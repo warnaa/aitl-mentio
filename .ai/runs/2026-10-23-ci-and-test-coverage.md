@@ -54,11 +54,20 @@ coverage for new features; bring existing code to 100%.
   download stalled on the Azure mirror); fixed by using the preinstalled Chrome
   (`AGENT_BROWSER_EXECUTABLE_PATH`) plus step timeouts. See lessons.
 
+## Follow-up: skip CI on docs-only changes
+
+- Added a `changes` job (plain `git diff`, no third-party action); all six jobs depend
+  on it and are skipped when only `*.md`, `.ai/**` or `docs/**` changed. PRs diff the
+  whole PR, pushes to `main` diff `before..after`; unknown base → run everything.
+- Filter tested locally against real commits (docs-only → false; workflow change,
+  whole PR, unknown base → true).
+- Found: branch protection on `main` is not enforced (private repo, free plan).
+
 ## Outcome
 
 Done.
 
 ## Needs from you
 
-- Mark the CI jobs as required checks in GitHub branch protection for `main`
-  (Settings → Branches); the workflow can't do that itself.
+- Branch protection on `main` is not enforced: private repo on a free personal
+  account (GitHub Pro or a public repo needed). Then require the six CI checks.

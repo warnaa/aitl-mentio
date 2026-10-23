@@ -223,7 +223,8 @@ in the engineering-standards spec. Non-negotiables enforced by the shared layers
 - `npm run dev` / `npm run build` / `npm run start` — the Next.js app.
 - `npm run db:migration:create`, `npm run db:migrate`, `npm run db:migrate:down`.
 - **Validation gate** — all must pass before work is considered done (CI runs the same
-  checks on every PR, `.github/workflows/ci.yml`):
+  checks on every PR, `.github/workflows/ci.yml`; a PR that only touches Markdown,
+  `.ai/` or `docs/` skips them — keep that filter job-level, never `paths-ignore`):
   `npm run lint`, `npm run typecheck`, `npm run test:coverage` (Vitest unit tests with
   the 100% gate; `npm test` runs them without coverage), `npm run build`,
   `npm run test:integration` (after the build; needs Docker or `TEST_DATABASE_URL`),

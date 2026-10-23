@@ -21,6 +21,15 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-23 - CI docs-only skip: job-level `if:`, never workflow `paths-ignore`
+
+With required status checks, a workflow skipped by `paths-ignore` never reports, so
+docs-only PRs wait forever on "Expected" checks and can't merge. Instead a `changes` job
+diffs the whole PR (merge base → head) and the other jobs run only if non-docs files
+changed; a job skipped via `if:` counts as success for required checks. Also: this repo
+is private on a free personal account, so GitHub does not enforce branch protection or
+rulesets here (API: 403 "Upgrade to GitHub Pro") even though the UI lets you save them.
+
 ## 2026-10-23 - CI: don't run `agent-browser install --with-deps` on GitHub runners
 
 On `ubuntu-latest` it apt-installs extra fonts (`fonts-noto-cjk`, 61 MB); the download

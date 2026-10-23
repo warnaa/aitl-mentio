@@ -13,7 +13,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Docs-only changes (Markdown, .ai/, docs/) skip every other job. A job skipped through
+  # `if:` reports success, so required checks still pass; `paths-ignore` on the workflow
+  # would instead leave required checks pending forever on docs-only PRs.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - id: filter
+        env:
+          # PRs: the whole PR (merge base → head), not just the latest push, so the head
+          # commit's checks always reflect every change in the PR.
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # Unknown base (new branch, force push): run everything.
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          code_files=$(git diff --name-only "$BASE...$HEAD" | grep -v -E '(^|/)[^/]+\.md$|^\.ai/|^docs/' || true)
+          echo "Non-docs changes:"; echo "${code_files:-(none)}"
+          echo "code=$([ -n "$code_files" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -23,6 +50,8 @@ jobs:
       - run: npm run lint
 
   typecheck:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -33,6 +62,8 @@ jobs:
 
   unit:
     name: unit (100% coverage)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -48,6 +79,8 @@ jobs:
           if-no-files-found: ignore
 
   build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -58,6 +91,8 @@ jobs:
       - run: npm run build
 
   audit:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -68,6 +103,8 @@ jobs:
 
   integration:
     name: integration (testcontainers + agent-browser)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
