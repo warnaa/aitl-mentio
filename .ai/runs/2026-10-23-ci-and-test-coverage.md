@@ -69,5 +69,5 @@ Done.
 
 ## Needs from you
 
-- Branch protection on `main` is not enforced: private repo on a free personal
-  account (GitHub Pro or a public repo needed). Then require the six CI checks.
+- none. (Branch protection on `main` is not enforced — private repo, free plan; the
+  user accepted this on 2026-10-23: CI reports on every PR but does not block merges.)
