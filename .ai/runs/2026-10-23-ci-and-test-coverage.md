@@ -1,7 +1,7 @@
 # Run: CI pipeline, 100% unit coverage, browser integration tests
 
 Date: 2026-10-23
-Spec: `.ai/specs/2026-10-23-ci-and-test-coverage.md`
+Spec: `.ai/specs/implemented/2026-10-23-ci-and-test-coverage.md`
 Branch: `feat/ci-and-test-coverage`
 
 ## Ask
@@ -21,7 +21,7 @@ coverage for new features; bring existing code to 100%.
 - [x] `.github/workflows/ci.yml`
 - [x] AGENTS.md, README, `.env.example`, lessons
 - [x] validation gate locally
-- [ ] PR; CI green
+- [x] PR #3; CI green (all six jobs)
 
 ## Log
 
@@ -47,7 +47,16 @@ coverage for new features; bring existing code to 100%.
 
 - Local: lint, typecheck, `test:coverage` (100%), build, audit, `test:integration`
   (via `TEST_DATABASE_URL`, local Postgres 17) all pass; no leftover server processes.
-- Not verifiable locally: the testcontainers path (no Docker) — covered by the CI run.
+- Not verifiable locally: the testcontainers path (no Docker) — verified in CI: the
+  integration job started `postgres:17-alpine` via testcontainers and passed 10/10
+  against the runner's Google Chrome 155.
+- First CI run: integration hung in `agent-browser install --with-deps` (apt font
+  download stalled on the Azure mirror); fixed by using the preinstalled Chrome
+  (`AGENT_BROWSER_EXECUTABLE_PATH`) plus step timeouts. See lessons.
+
+## Outcome
+
+Done.
 
 ## Needs from you
 

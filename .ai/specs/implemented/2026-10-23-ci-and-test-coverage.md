@@ -1,6 +1,6 @@
 # Mentio — CI pipeline, 100% unit coverage, browser integration tests
 
-Status: confirmed 2026-10-23 (exclusions: generated + type-only; integration test per new route/page)
+Status: implemented 2026-10-23; confirmed (exclusions: generated + type-only; integration test per new route/page)
 
 ## Goal
 
@@ -118,15 +118,15 @@ function with mocked `@mentio/core/*` imports and rendering the result.
 
 ## Done means
 
-- [ ] `.github/workflows/ci.yml` runs lint, typecheck, unit (coverage), build, audit,
+- [x] `.github/workflows/ci.yml` runs lint, typecheck, unit (coverage), build, audit,
       integration as separate jobs on every PR, and all pass on the PR that adds it.
-- [ ] `npm run test:coverage` enforces 100% on all four metrics; exclusions are the
+- [x] `npm run test:coverage` enforces 100% on all four metrics; exclusions are the
       commented list above only.
-- [ ] Existing code is at 100%; `npm test` and `npm run test:coverage` pass.
-- [ ] `npm run test:integration` boots Postgres via testcontainers (CI) or
+- [x] Existing code is at 100%; `npm test` and `npm run test:coverage` pass.
+- [x] `npm run test:integration` boots Postgres via testcontainers (CI) or
       `TEST_DATABASE_URL` (local), migrates, starts the production build, and the
       suites above pass, including the `agent-browser` checks of `/admin` and
       `/admin/users`.
-- [ ] AGENTS.md states the 100% unit-coverage rule and the integration-test rule;
+- [x] AGENTS.md states the 100% unit-coverage rule and the integration-test rule;
       README commands table and `.env.example` (`TEST_DATABASE_URL`) updated.
-- [ ] Lint, typecheck, build, audit still pass; lessons and run log written.
+- [x] Lint, typecheck, build, audit still pass; lessons and run log written.
