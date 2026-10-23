@@ -21,6 +21,14 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-23 - CI runner and actions are pinned; bump them deliberately
+
+`runs-on` is `ubuntu-26.04`, not `ubuntu-latest` (which migrated 24.04 → 26.04 from
+2026-10-19, bringing Docker 28 → 29). Actions are on v7 (`checkout`, `setup-node`,
+`upload-artifact`), all `node24`; `upload-artifact@v4` still ran on deprecated Node 20.
+When bumping either, check that the integration job still finds
+`/usr/bin/google-chrome` and that testcontainers works with the image's Docker.
+
 ## 2026-10-23 - CI docs-only skip: job-level `if:`, never workflow `paths-ignore`
 
 With required status checks, a workflow skipped by `paths-ignore` never reports, so
@@ -34,7 +42,7 @@ checks are green before merging. If the plan changes, require the six CI jobs.
 
 ## 2026-10-23 - CI: don't run `agent-browser install --with-deps` on GitHub runners
 
-On `ubuntu-latest` it apt-installs extra fonts (`fonts-noto-cjk`, 61 MB); the download
+On the GitHub Ubuntu runner it apt-installs extra fonts (`fonts-noto-cjk`, 61 MB); the download
 from the Azure mirror stalled and the integration job hung for 10+ minutes until
 cancelled. The runner image already has Google Chrome and its libraries, so CI sets
 `AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome` and skips the install. Steps that

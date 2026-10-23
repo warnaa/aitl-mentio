@@ -63,6 +63,13 @@ coverage for new features; bring existing code to 100%.
   whole PR, unknown base → true).
 - Found: branch protection on `main` is not enforced (private repo, free plan).
 
+## Follow-up: runner warnings
+
+- `upload-artifact@v4` ran on deprecated Node 20 → all actions bumped to v7 (node24;
+  release notes checked, no breaking changes for our usage).
+- `ubuntu-latest` → 26.04 migration notice → pinned `ubuntu-26.04` (image has Chrome 155
+  at `/usr/bin/google-chrome`, Docker 29); verified by the CI run.
+
 ## Outcome
 
 Done.
