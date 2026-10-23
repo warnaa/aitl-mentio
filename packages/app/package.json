@@ -1,0 +1,26 @@
+{
+  "name": "@mentio/app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "NODE_ENV=production next build",
+    "start": "NODE_ENV=production next start"
+  },
+  "dependencies": {
+    "@mentio/core": "*",
+    "@mentio/db": "*",
+    "@mentio/ui": "*",
+    "@next/env": "^16.4.2",
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4.3.3"
+  }
+}
