@@ -42,6 +42,8 @@ npm run dev                   # http://localhost:3000
 | `npm run lint`                 | ESLint across all packages (incl. layer boundaries)   |
 | `npm run typecheck`            | `tsc` for every package                               |
 | `npm test` / `test:watch`      | Vitest unit tests (`*.test.ts(x)` next to the code)   |
+| `npm run test:coverage`        | Unit tests + 100% coverage gate (report in `coverage/`) |
+| `npm run test:integration`     | Postgres (testcontainers) + production server + agent-browser; run `npm run build` first |
 | `npm run audit`                | Audit of production deps (high/critical, allowlisted) |
 | `npm run db:migration:create`  | Generate a migration from entity changes              |
 | `npm run db:migrate`           | Apply pending migrations                              |
@@ -65,6 +67,7 @@ MikroORM CLI. Real environment variables take precedence over `.env`; an empty v
 | `DB_DEBUG`                | `false` | Log SQL queries                                      |
 | `JWT_SECRET`              | —       | HS256 session key, ≥ 32 bytes (`openssl rand -base64 32`); session-protected routes fail closed without it |
 | `LOG_LEVEL`               | `info`  | pino log level                                       |
+| `TEST_DATABASE_URL`       | —       | Integration tests only, read from the shell (not `.env`): use this empty database instead of a testcontainers Postgres (no Docker) |
 
 ## Architecture
 

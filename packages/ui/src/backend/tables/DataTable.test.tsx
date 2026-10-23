@@ -52,4 +52,39 @@ describe("DataTable", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(onOffsetChange).toHaveBeenCalledWith(1);
   });
+
+  it("renders row actions and pages back, clamping at zero", () => {
+    const onOffsetChange = vi.fn();
+    render(
+      <DataTable
+        columns={[{ id: "name", header: "Name", cell: (row: Row) => row.name, className: "w-40" }]}
+        rows={[{ id: "1", name: "Ada" }]}
+        getRowId={getRowId}
+        rowActions={(row) => <button>Edit {row.name}</button>}
+        pagination={{ offset: 1, limit: 2, total: 5, onOffsetChange }}
+      />,
+    );
+
+    expect(screen.getByRole("columnheader", { name: "Actions" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Edit Ada" })).toBeTruthy();
+    expect(screen.getByText("2–3 of 5")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    expect(onOffsetChange).toHaveBeenCalledWith(0);
+  });
+
+  it("keeps the table with disabled paging while a refetch of an empty page is loading", () => {
+    render(
+      <DataTable
+        columns={columns}
+        rows={[]}
+        getRowId={getRowId}
+        isLoading
+        pagination={{ offset: 0, limit: 10, total: 0, onOffsetChange: vi.fn() }}
+      />,
+    );
+
+    expect(screen.getByText("0–0 of 0")).toBeTruthy();
+    expect(screen.queryByRole("columnheader", { name: "Actions" })).toBeNull();
+    expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
+  });
 });

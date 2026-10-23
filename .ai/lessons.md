@@ -21,6 +21,33 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-23 - Integration tests here: no Docker, so use TEST_DATABASE_URL
+
+The sandbox has no Docker, so testcontainers can't start Postgres locally; CI
+(`ubuntu-latest`) can. Locally run the suite against a throwaway cluster:
+`/usr/lib/postgresql/17/bin/initdb -D /tmp/it-pg -U postgres --auth=trust`, start it on
+:5433, create an empty `mentio_it`, then
+`TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5433/mentio_it npm run test:integration`
+(after `npm run build`). Chrome for agent-browser also needs system libraries here:
+`npx agent-browser install --with-deps` (sudo apt works). Spec:
+`.ai/specs/implemented/2026-10-23-ci-and-test-coverage.md`.
+
+## 2026-10-23 - Coverage gate: list sources in `coverage.include`, exclude barrels by name
+
+Without `coverage.include`, V8 coverage only reports files some test imported, so an
+untested file is invisible instead of 0%. Barrels are excluded one by one, not via
+`**/index.ts`: `db/src/entities/index.ts` holds the runtime `entities` array and a glob
+would hide it. A file that becomes a pure re-export (e.g. `ui/src/lib/utils.ts`) shows
+0/0 — add it to the commented exclusion list.
+
+## 2026-10-23 - Decided: adopt shadcn's `cn`; audit gate is high + allowlist
+
+Supersedes the open decision in the `cn` entry above: `@mentio/ui` depends on `cn`, and
+`lib/utils` re-exports it, so leave `from "cn"` in `shadcn add` output. The audit gate
+(`scripts/audit.mjs`) blocks high/critical advisories; exceptions go in
+`scripts/audit-allowlist.json` with a reason, never by lowering the level. The `braces`
+exception is only valid while ESLint bans awilix `loadModules`.
+
 ## 2026-10-23 - Sandbox exports NODE_ENV=development; `next build` breaks under it
 
 The sandbox shell sets `NODE_ENV=development` globally. `next build` then renders with
@@ -104,11 +131,3 @@ contains the pattern) and also hit the platform preview server on :3000. `setsid
 then `$!` is not the process group either (setsid forks). Start test servers with
 `setsid sh -c 'echo $$ > /tmp/srv.pgid; exec npm run start -- --port 3100'` and stop
 with `kill -- -$(cat /tmp/srv.pgid)`.
-
-## 2026-10-23 - Decided: adopt shadcn's `cn`; audit gate is high + allowlist
-
-Supersedes the open decision in the `cn` entry above: `@mentio/ui` depends on `cn`, and
-`lib/utils` re-exports it, so leave `from "cn"` in `shadcn add` output. The audit gate
-(`scripts/audit.mjs`) blocks high/critical advisories; exceptions go in
-`scripts/audit-allowlist.json` with a reason, never by lowering the level. The `braces`
-exception is only valid while ESLint bans awilix `loadModules`.

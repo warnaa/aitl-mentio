@@ -1,6 +1,6 @@
 import { Writable } from "node:stream";
-import { describe, expect, it } from "vitest";
-import { createLogger } from "./logger";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createLogger, getLogger } from "./logger";
 
 function captureLogger() {
   const lines: string[] = [];
@@ -30,5 +30,29 @@ describe("logger", () => {
     expect(output).not.toMatch(/hunter2|\$2b\$12|eyJ/);
     expect(output).toContain("ada@example.com");
     expect(output).toContain("[redacted]");
+  });
+});
+
+describe("createLogger", () => {
+  it("defaults the level to LOG_LEVEL from the environment", () => {
+    vi.stubEnv("LOG_LEVEL", "warn");
+
+    expect(createLogger().level).toBe("warn");
+  });
+});
+
+describe("getLogger", () => {
+  const globalForLogger = globalThis as typeof globalThis & { __mentioLogger?: unknown };
+
+  afterEach(() => {
+    delete globalForLogger.__mentioLogger;
+  });
+
+  it("returns one process-wide logger", () => {
+    delete globalForLogger.__mentioLogger;
+    const logger = getLogger();
+
+    expect(getLogger()).toBe(logger);
+    expect(globalForLogger.__mentioLogger).toBe(logger);
   });
 });

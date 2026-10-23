@@ -60,6 +60,23 @@ describe("apiCall", () => {
 
     expect(await apiCall("/api/things")).toMatchObject({ ok: false, status: 0, error: { code: "network_error" } });
   });
+
+  it("uses a generic message when the failure is not an Error", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => Promise.reject("offline")));
+
+    expect(await apiCall("/api/things")).toMatchObject({
+      ok: false,
+      error: { code: "network_error", message: "Network request failed" },
+    });
+  });
+
+  it("omits the query string when every parameter is undefined", async () => {
+    const fetchMock = mockFetch(json({ ok: true, data: null }));
+
+    await apiCall("/api/things", { query: { page: undefined } });
+
+    expect((fetchMock.mock.calls[0] as unknown as [string])[0]).toBe("/api/things");
+  });
 });
 
 describe("apiCallOrThrow", () => {
