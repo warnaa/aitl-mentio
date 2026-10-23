@@ -1,0 +1,5 @@
+/* Tailwind + shared shadcn/ui theme tokens from the ui package. */
+@import "@mentio/ui/styles.css";
+
+/* Scan the app's own sources for class names. */
+@source "../";

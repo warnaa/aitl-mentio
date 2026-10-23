@@ -1,24 +1,24 @@
 {
-  "name": "workspace-app",
+  "name": "mentio",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.3.4",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "dev": "npm run dev -w @mentio/app --",
+    "build": "npm run build -w @mentio/app",
+    "start": "npm run start -w @mentio/app --",
+    "lint": "eslint",
+    "typecheck": "tsc -p packages/core && tsc -p packages/db && tsc -p packages/ui && tsc -p packages/app",
+    "db:migration:create": "npm run migration:create -w @mentio/db --",
+    "db:migrate": "npm run migrate -w @mentio/db",
+    "db:migrate:down": "npm run migrate:down -w @mentio/db"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/node": "^24",
     "eslint": "^9",
-    "eslint-config-next": "16.3.4",
+    "eslint-config-next": "16.4.2",
     "typescript": "^5"
   }
 }

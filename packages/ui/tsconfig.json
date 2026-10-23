@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@mentio/ui/components/*": [
+        "./src/components/ui/*"
+      ],
+      "@mentio/ui/components": [
+        "./src/components/ui"
+      ],
+      "@mentio/ui/lib/*": [
+        "./src/lib/*"
+      ],
+      "@mentio/ui/lib": [
+        "./src/lib"
+      ],
+      "@mentio/ui/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@mentio/ui/hooks": [
+        "./src/hooks"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ]
+}
