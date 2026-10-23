@@ -104,3 +104,11 @@ contains the pattern) and also hit the platform preview server on :3000. `setsid
 then `$!` is not the process group either (setsid forks). Start test servers with
 `setsid sh -c 'echo $$ > /tmp/srv.pgid; exec npm run start -- --port 3100'` and stop
 with `kill -- -$(cat /tmp/srv.pgid)`.
+
+## 2026-10-23 - Decided: adopt shadcn's `cn`; audit gate is high + allowlist
+
+Supersedes the open decision in the `cn` entry above: `@mentio/ui` depends on `cn`, and
+`lib/utils` re-exports it, so leave `from "cn"` in `shadcn add` output. The audit gate
+(`scripts/audit.mjs`) blocks high/critical advisories; exceptions go in
+`scripts/audit-allowlist.json` with a reason, never by lowering the level. The `braces`
+exception is only valid while ESLint bans awilix `loadModules`.

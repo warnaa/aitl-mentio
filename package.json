@@ -13,7 +13,7 @@
     "typecheck": "tsc -p packages/core && tsc -p packages/db && tsc -p packages/ui && tsc -p packages/app",
     "test": "vitest run",
     "test:watch": "vitest",
-    "audit": "npm audit --omit=dev --audit-level=critical",
+    "audit": "node scripts/audit.mjs",
     "db:migration:create": "npm run migration:create -w @mentio/db --",
     "db:migrate": "npm run migrate -w @mentio/db",
     "db:migrate:down": "npm run migrate:down -w @mentio/db"

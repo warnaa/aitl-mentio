@@ -173,9 +173,9 @@ import `core`. Keep them in sync; a shared package for it is an Ask First change
 - shadcn/ui components live in `packages/ui/src/components/ui/` and are imported as
   `@mentio/ui/components/<name>`; `cn` from `@mentio/ui/lib/utils`.
 - Add components from `packages/ui`: `cd packages/ui && npx shadcn@latest add <name>`.
-  The CLI (v4.22+) rewrites `cn` imports to shadcn's own `cn` package and adds it as a
-  dependency; until the project adopts that package, point the imports back at
-  `@mentio/ui/lib/utils` and `npm uninstall cn -w @mentio/ui` after every add.
+  The project uses shadcn's own `cn` package (clsx + tailwind-merge replacement); the
+  CLI imports it as `from "cn"` in generated components — leave that as is.
+  `@mentio/ui/lib/utils` re-exports the same `cn` for hand-written code.
 - Theme tokens (CSS variables) and the Tailwind entry point are in
   `src/styles/globals.css`, imported once by the app's `src/app/globals.css`.
 - Components are presentational: they receive data and callbacks as props. Data
@@ -224,9 +224,10 @@ in the engineering-standards spec. Non-negotiables enforced by the shared layers
 - `npm run db:migration:create`, `npm run db:migrate`, `npm run db:migrate:down`.
 - **Validation gate** — all must pass before work is considered done:
   `npm run lint`, `npm run typecheck`, `npm test` (Vitest; tests live next to the code
-  as `*.test.ts(x)`), `npm run build`, `npm run audit` (fails on critical advisories in
-  production dependencies; the known high-severity `braces` advisory via `awilix` is
-  accepted — it is only reachable through `loadModules`, which is banned here).
+  as `*.test.ts(x)`), `npm run build`, `npm run audit` (`scripts/audit.mjs`: fails on any
+  high/critical advisory in production dependencies unless it is listed, with a reason,
+  in `scripts/audit-allowlist.json`; currently only `braces` via `awilix`, reachable only
+  through `loadModules`, which ESLint bans).
 - A behavior change ships with a test that fails without it; a bug fix ships with a
   regression test.
 

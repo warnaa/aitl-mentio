@@ -42,7 +42,7 @@ npm run dev                   # http://localhost:3000
 | `npm run lint`                 | ESLint across all packages (incl. layer boundaries)   |
 | `npm run typecheck`            | `tsc` for every package                               |
 | `npm test` / `test:watch`      | Vitest unit tests (`*.test.ts(x)` next to the code)   |
-| `npm run audit`                | `npm audit` of production deps (fails on critical)    |
+| `npm run audit`                | Audit of production deps (high/critical, allowlisted) |
 | `npm run db:migration:create`  | Generate a migration from entity changes              |
 | `npm run db:migrate`           | Apply pending migrations                              |
 | `npm run db:migrate:down`      | Revert the last migration                             |

@@ -41,6 +41,8 @@ Implement `.ai/specs/engineering-standards.md`.
 - [x] lint, typecheck, test, build, npm audit; DB check; dev pages
 - [x] lessons; spec → implemented
 - [x] commit / PR (user approved 2026-10-23)
+- [x] follow-up (user decisions): audit gate at high + allowlist, ESLint ban on
+      `loadModules`, adopt shadcn `cn`, drop product-scope step
 
 ## Log
 - `db`: Zod env (`src/env.ts`), `baseProperties()` (`entities/base.entity.ts`), `User` moved
@@ -89,13 +91,15 @@ Implement `.ai/specs/engineering-standards.md`.
 - Not verified: client-side rendering of `/admin/users` in a real browser (no headless
   browser in the sandbox) — covered by the jsdom `users-table.test.tsx` instead.
 
+## Follow-up (after PR review)
+
+- Audit: `scripts/audit.mjs` + `scripts/audit-allowlist.json` (gate at high/critical,
+  allowlist with reasons, warns on stale entries), unit-tested; `loadModules` banned via
+  `no-restricted-syntax` (probed with a deliberate violation).
+- `@mentio/ui`: `cn` package replaces `clsx` + `tailwind-merge`; `lib/utils` re-exports it.
+- `docs/product-scope.md` step: out of scope for this repo (training-pack doc).
+
 ## Needs from you
 
 - Review and merge the PR.
-- `docs/product-scope.md` (training pack) is not in this repo — update its "DI container"
-  exclusion wherever that document lives (spec step 8).
 - Set `JWT_SECRET` (`openssl rand -base64 32`) in `.env` before the auth concept lands.
-- Decide whether to adopt shadcn's `cn` package (the CLI keeps rewriting imports to it)
-  or keep `@mentio/ui/lib/utils` and the post-`shadcn add` fix step.
-- Accepting the `braces` advisory (audit gate at `critical`) is a judgment call — confirm
-  or ask for a different policy.

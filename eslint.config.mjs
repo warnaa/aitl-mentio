@@ -27,6 +27,19 @@ const eslintConfig = defineConfig([
       "no-empty": ["error", { allowEmptyCatch: false }],
     },
   },
+  {
+    // Register dependencies explicitly in container.ts. loadModules is also the only path
+    // to the allowlisted `braces` advisory (scripts/audit-allowlist.json).
+    files: ["packages/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...["ImportSpecifier[imported.name='loadModules']", "MemberExpression[property.name='loadModules']"].map(
+          (selector) => ({ selector, message: "awilix loadModules is banned: register dependencies explicitly." }),
+        ),
+      ],
+    },
+  },
   boundary(
     ["packages/app/**"],
     [
