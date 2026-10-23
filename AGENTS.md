@@ -32,91 +32,184 @@ propose a spec (see SDD below) before changing any of them.
 
 ```
 packages/
-  app/   @mentio/app   Next.js application: routes, pages, server code, DI composition root
-  core/  @mentio/core  Framework-agnostic reusable code: DI helpers, env/config, errors
-  db/    @mentio/db    MikroORM config, entities, migrations, ORM singleton
-  ui/    @mentio/ui    Reusable React components (shadcn/ui), `cn()`, shared Tailwind theme
+  app/   @mentio/app   Next.js application: pages, API routes (HTTP wiring only)
+  core/  @mentio/core  Business layer: services, DI container, validators, http layer, logger, env
+  db/    @mentio/db    Persistence: MikroORM config, entities, migrations, ORM singleton
+  ui/    @mentio/ui    Presentation: shadcn/ui primitives, backend panel blocks, shared theme
 ```
 
-Dependency direction (enforced by review — no cycles, no upward imports):
+Dependency direction — enforced by ESLint `no-restricted-imports` (`eslint.config.mjs`);
+do not loosen it for convenience:
 
-- `app` → `ui`, `db`, `core`
-- `db` → `core`
-- `ui` → (no workspace packages)
-- `core` → (no workspace packages; no React, no Next, no MikroORM)
+- `app` → `core`, `ui` (never `db` or `@mikro-orm/*` directly — go through `core`)
+- `core` → `db` (no `next`/`react`; no `@mikro-orm/*` — use the types `db` re-exports)
+- `db` → no workspace package (no `next`/`react`); the only package that imports MikroORM
+- `ui` → no workspace package (standalone; importable by `app` only)
 
 Add a new package only with a spec. New packages go in `packages/<name>`, are named
 `@mentio/<name>`, are `private`, and export TypeScript source via `exports` (no build
 step — Next transpiles workspace packages). Each has its own `tsconfig.json` extending
-`tsconfig.base.json`, and must be added to the root `typecheck` script.
+`tsconfig.base.json`, must be added to the root `typecheck` script, and gets a boundary
+entry in `eslint.config.mjs`.
+
+### Domain concept convention
+
+Domain code is not organized into `modules/`. Each concept (`auth`, `mentors`,
+`availability`, `bookings`, `payments`, `messages`, `favorites`, `reviews`, ...) is a
+same-named sub-folder repeated across the layers that need it:
+
+- `packages/db/src/entities/<concept>/<name>.entity.ts`
+- `packages/core/src/services/<concept>/<name>.service.ts`
+- `packages/core/src/validators/<concept>/<name>-<action>.schema.ts` (shared Zod schemas)
+- `packages/app/src/app/api/<concept>/route.ts` and the matching `page.tsx` under
+  the relevant persona route group (`(marketing)/`, `(auth)/`, `(student)/`, `(mentor)/`)
+  or under `admin/`
+
+Create a concept folder (and a persona route group) only when its first file is added
+— never scaffold empty ones. This is a directory convention, not a module runtime:
+there is no per-concept setup/ACL/auto-discovery. Reference implementation: the `auth`
+concept's `User` (`entities/auth/user.entity.ts` → `services/auth/user.service.ts` →
+`validators/auth/user-list.schema.ts` → `api/users/route.ts` → `admin/users/`). See
+`.ai/specs/implemented/2026-10-23-engineering-standards.md` for the full naming table,
+the step-by-step recipe for a new concept, and the payments-port/event-emitter patterns.
+
+Event IDs follow `concept.entity.action` (e.g. `bookings.booking.created`) and are
+emitted through the typed emitter in `packages/core/src/events`, registered on the
+`Cradle` — this is in-process only; there is no queue/worker in this project. (Add
+`core/src/events/` with the first feature that emits an event, not before.)
+
+External integrations (payments, later notifications/video) are reached through a port
+interface in `core` (`services/<concept>/<name>.port.ts`) with adapters under
+`services/<concept>/adapters/`; `core`/`db` never import vendor SDKs directly.
+
+### Reusable API & UI layer
+
+Every route and every page reuses two shared layers instead of re-implementing
+fetch/validation/auth/error-handling per feature:
+
+- `packages/core/src/http/` (`@mentio/core/http`) — `errors.ts` (typed `AppError`
+  hierarchy: `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`,
+  `ConflictError`, `ConfigError`), `apiHandler.ts` (wraps a route: CSRF header check on
+  unsafe methods, `AppError` → status + JSON envelope `{ ok, data }` /
+  `{ ok: false, error: { code, message, fieldErrors? } }`, logs unexpected failures and
+  never leaks them), `makeCrudRoute.ts` (schemas + service calls in,
+  `{ GET, POST, PUT, DELETE }` out, for plain CRUD resources), `auth.ts`
+  (`requireSession`, `requireRole`, `assertOwner`, session cookie options), `request.ts`
+  (`parseJsonBody` / `parseSearchParams` / `parseWith` — Zod-parsed input only).
+- `packages/ui/src/backend/` — `api` (`apiCall` / `apiCallOrThrow`: the only
+  sanctioned `fetch()` call site, enforced by ESLint), `forms` (`CrudForm`), `tables`
+  (`DataTable`), `feedback` (`LoadingMessage`, `ErrorMessage`, `EmptyState`). Import as
+  `@mentio/ui/backend/<category>`.
+
+Routes never write their own `try/catch` + `Response.json`; forms use `CrudForm`, lists
+use `DataTable`, loading/error/empty states use `feedback/`. A bespoke implementation
+needs a stated reason in the PR description.
+
+New reusable components have one designated home each — never scattered ad hoc:
+
+1. Shadcn primitive → `ui/src/components/ui/` (via `npx shadcn@latest add`, never
+   hand-written).
+2. Generic, concept-agnostic panel pattern → `ui/src/backend/<category>/`.
+3. Component tied to one concept's domain shape → `ui/src/components/<concept>/`,
+   named after the same concept folder used in `db`/`core`.
+4. Used by exactly one page → colocate next to that `page.tsx` until a second
+   consumer appears.
+
+The JSON envelope is a shape convention, not a shared type: `core/src/http` and
+`ui/src/backend/api` each declare it (and the CSRF header name), because `ui` must not
+import `core`. Keep them in sync; a shared package for it is an Ask First change.
 
 ## Package rules
 
 ### `@mentio/app`
 
-- Routes live in `packages/app/src/app/`:
-  - `(frontend)/` — public pages, Tailwind only. Do not import `@mentio/ui` here.
-  - `admin/` — backend/admin pages (served at `/admin`), built from `@mentio/ui`
-    components.
-- Server-only code lives in `packages/app/src/server/` and starts with
-  `import "server-only"` where it touches the container or the database.
-- Domain/application services go in `packages/app/src/server/services/` as classes
-  that receive dependencies through the constructor (Awilix PROXY injection:
-  `constructor({ em, otherService }: Deps)`).
+- Routes live in `packages/app/src/app/`: `(marketing)/` (public pages, plain Tailwind,
+  no `@mentio/ui`), `admin/` (backend panel at `/admin`, built from `@mentio/ui`), and
+  `api/<concept>/route.ts`. Page files default-export `<Segment>Page`.
+- A route file is HTTP wiring only: `makeCrudRoute(...)` or `apiHandler(...)` that calls
+  `requireSession`/ownership checks, then service methods through `withScope`. Business
+  rules live in `core` services.
+- Anything that touches the database declares `export const dynamic = "force-dynamic"`;
+  the app must build and boot with no database reachable.
 - `@/*` is the path alias for `packages/app/src/*`.
 
 ### `@mentio/core`
 
-- Pure TypeScript, safe to import anywhere on the server. No framework imports.
-- Owns the Awilix wrapper `createAppContainer()` (PROXY mode, strict) and re-exports
-  `asClass`/`asFunction`/`asValue`/`Lifetime`. Import Awilix through `@mentio/core`, not
-  directly.
-- Env access goes through `readEnv` / `readIntEnv`; config errors throw `ConfigError`.
+- Import through subpaths only — `@mentio/core/http`, `/container`, `/config`, `/logger`,
+  `/validators/<concept>/<file>`, `/services/<concept>/<file>` — so client code that needs
+  a schema (for `CrudForm`) or a DTO type never pulls in the ORM.
+- Services: one class per file in `services/<concept>/`, constructor-injected
+  (`constructor({ em, otherService }: Pick<Cradle, ...>)`), throw `AppError`s only, never
+  build HTTP responses, and return DTOs (never entities) so new columns can't leak.
+- Validators: Zod schemas in `validators/<concept>/`, shared by the API route and the
+  form. Generic pieces (e.g. `pagination.schema.ts`, `Page<T>`) live at `validators/`.
+- Env: `config/env.ts` (Zod-validated; `getEnv()`, `getJwtSecret()`); config errors
+  throw `ConfigError`. Logging: `getLogger()` (pino) — never log passwords, tokens or
+  full JWTs; extend `REDACTED_PATHS` in `logger.ts` when logging anything auth-related.
 
 ### `@mentio/db`
 
-- Entities: one file per entity in `src/entities/`, defined with `defineEntity` +
-  `p.*` builders and `setClass` (no decorators, no `reflect-metadata`). Export every
-  entity from `src/entities/index.ts` **and** add it to the `entities` array there —
-  the ORM uses explicit entity lists, not folder discovery.
-- Conventions: table names plural snake_case (`tableName: "users"`), `uuid` primary key
-  generated with `randomUUID()`, `createdAt` / `updatedAt` timestamps.
+- Entities: `entities/<concept>/<name>.entity.ts`, defined with `defineEntity` + `p.*`
+  builders and spreading `baseProperties()` (UUID id, `createdAt`, `updatedAt`). Export
+  the generated class — `export const X = XSchema.class; export type X = InstanceType<typeof X>`
+  — **never subclass it** (`class X extends XSchema.class` + `setClass`): minification
+  renames the subclass per bundle and Next bundles pages and route handlers separately,
+  so MikroORM's metadata lookup fails in production. Register the schema in the
+  `entities` array in `entities/index.ts` (explicit list, no folder discovery).
+- Conventions: table names plural snake_case (`tableName: "users"`), columns snake_case
+  (mapped from camelCase properties).
 - Schema changes are made **only** through migrations: change the entity, then
   `npm run db:migration:create`, review the generated file in `src/migrations/`, and
-  commit it with the `.snapshot-*.json`. Never edit an applied migration; never use
+  commit it with `.snapshot-mentio.json`. Never edit an applied migration; never use
   `schema:update` against shared databases. Write a `down()` for every migration.
 - `getOrm()` returns the process-wide ORM (one connection pool per process, cached on
-  `globalThis`). Pool size comes from `DB_POOL_MIN` / `DB_POOL_MAX` /
-  `DB_POOL_IDLE_TIMEOUT_MS`.
-- Never query through the global `orm.em`. Use a forked, request-scoped
-  EntityManager — in the app, resolve `em` (or a service using it) from a request scope.
-- MikroORM packages are in `serverExternalPackages`; never import `@mentio/db` from a
-  Client Component.
+  `globalThis`). DB settings are validated in `src/env.ts` (`db` can't import `core`).
+- All persistence goes through MikroORM's entity/query APIs — no raw SQL built from
+  user input. Check-then-write on shared state (slots, booking status) runs in a
+  transaction backed by a unique constraint.
 
 ### `@mentio/ui`
 
 - shadcn/ui components live in `packages/ui/src/components/ui/` and are imported as
   `@mentio/ui/components/<name>`; `cn` from `@mentio/ui/lib/utils`.
 - Add components from `packages/ui`: `cd packages/ui && npx shadcn@latest add <name>`.
-  After adding, check imports point at `@mentio/ui/lib/utils` (the CLI can rewrite them
-  wrongly) and that no unexpected dependency was added to `package.json`.
+  The project uses shadcn's own `cn` package (clsx + tailwind-merge replacement); the
+  CLI imports it as `from "cn"` in generated components — leave that as is.
+  `@mentio/ui/lib/utils` re-exports the same `cn` for hand-written code.
 - Theme tokens (CSS variables) and the Tailwind entry point are in
   `src/styles/globals.css`, imported once by the app's `src/app/globals.css`.
-- Components must be generic and presentational — no data fetching, no imports from
-  `app`, `db` or `core`.
+- Components are presentational: they receive data and callbacks as props. Data
+  fetching goes through `backend/api` only.
 
 ## Dependency injection
 
-- Composition root: `packages/app/src/server/container.ts`. Register every service
-  there and add it to the `AppCradle` interface.
-- Lifetimes: process-wide infrastructure (`orm`, config, clients) → singleton /
-  `asValue`; anything that touches `em` → `.scoped()`. Strict mode rejects singletons
+- Composition root: `packages/core/src/container/container.ts`; types in `cradle.ts`.
+  Every dependency is registered there explicitly (no `loadModules` globbing) and added
+  to the `Cradle` interface.
+- Lifetimes: process-wide infrastructure (`orm`, `logger`, gateways) → `asValue` /
+  singleton; anything that touches `em` → `.scoped()`. Strict mode rejects singletons
   that depend on scoped registrations.
-- Per request (page, route handler, server action): `const scope = await
-  createRequestScope()` then use `scope.cradle.<service>`. `em` is registered only on
-  request scopes (a fresh fork each), so services that need it cannot be resolved from
-  the root container. Awilix itself would allow resolving `.scoped()` registrations from
-  the root (caching them there for the whole process) — never rely on that.
+- Per request: `withScope((cradle) => cradle.someService.doThing())` (or
+  `createRequestScope()`). `em` is registered only on request scopes (a fresh fork
+  each), so services that need it cannot be resolved from the root container. Awilix
+  itself would allow resolving `.scoped()` registrations from the root (caching them
+  there for the whole process) — never rely on that.
+
+## Security baseline
+
+The full list (bcrypt cost ≥ 12, JWT/cookie/CSRF/rate-limit rules, review checklist) is
+in the engineering-standards spec. Non-negotiables enforced by the shared layers:
+
+- Every non-public route calls `requireSession` first (`makeCrudRoute` defaults to it;
+  `access: "public"` is a reviewed exception). Mutations also check ownership of the
+  specific record (`assertOwner`). Errors in auth checks fail closed.
+- Sessions are HS256 JWTs (`JWT_SECRET` ≥ 32 bytes, 24h, no refresh flow) in an
+  `httpOnly`, `sameSite=lax`, `secure`-in-production cookie — never `localStorage`.
+- State-changing requests must carry the CSRF header that `apiCall` sends;
+  `apiHandler` rejects them otherwise (`csrf: false` only for signature-verified webhooks).
+- Write endpoints only see the Zod schema's parsed output — never spread a raw body into
+  `em.create()`/`em.assign()`. Prices and ownership fields are recomputed server-side.
+- Auth error messages stay generic ("invalid credentials").
 
 ## Environment
 
@@ -128,8 +221,15 @@ step — Next transpiles workspace packages). Each has its own `tsconfig.json` e
 ## Commands (run from the repo root)
 
 - `npm run dev` / `npm run build` / `npm run start` — the Next.js app.
-- `npm run lint`, `npm run typecheck` — must pass before work is considered done.
 - `npm run db:migration:create`, `npm run db:migrate`, `npm run db:migrate:down`.
+- **Validation gate** — all must pass before work is considered done:
+  `npm run lint`, `npm run typecheck`, `npm test` (Vitest; tests live next to the code
+  as `*.test.ts(x)`), `npm run build`, `npm run audit` (`scripts/audit.mjs`: fails on any
+  high/critical advisory in production dependencies unless it is listed, with a reason,
+  in `scripts/audit-allowlist.json`; currently only `braces` via `awilix`, reachable only
+  through `loadModules`, which ESLint bans).
+- A behavior change ships with a test that fails without it; a bug fix ships with a
+  regression test.
 
 # Spec-Driven Development (SDD) and AI memory
 
@@ -188,11 +288,11 @@ Adapted from Boris Cherny's Claude Code tips and the Opus 5.5 prompting guide.
 - **Plan complex tasks first.** Plan the whole task before editing. For non-trivial
   features, the plan is the spec. If implementation goes off track, stop and re-plan
   instead of pushing through.
-- **Verify before calling it done.** After changes, run `npm run lint` and
-  `npm run build`. For UI changes, also run `npm run dev` and check the affected pages.
-  Review your own diff and be ready to justify the approach. If the result is mediocre,
-  rework it. Report what you verified, what you couldn't, and anything you need from
-  the user.
+- **Verify before calling it done.** After changes, run the validation gate (see
+  "Commands" above: lint, typecheck, test, build, audit). For UI changes, also run
+  `npm run dev` and check the affected pages. Review your own diff and be ready to
+  justify the approach. If the result is mediocre, rework it. Report what you verified,
+  what you couldn't, and anything you need from the user.
 - **Fix bugs end to end.** Given a bug report, failing build, or error log, reproduce
   it, find the root cause, and fix it without needing step-by-step direction.
 - **Split large jobs into narrow units.** Delegate heavy or broad work to subagents, one

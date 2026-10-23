@@ -11,7 +11,10 @@ export const metadata: Metadata = {
   },
 };
 
-const navItems = [{ href: "/admin", label: "Dashboard" }];
+const navItems = [
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/users", label: "Users" },
+];
 
 // Admin ("backend") pages are built from @mentio/ui (shadcn/ui) components.
 export default function AdminLayout({ children }: Readonly<{ children: ReactNode }>) {

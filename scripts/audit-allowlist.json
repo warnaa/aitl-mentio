@@ -1,0 +1,7 @@
+[
+  {
+    "id": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "reason": "Reached only via awilix → fast-glob, which awilix uses solely in loadModules(); loadModules is banned by ESLint (eslint.config.mjs). The only 'fix' npm offers is downgrading awilix to 6.0.0."
+  }
+]
