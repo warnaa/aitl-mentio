@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Runner OS is pinned (not `ubuntu-latest`) so image migrations are deliberate: bump
+# every `runs-on` together and watch the integration job (Chrome path, Docker version).
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Docs-only changes (Markdown, .ai/, docs/) skip every other job. A job skipped through
+  # `if:` reports success, so required checks still pass; `paths-ignore` on the workflow
+  # would instead leave required checks pending forever on docs-only PRs.
+  changes:
+    runs-on: ubuntu-26.04
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 0 }
+      - id: filter
+        env:
+          # PRs: the whole PR (merge base → head), not just the latest push, so the head
+          # commit's checks always reflect every change in the PR.
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # Unknown base (new branch, force push): run everything.
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          code_files=$(git diff --name-only "$BASE...$HEAD" | grep -v -E '(^|/)[^/]+\.md$|^\.ai/|^docs/' || true)
+          echo "Non-docs changes:"; echo "${code_files:-(none)}"
+          echo "code=$([ -n "$code_files" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+
+  unit:
+    name: unit (100% coverage)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run test:coverage
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      # Must succeed with no database reachable (AGENTS.md).
+      - run: npm run build
+
+  audit:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run audit
+
+  integration:
+    name: integration (testcontainers + agent-browser)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    env:
+      # The runner image ships Google Chrome and its libraries. `agent-browser install
+      # --with-deps` is not used here: its extra apt font packages stalled on the mirror.
+      AGENT_BROWSER_EXECUTABLE_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: google-chrome --version
+      - run: npm run build
+        timeout-minutes: 5
+      # Postgres comes from testcontainers (Docker is preinstalled on the runner image).
+      - run: npm run test:integration
+        timeout-minutes: 10
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: integration-artifacts
+          path: tests/integration/.artifacts/
+          if-no-files-found: ignore

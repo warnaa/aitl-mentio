@@ -222,14 +222,41 @@ in the engineering-standards spec. Non-negotiables enforced by the shared layers
 
 - `npm run dev` / `npm run build` / `npm run start` — the Next.js app.
 - `npm run db:migration:create`, `npm run db:migrate`, `npm run db:migrate:down`.
-- **Validation gate** — all must pass before work is considered done:
-  `npm run lint`, `npm run typecheck`, `npm test` (Vitest; tests live next to the code
-  as `*.test.ts(x)`), `npm run build`, `npm run audit` (`scripts/audit.mjs`: fails on any
+- **Validation gate** — all must pass before work is considered done (CI runs the same
+  checks on every PR, `.github/workflows/ci.yml`; a PR that only touches Markdown,
+  `.ai/` or `docs/` skips them — keep that filter job-level, never `paths-ignore`):
+  `npm run lint`, `npm run typecheck`, `npm run test:coverage` (Vitest unit tests with
+  the 100% gate; `npm test` runs them without coverage), `npm run build`,
+  `npm run test:integration` (after the build; needs Docker or `TEST_DATABASE_URL`),
+  `npm run audit` (`scripts/audit.mjs`: fails on any
   high/critical advisory in production dependencies unless it is listed, with a reason,
   in `scripts/audit-allowlist.json`; currently only `braces` via `awilix`, reachable only
   through `loadModules`, which ESLint bans).
 - A behavior change ships with a test that fails without it; a bug fix ships with a
   regression test.
+
+## Testing
+
+- **Every new feature must be 100% covered by unit tests** — lines, branches,
+  functions and statements — and so must every changed file. `npm run test:coverage`
+  enforces this with global 100% thresholds over all of `packages/*/src` and
+  `scripts/`, so an untested file fails the gate. Do not lower the thresholds.
+- Unit tests live next to the code (`*.test.ts(x)`), run under Vitest, and never touch a
+  real database or network: mock collaborators at the package boundary
+  (`vi.mock("@mentio/db", ...)`, `@mentio/core/container`, ...). Components and pages are
+  tested through Testing Library (jsdom); async server components by awaiting the page
+  function and rendering the result. Assert behavior, not just that code ran.
+- Coverage exclusions are only the commented list in `vitest.config.mts` (generated
+  shadcn primitives and migrations, type-only files, pure re-export barrels, tool config
+  entry points). Adding to it needs a reason in the comment and in the PR description.
+  `/* v8 ignore */` only for truly unreachable branches, with a same-line reason.
+- **Every new page and API route also gets at least one integration test** in
+  `tests/integration/` — routes: status codes + JSON envelope (including the auth
+  failure); pages: a browser check of the main content via the `agent-browser` wrapper
+  (`support/browser.ts`). The suite runs the production build against an ephemeral
+  Postgres (testcontainers; `TEST_DATABASE_URL` without Docker), migrated with the real
+  CLI. Each test seeds its own uniquely named data (`support/db.ts`); never rely on
+  another file's rows.
 
 # Spec-Driven Development (SDD) and AI memory
 

@@ -37,6 +37,22 @@ describe("requireSession", () => {
     });
   });
 
+  it("ignores malformed cookie pairs and finds the session cookie after them", async () => {
+    const { requireSession, signSessionToken, SESSION_COOKIE_NAME } = await loadAuth();
+    const token = await signSessionToken({ userId: USER_ID, role: "student" });
+
+    await expect(requireSession(requestWithCookie(`garbage; ${SESSION_COOKIE_NAME}=${token}`))).resolves.toEqual({
+      userId: USER_ID,
+      role: "student",
+    });
+  });
+
+  it("rejects a cookie header that does not contain the session cookie", async () => {
+    const { requireSession } = await loadAuth();
+
+    await expect(requireSession(requestWithCookie("a=b; garbage"))).rejects.toMatchObject({ status: 401 });
+  });
+
   it("rejects a request without a session cookie", async () => {
     const { requireSession } = await loadAuth();
 

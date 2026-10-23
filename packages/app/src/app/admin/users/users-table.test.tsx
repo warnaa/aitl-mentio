@@ -51,4 +51,24 @@ describe("UsersTable", () => {
 
     expect(await screen.findByText("No users yet")).toBeTruthy();
   });
+
+  it("shows the API error message for other failures", async () => {
+    respondWith([{ ok: false, error: { code: "internal_error", message: "Something went wrong" } }, 500]);
+    render(<UsersTable />);
+
+    expect(await screen.findAllByText("Something went wrong")).not.toHaveLength(0);
+  });
+
+  it("ignores a response that arrives after unmounting", async () => {
+    let resolve: (response: Response) => void = () => {};
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((settle) => (resolve = settle))));
+    const { unmount } = render(<UsersTable />);
+    const consoleError = vi.spyOn(console, "error");
+
+    unmount();
+    resolve(new Response(JSON.stringify({ ok: true, data: { items: [user(1)], total: 1, limit: 20, offset: 0 } })));
+    await new Promise((settle) => setTimeout(settle, 0));
+
+    expect(consoleError).not.toHaveBeenCalled();
+  });
 });

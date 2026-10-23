@@ -32,9 +32,10 @@ export function checkAudit(report, allowlist) {
   };
 }
 
-function runNpmAudit() {
+/** Raw `npm audit --json` output for production dependencies. */
+export function runNpmAudit(exec = execFileSync) {
   try {
-    return execFileSync("npm", ["audit", "--omit=dev", "--json"], { encoding: "utf8" });
+    return exec("npm", ["audit", "--omit=dev", "--json"], { encoding: "utf8" });
   } catch (error) {
     // npm audit exits non-zero when it finds anything; the JSON is still on stdout.
     if (error.stdout) return error.stdout;
@@ -42,17 +43,30 @@ function runNpmAudit() {
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const allowlist = JSON.parse(readFileSync(new URL("./audit-allowlist.json", import.meta.url), "utf8"));
-  const { blocking, stale } = checkAudit(JSON.parse(runNpmAudit()), allowlist);
+export function readAllowlist(read = readFileSync) {
+  return JSON.parse(read(new URL("./audit-allowlist.json", import.meta.url), "utf8"));
+}
+
+/** Runs the gate; returns the process exit code. */
+export function main({ auditJson, allowlist, log }) {
+  const { blocking, stale } = checkAudit(JSON.parse(auditJson), allowlist);
   for (const entry of stale) {
-    console.warn(`audit: allowlisted ${entry.id} (${entry.package}) no longer reported — remove it from scripts/audit-allowlist.json`);
+    log.warn(`audit: allowlisted ${entry.id} (${entry.package}) no longer reported — remove it from scripts/audit-allowlist.json`);
   }
   if (blocking.length > 0) {
     for (const advisory of blocking) {
-      console.error(`audit: ${advisory.severity} ${advisory.id} in ${advisory.package}: ${advisory.title}`);
+      log.error(`audit: ${advisory.severity} ${advisory.id} in ${advisory.package}: ${advisory.title}`);
     }
-    process.exit(1);
+    return 1;
   }
-  process.stdout.write(`audit: ok (${allowlist.length - stale.length} allowlisted advisory/ies)\n`);
+  log.info(`audit: ok (${allowlist.length - stale.length} allowlisted advisory/ies)`);
+  return 0;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  process.exitCode = main({
+    auditJson: runNpmAudit(),
+    allowlist: readAllowlist(),
+    log: { info: (line) => process.stdout.write(`${line}\n`), warn: console.warn, error: console.error },
+  });
 }
