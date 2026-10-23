@@ -4,9 +4,18 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    "./config": "./src/config/env.ts",
+    "./logger": "./src/logger.ts",
+    "./http": "./src/http/index.ts",
+    "./container": "./src/container/index.ts",
+    "./services/*": "./src/services/*.ts",
+    "./validators/*": "./src/validators/*.ts"
   },
   "dependencies": {
-    "awilix": "^13.0.5"
+    "@mentio/db": "*",
+    "awilix": "^13.0.5",
+    "jose": "^6.2.13",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
   }
 }

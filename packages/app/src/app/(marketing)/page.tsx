@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 // Public frontend pages use plain Tailwind utilities — no @mentio/ui (shadcn) components.
-export default function Home() {
+export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-8 px-6 py-24">
       <p className="text-sm font-medium tracking-widest text-neutral-500 uppercase">Mentio</p>

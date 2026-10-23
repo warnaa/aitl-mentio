@@ -14,10 +14,10 @@
     "migrate:down": "mikro-orm migration:down"
   },
   "dependencies": {
-    "@mentio/core": "*",
     "@mikro-orm/core": "^7.2.5",
     "@mikro-orm/migrations": "^7.2.5",
-    "@mikro-orm/postgresql": "^7.2.5"
+    "@mikro-orm/postgresql": "^7.2.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^7.2.5",
