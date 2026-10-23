@@ -21,6 +21,14 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-23 - CI: don't run `agent-browser install --with-deps` on GitHub runners
+
+On `ubuntu-latest` it apt-installs extra fonts (`fonts-noto-cjk`, 61 MB); the download
+from the Azure mirror stalled and the integration job hung for 10+ minutes until
+cancelled. The runner image already has Google Chrome and its libraries, so CI sets
+`AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome` and skips the install. Steps that
+touch the network get `timeout-minutes`.
+
 ## 2026-10-23 - Integration tests here: no Docker, so use TEST_DATABASE_URL
 
 The sandbox has no Docker, so testcontainers can't start Postgres locally; CI
