@@ -21,6 +21,16 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-25 - `migration:pending` is no connectivity check; exported env beats `.env`
+
+`mikro-orm migration:pending` against an unreachable host exits 0 and lists every
+migration as pending, so a connection failure only surfaces from `migration:up`. Don't use
+it as a probe. Separately, `process.loadEnvFile` (used by `mikro-orm.config.ts`) never
+overrides a variable that is already defined, even an empty one, so an exported
+`DATABASE_URL` from another project silently retargets `db:migrate`. Tools that write to the
+database must print the effective target (`host:port/db`, never credentials) and say where
+it came from. See `scripts/setup.mjs` and `.ai/runs/2026-10-25-setup-installer.md`.
+
 ## 2026-10-23 - CI runner and actions are pinned; bump them deliberately
 
 `runs-on` is `ubuntu-26.04`, not `ubuntu-latest` (which migrated 24.04 → 26.04 from

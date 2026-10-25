@@ -34,7 +34,9 @@ failure and says what to fix:
 2. runs `npm install` (skipped while `node_modules` is newer than `package-lock.json`);
 3. creates `.env` from `.env.example` if it is missing and generates `JWT_SECRET` if it is
    empty — values you already set are never overwritten;
-4. applies pending migrations (skipped when there are none).
+4. applies pending migrations (skipped when there are none), printing which database it
+   used — `host:port/db`, never credentials. A `DATABASE_URL` exported in your shell wins
+   over `.env`, and the output says so; `unset DATABASE_URL` to use `.env`.
 
 It does not install or start PostgreSQL or the dev server.
 
