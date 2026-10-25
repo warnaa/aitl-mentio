@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "dev": "npm run dev -w @mentio/app --",
     "build": "npm run build -w @mentio/app",
     "start": "npm run start -w @mentio/app --",

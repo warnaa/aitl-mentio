@@ -18,7 +18,27 @@ Mentio is a Next.js application organised as an npm-workspaces monorepo.
 
 ## Getting started
 
-Requirements: Node.js ≥ 22.17 (MikroORM 7) and a PostgreSQL server.
+Requirements: Node.js ≥ 22.17 (MikroORM 7) and a running PostgreSQL server with an empty
+database (the default `DATABASE_URL` expects one named `mentio`, e.g. `createdb mentio`).
+
+```bash
+npm run setup                 # install, configure .env, migrate — safe to re-run
+npm run dev                   # http://localhost:3000
+```
+
+`npm run setup` runs the manual steps below and skips every step that is already done, so
+you can run it again after pulling changes or fixing a problem; it stops at the first
+failure and says what to fix:
+
+1. checks the Node.js version;
+2. runs `npm install` (skipped while `node_modules` is newer than `package-lock.json`);
+3. creates `.env` from `.env.example` if it is missing and generates `JWT_SECRET` if it is
+   empty — values you already set are never overwritten;
+4. applies pending migrations (skipped when there are none).
+
+It does not install or start PostgreSQL or the dev server.
+
+### Manual steps (alternative)
 
 ```bash
 npm install
@@ -37,6 +57,7 @@ npm run dev                   # http://localhost:3000
 
 | Script                         | What it does                                          |
 | ------------------------------ | ----------------------------------------------------- |
+| `npm run setup`                | One-command local setup (idempotent): install, `.env`, migrate |
 | `npm run dev`                  | Next.js dev server                                    |
 | `npm run build` / `start`      | Production build / server                             |
 | `npm run lint`                 | ESLint across all packages (incl. layer boundaries)   |
