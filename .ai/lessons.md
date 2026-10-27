@@ -21,6 +21,14 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-27 - The two user roles are "mentor" and "mentee", never "developer"
+
+Mentors are developers too, so "developer" doesn't say which side of a session someone is
+on. In product docs (`.ai/specs/product-brief.md`, `research/decisions/`), specs, tickets and
+UI copy, call the person who pays for help the **mentee** and the senior engineer who
+answers the **mentor** (defined in the brief's Domain glossary). Quotes from research keep
+their original wording.
+
 ## 2026-10-25 - `migration:pending` is no connectivity check; exported env beats `.env`
 
 `mikro-orm migration:pending` against an unreachable host exits 0 and lists every
