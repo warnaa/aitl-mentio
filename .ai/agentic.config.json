@@ -33,5 +33,9 @@
     "qa": ".ai/qa"
   },
   "reviewChecklist": null,
-  "closeKeywords": []
+  "closeKeywords": [],
+  "discovery": {
+    "enabled": true,
+    "roles": { "domainExpert": false, "designer": true }
+  }
 }
