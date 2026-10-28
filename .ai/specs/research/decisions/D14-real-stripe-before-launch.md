@@ -1,0 +1,6 @@
+# D14 — Real Stripe Checkout and Connect must exist before launch, through their own spec
+- Date, owner: 2026-10-28, Damian (founder C, also the maintainer), confirmed in the om-discover refresh
+- Context and the options weighed: with a mock-only gateway (D13), the options were (a) no real money in the first build, with real Stripe moved to Later; (b) build on the mock now, with real Stripe required before mentors are invited to take bookings. Damian chose (b).
+- Decision and why: the first build runs on the mock gateway; before mentors take real paid bookings, real Stripe Checkout (payment) and Stripe Connect (payouts) replace it. That change departs from the standards' mock-only gateway and needs a spec that approves the departure. Asked in the same session, Damian confirmed that invited mentors may publish priced, bookable pages on the mock build before real Stripe exists; only real paid bookings wait.
+- Consequences, and what would make us revisit it: D05's choice of Stripe, R06's payouts through Connect, D11, D12, R13 and R15's card and BLIK take effect with that spec. The terms (D06) are needed before the first real payment, which can only happen after it. The test of A03 (a real paid booking) waits for it; the test of A02 (who publishes a priced page) and the invitation conversations of collection plan 1 can run on the first build.
+- Status: active

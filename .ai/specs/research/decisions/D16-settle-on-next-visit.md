@@ -1,0 +1,6 @@
+# D16 — Time-dependent settlement happens when either side next opens the booking (adopt R09, superseding R07)
+- Date, owner: 2026-10-28, Damian (founder C), confirmed in the om-discover refresh; supersedes D04, R07
+- Context and the options weighed: with no timed jobs (D13), nothing acts at a set time. R07 promised a mentor no-show would be refunded automatically the same day; R10, R12 and R14 also depend on time passing. Options: (a) apply the rules whenever either side next opens the booking or session; (b) the mentee presses "mentor didn't show" and the refund starts at once; (c) both. Origin: the agent's recommendation (a), accepted.
+- Decision and why: R09. Fault-based settlement from D04 is unchanged; only when a time-dependent case is settled changes. The mentee waiting at the slot normally triggers the check.
+- Consequences, and what would make us revisit it: "the same day" is no longer guaranteed for a mentor no-show or an unaccepted booking: if neither side opens the booking, settlement waits. The freelancer asked for a refund "tego samego dnia a nie jakis ticket" (2026-09-02). Revisit if refunds arrive late in practice, or with the spec that brings real Stripe (D14).
+- Status: active
