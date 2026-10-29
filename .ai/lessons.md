@@ -231,3 +231,22 @@ idempotency key; trigger next-visit settlement through a CSRF-protected POST, be
 page/metadata rendering and prefetch are reads rather than proof of an actual visit.
 See B8–B10 in `.ai/specs/2026-10-29-platform-primitives.md`. This is an accepted design
 contract for the future booking specs, not a claim of an implemented payment fix.
+
+## 2026-10-29 - Keep safety invariants shared and concrete future designs with consumers
+
+The accepted platform grilling refinements keep auth/CSRF, read-only rendering,
+atomic durable payment intent, idempotency and crash recovery in B8–B11. The future
+booking/payment specs own exact endpoints, states, storage, port signatures and UI;
+the earlier lesson's settlement POST is an example of a protected mutation, rather
+than a fixed endpoint or mounted-client design. These are future design decisions,
+not implemented behavior. See `.ai/runs/2026-10-29-platform-primitives-grilling.md`.
+
+The same accepted round makes query identity include every effective non-pagination
+parameter, with previous data retained only for retries/shared offset-limit changes;
+busy mutation calls return null so duplicate callers cannot replay callbacks. Money
+uses nonnegative safe integers and integer-only `fromWholePln`; timezone inversion
+uses a maintained dependency with invalid-calendar/gap rejection and earliest overlap
+selection. Valid content saves use last-write-wins while publication locks and dirty
+input preservation remain. URL errors name one-based rows before blank-row filtering,
+and pages handle malformed input explicitly rather than hiding service validation bugs
+behind 404s.

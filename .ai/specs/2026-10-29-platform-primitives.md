@@ -2,6 +2,7 @@
 
 Status: draft (design accepted at the gate 2026-10-29; not implemented)
 Review corrections: accepted by the user 2026-10-29; incorporated below
+Grilling decisions: Q1–Q10 accepted and application confirmed by the user 2026-10-29; incorporated below
 Issue: #8 asked for it (see "Consumers" below); no tracker issue of its own yet
 Design authority: `AGENTS.md`, `.ai/specs/implemented/2026-10-23-engineering-standards.md`, `.ai/specs/product-brief.md`
 Consumers: accounts and sign-in (#24, own spec), `2026-10-29-mentor-pages-and-discovery.md` (E01), then E02–E05 (#18–#23, #25)
@@ -17,7 +18,7 @@ Consumers: accounts and sign-in (#24, own spec), `2026-10-29-mentor-pages-and-di
 - server-rendered public pages,
 - a Polish interface.
 
-**Proposed (future behavior):** this spec defines a catalog of small primitives for those patterns, with their contracts, homes and rules. Each primitive is **built in the PR of its first consumer**, never ahead of it. Phase 1 has existing consumers: PR 1a translates existing screens and exposed errors into Polish, configures Zod's Polish locale and formats admin dates; PR 1b extracts the admin list's query state. Mutation hooks, money and slot formatting, and domain-specific error codes land with E01's actual consumers. Contracts whose consumers are E02–E05 (B8–B11, F6) remain **design guidance** owned by those specs; no generic lifecycle engine is prescribed.
+**Proposed (future behavior):** this spec defines a catalog of small primitives for those patterns, with their contracts, homes and rules. Each primitive is **built in the PR of its first consumer**, never ahead of it. Phase 1 has existing consumers: PR 1a translates existing screens and exposed errors into Polish, configures Zod's Polish locale and formats admin dates; PR 1b extracts the admin list's query state. Mutation hooks, money and slot formatting, and domain-specific error codes land with E01's actual consumers. B8–B11 keep **safety invariants** here; E02–E05 own their concrete endpoints, states, storage and UI. F6 remains design guidance; no generic lifecycle engine is prescribed.
 
 ## 📝 Problem Statement
 
@@ -48,7 +49,7 @@ Without shared primitives, each story would re-solve the same problem in slightl
 
 - Every primitive in the catalog has a **contract** (this spec) and a **first consumer**. Its code, tests and `AGENTS.md` line land in that consumer's PR. A primitive whose first consumer has not started stays text.
 - Phase 1 (PRs 1a and 1b) is the only standalone work, because its consumers already exist: admin, the marketing home page, `users-table`, and the copy in `CrudForm`, `DataTable` and `feedback/`.
-- A contract for a story without a spec (B8–B11, F6) binds nobody yet. It records the intended shape so that E02–E05 start from one design rather than three.
+- B8–B11 record safety invariants for stories without a spec. Their consumer specs must satisfy those invariants and define concrete endpoints, state models, storage and UI. F6 records an intended presentation shape for its future consumer.
 - A consumer spec cites the primitive by its id (`B3`, `F4`, …) and does not redesign it. If the contract does not fit, the consumer amends this spec in the same PR, and the review covers that amendment.
 - **Not proposed:** a base repository or service class, a module loader, RBAC, multi-tenancy, a queue or scheduled jobs (D13), Server Actions, or a generic event bus. No backlog story needs an in-process event consumer. `core/src/events` stays planned in `AGENTS.md`, to be added when a real consumer appears.
 
@@ -97,12 +98,12 @@ flowchart LR
     n3 --> n8["B5–B7 persistence helpers"]:::newp
     n3 --> n9["B1–B4 lib + rules (client-safe)"]:::newp
     n10["CrudForm schemas (client)"]:::existing --> n9
-    n3 --> n11["B8–B10 booking transitions, settlement POST, idempotent port"]:::planned
+    n3 --> n11["B8–B11 transaction, authorization and payment safety invariants"]:::planned
     n12["F1 Polish copy + Zod pl locale"]:::newp --> n1
     n12 --> n4
 ```
 
-Takeaway: pages read through `loadPage`; every mutation, including next-visit settlement, goes through `apiCall` and `apiHandler`. GET handlers, loaders and metadata generation only read. Both paths end in the same services without reversing package dependencies.
+Pages read through `loadPage`; every mutation, including next-visit settlement, goes through `apiCall` and `apiHandler` with session, record-scope and CSRF checks. GET handlers, loaders and metadata generation only read. Both paths end in the same services without reversing package dependencies; the booking consumer spec defines its mutation endpoint and trigger.
 
 ## 📝 Backend primitive contracts
 
@@ -112,25 +113,27 @@ Every primitive has 100% unit coverage in its first consumer's PR. "Rule" lines 
 
 ```ts
 export type Currency = "PLN";
-export interface Money { readonly grosze: number; readonly currency: Currency } // integer minor units
+export interface Money { readonly grosze: number; readonly currency: Currency } // nonnegative safe-integer minor units
 export interface MoneyDto { amountGrosze: number; currency: Currency }
-export function pln(zloty: number): Money;                 // throws on non-finite or more than 2 decimals
-export function fromGrosze(grosze: number): Money;         // throws on a non-integer
-export function multiply(m: Money, factor: number): Money; // integer factor only (50 min = rate × 2, R08)
-export function percentOf(m: Money, basisPoints: number): Money; // built with #23; rounds half up (R06)
-export function subtract(a: Money, b: Money): Money;             // built with #23's earnings split
+export function fromWholePln(zloty: number): Money;        // nonnegative safe integer; checked × 100
+export function fromGrosze(grosze: number): Money;         // nonnegative safe integer
+export function multiply(m: Money, factor: number): Money; // nonnegative safe-integer factor; checked result (R08)
+export function percentOf(m: Money, basisPoints: number): Money; // #23; integer 0..10000; rounds half up (R06)
+export function subtract(a: Money, b: Money): Money;       // #23; refuses b > a
 export function compare(a: Money, b: Money): -1 | 0 | 1;
 export function toDto(m: Money): MoneyDto;
 ```
 
-Rules: money columns are `p.integer()` named `<name>_grosze`; never float or decimal. A price that is charged is always derived from stored values (`multiply(rate, lengthMinutes / 25)`), never parsed from a request. Build the rate/price operations with #15; `percentOf` and `subtract` wait for #23, where the commission and remaining share must add up to the price. Display conversion stays inside F7's formatter; no unused core display helper is added.
+Rules: every money input, DTO amount and arithmetic result is a nonnegative safe integer (`Number.isSafeInteger`); reject negatives, fractions, non-finite values and overflow with a plain `Error`. Refund direction belongs to the operation, so refunds carry positive amounts. `fromWholePln` accepts whole złoty only; fractional amounts enter through `fromGrosze` and remain supported in commission arithmetic and F7 display. `percentOf` accepts only integer basis points in `0..10000` and uses exact integer arithmetic for rounding, avoiding an unsafe intermediate product even when the final share fits. `subtract` rejects a negative result. Boundary tests cover zero, the safe-integer limit, factory/multiplication overflow, and invalid inputs; #23 adds basis-point bounds and half-up rounding tests.
+
+Money columns are `p.integer()` named `<name>_grosze`; never float or decimal. Services also enforce the column's representable range before persistence; B1's safe-integer range does not widen PostgreSQL `integer`. A price that is charged is always derived from stored values (`multiply(rate, lengthMinutes / 25)`), never parsed from a request. Build the rate/price operations with #15; `percentOf` and `subtract` wait for #23, where the commission and remaining share must add up to the price. Display conversion stays inside F7's formatter; no unused core display helper is added.
 
 ### B2 — Business rules (`core/src/rules/<concept>.ts`) · first consumer E01 #15, #16
 
 ```ts
 // rules/mentors.ts
 /** R08 — one rate per 25 minutes, 90–600 PLN. Change only with a superseding brief row. */
-export const RATE_PER_25_MIN = { min: pln(90), max: pln(600) } as const;
+export const RATE_PER_25_MIN = { min: fromWholePln(90), max: fromWholePln(600) } as const;
 export const SESSION_LENGTHS_MINUTES = [25, 50] as const;           // R01
 // rules/availability.ts
 export const BOOKABLE_LEAD = { minMinutes: 120, maxDays: 14 } as const; // R11
@@ -162,7 +165,7 @@ export function instantToWallTime(instant: Date): string;
 
 The matching `wallTimeSchema` lives in `core/src/validators/zoned-time.schema.ts` and uses the shared `z` (F1). It validates the exact `YYYY-MM-DDTHH:mm` shape and uses `wallTimeToInstant` to reject invalid/nonexistent times, but **retains the string as its parsed output**. `CrudForm` submits parsed output and `apiCall` JSON-serializes it, so a shared transport schema must not turn it into a `Date`. The service converts the validated string with B4 and translates any conversion failure into a Polish `ValidationError`. A form → JSON → route-schema test proves both sides accept the same value.
 
-This is built on `Intl.DateTimeFormat` offset lookup for the fixed `APP_TIME_ZONE`, with no new dependency or arbitrary-zone parameter. A time inside the spring-forward gap is `nonexistent` and refused. A time in the autumn fall-back hour resolves to its **first** occurrence. Storage is always UTC `timestamptz`, and display goes through F7. Tests cover the last Sundays of March and October.
+Use one maintained timezone-library dependency for conversion and validation in both browser and server, behind this wrapper and the fixed `APP_TIME_ZONE`. Select it in #16 based on Node 24 and Next's supported browser compatibility, client-safe imports and explicit calendar/DST behavior; no custom inverse-offset algorithm or arbitrary-zone parameter is added. The wrapper rejects invalid calendar dates and spring-forward gaps rather than allowing normalization. A time in the autumn fall-back hour resolves to its **first** occurrence. A library's “earlier” option alone is insufficient if it also shifts gap times; validate that the resulting instant maps back to the exact input. Storage is always UTC `timestamptz`, and display goes through F7. Tests cover invalid dates, the last Sundays of March and October, `2026-03-29T02:30` rejection and the first occurrence of `2026-10-25T02:30`, plus the shared-schema JSON round trip.
 
 ### B5 — Owner-scoped lookups (`core/src/persistence/find.ts`) · first consumer E01 #14, #16
 
@@ -200,43 +203,41 @@ Rules:
 - A check-then-write runs inside `em.transactional`, either locked on the owning parent row or backed by a unique constraint, and preferably both. The lock's `failHandler` is chosen per call site: a missing parent can mean `404` or a specific `409`.
 - `mapConflicts` wraps the **whole** `em.transactional(…)` call, never a statement inside it. After a violation, Postgres aborts the transaction, so the mapping must run after the rollback.
 - A singleton "my X" row created on first write uses `em.upsert(Entity, data, { onConflictFields: ["owner"], onConflictMergeFields: [...] })`. The explicit merge fields include only that operation's writable content and its update timestamp, never lifecycle state, owner, rate or listing fields. Insert defaults do not reset an existing row. When validation depends on existing state, re-read/refresh the resulting row while holding its transaction lock, validate the complete candidate and roll back a refusal. Publish and content edits use the same row lock.
+- E01 content edits use **last-write-wins**: among valid concurrent saves, the last write applied by the database supplies the saved content. No revision token or edit-history mechanism is added. Publication validation still runs under the shared transaction lock, and F4 preserves dirty local input when refreshed server values arrive.
 - A violation maps to a `ConflictError` with a specific `code` (`slug_taken`, `slot_too_close`). The client branches on the code, never on the message. An unmapped constraint is rethrown and becomes a logged 500.
 
-### B8 — Concrete booking transitions · first consumer #18; design guidance
+### B8 — Booking transition safety · first consumer #18; future consumer owns the design
 
-The booking spec defines its own statuses, events, transition-specific inputs and pure predicates in `rules/bookings.ts`; persistence stays with `services/bookings/`. Start with named booking operations and conditional updates, not a generic `Machine`, entity-independent patch helper or shared lifecycle runtime.
+The booking spec defines its own statuses, events, transition-specific inputs, rules and persistence. Start with concrete booking operations; extract shared machinery only after another implemented consumer needs the same contract.
 
 Rules:
 - A transition checks the participant scope, allowed prior status and relevant business conditions in one transaction. Conditional writes or a row lock select one winner; a retry must identify the same recorded business operation, not infer success merely because another event reached the same destination status.
-- Only the winner **creates** its durable pending payment operation or earnings row. A deterministic operation key has a unique constraint, and its payload comes from stored booking values.
+- Only the winner **creates** its durable payment intent or earnings row, atomically with the transition. A deterministic operation key has a unique constraint, and its immutable payload comes from stored booking values.
 - Native updates set `updated_at` explicitly and refresh the entity before projecting a DTO; they bypass `baseProperties`' `onUpdate` and leave identity-map copies stale.
 - Persistence patches are concrete server-built shapes for each booking operation, never request data or `Partial<Entity>`.
-- **Executing or retrying an already pending payment operation does not require another winning transition.** B9/B10 govern that separate step.
+- **Executing or retrying an unconfirmed payment intent does not require another winning transition.** B9/B10 govern that separate step.
 
-### B9 — Settlement on an actual visit, through POST · first consumer #19 (R12), then #22 (R10); design guidance
+### B9 — Next-visit settlement safety · first consumer #19 (R12), then #22 (R10); future consumer owns the design
 
-GET routes, page loaders and `generateMetadata` only read. When a participant's booking/session screen mounts, an app-side client component calls `POST /api/bookings/<id>/settle` through `apiCall`/F3. The route uses `apiHandler`'s CSRF check, `requireSession`, and a participant-scoped lookup before any write. The id is validated; the client supplies no event, status, amount or participant fields. This explicit request implements D16 without a timer and prevents link prefetch, metadata loads and speculative server renders from settling a booking.
+GET routes, page loaders, prefetch, speculative renders and `generateMetadata` only read. Settlement uses an explicit CSRF-protected mutation through `apiCall` and `apiHandler`, requiring a valid session and participant scope before any write. The service derives events, amounts and ownership from stored data and the injected clock. This preserves D16 without timers; the consumer spec owns the endpoint, actual-visit trigger and retry UI.
 
-The booking service evaluates its pure `dueEvent(record, clock.now())` inside the authorized transaction, applies B8 and records any pending payment operation in that same transaction. After commit it also processes **existing pending operations**, even if no new event was due or another request won the transition. Calls use the immutable stored payload and B10's key. There is no generic `settleIfDue` persistence framework, queue or dispatcher.
+Due-state checks, the winning transition and creation of durable payment intent happen in one authorized transaction (B8). External money calls happen after commit and use the immutable stored payload with B10's key. Recovery must process **existing unconfirmed intent**, even if no new transition is due or another request won it.
 
-Operation recovery:
-- `pending` means the money operation is owed but not confirmed. A transient/ambiguous port failure leaves it pending; the next authorized settlement POST or explicit retry uses the same key.
-- `succeeded` is recorded after the port confirms success; future calls skip it. A crash after commit but before the call is recovered from `pending`. A crash after provider success but before recording success repeats the same key and records the original result.
-- A definitive non-retryable failure becomes `failed`, with a safe Polish status and a recorded reason code. Its correction belongs to the consumer payment spec; do not silently retry or mark it succeeded. Never expose provider exceptions or credentials.
-- Concurrent calls may both attempt a pending operation; the provider's idempotency guarantee and conditional recording of its result prevent duplicate money movement.
+Required recovery behavior:
+- A crash after intent commit but before the call can resume that intent with its original payload/key.
+- A crash after provider success but before local confirmation repeats the same key, recovers the original result and records confirmation.
+- Concurrent attempts and repeated visits cannot move money twice.
+- Transient/ambiguous failures remain recoverable; unconfirmed or failed money movement is never reported as completed. Provider exceptions and credentials stay out of responses.
 
-The POST returns the current participant DTO including the operation status: pending is displayed as pending, not as a completed refund. The screen refreshes after settlement; retryable errors offer an explicit retry. Each mount/retry may repeat the POST safely. Booking settlement requires client JavaScript; the public mentor/share pages remain server-rendered without it. The consumer spec defines the concrete storage and acceptance criteria, including crash recovery, concurrency, denied access, missing CSRF and prefetch/metadata reads that perform no writes.
+The booking/payment consumer specs define concrete operation states, storage, failure classification, DTOs and UI, with acceptance tests for both crash points, concurrent retries, denied access, missing CSRF and rendering paths that perform no writes. This spec adds no settlement framework, queue or dispatcher.
 
-### B10 — Idempotent port calls (`core/src/services/payments/payment-gateway.port.ts`) · first consumer #25
+### B10 — Idempotent money-call safety · first consumer #25; future consumer owns the port and storage
 
-Every port method that moves money takes `idempotencyKey: string`, derived deterministically from the business event (`booking:<id>:charge`, `booking:<id>:refund`). Repeating a key with the same immutable operation payload returns the original confirmed result; reusing it with a different amount, currency or operation is an error. The mock adapter persists successful operations/results with a unique key so this guarantee survives restarts and concurrent calls. A transient failure must not be persisted as a completed money movement. Details belong to #25; this spec fixes the recovery contract B9 relies on, while the booking spec owns durable pending intent.
+Every port operation that moves money carries a deterministic idempotency key identifying the recorded business operation. Repeating a key with the same immutable payload returns the original confirmed result; reusing it with a different amount, currency or operation is an error. The mock and future provider adapters must preserve this guarantee across restarts and concurrent calls. A transient failure must not be recorded as completed money movement. #25 defines the port, key format, storage and adapter details; B8/B9 define the intent and recovery invariants its consumers rely on.
 
-### B11 — `assertParticipant` (`core/src/http/auth.ts`) · first consumer #19
+### B11 — Participant access safety · first consumer #19; future consumer owns the helper
 
-```ts
-export function assertParticipant(session: Session, parties: { mentorId: string; menteeId: string }): "mentor" | "mentee";
-// not a participant → NotFoundError (404, per B5's policy)
-```
+Require a valid session and restrict record reads/mutations to its mentor or mentee. Prefer participant scope in the database lookup; a non-participant receives `NotFoundError` (404), indistinguishable from a missing record, before any state or payment write. The booking spec defines any reusable helper's signature and placement from its actual callers.
 
 ### B12 — Error codes as the client contract (`core/src/http/errors.ts`) · first consumer E01 #14 (`slug_taken`)
 
@@ -276,7 +277,8 @@ export async function loadPage<T>(access: PageAccess, load: (cradle: Cradle, ctx
   - contains no `\` and no control or whitespace characters,
   - and, resolved with `new URL(value, "http://mentio.invalid")`, keeps that origin.
   It is checked where `returnTo` is produced **and again where it is consumed** (the sign-in redirect in #24). Anything else falls back to the persona's home.
-- Inside `load`, `NotFoundError`, `ForbiddenError` and `ValidationError` become `notFound()`; anything else is rethrown to the segment's Polish `error.tsx`.
+- Inside `load`, only `NotFoundError` and `ForbiddenError` become `notFound()`. Unexpected errors, including `ValidationError` from a service, are logged through the server logger and rethrown to the segment's Polish `error.tsx`.
+- Each page parses its route/search parameters explicitly and handles expected invalid input before the service call: an invalid mentor slug gives `notFound()`; malformed list pagination uses the existing page-1 fallback. The shared loader does not turn every validation failure into a 404.
 - `forbidden()` and `unauthorized()` are not used: they are experimental in Next 16.4 (`authInterrupts`).
 - The guard runs **in each page's loader**, never only in a layout. Next 16's auth guide warns that layouts do not re-run on client navigation. Layouts may read the session for the shell (the name in the nav), never to authorize.
 - Pages wrap their loader in React `cache()` so `generateMetadata` and the page share one load. Each page still declares `export const dynamic = "force-dynamic"`.
@@ -287,24 +289,26 @@ export async function loadPage<T>(access: PageAccess, load: (cradle: Cradle, ctx
 export function useApiQuery<T>(path: ApiPath, options?: { query?: ApiCallOptions["query"]; enabled?: boolean }):
   { data: T | undefined; error: ApiErrorBody | null; status: number | null; isLoading: boolean; retry(): void };
 export function useApiMutation<TInput, TData>(call: (input: TInput) => Promise<ApiResult<TData>>):
-  { run(input: TInput): Promise<ApiResult<TData>>; isPending: boolean; error: ApiErrorBody | null; reset(): void };
+  { run(input: TInput): Promise<ApiResult<TData> | null>; isPending: boolean; error: ApiErrorBody | null; reset(): void };
 ```
 
-`useApiQuery` ignores stale responses (the last request wins), keeps previous data while reloading (`isLoading` alongside `data`), and never throws. Phase 1b rewrites the read-only `admin/users/users-table.tsx` on this hook only. `useApiMutation` is built with E01 #14's `ActionButton`, its first actual consumer. It never throws; a duplicate `run` while pending reuses the in-flight promise and does not start another request. The button also guards entry so its success/failure callbacks run once per accepted action. After a mutation, a server-rendered screen calls `router.refresh()` in the app-side `onSuccess`; `ui` never imports `next/navigation`.
+`useApiQuery` ignores stale responses (the last request wins) and never throws. Resource identity is the API path plus every effective query parameter except the shared pagination keys `offset` and `limit`. Canonicalize query options using `apiCall`'s serialization semantics: omit `undefined`, apply `String(value)` and serialize with `URLSearchParams` in stable key order. Object identity, insertion order and equivalent serialized values do not cause a new resource identity. Only a retry or an `offset`/`limit` change for the same resource retains prior data while loading (`isLoading` alongside `data`). Path or any other effective query-parameter change clears prior data, error and status before loading. Disabling (`enabled: false`) clears them too and invalidates in-flight responses; a late response cannot repopulate a disabled query. There is no cache of previously visited resources. Phase 1b rewrites the read-only `admin/users/users-table.tsx` on this hook only.
+
+`useApiMutation` is built with E01 #14's `ActionButton`, its first actual consumer. It never throws. Any `run` while busy, even in the same event tick or with different input, returns `null` without calling `call`, changing the accepted action's state or triggering callbacks. Busy state is guarded synchronously; `reset()` clears a displayed error without releasing an active request. Callers ignore `null`; success/failure callbacks run only for the accepted call's `ApiResult`, once. After an accepted mutation succeeds, a server-rendered screen calls `router.refresh()` in the app-side `onSuccess`; `ui` never imports `next/navigation`.
 
 ### F4 — `CrudForm` field kinds (`ui/src/backend/forms/`) · first consumer E01 #14–#17
 
 - Form values widen from `string` to `string | boolean | string[]`. Existing text fields behave exactly as today, and existing tests stay green unchanged.
 - `initialValues` accepts those same shapes plus the existing number/null values. Shared schemas output JSON-compatible transport values: numeric coercion is allowed, but date conversion happens in the server service. Initialization, client validation, JSON serialization and route validation get a round-trip test for each new shape.
 - **New kinds, each built with the story that first uses it:**
-  - `urlList` (#14): repeatable URL rows with add/remove, `max`; empty rows dropped; sends `string[]`. The mentor API, DTOs and JSONB field use the same array; there are no optional link-label objects.
+  - `urlList` (#14): repeatable URL rows with add/remove, `max`; passes displayed rows to the shared schema, which validates nonempty entries before dropping empty rows from successful output; sends `string[]`. The mentor API, DTOs and JSONB field use the same array; there are no optional link-label objects.
   - `money` (#15): an integer złoty input with a `zł` suffix and `inputMode="numeric"`; the schema converts the value.
   - `datetime` (#16): native `datetime-local` with `step=900`; B4's schema validates and retains `"YYYY-MM-DDTHH:mm"` wall time; the service converts it to an instant. The label says "czasu polskiego".
   - `checkbox` (#17): a boolean.
 - `select` (`options: { value, label }[]`) is listed for #18 (25 or 50 minutes) and is built there.
 - No generic `render` escape hatch: a control that fits no kind is a new kind or a bespoke form with a stated reason.
-- Field errors stay keyed by top-level field. Errors for a `urlList` show under the whole list, a known limitation.
-- With #14, add `externalFieldErrors?: FieldErrors` and `onDirtyChange?(dirty: boolean)` for its publish action. External errors appear through the same accessible field rendering; current local validation errors take precedence for a field. Dirty state compares current normalized values with the last successful save. The editor clears external errors on an edit or a successful save/action; after success, the form's saved baseline and refreshed initial values agree. Publishing validates saved content, and the editor disables publish until dirty changes are saved. This is a small extension of the existing form, not a second form implementation.
+- Field errors stay keyed by top-level field. Invalid `urlList` entries appear under the list with one-based row numbers in Polish message text, e.g. `publicWorkLinks: ["Link 3: wpisz poprawny adres."]`. Validation numbers the displayed rows before dropping empty rows, so an earlier blank row does not shift an invalid link's number. The client and API schema keep the existing envelope; no nested-error framework is added. List-wide bounds and publication requirements remain list-wide messages.
+- With #14, add `externalFieldErrors?: FieldErrors` and `onDirtyChange?(dirty: boolean)` for its publish action. External errors appear through the same accessible field rendering; current local validation errors take precedence for a field. Dirty state compares current normalized values with the last successful save. The editor clears external errors on an edit or a successful save/action; after success, the form's saved baseline and refreshed initial values agree. A refresh preserves dirty local input; clean forms can adopt refreshed values. Valid concurrent server saves use B7's last-write-wins, without revision tokens or history. Publishing validates saved content, and the editor disables publish until dirty changes are saved. This is a small extension of the existing form, not a second form implementation.
 - shadcn primitives (`checkbox`, later `select`) are added via `npx shadcn@latest add` in the PR that needs them.
 
 ### F5 — `ActionButton` (`ui/src/backend/actions/`) · first consumer E01 #14 (publish/unpublish), #16 (remove slot)
@@ -313,7 +317,7 @@ export function useApiMutation<TInput, TData>(call: (input: TInput) => Promise<A
 <ActionButton label run={() => apiCall(...)} confirm?={{ title, description, confirmLabel }} onSuccess? onError? disabled? variant? />
 ```
 
-`ActionButton` builds and runs F3's `useApiMutation`, optionally confirms first in a shadcn `alert-dialog`, guards against duplicate invocation, respects `disabled`, and shows a failure inline with `role="alert"`. `onError?(error: ApiErrorBody)` lets the mentor editor pass publish `fieldErrors` into F4; it runs once per accepted failed action. Later consumers are accept/decline (#19) and cancel (#20).
+`ActionButton` builds and runs F3's `useApiMutation`, optionally confirms first in a shadcn `alert-dialog`, guards against duplicate invocation, respects `disabled`, and shows a failure inline with `role="alert"`. A `null` result triggers neither `onSuccess` nor `onError`. `onError?(error: ApiErrorBody)` lets the mentor editor pass publish `fieldErrors` into F4; it runs once per accepted failed action. Later consumers are accept/decline (#19) and cancel (#20).
 
 ### F6 — `StatusBadge` (`ui/src/backend/feedback/`) · first consumer #18
 
@@ -338,17 +342,20 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 ## 📝 Edge Cases & Failure Scenarios
 
 - **Server/client time-zone mismatch:** F7 always passes `pl-PL` and `Europe/Warsaw` explicitly, so a server in UTC and a browser in any zone print the same time. Unit tests format fixed UTC instants in summer and in winter, and assert the Warsaw wall time.
-- **DST:** a nonexistent wall time is a field error ("Ta godzina nie istnieje w dniu zmiany czasu"). An ambiguous one resolves to its first occurrence, and the stored UTC instant is what gets displayed back, so the mentor sees the exact time saved.
-- **Stale responses:** `useApiQuery` discards a response that is not for the latest request (this is how `users-table` works today; F3 keeps it).
-- **Double submit:** `CrudForm` and `useApiMutation` both ignore a second submit while one is pending. Idempotency on money paths (B10) protects anything that slips past.
+- **DST:** B4's maintained library wrapper rejects invalid dates and nonexistent wall times ("Ta godzina nie istnieje w dniu zmiany czasu"). An ambiguous one resolves to its first occurrence, and the stored UTC instant is what gets displayed back, so the mentor sees the exact time saved.
+- **Stale responses and resource changes:** `useApiQuery` discards responses from superseded requests or after disabling. Retain data only for retries or shared `offset`/`limit` changes; switching path, search, sort, filters or any other effective parameter clears it. Equivalent canonical queries do not reload.
+- **Double submit:** `CrudForm` ignores a second submit while pending; a busy `useApiMutation.run` returns `null` and consumers invoke no callbacks for it. Idempotency on money paths (B10) protects anything that slips past.
+- **Invalid money:** reject negative/fractional/unsafe amounts, factory or multiplication overflow and, with #23, out-of-range/fractional basis points or subtraction below zero. Refunds use positive money with a refund operation.
 - **Form transport drift:** shared schema output survives JSON serialization and passes the same route schema. Datetime remains wall time on the wire; URL lists remain string arrays.
-- **Publish action errors:** an incomplete saved draft puts the server's errors under the relevant editor fields. Dirty content must be saved first; a rejected published-page edit leaves the prior public page intact.
+- **URL row errors:** invalid links name their one-based row in the existing top-level field messages, including when blank rows precede them; multiple invalid rows each get a message.
+- **Publish action errors and concurrent saves:** an incomplete saved draft puts the server's errors under the relevant editor fields. Dirty content must be saved first; a rejected published-page edit leaves the prior public page intact. Valid saves use last-write-wins; refreshing preserves dirty local input.
 - **Unique violation with an unmapped constraint:** it is rethrown and becomes a logged 500. It must never be silently mapped to a generic conflict, because that would hide a real bug.
 - **A booking transition on a deleted or inaccessible record:** the participant-scoped lookup returns `NotFoundError` before any transition or pending operation is created.
-- **Payment crash/retry:** existing pending intent is processed without another transition; repeated keys recover provider success after a crash. Pending/failed states are never presented as completed refunds.
-- **Prefetch or metadata rendering:** GET/loaders only read, so no settlement or payment call occurs. Settlement starts only through the authorized POST on a participant's actual visit/retry.
+- **Payment crash/retry:** existing unconfirmed intent is processed without another transition; repeated keys recover provider success after a crash. Unconfirmed/failed operations are never presented as completed refunds; consumer specs define concrete states.
+- **Prefetch or metadata rendering:** GET/loaders only read, so no settlement or payment call occurs. Settlement starts through an authorized CSRF-protected mutation whose endpoint and trigger are defined by the booking spec.
 - **Bad or expired session cookie on a page:** `getPageSession` returns `null`, and a guarded page redirects to sign-in. A `ConfigError` (missing `JWT_SECRET`) is rethrown, giving a 500 page and never treating the user as signed out.
-- **Database down:** `loadPage` rethrows to `error.tsx` (Polish, no details), and the app still builds and boots (`force-dynamic`).
+- **Bad page input versus a service bug:** a page rejects a malformed slug with 404 or falls back to page 1 for malformed pagination. An unexpected service `ValidationError` is logged and rethrown to `error.tsx`, preserving visibility of the failure.
+- **Database down:** `loadPage` logs and rethrows to `error.tsx` (Polish, no details), and the app still builds and boots (`force-dynamic`).
 
 ## 📝 Risks & Impact Review
 
@@ -357,20 +364,23 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 - **The `CrudForm` value refactor** (E01) touches a shared component. Its tests as they stand after Phase 1a must pass unchanged; that is the proof of backwards compatibility. New kinds get their own tests.
 - **The new ESLint boundary** might flag existing imports. Today only `validators/` exists in that set, and it imports only `zod` and siblings.
 - **Product calls vs rule violations:** the 404-for-others policy (B5) refines, but does not break, the `AGENTS.md` security baseline ("check ownership of the specific record"). It is recorded as an `AGENTS.md` edit in E01's PR.
-- **Next-visit settlement:** replacing loader writes with a mounted-client POST adds a request and requires JavaScript on booking screens. The consumer UI displays pending settlement until the response arrives, and handles retries explicitly. Public link rendering is unaffected.
+- **Timezone dependency:** #16 selects one maintained library compatible with browser and server, and verifies rejection of normalization/gaps plus overlap selection. This keeps inverse conversion out of custom time arithmetic; F7's forward display formatting stays on `Intl`.
+- **Concurrent valid edits:** last-write-wins can overwrite a save from another tab. This tradeoff is accepted for E01; transaction locks protect publication completeness and refresh preserves dirty local input. Revision tokens/history wait for a demonstrated need.
+- **Next-visit settlement:** the future booking spec must make D16's authorized mutation trigger and recovery concrete while keeping GET/rendering read-only. Its UI must represent unconfirmed money movement accurately; endpoint, states and interaction details belong there.
 
 ## 📝 Decisions in play
 
 - R15 (Polish only): F1 is how every screen meets it, without an i18n library. D10 (PLN, Polish market): B1, B4, F7. D13 (no timed jobs) and D16 (settle on the next visit): B8 and B9. D14 (real Stripe later): B10's key contract carries over to the Stripe adapter unchanged.
 - Gate answers recorded here: Q1 = b (separate specs), Q3 = a (build with the first consumer), Q4 = a (server-rendered public pages), Q5 = a (shadcn persona screens), Q6 = c (Polish literals in the code; switched from b on 2026-10-29).
+- Separate grilling round, Q1–Q10 (accepted 2026-10-29): B8–B11 safety invariants with concrete designs owned by consumers; nonnegative safe-integer money and bounded basis points; busy mutations return `null`; explicit page-input handling; last-write-wins valid edits; maintained timezone conversion; query clearing on path/disable; one-based URL row messages; resource identity includes every effective non-pagination parameter, with retention only for retries/`offset`/`limit`; integer-only `fromWholePln`.
 
 ## 📝 `AGENTS.md` changes (each lands with the phase that builds the primitive)
 
 - **1a:** Polish copy and all exposed fallback errors (F1), schemas import `z` from `validators/z.ts` with its exact lint exception, `@mentio/ui/lib/format` as the only formatter (F7; `formatDay` first), and composed client-safe ESLint restrictions.
-- **1b:** `useApiQuery` as shared client query-state code.
+- **1b:** `useApiQuery` as shared client query-state code, with F3's canonical resource identity, data-retention limits and disabled-response protection.
 - **2, with #24:** "pages read through `loadPage`; auth is checked in the loader, never only in a layout", and `isSafeReturnTo`. This sanctions server components calling services through `loadPage`, which changes today's client-fetch-only reference.
-- **3, with E01:** B5–B7/B12, F3's mutation hook, F4/F5 action errors and `PanelShell` with #14; B1/B2 and money formatting with #15; B2–B4/B13 and slot formatting with #16; the `app/src/components/<concept>/` placement rule when its second consumer appears. Shared-schema output stays JSON-compatible, and publication requirements hold after every published-content write.
-- **Phase 4:** each E02–E05 spec adds the B8–B11/F6 rules it adopts.
+- **3, with E01:** B5–B7/B12, F3's mutation hook, F4/F5 action errors and `PanelShell` with #14; B1/B2 and money formatting with #15; B2–B4/B13 and slot formatting with #16; the `app/src/components/<concept>/` placement rule when its second consumer appears. Shared-schema output stays JSON-compatible; publication requirements hold after every published-content write; valid saves use last-write-wins and refresh preserves dirty input.
+- **Phase 4:** each E02–E05 spec defines concrete B8–B11 contracts satisfying the safety invariants and adds the rules for those implementations; F6 lands with its consumer.
 
 ## 📋 Phasing
 
@@ -380,7 +390,7 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 | 1b | its own PR (now; independent of 1a) | F3 `useApiQuery` only | read-only `admin/users/users-table.tsx` |
 | 2 | the accounts (#24) PR | F2 (`verifySessionToken`, `getPageSession`, `loadPage`, `isSafeReturnTo`), Polish `not-found.tsx`/`error.tsx` | sign-in pages and the first guarded page |
 | 3 | E01 PRs (see the E01 spec) | B1–B7, B12/B13, F3 `useApiMutation`, F4/F5, F7 money/slot formatting, F8 `PanelShell` | each primitive's actual page/rate/slot/list consumer |
-| 4 | E02–E05 PRs: **design guidance**, adopted or amended by each consumer spec | B8, B9, B10, B11, F4 `select`, F6, `percentOf`/`subtract` | #18, #19, #20, #22, #23, #25 |
+| 4 | E02–E05 PRs: consumers define concrete designs satisfying B8–B11 safety invariants | B8, B9, B10, B11, F4 `select`, F6, `percentOf`/`subtract` | #18, #19, #20, #22, #23, #25 |
 
 ## 📋 Implementation Plan
 
@@ -398,30 +408,32 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 
 ### Phase 1b — query-state hook (standalone PR)
 
-1. **`useApiQuery`.** Add it to `ui/backend/api` and rewrite `admin/users/users-table.tsx`. Tests: stale-response discard, retry, retained data while loading; existing users-table tests pass. Add the `AGENTS.md` line. `useApiMutation` is built with #14, not in this read-only refactor.
+1. **`useApiQuery`.** Add it to `ui/backend/api` and rewrite `admin/users/users-table.tsx`. Tests: stale-response discard; retention during retry and `offset`/`limit` changes only; clearing on path/search/sort/filter changes and disabling; disabled queries ignore late responses; re-enabling loads fresh data; key order, omitted `undefined` and equivalent `String(value)` values preserve identity without redundant requests. Existing users-table tests pass. Add the `AGENTS.md` line. `useApiMutation` is built with #14, not in this read-only refactor.
 
 ### Phase 2 — page loading (in the accounts PR)
 
 1. `verifySessionToken` split out of `requireSession` (existing auth tests unchanged), then `getPageSession`.
 2. `isSafeReturnTo`, with tests for `//x`, `/\x`, `%2F%2Fx`, control characters and absolute URLs.
-3. `loadPage` with its access modes and error mapping; Polish `not-found.tsx` and `error.tsx`. Unit tests cover every mapping branch, including the `ConfigError` rethrow.
+3. `loadPage` with its access modes and error mapping; Polish `not-found.tsx` and `error.tsx`. Unit tests cover not-found/forbidden mapping plus logging/rethrow of unexpected `ValidationError`, `ConfigError` and other failures. Each consuming page tests its explicit malformed-parameter behavior; E01 tests bad slug → 404 and bad pagination → page 1.
 
 ### Phase 3 — in E01 PRs (steps listed in the E01 spec; each primitive's tests land with it)
 
-- With #14: B5, B6, B7, B12, F3 `useApiMutation`, F4 `urlList`/external errors/dirty state, F5, `PanelShell`.
-- With #15: B1, B2 (mentors), F4 `money`, F7 `formatMoney`.
-- With #16: B3, B4, B2 (availability), B13, F4 `datetime`, F7 `formatSlotTime`.
+- With #14: B5, B6, B7, B12, F3 `useApiMutation`, F4 `urlList`/external errors/dirty state, F5, `PanelShell`. Tests prove busy calls return `null` without extra requests/callbacks, URL errors name rows, and valid last-write-wins saves preserve publication completeness and dirty input on refresh.
+- With #15: B1, B2 (mentors), F4 `money`, F7 `formatMoney`. Tests cover `fromWholePln` integer-only inputs, `fromGrosze` fractional-zł amounts, safe-integer bounds and arithmetic overflow.
+- With #16: B3, B4, B2 (availability), B13, F4 `datetime`, F7 `formatSlotTime`. Select the maintained timezone dependency and test invalid-calendar/gap rejection, earliest overlap selection and browser/server transport parity.
 - With #17: F4 `checkbox`.
 
 ### Phase 4 — in E02–E05 PRs
 
-B10 with #25; B8, F4 `select` and F6 with #18; B9 and B11 with #19; `percentOf`/`subtract` with #23. Each consumer spec cites the ids and records any amendment here. B8/B9 adoption must include concrete booking operations, CSRF-protected next-visit settlement, durable pending intent, recovery without another transition, and tests proving GET/prefetch/metadata paths do not write.
+B10 with #25; B8, F4 `select` and F6 with #18; B9 and B11 with #19; `percentOf`/`subtract` with #23. Each consumer spec cites the ids, defines its endpoints, states, storage and UI, and records any invariant amendment here. Tests prove transactional one-winner intent creation, authenticated participant scope, CSRF-protected settlement, both crash-recovery points without another transition, idempotency across concurrent calls/restarts, and GET/prefetch/metadata paths that do not write. #23 tests integer basis points in `0..10000`, exact half-up rounding without unsafe intermediates, nonnegative subtraction and split conservation.
 
 ## ✅ Done means
 
 - [ ] Phase 1a merged: existing screens and exposed HTTP/client errors are Polish (`lang="pl"`); schemas use the shared `z` with an exact wrapper exemption; admin dates use `formatDay`; effective lint restrictions preserve all existing package boundaries.
-- [ ] Phase 1b merged: `users-table` uses `useApiQuery`, without an unused mutation hook.
+- [ ] Phase 1b merged: `users-table` uses `useApiQuery`; canonical resource identity includes all effective non-pagination query parameters; only retries and shared `offset`/`limit` changes retain data; path/other-parameter changes or disabling clear it and ignore stale responses.
 - [ ] Phase 2 merged with #24, and Phase 3's primitives merged with E01: each with 100% coverage, its `AGENTS.md` rule, and a reference to this spec's id.
-- [ ] E01 proves shared-schema JSON round trips, published-edit invariants, external action field errors, eligibility distinct from availability, and formatter/hook/B13 delivery with actual consumers.
+- [ ] Page loaders map only not-found/forbidden to 404 and log/rethrow unexpected validation failures; each page handles malformed inputs explicitly.
+- [ ] E01 proves shared-schema JSON round trips, published-edit invariants under last-write-wins valid saves, dirty-input preservation, one-based URL row errors, external action field errors and busy mutation calls returning `null` without callbacks.
+- [ ] E01 proves nonnegative safe-integer money, integer-only `fromWholePln`, fractional amounts via `fromGrosze`, checked arithmetic and maintained-library calendar/DST conversion; eligibility stays distinct from availability, and formatter/hook/B13 delivery follows actual consumers.
 - [ ] `npm run lint`, `typecheck`, `test:coverage`, `build`, `test:integration` and `audit` pass on every PR above.
-- [ ] Moved to `.ai/specs/implemented/` when Phase 3 completes. Phase 4's contracts then live on as design guidance cited by the E02–E05 specs, each of which owns its adoption.
+- [ ] Moved to `.ai/specs/implemented/` when Phase 3 completes. B8–B11 safety invariants remain cited by E02–E05, which own their concrete endpoints, states, storage, UI and recovery acceptance tests; F6 remains guidance until its consumer implements it.
