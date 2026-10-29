@@ -210,3 +210,24 @@ contains the pattern) and also hit the platform preview server on :3000. `setsid
 then `$!` is not the process group either (setsid forks). Start test servers with
 `setsid sh -c 'echo $$ > /tmp/srv.pgid; exec npm run start -- --port 3100'` and stop
 with `kill -- -$(cat /tmp/srv.pgid)`.
+
+## 2026-10-29 - Shared form schemas must preserve the HTTP wire shape
+
+`CrudForm` passes Zod's parsed output to `onSubmit`, and `apiCall` JSON-serializes it.
+A shared schema that transforms a wall-time string into `Date` therefore sends an ISO
+UTC string, which the same wall-time schema on the API rejects. Keep shared transport
+schemas JSON-compatible and perform domain conversion after server validation, or define
+separate wire and server schemas explicitly. Verify the full form → JSON → route-schema
+path when adding transformed fields. Found during the design review in
+`.ai/runs/2026-10-29-platform-mentor-design-review.md`; the slot feature is not implemented.
+
+## 2026-10-29 - Separate pending payment creation from execution and retries
+
+The accepted primitives-spec correction makes only the winning booking transition
+create durable pending payment intent. Executing/retrying that intent must also work
+when no new transition occurs, including after a crash before the provider call or
+after provider success but before local confirmation. Keep an immutable payload and
+idempotency key; trigger next-visit settlement through a CSRF-protected POST, because
+page/metadata rendering and prefetch are reads rather than proof of an actual visit.
+See B8–B10 in `.ai/specs/2026-10-29-platform-primitives.md`. This is an accepted design
+contract for the future booking specs, not a claim of an implemented payment fix.
