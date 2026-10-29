@@ -118,15 +118,15 @@ export interface MoneyDto { amountGrosze: number; currency: Currency }
 export function fromWholePln(zloty: number): Money;        // nonnegative safe integer; checked × 100
 export function fromGrosze(grosze: number): Money;         // nonnegative safe integer
 export function multiply(m: Money, factor: number): Money; // nonnegative safe-integer factor; checked result (R08)
-export function percentOf(m: Money, basisPoints: number): Money; // #23; integer 0..10000; rounds half up (R06)
-export function subtract(a: Money, b: Money): Money;       // #23; refuses b > a
+export function percentOf(m: Money, basisPoints: number): Money; // #20 (E02 late cancellation); integer 0..10000; rounds half up (R06)
+export function subtract(a: Money, b: Money): Money;       // #20 (E02 late cancellation); refuses b > a
 export function compare(a: Money, b: Money): -1 | 0 | 1;
 export function toDto(m: Money): MoneyDto;
 ```
 
 Rules: every money input, DTO amount and arithmetic result is a nonnegative safe integer (`Number.isSafeInteger`); reject negatives, fractions, non-finite values and overflow with a plain `Error`. Refund direction belongs to the operation, so refunds carry positive amounts. `fromWholePln` accepts whole złoty only; fractional amounts enter through `fromGrosze` and remain supported in commission arithmetic and F7 display. `percentOf` accepts only integer basis points in `0..10000` and uses exact integer arithmetic for rounding, avoiding an unsafe intermediate product even when the final share fits. `subtract` rejects a negative result. Boundary tests cover zero, the safe-integer limit, factory/multiplication overflow, and invalid inputs; #23 adds basis-point bounds and half-up rounding tests.
 
-Money columns are `p.integer()` named `<name>_grosze`; never float or decimal. Services also enforce the column's representable range before persistence; B1's safe-integer range does not widen PostgreSQL `integer`. A price that is charged is always derived from stored values (`multiply(rate, lengthMinutes / 25)`), never parsed from a request. Build the rate/price operations with #15; `percentOf` and `subtract` wait for #23, where the commission and remaining share must add up to the price. Display conversion stays inside F7's formatter; no unused core display helper is added.
+Money columns are `p.integer()` named `<name>_grosze`; never float or decimal. Services also enforce the column's representable range before persistence; B1's safe-integer range does not widen PostgreSQL `integer`. A price that is charged is always derived from stored values (`multiply(rate, lengthMinutes / 25)`), never parsed from a request. Build the rate/price operations with #15; `percentOf` and `subtract` wait for #20 (E02, which records earnings first), where the commission and remaining share must add up to the price. Display conversion stays inside F7's formatter; no unused core display helper is added.
 
 ### B2 — Business rules (`core/src/rules/<concept>.ts`) · first consumer E01 #15, #16
 
@@ -217,7 +217,7 @@ Rules:
 - Persistence patches are concrete server-built shapes for each booking operation, never request data or `Partial<Entity>`.
 - **Executing or retrying an unconfirmed payment intent does not require another winning transition.** B9/B10 govern that separate step.
 
-### B9 — Next-visit settlement safety · first consumer #19 (R12), then #22 (R10); future consumer owns the design
+### B9 — Next-visit settlement safety · first consumer #18 (pending-operation recovery), then #19 (R12) and #22 (R10); future consumer owns the design
 
 GET routes, page loaders, prefetch, speculative renders and `generateMetadata` only read. Settlement uses an explicit CSRF-protected mutation through `apiCall` and `apiHandler`, requiring a valid session and participant scope before any write. The service derives events, amounts and ownership from stored data and the injected clock. This preserves D16 without timers; the consumer spec owns the endpoint, actual-visit trigger and retry UI.
 
@@ -345,7 +345,7 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 - **DST:** B4's maintained library wrapper rejects invalid dates and nonexistent wall times ("Ta godzina nie istnieje w dniu zmiany czasu"). An ambiguous one resolves to its first occurrence, and the stored UTC instant is what gets displayed back, so the mentor sees the exact time saved.
 - **Stale responses and resource changes:** `useApiQuery` discards responses from superseded requests or after disabling. Retain data only for retries or shared `offset`/`limit` changes; switching path, search, sort, filters or any other effective parameter clears it. Equivalent canonical queries do not reload.
 - **Double submit:** `CrudForm` ignores a second submit while pending; a busy `useApiMutation.run` returns `null` and consumers invoke no callbacks for it. Idempotency on money paths (B10) protects anything that slips past.
-- **Invalid money:** reject negative/fractional/unsafe amounts, factory or multiplication overflow and, with #23, out-of-range/fractional basis points or subtraction below zero. Refunds use positive money with a refund operation.
+- **Invalid money:** reject negative/fractional/unsafe amounts, factory or multiplication overflow and, with #20 (moved from #23 by the E02 spec), out-of-range/fractional basis points or subtraction below zero. Refunds use positive money with a refund operation.
 - **Form transport drift:** shared schema output survives JSON serialization and passes the same route schema. Datetime remains wall time on the wire; URL lists remain string arrays.
 - **URL row errors:** invalid links name their one-based row in the existing top-level field messages, including when blank rows precede them; multiple invalid rows each get a message.
 - **Publish action errors and concurrent saves:** an incomplete saved draft puts the server's errors under the relevant editor fields. Dirty content must be saved first; a rejected published-page edit leaves the prior public page intact. Valid saves use last-write-wins; refreshing preserves dirty local input.
@@ -390,7 +390,7 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 | 1b | its own PR (now; independent of 1a) | F3 `useApiQuery` only | read-only `admin/users/users-table.tsx` |
 | 2 | the accounts (#24) PR | F2 (`verifySessionToken`, `getPageSession`, `loadPage`, `isSafeReturnTo`), Polish `not-found.tsx`/`error.tsx` | sign-in pages and the first guarded page |
 | 3 | E01 PRs (see the E01 spec) | B1–B7, B12/B13, F3 `useApiMutation`, F4/F5, F7 money/slot formatting, F8 `PanelShell` | each primitive's actual page/rate/slot/list consumer |
-| 4 | E02–E05 PRs: consumers define concrete designs satisfying B8–B11 safety invariants | B8, B9, B10, B11, F4 `select`, F6, `percentOf`/`subtract` | #18, #19, #20, #22, #23, #25 |
+| 4 | E02–E05 PRs: consumers define concrete designs satisfying B8–B11 safety invariants | B8, B9, B10, B11, F4 `select`, F6, `percentOf`/`subtract` | #18, #19, #20, #22, #25 (E02's design: `2026-10-29-book-and-pay.md`) |
 
 ## 📋 Implementation Plan
 
@@ -425,7 +425,7 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 
 ### Phase 4 — in E02–E05 PRs
 
-B10 with #25; B8, F4 `select` and F6 with #18; B9 and B11 with #19; `percentOf`/`subtract` with #23. Each consumer spec cites the ids, defines its endpoints, states, storage and UI, and records any invariant amendment here. Tests prove transactional one-winner intent creation, authenticated participant scope, CSRF-protected settlement, both crash-recovery points without another transition, idempotency across concurrent calls/restarts, and GET/prefetch/metadata paths that do not write. #23 tests integer basis points in `0..10000`, exact half-up rounding without unsafe intermediates, nonnegative subtraction and split conservation.
+B10 with #25; B8, F4 `select` and F6 with #18; B9 with #18 (pending-operation recovery, per `2026-10-29-book-and-pay.md`) and #19 (R12's due event); B11 with #19; `percentOf`/`subtract` with #20 (its late-cancellation earnings, per the E02 spec's gate Q4 = a). Each consumer spec cites the ids, defines its endpoints, states, storage and UI, and records any invariant amendment here. Tests prove transactional one-winner intent creation, authenticated participant scope, CSRF-protected settlement, both crash-recovery points without another transition, idempotency across concurrent calls/restarts, and GET/prefetch/metadata paths that do not write. #23 tests integer basis points in `0..10000`, exact half-up rounding without unsafe intermediates, nonnegative subtraction and split conservation.
 
 ## ✅ Done means
 
