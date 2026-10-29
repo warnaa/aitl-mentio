@@ -21,6 +21,31 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-29 - Decided: Polish strings in code, no i18n library (first build)
+
+next-intl was chosen at the primitives spec's gate, then reversed the same day. For one fixed
+language (R15) it needed a plugin, provider, catalog, a copy provider in `ui` and a separate
+`core` dictionary. Polish literals in code plus `z.config(z.locales.pl())` (via
+`core/src/validators/z.ts`) cover R15. Don't reintroduce an i18n library until a second
+language is actually scheduled (D10's English beachhead). Spec:
+`.ai/specs/2026-10-29-platform-primitives.md` (F1).
+
+## 2026-10-29 - Spec review gotchas: Awilix cycles, aborted transactions, D-row conflicts
+
+From the review of the E01 and primitives specs:
+- Two services that take each other from the cradle (PROXY mode, constructor destructuring)
+  make Awilix throw "Cyclic dependencies detected" on every resolve. Keep dependencies
+  between concept services one-way.
+- After a unique violation, Postgres aborts the transaction. Map the violation to a
+  `ConflictError` outside `em.transactional(...)`, never inside it. MikroORM 7 already has
+  `findOneOrFail(..., { failHandler })` and `em.upsert(..., { onConflictFields })`; use them
+  instead of writing wrappers.
+- A gate answer that contradicts an active brief decision (open publishing vs D14's
+  "invited mentors") is still a review blocker under `SDLC.md`. It needs a superseding row
+  from the owner, not just the spec's say-so.
+- Next 16: `forbidden()`/`unauthorized()` are experimental (`authInterrupts`), and layouts
+  don't re-run auth on client navigation. Guard in each page's loader.
+
 ## 2026-10-29 - `use-intl/core` is not react-free
 
 `use-intl@4.14.9`'s `./core` entry looks framework-agnostic, but its `initializeConfig` chunk
