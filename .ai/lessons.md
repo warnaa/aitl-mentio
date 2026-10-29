@@ -21,6 +21,15 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-29 - `use-intl/core` is not react-free
+
+`use-intl@4.14.9`'s `./core` entry looks framework-agnostic, but its `initializeConfig` chunk
+imports `react`, so `createTranslator` would pull React into `@mentio/core` (which must stay
+react-free). That, plus the copy provider `ui` would need, is part of why the first build
+dropped next-intl for Polish strings written in the code and Zod's built-in `pl` locale
+(`.ai/specs/2026-10-29-platform-primitives.md`, F1, gate Q6 = c). If a second language
+arrives, re-check `use-intl`'s import graph before letting `core` use its translator.
+
 ## 2026-10-27 - The two user roles are "mentor" and "mentee", never "developer"
 
 Mentors are developers too, so "developer" doesn't say which side of a session someone is
