@@ -21,6 +21,18 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-30 - Logout scope and invitations must reflect the final answer
+
+In the accounts interview, the user explicitly withdrew all-device logout: ordinary
+logout must revoke only the current session, including token copies. Password reset
+and actual role removal invalidate all sessions. The approved design therefore adds
+individual PostgreSQL sessions plus an account version, fresh protected-auth checks,
+and locked rechecks so login/enrollment cannot rescue invalidated access. This is a
+future contract, not implemented behavior. The user also rejected an invitation gate:
+invitation-led recruitment does not mean restricted registration/API access. Recovery
+requires a private contact channel established beforehand; email knowledge is not proof.
+See `.ai/runs/2026-10-30-accounts-and-sign-in-grilling.md` and D22/D23.
+
 ## 2026-10-30 - Accepted accounts corrections: atomic admission and role writes
 
 The accepted accounts spec counts every admitted login attempt synchronously before

@@ -7,7 +7,7 @@ Correction review completed 2026-10-30; fresh-context scope check found no remai
 Grilling decisions 2026-10-30: overlapping paid sessions are the mentee's choice; creation and duration changes use the current rate with a price-change notice; live unpaid bookings can be edited without releasing or extending the hold; question-only edits preserve price; pending payment can be cancelled with immediate release and recovery/refund of any successful charge. These decisions supersede the earlier pending-payment cancellation refusal. Run: `.ai/runs/2026-10-30-book-and-pay-grilling.md`.
 Issue: #9 — stories #18 (book and pay), #25 (payments port, task of #18), #20 (cancel and refund)
 Design authority: `.ai/specs/product-brief.md` (Scope → Now, Key flows 3–4; R03, R06, R08, R09, R11, R14, R15, R17, D09, D13, D14, D18, N01)
-Builds on: `2026-10-29-platform-primitives.md` (ids `B*`/`F*` below), `2026-10-29-mentor-pages-and-discovery.md` (E01: `MentorPage.rate`, `Slot`, `SlotService`); requires the accounts spec (#24, not written yet) for the `mentee` role and sign-in
+Builds on: `2026-10-29-platform-primitives.md` (ids `B*`/`F*` below), `2026-10-29-mentor-pages-and-discovery.md` (E01: `MentorPage.rate`, `Slot`, `SlotService`); requires `2026-10-30-accounts-and-sign-in.md` (#24 Phase 1) for the `mentee` role, persisted-session verification and sign-in
 
 ## 📝 TLDR
 
@@ -378,7 +378,7 @@ All copy is Polish (R15, F1). Times are Europe/Warsaw and money is in `zł` (F7)
   - It shows the mentor only `paid` and later bookings (#19 AC 4).
   - It uses this spec's lock order (slot first, then booking) in accept and decline.
   - Phase 3 here lands after it.
-- **Depends on core accounts (#24 Phase 1):** the `mentee` role (D21), the sign-in path with `returnTo`, and **one account holding both roles** (decided 2026-10-29). Every valid session includes `mentee`; mentors may book other mentors, while E02 always refuses booking one's own slot. Integration fixtures sign `roles` arrays and a valid `exp`; `support/session.ts` signs `student` today. The core-accounts PR updates claims and renames the `AGENTS.md` route group `(student)/` → `(mentee)/` (D21); this spec only adds the group's first pages. Self-service mentor enrollment (#24 Phase 2) is not a prerequisite.
+- **Depends on core accounts (#24 Phase 1):** `mentee` (D21), sign-in with `returnTo`, persisted-session verification and **one account holding both roles**. Every valid session includes `mentee`; mentors may book other mentors, while E02 refuses self-booking. Fixtures seed persisted users/sessions and sign matching `roles`/`jti`/`sv`/`exp`; token-only fixtures are invalid. Test revoked/current-session logout and reset/role-removal denial before booking validation, alongside ordinary ownership/self-booking cases. Protected auth DB failures fail closed; work authorized before revocation may finish. Accounts updates claims and `(student)/` → `(mentee)/`; this spec adds the group's first pages. Self-service mentor enrollment (#24 Phase 2) is not a prerequisite.
 
 ## 📋 Phasing
 
