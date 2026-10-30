@@ -27,11 +27,11 @@
 <svg id="graph" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker></defs><g id="viewport"></g></svg>
 <script type="application/json" id="graph-data">
 {"nodes":[
- {"id":"entity_1","label":"Booking","kind":"new","x":420,"y":260,"fields":["mentee_id, mentor_id, slot_id","starts_at, length_minutes","question (sensitive)","price_grosze, commission_bps","status, hold_expires_at","paid_at, cancelled_at"]},
- {"id":"entity_2","label":"PaymentOperation","kind":"new","x":780,"y":120,"fields":["kind charge|refund","reference (booking:id)","idempotency_key (unique)","amount_grosze, charge_ref","status, provider_ref"]},
+ {"id":"entity_1","label":"Booking","kind":"new","x":420,"y":260,"fields":["mentee_id, mentor_id; slot_id nullable","starts_at, length_minutes","question (sensitive)","price_grosze, commission_bps","status, hold_expires_at","paid_at, cancelled_at"]},
+ {"id":"entity_2","label":"PaymentOperation","kind":"new","x":780,"y":120,"fields":["kind charge|refund","reference (booking:id)","idempotency_key (unique)","amount_grosze, charge_ref","description (immutable, charges)","status, provider_ref"]},
  {"id":"entity_3","label":"MentorEarning","kind":"new","x":780,"y":420,"fields":["booking_id (unique)","mentor_id","price/commission/share grosze","reason"]},
  {"id":"entity_4","label":"User","kind":"existing","x":420,"y":560,"fields":["id","email, name"]},
- {"id":"entity_5","label":"Slot (E01, gains heldBy / heldUntil)","kind":"planned","x":60,"y":260,"fields":["mentor_id, starts_at","held_by_id (unique, nullable)","held_until"]}
+ {"id":"entity_5","label":"Slot (E01, gains heldBy / heldUntil)","kind":"planned","x":60,"y":260,"fields":["mentor_id, starts_at","held_by_id (unique, nullable)","held_until: unpaid expiry / start / null"]}
 ],
 "edges":[
  {"from":"entity_1","to":"entity_4","label":"n-1 mentee","offset":-40},

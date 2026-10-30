@@ -250,3 +250,24 @@ selection. Valid content saves use last-write-wins while publication locks and d
 input preservation remain. URL errors name one-based rows before blank-row filtering,
 and pages handle malformed input explicitly rather than hiding service validation bugs
 behind 404s.
+
+## 2026-10-29 - Slot-first locking needs a rule for multi-slot cleanup
+
+The book-and-pay design review identified that creating on one slot while expiring a
+mentee's former hold on another introduces more than one slot into the operation.
+"Slot before booking" alone does not order those slot locks: two mentees swapping
+expired holds can acquire opposite first locks. Keep cleanup in a separate transaction
+or define deterministic ordering for all involved rows. This is a design finding,
+not a reproduced implementation bug; see
+`.ai/runs/2026-10-29-book-and-pay-design-review.md`.
+
+## 2026-10-30 - Ending a reservation must not wait for payment confirmation
+
+The approved book-and-pay spec corrections separate resource deadlines from durable
+money recovery. Reconcile the deadline under locks before applying a charge result,
+and do it before external calls as well as after them. Release an unconfirmed reservation
+at its start even if the gateway remains unavailable; later success creates a full
+refund without restoring the booking. GET projections and the actual-visit trigger
+must cover this ended state with pending money. This is a corrected design contract,
+not implemented behavior; see R22 and
+`.ai/runs/2026-10-29-book-and-pay-spec-corrections.md`.
