@@ -270,7 +270,7 @@ Configuration (`config/env.ts`, in `.env.example`): `PLATFORM_COMMISSION_BPS` (a
 
 ## 📝 UI/UX
 
-All copy is Polish (R15, F1). Times are Europe/Warsaw and money is in `zł` (F7). The mentee screens use a `(mentee)` route group with `PanelShell` (F8) and shadcn components. Each page parses its `[slotId]`/`[id]` parameter as a UUID before any service call (a malformed value gives `notFound()`, F2), then loads through `loadPage({ role: "mentee", returnTo })`, so a signed-out visitor is sent to sign-in and comes back (D18), and a session that cannot act as a mentee gets the 404. Every booking screen carries "Sesja odbywa się wyłącznie tekstowo — bez rozmowy wideo" (N01).
+All copy is Polish (R15, F1). Times are Europe/Warsaw and money is in `zł` (F7). The mentee screens use a `(mentee)` route group with `PanelShell` (F8) and shadcn components. Each page parses its `[slotId]`/`[id]` parameter as a UUID before any service call (a malformed value gives `notFound()`, F2), then loads through `loadPage({ role: "mentee", returnTo })`, so a signed-out visitor is sent to sign-in and comes back (D18). Accounts #24 requires every valid session to include `mentee`; mentors can use these screens for their own bookings with other mentors. Record ownership checks still apply, and self-booking is refused. Every booking screen carries "Sesja odbywa się wyłącznie tekstowo — bez rozmowy wideo" (N01).
 
 - **Mentor page (E01, `(marketing)`; links in Phase 3, with cancellation):** each bookable slot becomes a link "Zarezerwuj" to `/rezerwacje/nowa/<slotId>`. Held slots are not listed from Phase 1. Unpriced slots stay plain text.
 - **`/rezerwacje/nowa/[slotId]` — `NowaRezerwacjaPage`:**
@@ -319,7 +319,7 @@ All copy is Polish (R15, F1). Times are Europe/Warsaw and money is in `zł` (F7)
 - **The mentor removes a held slot:** `409 slot_held`. A slot whose bookings are all finished can be removed; `bookings.slot_id` becomes null and the booking history stays (integration test). Unpublishing or a rate change does not invalidate the held booking. Question-only edits/pay preserve its price; a duration change uses the current rate with a notice as specified above (E03 handles the mentor's side).
 - **Booking one's own slot:** one account may hold both roles (decided 2026-10-29, for the accounts spec), so a mentor acting as a mentee can reach their own slot. `create` refuses it with `409 slot_unavailable` (unit and integration tests).
 - **A refund fails definitively (`refund_failed`):** the operation is `failed` and logged at `error` level with the booking id only. The mentee sees "Zwrot nie powiódł się". Correcting it is manual, from the logs, and out of scope; there is no admin screen.
-- **Someone else's booking id, a malformed id, or a mentor calling a mentee route:** `404`, `404` (`notFound()` on pages, `400` on routes) and `403`.
+- **Someone else's booking id or a malformed id:** `404` for another owner's record; malformed IDs give `notFound()` on pages and `400` on routes. A mentor account also has `mentee` and may use mentee routes under the same ownership rules. A token missing `mentee` is invalid under accounts #24 and gives `401`, not an authenticated wrong-role `403`.
 - **Prefetch of `/rezerwacje/...` links, or metadata rendering:** these are read-only, so no expiry write, settlement or charge happens (test).
 - **The database is unreachable:** the Polish error page; the app still builds and boots.
 
@@ -378,11 +378,11 @@ All copy is Polish (R15, F1). Times are Europe/Warsaw and money is in `zł` (F7)
   - It shows the mentor only `paid` and later bookings (#19 AC 4).
   - It uses this spec's lock order (slot first, then booking) in accept and decline.
   - Phase 3 here lands after it.
-- **Depends on accounts (#24):** the `mentee` role (D21), the sign-in path with `returnTo`, and **one account holding both roles** (decided 2026-10-29). The accounts spec defines how a session carries them; E02's routes and page guards need only "this session may act as a mentee", and E02 always refuses booking one's own slot. Integration tests need a signed `mentee` session; `support/session.ts` signs `student` today. The accounts PR renames the role and the `AGENTS.md` route group `(student)/` → `(mentee)/` (D21); this spec only adds the group's first pages.
+- **Depends on core accounts (#24 Phase 1):** the `mentee` role (D21), the sign-in path with `returnTo`, and **one account holding both roles** (decided 2026-10-29). Every valid session includes `mentee`; mentors may book other mentors, while E02 always refuses booking one's own slot. Integration fixtures sign `roles` arrays and a valid `exp`; `support/session.ts` signs `student` today. The core-accounts PR updates claims and renames the `AGENTS.md` route group `(student)/` → `(mentee)/` (D21); this spec only adds the group's first pages. Self-service mentor enrollment (#24 Phase 2) is not a prerequisite.
 
 ## 📋 Phasing
 
-0. **Prerequisites:** the accounts spec (#24) with primitives Phase 2 (`loadPage`); E01 #15 (rate, B1) and #16 (slots, B3/B4, `SlotService`). R21 and the R22 superseding row are recorded in the brief.
+0. **Prerequisites:** core accounts (#24 Phase 1), which includes platform Phase 2 (`loadPage`); E01 #15 (rate, B1) and #16 (slots, B3/B4, `SlotService`). R21 and the R22 superseding row are recorded in the brief.
 1. **#25 + #18 API — payments port, ledger, bookings and holds.** A mergeable foundation with integration tests. Shared deployment keeps `BOOKINGS_ENABLED=false`; isolated tests may enable it. #25 closes with its first consumer. No claim that missing links prevent API access.
 2. **#18 screens.** Mergeable and testable end to end by direct URL in isolated environments. On a shared deployment the disabled gate suppresses the form and refuses create/first pay, while existing booking recovery remains available. No shared paid flow is enabled before mentor handling and cancellation are ready.
 3. **#20 — cancellation and refunds, plus the mentor-page booking links, after #19.** Bookable slots become links in the same PR that lets mentees cancel, so #18 and #20 close together, and with them #9. **Provisional:** its `accepted` rows and `acceptedAt` come from E03's spec, which is not written yet. This phase must be re-reviewed against that spec before implementation starts. Mentees cancel under R14, and late cancellations record earnings.
@@ -423,18 +423,18 @@ Each step leaves the app working and ends with its tests. Each phase is one PR t
 
    Tests: every refusal/code and owner-in-`where`; every releasing transition frees only its own hold; stored-price charge; unavailable before start → paying → pre-start recovery paid; declined → failed/free; stored succeeded charge recovered before start → paid, exactly at/after start → failed/refunded; pending charge at start → release commits before provider call, R17 no longer blocks, later confirmation refunds once; pay/settle race across cutoff; a clock crossing the start while waiting for locks; deleted slot between initial read/lock; null-slot expiry and late-charge refund; gate off refuses new intent but permits existing recovery/cancel; committed hold expiry cannot release a successor.
 7. **Routes.** Add `POST /api/bookings`, `PUT /api/bookings/[id]`, `POST …/[id]/pay`, `…/[id]/cancel` and `…/[id]/settle` on `apiHandler`. Integration tests:
-   - envelopes for `201`/`200`, `400`, `401`, `403` (mentor role, missing CSRF), `404` (another mentee's booking), and `409` for `slot_taken`, `unpaid_booking_exists`, `slot_unavailable` and `hold_expired` (seeded `hold_expires_at` in the past);
+   - envelopes for `201`/`200`, `400`, `401` (including an invalid token without `mentee`), `403` (missing CSRF), `404` (another account's booking), and `409` for `slot_taken`, `unpaid_booking_exists`, `slot_unavailable` and `hold_expired` (seeded `hold_expires_at` in the past);
    - two mentees `POST` the same slot concurrently → exactly one `201`;
    - one mentee `POST`s two slots concurrently → exactly one `201`;
    - a repeated pay → one `payment_operations` row;
    - an abandon makes the slot bookable for another mentee;
-   - a session holding both roles cannot book its own slot (`409 slot_unavailable`);
+   - a session holding both roles can book another mentor's slot under ordinary eligibility/ownership rules, but cannot book its own slot (`409 slot_unavailable`);
    - lock order: M re-books the slot their lapsed booking still points at while N books it concurrently → one `201` and one `409`, never a deadlock `500`;
    - two mentees, each with an expired hold on the slot the other now books, book concurrently → two `201`s, no deadlock;
    - a mentee with an old paying booking past its start can create on a future slot while its old fake-gateway charge remains unavailable; no gateway execution is required for cleanup;
    - a cutoff-failed booking with deleted slot still recovers a late charge and refunds it exactly once;
    - a slot whose only booking is `abandoned` can be removed, and the booking survives with `slot_id` null.
-   - the edit route has successful/envelope, validation, unauthenticated, wrong-role/missing-CSRF and other-owner tests; id/slot/deadline stay fixed, question-only/same-length saves preserve price, actual duration changes use the current rate with a persisted notice;
+   - the edit route has successful/envelope, validation, unauthenticated/invalid-token, missing-CSRF and other-owner tests; a mentor can edit their own booking with another mentor; id/slot/deadline stay fixed, question-only/same-length saves preserve price, actual duration changes use the current rate with a persisted notice;
    - initial creation uses current rate despite an outdated/tampered displayed quote; notice survives reload; pay charges the saved price despite another mentor rate change;
    - stale edit/first pay returns `409 booking_changed` without charge intent; both edit/pay race orders, two simultaneous edits, and editing across expiry are tested;
    - pending-payment cancellation commits release even with an unavailable fake gateway; another booking can take the slot; later charge success refunds once without revival or releasing the successor, including after deletion/start and with the gate off;

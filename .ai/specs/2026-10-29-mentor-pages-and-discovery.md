@@ -5,7 +5,7 @@ Review corrections: accepted by the user 2026-10-29; incorporated below
 Platform grilling refinements: accepted and application confirmed by the user 2026-10-29; dependent contracts aligned below
 Issue: #8 — stories #14 (page and share link), #15 (rate), #16 (slots), #17 (public list)
 Design authority: `.ai/specs/product-brief.md` (Scope → Now, Key flows 1–3; D02, D09, D10, R03, R08, R11, R15, N01, N02)
-Builds on: `2026-10-29-platform-primitives.md` (ids `B*`/`F*` below); requires the accounts spec (#24) to have landed
+Builds on: `2026-10-29-platform-primitives.md` (ids `B*`/`F*` below); requires core accounts (#24 Phase 1) to have landed; self-service mentor enrollment (#24 Phase 2) is independent
 
 ## 📝 TLDR
 
@@ -96,7 +96,7 @@ Two concepts, following the folder convention: **`mentors`** (the page, its rate
 - **Deleting a slot:** a hard delete (no bookings exist in E01). E02 adds the hold and turns removing a held slot into a `409`.
 - **Sensitive data:** none new. The mentor's email (`User.email`) never appears in a public DTO (B6 key-set tests). Descriptions and links are public by design, once the mentor publishes.
 - **Migrations:** one per phase, generated from the latest merged snapshot, each with a hand-written `down()` that drops what it added. Rate and slot migration order follows actual delivery, not their story numbers; rollback traverses that real order. Rolling back Phase 1 deletes every mentor page; that is acceptable before launch and stated in the PR's rollback plan.
-- **Migration test harness (built in Phase 1, reused by every later migration and by E02–E05):** `tests/integration/migrations.test.ts`. It creates its own throwaway database on the same Postgres server (`mentio_it_migrations_<random>`), so it never touches the database the running `next start` uses. It runs the real CLI up → down (step by step to the previous migration) → up with an explicit `DATABASE_URL` (see the lessons on exported `DATABASE_URL`), asserts the tables and named constraints after each step, and drops the database afterwards.
+- **Migration test harness (built by accounts #24 Phase 1, extended here and reused by later migrations and E02–E05):** `tests/integration/migrations.test.ts`. It creates its own throwaway database on the same Postgres server (`mentio_it_migrations_<random>`), so it never touches the database the running `next start` uses. It runs the real CLI up → down (step by step to the previous migration) → up with an explicit `DATABASE_URL` (see the lessons on exported `DATABASE_URL`), asserts the tables and named constraints after each step, and drops the database afterwards. Preserve accounts' canonical-email and collision tests when adding these cases.
 
 ```mermaid
 flowchart LR
@@ -216,17 +216,17 @@ All copy is Polish (R15), written directly in the code (F1). Times are Europe/Wa
   - **R19 (Phase 3, ⚠ needs confirmation):** mentors publish start times from 2 hours to 14 days ahead. An agent proposal.
   - **D22 (Phase 1, ⛔ blocks merge):** any account with the `mentor` role may publish on the mock build. It supersedes or clarifies D14's "invited mentors" and was chosen at this spec's gate (Q9 = a).
   - **Product choices recorded here, no brief row needed:** a slug change breaks the old link (Q7 = a); unlisted pages are `noindex` (an agent proposal).
-- Depends on the accounts spec (#24, gate Q2 = a): `mentor`/`mentee` roles (D21), sign-in path, `returnTo`. Integration tests need a signed session with role `mentor` (`tests/integration/support/session.ts` signs `student` today; accounts renames it).
+- Depends on core accounts (#24 Phase 1): `mentor`/`mentee` roles (D21), sign-in path, `returnTo`, DB uniqueness/locking exports, B13 and the migration harness. Integration tests need a signed session whose `roles` contains `mentor` and `mentee` and whose `exp` is valid (`support/session.ts` signs `student` today; accounts updates it). The operator grants mentor roles before self-service enrollment ships. Self-service (#24 Phase 2) is independent and remains gated by D22.
 
 ## 📋 Phasing
 
-0. **Prerequisites:** the accounts spec (#24), carrying primitives Phase 2 (`loadPage`, `isSafeReturnTo`), and primitives Phase 1a (Polish UI) are merged. D22 is approved by Damian before Phase 1 merges.
+0. **Prerequisites:** core accounts (#24 Phase 1), carrying platform Phase 2 (`loadPage`, `isSafeReturnTo`) and B7/B12 auth pieces/B13, and platform Phase 1a (Polish UI) are merged. Self-service enrollment is not a prerequisite; mentor roles can be granted by the operator. D22 is approved by Damian before E01 Phase 1 merges, or the stated restricted-publishing fallback is adopted.
 1. **#14 — page, publish, share link.** Shippable alone: mentors publish pages; mentees open links.
 2. **#15 — rate, after #14.** Pages show both prices; if slots have landed, their eligibility updates with the rate.
 3. **#16 — slots, after #14.** Pages show published availability, with the baseline no-rate notice until #15 lands.
 4. **#17 — public list.** Mentees find mentors without a link; cards show the rate (Phase 2) and the next slot (Phase 3).
 
-**Dependency order: prerequisites → #14 → {#15, #16} → #17.** Numbers identify stories, not a strict sequence between rate and slots. Stable DTO defaults let either follow #14; whichever lands second integrates the combined eligibility projection. #17 needs both B1/F7 money from #15 and clock/slot data from #16. Platform Phase 1b's admin query refactor is independent and is not an E01 prerequisite: #14 builds its own first-use mutation hook. B13 waits for #16's actual factory consumer.
+**Dependency order: prerequisites → #14 → {#15, #16} → #17.** Numbers identify stories, not a strict sequence between rate and slots. Stable DTO defaults let either follow #14; whichever lands second integrates the combined eligibility projection. #17 needs both B1/F7 money from #15 and clock/slot data from #16. Platform Phase 1b's admin query refactor is independent and is not an E01 prerequisite: #14 builds its own first-use mutation hook. B13 is already built by accounts' admin users route and is reused by #16.
 
 ## 📋 Implementation Plan
 
@@ -234,8 +234,8 @@ Each step leaves the app working and ends with its tests; each phase is one PR t
 
 ### Phase 1 — mentor page (#14)
 
-1. **Entity, migration and the migration harness:** `MentorPage` with the Phase 1 columns, named constraints and registration in `entities/index.ts`; `db/src/errors.ts` (`isUniqueViolation`, `LockMode` re-export) (B7); `tests/integration/migrations.test.ts` in its own throwaway database (see Data Model). Tests: entity metadata test; migration up → down → up.
-2. **Primitives for this phase:** `persistence/find.ts` (B5), `persistence/conflicts.ts` (B7), and B12's optional domain-specific error codes, preserving defaults. Tests: conflict mapping, a custom code in the envelope and existing codes unchanged. Role checks remain explicit in `apiHandler`; B13 waits for #16.
+1. **Entity, migration and harness extension:** `MentorPage` with the Phase 1 columns, named constraints and registration in `entities/index.ts`; reuse accounts' `db/src/errors.ts` (`isUniqueViolation`, `LockMode` re-export) (B7). Extend its `tests/integration/migrations.test.ts` in the dedicated throwaway database (see Data Model), preserving account cases. Tests: entity metadata; migration up → down → up.
+2. **Primitives for this phase:** `persistence/find.ts` (B5), `persistence/conflicts.ts` (B7), and B12's optional codes on the remaining classes this phase needs; reuse accounts' `ConflictError` code/field-error support and preserve defaults. Tests: conflict mapping, a custom code in the envelope and existing codes unchanged. Role checks remain explicit in bespoke `apiHandler` routes; factory routes reuse B13 from accounts.
 3. **Validators:** `slug.ts` (`slugify` with Polish transliteration, `slugSchema`) and `mentor-page-update.schema.ts` (URL string arrays, http/https, length bounds, Polish messages with one-based invalid-row numbers). Tests: transliteration (`Łukasz Żółć` → `lukasz-zolc`), every refusal, multiple invalid rows with preceding blanks, top-level field-error messages through client and API parsing, and F4's link initialization/client parse → JSON → route-schema round trip.
 4. **`MentorPageService`:**
    - `getOwn`;
@@ -265,7 +265,7 @@ Each step leaves the app working and ends with its tests; each phase is one PR t
    - `removeOwn`: owner in `where`, 404 otherwise;
    - `listOwnUpcoming(mentorId, now)`, `listWithinBookingWindow(mentorId, now)`, returning slot data only.
    Then `MentorPageService.addSlot`: service-side conversion, transaction, own-page lock (`409 mentor_page_required` if missing), `insertWithinLock`, with `mapConflicts` outside. Compose owner/public visibility and eligibility with one clock snapshot. Tests: fixed-clock window edges, draft-page flags, no-rate availability, effective 60-minute spacing, and a container resolve proving no cycle.
-3. Build B13's role-scoped `makeCrudRoute` with this actual consumer; `api/availability/slots` wires create → `mentorPageService.addSlot`, remove → `slotService.removeOwn`. Tests: wrong role plus invalid body gets `403` before `400`; datetime client parse → JSON → route parse retains wall time and stores the correct UTC instant. Integration: `201`, `409 slot_too_close`, exactly one success for concurrent conflicting creates, grid refusals, foreign-slot `404`, `401`, `403`.
+3. Reuse B13's role-scoped `makeCrudRoute` from accounts; `api/availability/slots` wires create → `mentorPageService.addSlot`, remove → `slotService.removeOwn`. Tests: wrong role plus invalid body gets `403` before `400`; datetime client parse → JSON → route parse retains wall time and stores the correct UTC instant. Integration: `201`, `409 slot_too_close`, exactly one success for concurrent conflicting creates, grid refusals, foreign-slot `404`, `401`, `403`.
 4. `/mentor/terminy` (`datetime`, `DataTable`, remove `ActionButton`, grid/block help); public availability grouped by Warsaw day. Page/browser tests: added → visible, removed → gone, unpublished page not visible, no rate → visible but not bookable. This phase can land before #15 using the baseline null-price projection; if #15 has landed, test combined eligibility. Add B2–B4/B13/F4/F7 documentation.
 
 ### Phase 4 — public list (#17)

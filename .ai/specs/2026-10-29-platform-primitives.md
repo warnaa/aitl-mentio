@@ -187,7 +187,7 @@ Rules (these refine the security baseline; the `AGENTS.md` change goes with E01)
 
 Each service exposes `to<Name>PublicDto` and `to<Name>OwnerDto` (only the projections it needs), written as explicit object literals; an entity is never spread. Each projection's unit test asserts the **exact key set**, so a new column cannot reach the public page without a test changing. N02 rides on this: public mentor DTOs are tested to have no `rating*`, `review*` or `stars*` keys.
 
-### B7 — Constraint-backed writes (`db/src/errors.ts`, `core/src/persistence/conflicts.ts`) · first consumer E01 #14 (slug/publication), #16 (slots)
+### B7 — Constraint-backed writes (`db/src/errors.ts`, `core/src/persistence/conflicts.ts`) · first consumer accounts #24 (email uniqueness and role locks), then E01 #14 (slug/publication), #16 (slots)
 
 ```ts
 // db (the only MikroORM importer)
@@ -199,6 +199,7 @@ export async function mapConflicts<T>(fn: () => Promise<T>, map: Record<string, 
 ```
 
 Rules:
+- Accounts Phase 1 builds `isUniqueViolation` and the `LockMode` re-export, using the user-row lock for role changes. E01 reuses them and builds `persistence/conflicts.ts` with its first multi-constraint consumer. The accounts spec owns canonical-email migration/collision handling; no second generic persistence layer is added.
 - Every unique constraint a service maps is **named explicitly** in the entity (`name: "<table>_<cols>_unique"`), so the mapping survives regenerated migrations.
 - A check-then-write runs inside `em.transactional`, either locked on the owning parent row or backed by a unique constraint, and preferably both. The lock's `failHandler` is chosen per call site: a missing parent can mean `404` or a specific `409`.
 - `mapConflicts` wraps the **whole** `em.transactional(…)` call, never a statement inside it. After a violation, Postgres aborts the transaction, so the mapping must run after the rollback.
@@ -239,11 +240,13 @@ Every port operation that moves money carries a deterministic idempotency key id
 
 Require a valid session and restrict record reads/mutations to its mentor or mentee. Prefer participant scope in the database lookup; a non-participant receives `NotFoundError` (404), indistinguishable from a missing record, before any state or payment write. The booking spec defines any reusable helper's signature and placement from its actual callers.
 
-### B12 — Error codes as the client contract (`core/src/http/errors.ts`) · first consumer E01 #14 (`slug_taken`)
+### B12 — Error codes as the client contract (`core/src/http/errors.ts`) · first consumer accounts #24 (`email_taken`, `invalid_credentials`, `too_many_attempts`)
 
 `ConflictError`, `NotFoundError`, `ForbiddenError` and `ValidationError` accept an optional `code` (backwards compatible; the defaults stay `conflict`, `not_found`, …). Exposed messages are user-facing Polish literals (F1). Codes are stable `snake_case` identifiers, documented next to the throwing service method.
 
-### B13 — Role-scoped `makeCrudRoute` (`core/src/http/makeCrudRoute.ts`) · first consumer E01 #16
+Accounts Phase 1 implements only its needed subset: `ConflictError` gains optional `code` and `fieldErrors`, `UnauthorizedError` gains optional `code`, and `TooManyRequestsError` carries `429` and the wait used by `Retry-After`. `email_taken` includes `fieldErrors.email` through the normal envelope so `CrudForm` can render it. E01 #14 extends the remaining classes it needs; defaults and existing signatures remain compatible.
+
+### B13 — Role-scoped `makeCrudRoute` (`core/src/http/makeCrudRoute.ts`) · first consumer accounts #24 (`GET /api/users`, admin), reused by E01 #16
 
 `access` widens from `"session" | "public"` to also accept `{ role: SessionRole }`, in which case `session` is typed non-null and `requireRole` runs **before** query or body parsing. A mentee then gets `403`, never a `400` that reveals the schema. This keeps the existing order (auth → validation → service). Most E01–E05 resources are role-specific, so without this every `run` would repeat the check after the body had already been parsed.
 
@@ -271,12 +274,13 @@ export async function loadPage<T>(access: PageAccess, load: (cradle: Cradle, ctx
 ```
 
 - `core/src/http/auth.ts` splits `requireSession(req)` into `verifySessionToken(token)` plus cookie reading, so both paths share one verification.
+- Accounts #24 changes `Session` to `{ userId, roles, expiresAt }`, mapping required JWT `exp` to `expiresAt`. Role guards check membership. `PageAccess` stays unchanged. Enrollment token replacement preserves the original authentication deadline; credential sign-in alone starts a fresh one. These changes and F2 ship in accounts Phase 1's single core-accounts PR.
 - A guarded page with no session redirects (`redirect()`) to the accounts spec's sign-in path, carrying `returnTo`. A wrong role gives `notFound()`.
 - `isSafeReturnTo(value)` lives in `core/src/lib/`, so it is client-safe and shared. It accepts only a value that:
   - starts with a single `/`,
   - contains no `\` and no control or whitespace characters,
   - and, resolved with `new URL(value, "http://mentio.invalid")`, keeps that origin.
-  It is checked where `returnTo` is produced **and again where it is consumed** (the sign-in redirect in #24). Anything else falls back to the persona's home.
+  It is checked where `returnTo` is produced **and again where it is consumed** (the sign-in redirect in #24). Anything else falls back to `/` until an implemented persona home provides a second destination; role-aware landing selection is introduced with that consumer.
 - Inside `load`, only `NotFoundError` and `ForbiddenError` become `notFound()`. Unexpected errors, including `ValidationError` from a service, are logged through the server logger and rethrown to the segment's Polish `error.tsx`.
 - Each page parses its route/search parameters explicitly and handles expected invalid input before the service call: an invalid mentor slug gives `notFound()`; malformed list pagination uses the existing page-1 fallback. The shared loader does not turn every validation failure into a 404.
 - `forbidden()` and `unauthorized()` are not used: they are experimental in Next 16.4 (`authInterrupts`).
@@ -378,8 +382,8 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 
 - **1a:** Polish copy and all exposed fallback errors (F1), schemas import `z` from `validators/z.ts` with its exact lint exception, `@mentio/ui/lib/format` as the only formatter (F7; `formatDay` first), and composed client-safe ESLint restrictions.
 - **1b:** `useApiQuery` as shared client query-state code, with F3's canonical resource identity, data-retention limits and disabled-response protection.
-- **2, with #24:** "pages read through `loadPage`; auth is checked in the loader, never only in a layout", and `isSafeReturnTo`. This sanctions server components calling services through `loadPage`, which changes today's client-fetch-only reference.
-- **3, with E01:** B5–B7/B12, F3's mutation hook, F4/F5 action errors and `PanelShell` with #14; B1/B2 and money formatting with #15; B2–B4/B13 and slot formatting with #16; the `app/src/components/<concept>/` placement rule when its second consumer appears. Shared-schema output stays JSON-compatible; publication requirements hold after every published-content write; valid saves use last-write-wins and refresh preserves dirty input.
+- **2, with #24 Phase 1:** "pages read through `loadPage`; auth is checked in the loader, never only in a layout", and `isSafeReturnTo`. This sanctions server components calling services through `loadPage`, which changes today's client-fetch-only reference. Add B7's user-row lock rule, B12's auth error subset and B13's admin users access rule in this same core-accounts PR.
+- **3, with E01:** B5/B6, the remaining B7/B12 pieces, F3's mutation hook, F4/F5 action errors and `PanelShell` with #14; B1/B2 and money formatting with #15; B2–B4 and slot formatting with #16, reusing B13 from accounts; the `app/src/components/<concept>/` placement rule when its second consumer appears. Shared-schema output stays JSON-compatible; publication requirements hold after every published-content write; valid saves use last-write-wins and refresh preserves dirty input.
 - **Phase 4:** each E02–E05 spec defines concrete B8–B11 contracts satisfying the safety invariants and adds the rules for those implementations; F6 lands with its consumer.
 
 ## 📋 Phasing
@@ -388,8 +392,8 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 |---|---|---|---|
 | 1a | its own PR (now) | F1, F7 `formatDay`, composed client-safe and `z.ts` import rules | existing screens, exposed errors and `users-table` dates |
 | 1b | its own PR (now; independent of 1a) | F3 `useApiQuery` only | read-only `admin/users/users-table.tsx` |
-| 2 | the accounts (#24) PR | F2 (`verifySessionToken`, `getPageSession`, `loadPage`, `isSafeReturnTo`), Polish `not-found.tsx`/`error.tsx` | sign-in pages and the first guarded page |
-| 3 | E01 PRs (see the E01 spec) | B1–B7, B12/B13, F3 `useApiMutation`, F4/F5, F7 money/slot formatting, F8 `PanelShell` | each primitive's actual page/rate/slot/list consumer |
+| 2 | accounts (#24) Phase 1, one core-accounts PR | F2 (`verifySessionToken`, `getPageSession`, `loadPage`, `isSafeReturnTo`), Polish `not-found.tsx`/`error.tsx`; B7 unique-violation/locking exports, B12's auth subset and B13 | working sign-in pages, guarded admin pages/API, and registration/role writes |
+| 3 | E01 PRs (see the E01 spec) | B1–B6, remaining B7/B12 pieces, F3 `useApiMutation`, F4/F5, F7 money/slot formatting, F8 `PanelShell`; reuse B13 | each primitive's actual page/rate/slot/list consumer |
 | 4 | E02–E05 PRs: consumers define concrete designs satisfying B8–B11 safety invariants | B8, B9, B10, B11, F4 `select`, F6, `percentOf`/`subtract` | #18, #19, #20, #22, #25 (E02's design: `2026-10-29-book-and-pay.md`) |
 
 ## 📋 Implementation Plan
@@ -412,15 +416,16 @@ These are pure functions with no React and no shadcn, built on `Intl` with `pl-P
 
 ### Phase 2 — page loading (in the accounts PR)
 
-1. `verifySessionToken` split out of `requireSession` (existing auth tests unchanged), then `getPageSession`.
+1. `verifySessionToken` split out of `requireSession`, then `getPageSession`. Accounts updates auth tests for `roles` membership and required `exp`; replacement tokens retain that deadline. This platform phase is inside accounts Phase 1, not a second accounts PR.
 2. `isSafeReturnTo`, with tests for `//x`, `/\x`, `%2F%2Fx`, control characters and absolute URLs.
 3. `loadPage` with its access modes and error mapping; Polish `not-found.tsx` and `error.tsx`. Unit tests cover not-found/forbidden mapping plus logging/rethrow of unexpected `ValidationError`, `ConfigError` and other failures. Each consuming page tests its explicit malformed-parameter behavior; E01 tests bad slug → 404 and bad pagination → page 1.
+4. Accounts' own implementation plan also delivers B7's `isUniqueViolation`/`LockMode` exports, B12's auth subset and B13's admin access, with tests for transaction-backed role writes, taken-email field errors and wrong-role checks before parsing. Reuse these in E01 rather than implementing them twice.
 
 ### Phase 3 — in E01 PRs (steps listed in the E01 spec; each primitive's tests land with it)
 
-- With #14: B5, B6, B7, B12, F3 `useApiMutation`, F4 `urlList`/external errors/dirty state, F5, `PanelShell`. Tests prove busy calls return `null` without extra requests/callbacks, URL errors name rows, and valid last-write-wins saves preserve publication completeness and dirty input on refresh.
+- With #14: B5, B6, remaining B7/B12 pieces (reuse accounts' DB exports/error extensions), F3 `useApiMutation`, F4 `urlList`/external errors/dirty state, F5, `PanelShell`. Tests prove busy calls return `null` without extra requests/callbacks, URL errors name rows, and valid last-write-wins saves preserve publication completeness and dirty input on refresh.
 - With #15: B1, B2 (mentors), F4 `money`, F7 `formatMoney`. Tests cover `fromWholePln` integer-only inputs, `fromGrosze` fractional-zł amounts, safe-integer bounds and arithmetic overflow.
-- With #16: B3, B4, B2 (availability), B13, F4 `datetime`, F7 `formatSlotTime`. Select the maintained timezone dependency and test invalid-calendar/gap rejection, earliest overlap selection and browser/server transport parity.
+- With #16: B3, B4, B2 (availability), reuse B13 from accounts, F4 `datetime`, F7 `formatSlotTime`. Select the maintained timezone dependency and test invalid-calendar/gap rejection, earliest overlap selection and browser/server transport parity.
 - With #17: F4 `checkbox`.
 
 ### Phase 4 — in E02–E05 PRs

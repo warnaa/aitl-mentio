@@ -21,6 +21,27 @@ details if applicable, and to the relevant spec in `.ai/specs/` if one exists.
 
 ---
 
+## 2026-10-30 - Accepted accounts corrections: atomic admission and role writes
+
+The accepted accounts spec counts every admitted login attempt synchronously before
+asynchronous lookup/hashing, with no success reset or live-key eviction. A single
+service class does not serialize JSON role updates: operator and enrollment paths
+must lock the same user row and use committed roles for replacement tokens. Core
+accounts now ship backend and UI in one PR; self-service enrollment remains a separate
+gated phase. These are approved design contracts, not implemented behavior. See
+`.ai/runs/2026-10-30-accounts-and-sign-in-spec-corrections.md`.
+
+## 2026-10-30 - Token replacement and normalization need explicit boundaries
+
+The accounts design review found that an idempotent role-enrollment endpoint that
+re-signs a token can silently become an unlimited refresh endpoint when the signer
+always starts a new 24-hour TTL. Preserve the original authentication deadline when
+changing claims, and source roles from committed state. Normalizing only future
+email writes also does not protect mixed-case legacy identities: migration and
+collision handling must establish the invariant before registration opens. These
+are design findings, not implemented fixes; see
+`.ai/runs/2026-10-30-accounts-and-sign-in-design-review.md`.
+
 ## 2026-10-29 - Decided: Polish strings in code, no i18n library (first build)
 
 next-intl was chosen at the primitives spec's gate, then reversed the same day. For one fixed
