@@ -271,3 +271,14 @@ refund without restoring the booking. GET projections and the actual-visit trigg
 must cover this ended state with pending money. This is a corrected design contract,
 not implemented behavior; see R22 and
 `.ai/runs/2026-10-29-book-and-pay-spec-corrections.md`.
+
+## 2026-10-30 - Booking edits have different pricing rules by changed field
+
+During the book-and-pay interview, the user rejected preserving the old rate when
+changing an unpaid booking's duration: use the current mentor rate and explicitly
+show that it changed. Question-only edits keep the saved price. Both retain the
+original slot and hold deadline. Do not apply a blanket "all edits preserve price"
+or "all edits reprice" rule. Pending-payment cancellation was also approved, with
+immediate release and refund recovery that never revives the booking. These are
+draft design decisions, not implemented behavior; see
+`.ai/runs/2026-10-30-book-and-pay-grilling.md`.
