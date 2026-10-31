@@ -13,7 +13,7 @@ const meta = {
         <CardTitle><h2>Booking summary</h2></CardTitle>
         <CardDescription>Text session with Alex, 6 November 2026 at 18:00 (Warsaw time).</CardDescription>
       </CardHeader>
-      <CardContent><p>50 minutes — 240 PLN</p></CardContent>
+      <CardContent><p>50 minutes — 240 zł</p></CardContent>
     </Card>
   </div>,
 } satisfies Meta<typeof Card>;
@@ -30,10 +30,10 @@ export const WithActionAndFooter: Story = {
         <CardAction><Button type="button" variant="ghost" size="sm">Edit question or length</Button></CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-within-group">
-        <p>50 minutes — 240 PLN</p>
+        <p>50 minutes — 240 zł</p>
         <p>Simulated payment — no money is charged.</p>
       </CardContent>
-      <CardFooter className="border-t"><Button type="button">Pay 240 PLN</Button></CardFooter>
+      <CardFooter className="border-t"><Button type="button">Pay 240 zł</Button></CardFooter>
     </Card>
   </div>,
 };
@@ -78,7 +78,7 @@ export const LongContent: Story = {
         <CardAction><Button type="button" variant="ghost" size="sm">Edit question or length</Button></CardAction>
       </CardHeader>
       <CardContent><p className="font-mono break-all">kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --since=1h</p></CardContent>
-      <CardFooter className="border-t"><Button type="button">Pay 240 PLN</Button><Button type="button" variant="outline">Cancel booking</Button></CardFooter>
+      <CardFooter className="border-t"><Button type="button">Pay 240 zł</Button><Button type="button" variant="outline">Cancel booking</Button></CardFooter>
     </Card>
   </div>,
 };
@@ -98,7 +98,7 @@ export const StructureAndFocusOrder: Story = {
     await userEvent.tab();
     await expect(canvas.getByRole('button', { name: 'Edit question or length' })).toHaveFocus();
     await userEvent.tab();
-    await expect(canvas.getByRole('button', { name: 'Pay 240 PLN' })).toHaveFocus();
+    await expect(canvas.getByRole('button', { name: 'Pay 240 zł' })).toHaveFocus();
   },
 };
 // WCAG 1.4.10 regression: a header narrower than 24rem moves the action under the title.

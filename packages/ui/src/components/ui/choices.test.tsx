@@ -23,12 +23,12 @@ it('checkbox toggles through its visible label and reports the new state', () =>
 it('radio group selects exactly one labelled option', () => {
   const change = vi.fn();
   render(<RadioGroup aria-label="Session length" onValueChange={change}>
-    <RadioGroupItem id="len-25" value="25" /><Label htmlFor="len-25">25 minutes — 120 PLN</Label>
-    <RadioGroupItem id="len-50" value="50" /><Label htmlFor="len-50">50 minutes — 240 PLN</Label>
+    <RadioGroupItem id="len-25" value="25" /><Label htmlFor="len-25">25 minutes — 120 zł</Label>
+    <RadioGroupItem id="len-50" value="50" /><Label htmlFor="len-50">50 minutes — 240 zł</Label>
   </RadioGroup>);
-  fireEvent.click(screen.getByRole('radio', { name: '50 minutes — 240 PLN' }));
+  fireEvent.click(screen.getByRole('radio', { name: '50 minutes — 240 zł' }));
   expect(change).toHaveBeenLastCalledWith('50');
-  expect(screen.getByRole('radio', { name: '25 minutes — 120 PLN' }).getAttribute('aria-checked')).toBe('false');
+  expect(screen.getByRole('radio', { name: '25 minutes — 120 zł' }).getAttribute('aria-checked')).toBe('false');
 });
 
 it('select keeps one approved trigger size and exposes the chosen value', () => {

@@ -1,0 +1,124 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './alert.stories';
+
+<Meta of={Stories} />
+
+# Alert
+
+## 1. Purpose
+
+Tell a person, next to the task it affects, that something happened or needs attention, and what to do next. Sources: reference R02.4 (feedback near the element it concerns); task Content (what happened and what to do).
+
+## 2. When to use
+
+Use it for the booking and payment situations named in the spec:
+- “This slot was just taken” and “You already have an unpaid booking”.
+- “Bookings are temporarily switched off”.
+- The simulated-payment notice and the slot hold deadline.
+- “Payment declined — the slot was released”.
+- The payment deadline passing.
+- A failed refund.
+
+Sources: book-and-pay UI/UX.
+
+## 3. When not to use
+
+- An error that belongs to one field goes in that field's FormField error.
+- A failed page load uses ErrorMessage.
+- A destructive decision uses AlertDialog.
+- A short confirmation such as “Link copied.” is local status text next to the control.
+- Never use a toast, and never put an error that needs action anywhere that disappears.
+
+Sources: platform F4; existing `backend/feedback`; R02.4; task How to choose (an error that needs action is never a toast); approved stage-0 Q4 (no toast).
+
+## 4. Anatomy
+
+- A bordered card-surface container with a 1 px border, 10 px radius, 16 px inline and 12 px block padding.
+- An optional 16 px icon. It is decorative because the title states the meaning.
+- `AlertTitle`: medium weight, wraps over several lines.
+- `AlertDescription`: 14/20, muted, at most 65ch. In the destructive variant it uses the destructive role.
+
+Sources: retained base geometry; tokens (radii retained); WCAG 1.4.1; batch-3 derivation (titles wrap, no clamp).
+
+## 5. Variants
+
+- `default`: a neutral notice or progress, for example “Simulated payment — no money is charged”.
+- `destructive`: a failure that changes what the person can do, for example “Payment declined”. Text and icon use the destructive role on the card surface.
+
+There are no success, warning or info colours. No new hue is approved, so the title text carries the kind of message. Sources: package variants; references R01.4 and A01.1 (no new brand hue); T01 contrast pair.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.Notice} /></Unstyled>
+<Unstyled><Canvas of={Stories.Destructive} /></Unstyled>
+<Unstyled><Canvas of={Stories.WithoutIcon} /></Unstyled>
+
+## 6. States
+
+An alert is not interactive, so hover, focus, pressed, selected and disabled do not apply. What changes is how it is announced, through its role:
+- `role="alert"` (the default) when it appears after an action, such as a declined payment.
+- `role="status"` for progress, such as “Payment in progress…”.
+- `role="note"` for a notice already present when the page loads.
+
+Loading is never shown with an alert alone. Pair a status alert with the pending control. Sources: WAI-ARIA alert, status and note roles; WCAG 4.1.3.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+An alert does not move focus. The person keeps working where they were, and a screen reader announces the new alert or status. Put it directly above the control it concerns, such as the payment button, or above the form. Never rely on colour: the title names the situation. Pass `role="note"` or `role="status"` explicitly when `alert` would interrupt without reason. There are no click targets of its own. Any action inside is a real Button or Link. Sources: WAI-ARIA alert role; WCAG 1.3.2, 1.4.1, 4.1.3; reference R02.4.
+
+## 8. Content
+
+- The title says what happened in plain words: “This slot was just taken”, not “Error 409 slot_held”.
+- The description says what to do next and what was kept: “Choose another time; your question is still here.”
+- Use the second person, with no blame and no exclamation marks.
+- Write times in Warsaw time and prices as “240 zł”.
+- Long titles wrap. Longer languages add lines and never truncate.
+
+Sources: U01.1; task Content; book-and-pay UI/UX; D10.
+
+## 9. Responsiveness
+
+The alert fills its container at every width. At 320 px the icon stays aligned with the first line of the title and the text wraps. At 768 and 1440 px the description stops at 65ch. Sources: approved stage-0 Q3; WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Part / prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Alert variant</code></td><td><code>'default' | 'destructive'</code></td><td><code>default</code></td><td>Neutral notice or failure.</td></tr><tr><td><code>Alert role</code></td><td><code>'alert' | 'status' | 'note'</code></td><td><code>alert</code></td><td>How assistive technology announces it.</td></tr><tr><td><code>Alert className / div props</code></td><td>native</td><td>unset</td><td>Layout utilities.</td></tr><tr><td><code>AlertTitle</code></td><td><code>div</code> props</td><td>—</td><td>What happened. It wraps.</td></tr><tr><td><code>AlertDescription</code></td><td><code>div</code> props</td><td>—</td><td>What to do next. It may contain paragraphs and links.</td></tr></tbody></table>
+
+Source: exported package API.
+
+## 11. Code
+
+Minimal:
+
+```tsx
+import { Alert, AlertDescription, AlertTitle } from '@mentio/ui/components/alert';
+<Alert role="note"><AlertTitle>Simulated payment — no money is charged</AlertTitle></Alert>
+```
+
+Product composition, after a declined payment:
+
+```tsx
+import { CircleAlert } from 'lucide-react';
+{payment === 'declined' && <Alert variant="destructive">
+  <CircleAlert aria-hidden="true" />
+  <AlertTitle>Payment declined — the slot was released</AlertTitle>
+  <AlertDescription>No money was taken. Choose a time again to book this mentor.</AlertDescription>
+</Alert>}
+```
+
+Sources: book-and-pay UI/UX; package API.
+
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>An alert above the payment button: “Payment declined — the slot was released”, with the next step.</td><td>A toast that disappears after five seconds while the person still has to choose a new time.</td></tr><tr><td>Static simulated-payment notice with <code>role="note"</code>.</td><td>The same notice with <code>role="alert"</code>, announced as urgent on every visit.</td></tr><tr><td>“This slot was just taken.”</td><td>“Error 409: slot_held.”</td></tr></tbody></table>
+
+Sources: task How to choose and What to avoid; WAI-ARIA; U01.1.
+
+## 13. Related
+
+FormField error is for one field. ErrorMessage is for a failed page load. AlertDialog asks for a decision. Badge is a short status inside a row. Patterns: booking and payment recovery; cancellation; form (server error). Sources: approved stage-0 inventory.

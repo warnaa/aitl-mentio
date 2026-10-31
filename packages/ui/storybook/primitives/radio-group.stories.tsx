@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@mentio/ui/components/radio-group';
 
 // Approved inventory: RadioGroup documents the visible alternative for the two booking lengths.
 // The book-and-pay spec still uses Select for that screen.
-const durations = [{ value: '25', label: '25 minutes — 120 PLN' }, { value: '50', label: '50 minutes — 240 PLN' }];
+const durations = [{ value: '25', label: '25 minutes — 120 zł' }, { value: '50', label: '50 minutes — 240 zł' }];
 
 const meta = {
   title: 'Primitives/RadioGroup',
@@ -43,8 +43,8 @@ export const LongContent: Story = {
   render: () => <div className="primitive-demo flex flex-col gap-within-group">
     <p id="length-long-legend" className="font-medium">How much time do you need for the question about the ingress that stopped responding after the cluster upgrade?</p>
     <RadioGroup aria-labelledby="length-long-legend" defaultValue="50">
-      <div className="flex items-start gap-within-group"><RadioGroupItem id="length-long-25" value="25" className="mt-1" /><Label htmlFor="length-long-25">25 minutes — 120 PLN, enough for one focused error message</Label></div>
-      <div className="flex items-start gap-within-group"><RadioGroupItem id="length-long-50" value="50" className="mt-1" /><Label htmlFor="length-long-50">50 minutes — 240 PLN, time to read the pasted configuration, logs and the change made before the failure</Label></div>
+      <div className="flex items-start gap-within-group"><RadioGroupItem id="length-long-25" value="25" className="mt-1" /><Label htmlFor="length-long-25">25 minutes — 120 zł, enough for one focused error message</Label></div>
+      <div className="flex items-start gap-within-group"><RadioGroupItem id="length-long-50" value="50" className="mt-1" /><Label htmlFor="length-long-50">50 minutes — 240 zł, time to read the pasted configuration, logs and the change made before the failure</Label></div>
     </RadioGroup>
   </div>,
 };
@@ -53,8 +53,8 @@ export const ArrowKeySelection: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const group = canvas.getByRole('radiogroup', { name: 'Session length' });
-    const short = canvas.getByRole('radio', { name: '25 minutes — 120 PLN' });
-    const long = canvas.getByRole('radio', { name: '50 minutes — 240 PLN' });
+    const short = canvas.getByRole('radio', { name: '25 minutes — 120 zł' });
+    const long = canvas.getByRole('radio', { name: '50 minutes — 240 zł' });
     await expect(group).toBeInTheDocument();
     await expect(getComputedStyle(short).borderRadius).toBe('50%');
     await userEvent.tab();
@@ -65,7 +65,7 @@ export const ArrowKeySelection: Story = {
     await waitFor(() => expect(long).toHaveAttribute('aria-checked', 'true'));
     await userEvent.keyboard('{/ArrowDown}');
     await expect(args.onValueChange).toHaveBeenLastCalledWith('50');
-    await userEvent.click(canvas.getByText('25 minutes — 120 PLN'));
+    await userEvent.click(canvas.getByText('25 minutes — 120 zł'));
     await expect(short).toHaveAttribute('aria-checked', 'true');
     await expect(long).toHaveAttribute('aria-checked', 'false');
     await userEvent.tab();

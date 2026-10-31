@@ -380,3 +380,43 @@ On a Linux host with Noto Color Emoji but without "Noto Sans", Chromium resolves
 (CDP `CSS.getPlatformFontsForNode` shows NotoColorEmoji for "128"); letters fall back
 to DejaVu. Digits look grey and offset. The stack is an approved decision; a change is
 pending the user's decision (POSTEP.md).
+
+## 2026-10-31 - Never embed nested story frames in Storybook docs for overlays
+
+`parameters.docs.story.inline: false` renders a story in a nested preview iframe. That
+preview receives no globals and broadcasts its own (light) SET_GLOBALS through the
+channel, which the docs page's theme sync applied — the whole docs page switched to
+light. Mirroring the parent theme in the child does not help. Show modal overlays in
+docs as closed trigger stories (they open in the docs document, in its theme) and keep
+open states as standalone stories with `docs.disable`. Also do not embed stories whose
+play functions open overlays: docs run play functions. Open modal stories pass axe
+without exceptions when no trigger sits behind the modal (nothing focusable is
+aria-hidden). See `.ai/runs/2026-10-31-mentio-primitives-batch-3.md`.
+
+## 2026-10-31 - Radix overlay gotchas found by browser checks
+
+Radix PopoverContent has role="dialog" but the shadcn PopoverTitle is not linked to
+it: pass `aria-labelledby`/`aria-label` or axe fails `aria-dialog-name`. Dropdown and
+popover panels need `max-inline-size` from `--radix-*-content-available-width`, or
+long items leave a 320px viewport. Radix Tooltip closes on any ancestor scroll,
+including the scroll caused by keyboard focus on an off-screen trigger (a WCAG 1.4.13
+persistence gap; decision pending). Programmatic focus in scripts must scroll the
+trigger into view first, or the check measures that closing instead of the theme.
+
+## 2026-10-31 - Correction: emoji-digit fallback is not caused by "Noto Sans"
+
+The earlier lesson attributed digits rendered with Noto Color Emoji to the `'Noto Sans'`
+entry. Measured with CDP `CSS.getPlatformFontsForNode`: removing it changes nothing;
+any stack whose named families are all missing, followed by `sans-serif` and then the
+emoji fonts, renders ASCII digits with Noto Color Emoji on this host. Putting
+`system-ui` before `sans-serif` fixes digits but makes user emoji monochrome
+(DejaVu has its own glyphs). A local `@font-face` alias for the emoji fonts with a
+`unicode-range` limited to emoji blocks, placed before `sans-serif`, fixes digits and
+keeps colour emoji. Verify font diagnoses by measurement before writing them down.
+
+## 2026-10-31 - Currency is PLN, displayed as "zł" even in English UI
+
+The user approved English UI copy but wants amounts shown as "240 zł" (whole amount,
+symbol after the number), not "240 PLN". Keep "PLN" only where the currency itself is
+named (D10, data contracts such as `currency: "PLN"`). Story labels double as test
+selectors, so a copy change must update play-function and unit-test names together.

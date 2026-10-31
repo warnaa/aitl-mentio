@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 2, batch 2 complete; awaiting “dalej” before batch 3.**
+Date: 2026-10-31. Status: **stage 2, batch 3 complete; no open decisions; awaiting “dalej” before batch 4.**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -322,9 +322,87 @@ Fixed during verification: a Card header overflow at 320 px (container-query ref
 
 ### Finding for decision
 
-Digits render with Noto Color Emoji on Linux systems without “Noto Sans” (Tailwind's default `--font-sans`, which you approved keeping). The glyphs come out grey and offset. This predates this batch, and changing the font stack would revise an approved decision. Options: keep it as is, or put a generic sans-serif ahead of the emoji fallbacks.
+Digits render with Noto Color Emoji on Linux systems that have none of the named fonts in Tailwind's default `--font-sans` (which you approved keeping) but do have Noto Color Emoji. The glyphs come out grey and offset. This predates this batch, and changing the font stack would revise an approved decision.
+
+*Corrected 2026-10-31 after measurement:* the cause is not the “Noto Sans” entry. Removing it changes nothing. The cause is the emoji fonts at the end of the stack combined with a generic `sans-serif` fallback. Options were measured and presented to the user.
 
 Next: wait for “dalej”, then batch 3 only: Alert, Dialog, AlertDialog, DropdownMenu, Popover, Tooltip.
 
 The user then asked for a local commit and continuation (“commit aktualnych postępów i dalej”). Batch 2 is committed locally on main; no push. The five proposals and the font finding remain open; batch 3 does not depend on them.
+
+## Stage 2 batch 3 started — 2026-10-31
+
+Authorized by “commit aktualnych postępów i dalej”. Alert, Dialog, AlertDialog, DropdownMenu, Popover and Tooltip were added with the shadcn CLI. The overwrite of the adapted Button was declined, and the manifests are unchanged. Run log: `.ai/runs/2026-10-31-mentio-primitives-batch-3.md`.
+
+Approved by the user where materials were silent:
+- The modal scrim is a new `--overlay-scrim` token: warm neutral-950 at 50%.
+- Dialog and AlertDialog titles use the body role, 16/24 semibold.
+- AlertDialog has only the default size (generated `sm` removed).
+- Tooltip keeps the inverted foreground/background pair with an arrow.
+
+Derived, not new decisions:
+- No entrance animations (U02.1).
+- Opaque popovers (A01.2).
+- Menu rows use the batch-2 menu tokens.
+- The destructive menu highlight uses `--error-surface`.
+- The dialog close control is a 32 px ghost icon Button (WCAG 2.5.8).
+- Text is left-aligned at every width.
+- AlertTitle wraps instead of being clamped.
+
+## Stage 2 batch 3 completion — 2026-10-31
+
+Completed Alert, Dialog, AlertDialog, DropdownMenu, Popover and Tooltip. That adds six 13-section pages and 42 stories, for a cumulative 26 MDX pages and 153 stories. No dependencies were added. Report: `storybook/verification/2026-10-31-stage-2-batch-3.md`.
+
+Verified:
+- 306 story tests in both themes, with 8 clean full runs.
+- 156 built-page checks and 52 MDX axe audits with zero findings.
+- Overlays opened from docs pages use the docs theme and stay in the viewport.
+- Real menu hover equals the frozen samples.
+- The tooltip is hoverable and dismissible.
+- The dialog footer stacks below 640 px and is a row above.
+- No long-content overflow.
+- Batch-2 states show no regression.
+- 234 unit tests with 100% coverage; lint and types; app build; 10 integration tests; audit.
+
+`check:tokens` reports only the 2 Table findings scheduled for batch 4.
+
+Fixed during verification:
+- Popovers lacked an accessible name. `aria-labelledby` or `aria-label` is now a documented rule.
+- Long menus overflowed at 320 px and are now capped to the available width.
+- A nowrap popover trigger overflowed and now uses the long-label Button classes.
+
+Open overlay states are separate stories rather than nested docs frames, because nested frames broadcast their own globals and reset the docs theme (rule 9).
+
+### Proposals awaiting your decision (new in batch 3; batch 2's list above still applies)
+
+6. No confirmation dialog for reversible actions such as unpublishing a page; the specs do not require one.
+7. Mentor page and row actions are placed in a DropdownMenu, with about seven items as a practical maximum.
+8. Dialog is documented as not needed by any current screen, with an illustrative “How a text session works” example. Popover is illustrated by the share link and booking-window explanations.
+
+### Finding for decision
+
+Radix closes a tooltip on scroll, including the scroll caused by keyboard focus on an off-screen trigger. This conflicts with the persistence rule of WCAG 1.4.13. Impact is limited because tooltips only repeat a name. Options: accept and document it, or wrap Tooltip to reopen after focus-scroll, which changes behavior.
+
+Next: wait for “dalej”, then batch 4 only: Table, Skeleton, LoadingMessage, EmptyState, ErrorMessage. Batch 3 is not committed; no push.
+
+## Decisions on batch-3 proposals — 2026-10-31
+
+The user approved:
+- 6: no confirmation for reversible actions.
+- 7: page and row actions in a DropdownMenu, at most about seven items.
+- 8: Dialog and Popover are not required by current screens; the examples stay illustrative.
+
+The tooltip-scroll finding is accepted as is and documented as a known limitation on the Tooltip page. The corresponding “Proposal” marks in the docs are replaced with the decision. The batch-2 proposals 1–5 remain open; the font options are presented to the user for a decision.
+
+## Font decision — 2026-10-31
+
+The user chose to keep the approved Tailwind system font stack unchanged (option 1 of 4 measured options: keep; local emoji alias with unicode-range; system-ui before sans-serif; self-hosted font). Known effect, accepted: on Linux hosts with none of the named families but with Noto Color Emoji, digits render with the emoji font. No code change.
+
+## Decisions on batch-2 proposals — 2026-10-31
+
+The user approved proposals 1, 2, 3 and 5 as written. Proposal 4 is approved with one change: show the currency as “zł” after a whole amount (“240 zł”), not “PLN”. The currency itself stays PLN (D10); the date format “6 November 2026 at 18:00 (Warsaw time)” is approved for examples, with final wording on the Content page in stage 4.
+
+Applied: every example amount in stories, docs and unit tests now reads “… zł”, including rate labels (“Rate per 25 minutes (zł)”). The “Proposal” marks for 1–5 are replaced with the decision and its date, including the Card container-query comment in the token file.
+
+No open decisions remain for stages 0–2 so far. Next: “dalej” for batch 4 (Table, Skeleton, LoadingMessage, EmptyState, ErrorMessage), or a local commit of batch 3 first.
 

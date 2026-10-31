@@ -423,7 +423,7 @@
   .mentio-card-description { color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); max-inline-size: var(--prose-max-width); }
   .mentio-card-action { grid-column-start: 2; grid-row: 1 / span 2; align-self: start; justify-self: end; }
   /* WCAG 1.4.10 reflow: below Tailwind's --container-sm (24rem; var() is invalid in a container
-   * query) the header action moves under the title instead of widening the card. Proposal. */
+   * query) the header action moves under the title instead of widening the card. Threshold: user decision 2026-10-31. */
   @container card-header (inline-size < 24rem) {
     /* A container cannot restyle itself; its children span both columns instead. */
     .mentio-card-header > * { grid-column: 1 / -1; }
@@ -454,4 +454,93 @@
   .mentio-separator { flex-shrink: 0; background: var(--border); }
   .mentio-separator[data-orientation=horizontal] { block-size: var(--divider-width); inline-size: 100%; }
   .mentio-separator[data-orientation=vertical] { block-size: 100%; inline-size: var(--divider-width); }
+}
+
+/* Stage 2 batch 3: Alert, Dialog, AlertDialog, DropdownMenu, Popover, Tooltip.
+ * User decisions 2026-10-31: warm 50% modal scrim, dialog titles in the body role (16/24
+ * semibold), one AlertDialog size, inverted tooltip. Other values retain the base scale. */
+:root {
+  /* User decision: warm neutral scrim at the base strength (R01.4); no blur (A01.2). */
+  --overlay-scrim: color-mix(in srgb, var(--raw-neutral-950) 50%, transparent);
+  /* Retained base geometry: 32rem dialogs, 18rem popovers, 2px alert rhythm, tooltip arrow. */
+  --dialog-max-width: calc(var(--spacing) * 128);
+  --popover-width: calc(var(--spacing) * 72);
+  --alert-row-gap: calc(var(--spacing) * 0.5);
+  --tooltip-padding-block: calc(var(--spacing) * 1.5);
+  --tooltip-arrow-size: calc(var(--spacing) * 2.5);
+  --tooltip-arrow-offset: 2px;
+  --media-size: calc(var(--spacing) * 16);
+  --media-icon-size: calc(var(--spacing) * 8);
+}
+
+@layer components {
+  /* Alert: R02.4 local feedback near the cause; text and icon carry meaning (WCAG 1.4.1). */
+  .mentio-alert { position: relative; display: grid; inline-size: 100%; grid-template-columns: 0 1fr; align-items: start; row-gap: var(--alert-row-gap); border: var(--divider-width) solid var(--border); border-radius: var(--radius-lg); padding-inline: var(--control-padding-inline); padding-block: var(--control-padding-small); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-alert:has(> svg) { grid-template-columns: var(--icon-size) 1fr; column-gap: var(--control-padding-small); }
+  .mentio-alert > svg { inline-size: var(--icon-size); block-size: var(--icon-size); translate: 0 var(--alert-row-gap); color: currentColor; }
+  .mentio-alert-default { background: var(--card); color: var(--card-foreground); }
+  .mentio-alert-destructive { background: var(--card); color: var(--destructive); }
+  /* WCAG 1.4.10 / longer languages: titles wrap instead of the base single-line clamp. */
+  .mentio-alert-title { grid-column-start: 2; min-block-size: var(--icon-size); font-weight: var(--font-weight-medium); letter-spacing: var(--tracking-tight); overflow-wrap: anywhere; }
+  .mentio-alert-description { grid-column-start: 2; display: grid; justify-items: start; gap: var(--spacing); color: var(--muted-foreground); font-size: var(--text-label); max-inline-size: var(--prose-max-width); }
+  .mentio-alert-description p { line-height: var(--leading-relaxed); }
+  /* T01: the destructive role is measured on the card surface; no translucent variant. */
+  .mentio-alert-destructive > .mentio-alert-description { color: var(--destructive); }
+
+  /* Dialog/AlertDialog: opaque surface (A01.2), no entrance motion (U02.1). */
+  .mentio-overlay { position: fixed; inset: 0; z-index: 50; background: var(--overlay-scrim); }
+  .mentio-dialog { position: fixed; inset-block-start: 50%; inset-inline-start: 50%; z-index: 50; display: grid; inline-size: 100%; max-inline-size: min(calc(100% - var(--space-section)), var(--dialog-max-width)); max-block-size: calc(100dvh - var(--space-section)); overflow-y: auto; translate: -50% -50%; gap: var(--space-between-groups); border: var(--divider-width) solid var(--border); border-radius: var(--radius-lg); background: var(--background); color: var(--foreground); padding: var(--space-panel); box-shadow: var(--shadow-lg); outline: none; }
+  .mentio-dialog-close { position: absolute; inset-block-start: var(--space-between-groups); inset-inline-end: var(--space-between-groups); }
+  /* Task What to avoid: start-aligned text at every width, never centred. */
+  .mentio-dialog-header { display: flex; flex-direction: column; gap: var(--space-within-group); text-align: start; }
+  .mentio-dialog:has(> .mentio-dialog-close) > .mentio-dialog-header { padding-inline-end: var(--space-panel); }
+  /* R01.5: on narrow screens the primary action is stacked first; then right-aligned in a row. */
+  .mentio-dialog-footer { display: flex; flex-direction: column-reverse; gap: var(--space-within-group); }
+  .mentio-dialog-footer > .mentio-button { white-space: normal; block-size: auto; min-block-size: var(--control-height); }
+  /* User decision: body role, 16/24 semibold. */
+  .mentio-dialog-title { font-size: var(--text-body); line-height: var(--line-body); font-weight: var(--font-weight-semibold); overflow-wrap: anywhere; }
+  .mentio-dialog-description { color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); max-inline-size: var(--prose-max-width); }
+  .mentio-alert-dialog-media { display: inline-flex; inline-size: var(--media-size); block-size: var(--media-size); align-items: center; justify-content: center; border-radius: var(--radius-md); background: var(--muted); }
+  .mentio-alert-dialog-media > svg:not([class*='size-']) { inline-size: var(--media-icon-size); block-size: var(--media-icon-size); }
+
+  /* DropdownMenu: same opaque list and 32px rows as Select (batch-2 menu tokens). */
+  /* WCAG 1.4.10: long items wrap within the available width instead of leaving the viewport. */
+  .mentio-menu-content { z-index: 50; max-block-size: var(--radix-dropdown-menu-content-available-height); min-inline-size: var(--menu-min-width); max-inline-size: var(--radix-dropdown-menu-content-available-width); transform-origin: var(--radix-dropdown-menu-content-transform-origin); overflow-x: hidden; overflow-y: auto; border: var(--divider-width) solid var(--border); border-radius: var(--radius-md); background: var(--popover); color: var(--popover-foreground); padding: var(--spacing); box-shadow: var(--shadow-md); }
+  .mentio-menu-sub-content { overflow: hidden; box-shadow: var(--shadow-lg); }
+  .mentio-menu-item { position: relative; display: flex; align-items: center; gap: var(--space-within-group); border-radius: var(--radius-sm); padding-block: var(--menu-item-padding-block); padding-inline: var(--menu-item-padding-inline); font-size: var(--text-label); line-height: var(--line-label); outline: none; user-select: none; cursor: default; }
+  .mentio-menu-item:is([data-highlighted],[data-state=open]) { background: var(--accent); color: var(--accent-foreground); }
+  .mentio-menu-item[data-disabled] { pointer-events: none; opacity: var(--state-disabled-opacity); }
+  :is(.mentio-menu-item,.mentio-menu-label)[data-inset] { padding-inline-start: var(--menu-item-indicator-space); }
+  .mentio-menu-item svg { pointer-events: none; flex-shrink: 0; }
+  .mentio-menu-item svg:not([class*='size-']) { inline-size: var(--icon-size); block-size: var(--icon-size); }
+  .mentio-menu-item svg:not([class*='text-']) { color: var(--muted-foreground); }
+  /* Approved error tint for the highlighted destructive row; text stays the destructive role. */
+  .mentio-menu-item[data-variant=destructive] { color: var(--destructive); }
+  .mentio-menu-item[data-variant=destructive][data-highlighted] { background: var(--error-surface); color: var(--destructive); }
+  .mentio-menu-item[data-variant=destructive] svg { color: var(--destructive); }
+  .mentio-menu-choice { padding-inline: var(--menu-item-indicator-space) var(--menu-item-padding-inline); }
+  .mentio-menu-indicator { pointer-events: none; position: absolute; inset-inline-start: var(--menu-item-padding-inline); display: flex; inline-size: var(--icon-size); block-size: var(--icon-size); align-items: center; justify-content: center; }
+  .mentio-menu-choice .mentio-menu-indicator svg { color: currentColor; }
+  .mentio-menu-indicator svg.mentio-menu-radio-dot { inline-size: calc(var(--spacing) * 2); block-size: calc(var(--spacing) * 2); fill: currentColor; }
+  .mentio-menu-label { padding-block: var(--menu-item-padding-block); padding-inline: var(--menu-item-padding-inline); font-size: var(--text-label); line-height: var(--line-label); font-weight: var(--font-weight-medium); }
+  .mentio-menu-separator { margin-inline: calc(var(--spacing) * -1); margin-block: var(--spacing); block-size: var(--divider-width); background: var(--border); }
+  .mentio-menu-shortcut { margin-inline-start: auto; color: var(--muted-foreground); font-size: var(--text-metadata); line-height: var(--line-metadata); letter-spacing: var(--tracking-widest); }
+  .mentio-menu-item svg.mentio-menu-sub-chevron { margin-inline-start: auto; }
+
+  /* Popover: opaque card-like surface for supplementary, interactive content. */
+  .mentio-popover { z-index: 50; inline-size: var(--popover-width); max-inline-size: var(--radix-popover-content-available-width); transform-origin: var(--radix-popover-content-transform-origin); border: var(--divider-width) solid var(--border); border-radius: var(--radius-md); background: var(--popover); color: var(--popover-foreground); padding: var(--space-between-groups); box-shadow: var(--shadow-md); outline: none; }
+  .mentio-popover-header { display: flex; flex-direction: column; gap: var(--spacing); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-popover-title { font-weight: var(--font-weight-medium); }
+  .mentio-popover-description { color: var(--muted-foreground); }
+
+  /* User decision: inverted, measured foreground/background pair with an arrow.
+   * WCAG 1.4.10: the hint wraps within the popover width instead of widening the page. */
+  .mentio-tooltip { z-index: 50; inline-size: fit-content; max-inline-size: min(var(--popover-width), var(--radix-tooltip-content-available-width)); transform-origin: var(--radix-tooltip-content-transform-origin); border-radius: var(--radius-md); background: var(--foreground); color: var(--background); padding-inline: var(--control-padding-small); padding-block: var(--tooltip-padding-block); font-size: var(--text-metadata); line-height: var(--line-metadata); text-wrap: balance; }
+  .mentio-tooltip-arrow { z-index: 50; inline-size: var(--tooltip-arrow-size); block-size: var(--tooltip-arrow-size); translate: 0 calc(-50% - var(--tooltip-arrow-offset)); rotate: 45deg; border-radius: var(--radius-xs); background: var(--foreground); fill: var(--foreground); }
+}
+
+@layer components {
+  @variant sm {
+    .mentio-dialog-footer { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; }
+  }
 }

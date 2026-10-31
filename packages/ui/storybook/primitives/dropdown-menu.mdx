@@ -1,0 +1,120 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './dropdown-menu.stories';
+
+<Meta of={Stories} />
+
+# DropdownMenu
+
+## 1. Purpose
+
+Offer a short list of secondary actions for one object, without crowding the row or competing with the main action. Sources: reference R01.5 (secondary actions visually weaker); WAI-ARIA APG menu button.
+
+## 2. When to use
+
+- Mentor page actions in the editor: “Copy share link”, “View public page”, “Unpublish page”.
+- Per-row actions in the availability list, where “Remove slot” opens the AlertDialog.
+
+Sources: mentor-pages UI/UX (share link, publish/unpublish, slot removal); D02; platform F5; user decision 2026-10-31 (these actions go in a menu).
+
+## 3. When not to use
+
+- The main action of the view stays a visible filled Button and is never hidden in a menu.
+- To choose a value for a form, use Select.
+- To navigate between pages, use links.
+- A single action does not need a menu: show the Button.
+- Do not hide a person's only way to complete a task in a menu.
+
+Sources: reference R01.5; task How to choose (button, link, icon button and action menu); WAI-ARIA APG.
+
+## 4. Anatomy
+
+- A trigger Button: outline with text, or a ghost icon Button with an `aria-label` that names the object.
+- An opaque list: popover surface, 1 px border, 8 px radius, 4 px padding, at least 8rem wide and never wider than the available space.
+- Items are 32 px rows with an optional 16 px icon.
+- Optional parts: `DropdownMenuLabel`, groups, `DropdownMenuSeparator`, checkbox and radio items (indicator at the start), and sub-menus (trigger with a chevron).
+- `DropdownMenuShortcut` is exported but not used: Mentio defines no keyboard shortcuts.
+
+Sources: reference A01.2; batch-2 menu tokens; package API.
+
+## 5. Variants
+
+Item `variant`:
+- `default`.
+- `destructive`: removal. Destructive text, and a highlight on the approved error surface.
+
+Item `inset` aligns a text-only item with items that have indicators. There are no visual variants of the list. Sources: package variants; approved token table (`--error-surface`); T01.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.IconTrigger} /></Unstyled>
+
+Open the menus with their buttons. The **States open**, **Long content** and **Narrow** stories show open lists. Sources: task rule 9; batch-3 verification.
+
+## 6. States
+
+- Item default.
+- Highlighted: hover and keyboard focus look the same, using the accent surface.
+- Disabled: `aria-disabled`, lower opacity. The item text says why, for example “Unpublish page — saving your draft first”, because a tooltip cannot be relied on.
+- Selected: the check mark on checkbox and radio items.
+- Destructive highlighted.
+- Pressed is the selection itself, which closes the menu.
+
+The trigger keeps Button states. The **States open** story shows highlighted rows as frozen samples, using the same declarations as `[data-highlighted]`. Sources: task stage 2; WCAG 1.4.1; task What to avoid (disabled without explanation).
+
+## 7. Behavior and accessibility
+
+The trigger is a button with `aria-haspopup="menu"` and `aria-expanded`. The list is a `menu` of `menuitem`, `menuitemcheckbox` and `menuitemradio`.
+- Enter, Space or Arrow Down opens the menu and focuses the first item. Arrow Up focuses the last.
+- The arrows move, Home and End jump, and typing a letter finds an item.
+- Enter selects and closes. Escape closes, and focus returns to the trigger. Tab closes and moves on.
+- By default the menu is modal: the page behind is hidden and does not scroll.
+- Rows are 32 px high, above the 24 px minimum.
+
+Sources: WAI-ARIA APG menu button and menu; WCAG 2.1.1, 2.4.3, 2.5.8, 4.1.2.
+
+## 8. Content
+
+- Items are a verb and object: “Copy share link”, “Remove slot”. Do not use nouns alone or “More”.
+- An icon trigger's `aria-label` names the object: “Actions for the slot on 6 November 2026 at 18:00”.
+- Keep about seven items or fewer. Long items wrap.
+
+Sources: U01.1; task Content (buttons); user decision 2026-10-31 (about seven items at most).
+
+## 9. Responsiveness
+
+At 320 px the list never leaves the viewport: it is limited to the available width and long items wrap. Radix flips it above or beside the trigger when there is no room. At 768 and 1440 px align the list to the trigger's end in rows. Sources: WCAG 1.4.10; approved stage-0 Q3.
+
+## 10. API
+
+<table><thead><tr><th>Part / prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>DropdownMenu open / defaultOpen / onOpenChange / modal</code></td><td><code>boolean / handler</code></td><td>closed / modal</td><td>Visibility and modality.</td></tr><tr><td><code>DropdownMenuTrigger asChild</code></td><td>Radix trigger</td><td>—</td><td>A Button. Icon-only triggers need <code>aria-label</code>.</td></tr><tr><td><code>DropdownMenuContent align / side / sideOffset</code></td><td>Radix placement</td><td><code>center</code> / <code>bottom</code> / 4</td><td>Placement relative to the trigger.</td></tr><tr><td><code>DropdownMenuItem onSelect / disabled / variant / inset</code></td><td>handler / boolean / <code>'default' | 'destructive'</code> / boolean</td><td>— / false / <code>default</code> / false</td><td>One action.</td></tr><tr><td><code>DropdownMenuCheckboxItem checked / onCheckedChange</code></td><td><code>boolean</code> / handler</td><td>—</td><td>Toggle inside a menu.</td></tr><tr><td><code>DropdownMenuRadioGroup value / DropdownMenuRadioItem value</code></td><td><code>string</code></td><td>—</td><td>One choice inside a menu.</td></tr><tr><td><code>DropdownMenuLabel, Group, Separator, Sub, SubTrigger, SubContent, Shortcut, Portal</code></td><td>Radix parts</td><td>—</td><td>Optional structure.</td></tr></tbody></table>
+
+Source: exported package API (Radix DropdownMenu).
+
+## 11. Code
+
+Minimal:
+
+```tsx
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@mentio/ui/components/dropdown-menu';
+<DropdownMenu>
+  <DropdownMenuTrigger asChild><Button variant="outline">Page actions</Button></DropdownMenuTrigger>
+  <DropdownMenuContent align="end"><DropdownMenuItem onSelect={copyShareLink}>Copy share link</DropdownMenuItem></DropdownMenuContent>
+</DropdownMenu>
+```
+
+Row actions with a confirmation: open a controlled AlertDialog from the item's `onSelect`.
+
+```tsx
+<DropdownMenuItem variant="destructive" onSelect={() => setConfirmSlot(slot)}><Trash2 aria-hidden="true" />Remove slot</DropdownMenuItem>
+```
+
+Sources: mentor-pages UI/UX; platform F5.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>“Publish page” as a visible filled Button, with secondary page actions in the menu.</td><td>“Publish page” hidden inside “More”.</td></tr><tr><td>An icon trigger labelled “Actions for the slot on 6 November 2026 at 18:00”.</td><td>An icon trigger labelled “More” in every row: the rows cannot be told apart.</td></tr><tr><td>“Remove slot” opens a confirmation.</td><td>“Remove slot” deletes immediately from the menu.</td></tr></tbody></table>
+
+Sources: reference R01.5; WCAG 2.4.6; platform F5.
+
+## 13. Related
+
+Select is used for values. Button is used for single actions. AlertDialog confirms destructive items. Popover holds richer anchored content. Patterns: list with filters (row actions); availability; publication. Sources: approved stage-0 inventory.

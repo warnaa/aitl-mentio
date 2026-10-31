@@ -11,7 +11,7 @@ Let a person compare a few exclusive options side by side and pick exactly one. 
 
 ## 2. When to use
 
-Use it when two to five exclusive options must all stay visible and each option needs its own explanation. The documented product example shows the two booking lengths with their prices. The book-and-pay spec currently uses Select on that screen, so this is the alternative presentation, not the current screen. Sources: approved stage-0 inventory; book-and-pay UI/UX; brief R01. Proposal: the two-to-five option range is not set by the materials.
+Use it when two to five exclusive options must all stay visible and each option needs its own explanation. The documented product example shows the two booking lengths with their prices. The book-and-pay spec currently uses Select on that screen, so this is the alternative presentation, not the current screen. Sources: approved stage-0 inventory; book-and-pay UI/UX; brief R01. The two-to-five option range: user decision 2026-10-31.
 
 ## 3. When not to use
 
@@ -42,7 +42,7 @@ Tab enters the group once, on the selected option or the first one. The arrow ke
 
 ## 8. Content
 
-The group heading asks or names the choice: “Session length”. Option labels state the value and its consequence: “25 minutes — 120 PLN”. Labels may wrap. Do not shorten them for a longer language. Order options by value, not by preference. Sources: U01.1; book-and-pay UI/UX; task Content requirements. Proposal: ordering by value.
+The group heading asks or names the choice: “Session length”. Option labels state the value and its consequence: “25 minutes — 120 zł”. Labels may wrap. Do not shorten them for a longer language. Order options by value, not by preference. Sources: U01.1; book-and-pay UI/UX; task Content requirements. Ordering by value: user decision 2026-10-31.
 
 ## 9. Responsiveness
 
@@ -66,8 +66,8 @@ import { Label } from '@mentio/ui/components/label';
 import { RadioGroup, RadioGroupItem } from '@mentio/ui/components/radio-group';
 <p id="length-legend">Session length</p>
 <RadioGroup name="lengthMinutes" aria-labelledby="length-legend">
-  <div className="flex items-center gap-within-group"><RadioGroupItem id="len-25" value="25" /><Label htmlFor="len-25">25 minutes — 120 PLN</Label></div>
-  <div className="flex items-center gap-within-group"><RadioGroupItem id="len-50" value="50" /><Label htmlFor="len-50">50 minutes — 240 PLN</Label></div>
+  <div className="flex items-center gap-within-group"><RadioGroupItem id="len-25" value="25" /><Label htmlFor="len-25">25 minutes — 120 zł</Label></div>
+  <div className="flex items-center gap-within-group"><RadioGroupItem id="len-50" value="50" /><Label htmlFor="len-50">50 minutes — 240 zł</Label></div>
 </RadioGroup>
 ```
 

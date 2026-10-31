@@ -11,7 +11,7 @@ Capture one short value without hiding its label or its editing state. Source: a
 
 ## 2. When to use
 
-Use it for account email/password, a mentor rate in PLN, a public-work URL or a native availability date/time. Source: accounts UI/UX; mentor-pages UI/UX; platform F4.
+Use it for account email/password, a mentor rate in zł, a public-work URL or a native availability date/time. Source: accounts UI/UX; mentor-pages UI/UX; platform F4.
 
 ## 3. When not to use
 
@@ -41,7 +41,7 @@ Keep a visible Label with matching htmlFor/id. Tab reaches the input; native sel
 
 ## 8. Content
 
-Use a short noun phrase such as “Email address” or “Rate per 25 minutes (PLN)”. A placeholder is an example, not the name. No universal maximum label length has been approved: wrap the label instead of truncating it. Set maxLength/min/max from the field schema, not from visual convenience. Preserve long entered values and choose inputMode for the value being entered. Sources: U01.1, task Content and longer-language requirements; accounts UI/UX; mentor-pages UI/UX; platform F4.
+Use a short noun phrase such as “Email address” or “Rate per 25 minutes (zł)”. A placeholder is an example, not the name. No universal maximum label length has been approved: wrap the label instead of truncating it. Set maxLength/min/max from the field schema, not from visual convenience. Preserve long entered values and choose inputMode for the value being entered. Sources: U01.1, task Content and longer-language requirements; accounts UI/UX; mentor-pages UI/UX; platform F4.
 
 ## 9. Responsiveness
 
@@ -72,8 +72,8 @@ Product composition:
 ```tsx
 import { FormField } from '@mentio/ui/backend/forms';
 import { Input } from '@mentio/ui/components/input';
-<FormField label="Rate per 25 minutes (PLN)" required
-  description="Choose a whole PLN amount from 90 to 600.">
+<FormField label="Rate per 25 minutes (zł)" required
+  description="Choose a whole amount from 90 to 600 zł.">
   <Input name="ratePln" type="number" min={90} max={600} inputMode="numeric" />
 </FormField>
 ```

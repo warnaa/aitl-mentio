@@ -1,0 +1,124 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './dialog.stories';
+
+<Meta of={Stories} />
+
+# Dialog
+
+## 1. Purpose
+
+Show a short, self-contained piece of content or task that the person deals with before returning to the page, without losing their place. Sources: WAI-ARIA APG modal dialog; approved stage-0 inventory (task minimum).
+
+## 2. When to use
+
+No current screen specification requires a non-confirmation dialog. Booking edits are inline (book-and-pay), and slot removal and cancellation use AlertDialog. Use Dialog only when a future spec needs a short, focused task or explanation that must not move the person away from unsaved work. The example shows brief content, text-only sessions (N01) and the cancellation rule (R14), as an illustration. Sources: book-and-pay UI/UX; approved stage-0 inventory (“no new modal flow implied”); N01; brief R14; user decision 2026-10-31 (Dialog not required by current screens).
+
+## 3. When not to use
+
+- To confirm a destructive or consequential action, use AlertDialog.
+- To edit an unpaid booking, use the specified inline form.
+- For a long form or anything someone may want to link to, use a separate page.
+- For non-blocking extra detail, use Popover.
+- To report a failure, use Alert near the cause.
+
+Sources: book-and-pay UI/UX; task How to choose; reference R02.4.
+
+## 4. Anatomy
+
+- A warm scrim at 50% (`--overlay-scrim`) covers the page.
+- The content panel is the opaque page surface: 1 px border, 10 px radius, 24 px padding, 16 px between parts, the large shadow. It is at most 32rem wide, and at most the viewport height minus 32 px, scrolling inside.
+- `DialogHeader` holds `DialogTitle` (16/24 semibold, user decision) and `DialogDescription` (14/20, muted).
+- The body follows the header.
+- `DialogFooter` holds the actions.
+- The optional close button is a 32 px ghost icon Button named “Close”. The header leaves room for it.
+
+Sources: user decisions 2026-10-31 (scrim, title role); reference A01.2 (opaque, no blur); tokens (radii and shadows retained); WCAG 2.5.8.
+
+## 5. Variants
+
+There are no visual variants.
+- `showCloseButton` (default true) controls the top-right close button. Hide it only when the footer already offers a clear way out.
+- `modal` (default true) blocks the page behind.
+
+Sources: package API; WAI-ARIA APG modal dialog.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+
+Open the dialog with the button above: it opens in this page with the current theme. The open states are separate stories in the sidebar: **Open**, **Without close button**, **Long content** and **Narrow**. They are not embedded here because an open modal takes over the page. Sources: task rule 9 (theme on the document root); batch-3 verification (nested story frames reset the docs theme).
+
+## 6. States
+
+The dialog is either closed or open. Its controls keep their own states. Use these patterns for the rest:
+- Pending: disable the primary Button, set `aria-busy` and add visible status text.
+- Error: an Alert inside the dialog, above the footer.
+- Success: close the dialog and show the result next to where it applies.
+
+There is no entrance animation: the dialog appears in place. Sources: U02.1; reference R02.4; Button states.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+The content has `role="dialog"`. It is named by `DialogTitle` and described by `DialogDescription`, so always provide both.
+1. On open, focus moves to the first focusable element inside.
+2. Tab and Shift+Tab stay inside the dialog.
+3. The page behind is hidden from assistive technology and does not scroll.
+4. Escape, the close button or a footer action closes the dialog.
+5. Focus then returns to the trigger.
+
+The close button and footer buttons meet the 24 px minimum target. Sources: WAI-ARIA APG modal dialog; WCAG 2.1.2, 2.4.3, 2.5.8, 4.1.2.
+
+## 8. Content
+
+- The title names the task or topic in a few words.
+- The description is one supporting sentence.
+- Buttons use a verb and an object. The way out is named for what it does, such as “Back to the booking”, not “Cancel” or “OK”.
+- Long titles wrap, and long bodies scroll inside the dialog.
+
+Sources: U01.1; task Content (buttons: verb and object).
+
+## 9. Responsiveness
+
+- At 320 px the dialog leaves 16 px on each side. Footer buttons stack at full width with the primary action first, and long labels wrap.
+- From 640 px the footer becomes a right-aligned row with the primary action last.
+- At 768 and 1440 px the dialog stays at most 32rem wide.
+- Text is left-aligned at every width.
+
+Sources: reference R01.5; approved stage-0 Q3; WCAG 1.4.10; task What to avoid (everything centred).
+
+## 10. API
+
+<table><thead><tr><th>Part / prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Dialog open / defaultOpen / onOpenChange</code></td><td><code>boolean / handler</code></td><td>closed</td><td>Controlled or initial visibility.</td></tr><tr><td><code>Dialog modal</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Blocks the page behind it.</td></tr><tr><td><code>DialogTrigger asChild</code></td><td>Radix trigger</td><td>—</td><td>Usually a Button. Focus returns to it.</td></tr><tr><td><code>DialogContent showCloseButton</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Top-right 32 px close Button.</td></tr><tr><td><code>DialogContent onOpenAutoFocus / onEscapeKeyDown / onInteractOutside</code></td><td>Radix handlers</td><td>unset</td><td>Adjust focus and closing behavior.</td></tr><tr><td><code>DialogHeader / DialogFooter</code></td><td><code>div</code> props</td><td>—</td><td>Layout. <code>DialogFooter showCloseButton</code> adds an outline “Close” Button.</td></tr><tr><td><code>DialogTitle / DialogDescription</code></td><td>Radix parts</td><td>—</td><td>Required accessible name and description.</td></tr><tr><td><code>DialogClose asChild</code></td><td>Radix close</td><td>—</td><td>Wraps any Button that should close the dialog.</td></tr></tbody></table>
+
+Source: exported package API (Radix Dialog).
+
+## 11. Code
+
+Minimal:
+
+```tsx
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@mentio/ui/components/dialog';
+<Dialog>
+  <DialogTrigger asChild><Button variant="link">How a text session works</Button></DialogTrigger>
+  <DialogContent><DialogHeader><DialogTitle>How a text session works</DialogTitle>
+    <DialogDescription>The session takes place in text only — there is no video call.</DialogDescription></DialogHeader></DialogContent>
+</Dialog>
+```
+
+With a footer:
+
+```tsx
+<DialogFooter><DialogClose asChild><Button>Got it</Button></DialogClose></DialogFooter>
+```
+
+Sources: N01; package API.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>A short explanation with one clear way out.</td><td>A dialog containing a whole multi-step form: use a page.</td></tr><tr><td>Booking edit inline, as specified.</td><td>Moving the booking edit into a dialog without a spec change.</td></tr><tr><td>Title and description provided.</td><td>No description: the dialog has no context for a screen reader.</td></tr></tbody></table>
+
+Sources: book-and-pay UI/UX; WAI-ARIA APG.
+
+## 13. Related
+
+AlertDialog is used for decisions. Popover holds non-blocking anchored content. Alert gives feedback inside a page. Patterns: delete confirmation (with AlertDialog); detail view. Sources: approved stage-0 inventory.

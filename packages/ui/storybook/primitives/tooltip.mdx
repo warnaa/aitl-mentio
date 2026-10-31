@@ -1,0 +1,101 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './tooltip.stories';
+
+<Meta of={Stories} />
+
+# Tooltip
+
+## 1. Purpose
+
+Show the name or a brief, non-essential description of a control when it is hovered or focused, so icon-only controls stay understandable. Sources: WAI-ARIA APG tooltip; WCAG 1.4.13.
+
+## 2. When to use
+
+Use it for icon-only buttons, for example a “Copy share link” icon button on the mentor page editor. The tooltip repeats the button's accessible name for sighted pointer and keyboard users. Sources: mentor-pages UI/UX (share link); D02; approved stage-0 inventory.
+
+## 3. When not to use
+
+- Never use it for information needed to act, such as a price, a deadline, a validation rule or why a button is disabled: show that as text on the page.
+- Never put interactive content in it: use Popover.
+- Do not add one to a control that already has a visible text label.
+- Touch screens have no hover, so a tooltip must never be the only label.
+
+Sources: task What to avoid (a hint containing information needed to act; a disabled button without explanation); WAI-ARIA APG tooltip.
+
+## 4. Anatomy
+
+- A focusable trigger: Button or Link.
+- A label with the inverted foreground/background pair, 12/16 metadata text, 8 px radius, 12 px inline and 6 px block padding, at most 18rem wide, plus a 10 px arrow.
+- `TooltipProvider` wraps the application once and sets the shared delay (0 ms, as in the base).
+
+Sources: user decision 2026-10-31 (inverted tooltip); approved stage-0 Q2 (metadata role); retained base geometry.
+
+## 5. Variants
+
+There are no visual variants. `side`, `align` and `sideOffset` set placement. Sources: package API.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+
+Hover over or Tab to the button to show the tooltip. The **Open**, **Long content** and **Narrow** stories show it visible.
+
+## 6. States
+
+The tooltip is hidden or shown. It has no hover, pressed, disabled or error appearance of its own. A disabled native button receives no hover or focus, so it cannot show a tooltip; explain unavailability in text instead. There is no entrance animation. Sources: WAI-ARIA APG tooltip; U02.1; task What to avoid.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+- It appears on pointer hover and on keyboard focus.
+- Escape hides it without moving focus.
+- The pointer can move onto it without it disappearing, and it stays until hover or focus leaves (WCAG 1.4.13: dismissible, hoverable, persistent).
+- The content has `role="tooltip"`, and the trigger references it with `aria-describedby`.
+- An icon-only trigger still needs its own `aria-label`, because the tooltip describes the control and does not name it.
+
+Sources: WAI-ARIA APG tooltip; WCAG 1.4.13, 2.1.1, 4.1.2.
+
+Known limitation, accepted by user decision on 2026-10-31: Radix closes the tooltip when an ancestor scrolls, including the scroll caused by keyboard focus moving to a trigger outside the viewport. Pressing Tab again shows it. This is acceptable only because a tooltip never carries information needed to act (section 3).
+
+## 8. Content
+
+- Repeat the control's name or add a few words, at most one short sentence, for example “Copy share link”.
+- Use no trailing punctuation for names. Do not add emoji or decorative symbols.
+- Longer languages wrap within 18rem.
+
+Sources: U01.1; reference R02.5 (no decorative emoji); task Content.
+
+## 9. Responsiveness
+
+At 320 px the tooltip stays within the available width and wraps. On touch devices it does not appear, so the control must make sense without it. At 768 and 1440 px it sits next to its trigger and flips when there is no room. Sources: WCAG 1.4.10; approved stage-0 Q3.
+
+## 10. API
+
+<table><thead><tr><th>Part / prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>TooltipProvider delayDuration / skipDelayDuration</code></td><td><code>number</code></td><td>0 / Radix default</td><td>Shared timing. Wrap the app once.</td></tr><tr><td><code>Tooltip open / defaultOpen / onOpenChange</code></td><td><code>boolean / handler</code></td><td>hidden</td><td>Controlled visibility. Usually left uncontrolled.</td></tr><tr><td><code>TooltipTrigger asChild</code></td><td>Radix trigger</td><td>—</td><td>A focusable control with its own accessible name.</td></tr><tr><td><code>TooltipContent side / align / sideOffset</code></td><td>Radix placement</td><td><code>top</code> / <code>center</code> / 0</td><td>Placement. It renders the arrow.</td></tr></tbody></table>
+
+Source: exported package API (Radix Tooltip).
+
+## 11. Code
+
+Minimal:
+
+```tsx
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@mentio/ui/components/tooltip';
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild><Button size="icon" variant="outline" aria-label="Copy share link"><Copy aria-hidden="true" /></Button></TooltipTrigger>
+    <TooltipContent>Copy share link</TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+```
+
+Place `TooltipProvider` once around the application layout, not around each tooltip. Sources: package API.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>An icon button with <code>aria-label</code> and a matching tooltip.</td><td>An icon button whose only name is in the tooltip.</td></tr><tr><td>“Add a public-work link to publish” shown as text under a disabled Publish button.</td><td>The same reason only in a tooltip on the disabled button, which never appears.</td></tr></tbody></table>
+
+Sources: WAI-ARIA APG; task What to avoid.
+
+## 13. Related
+
+Popover holds interactive or longer content. Button names itself with visible text. Link is used for navigation. Patterns: publication (share link icon button). Sources: approved stage-0 inventory.

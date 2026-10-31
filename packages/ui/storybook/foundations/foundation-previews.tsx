@@ -81,12 +81,12 @@ export function ColorFoundations() {
 }
 
 export function TypeSpecimens() {
-  const roles = [['page', 'Book a text session'], ['section', 'Public work'], ['body', 'Tell your mentor what failed, what you expected, and what you have already tried.'], ['label', 'Your question'], ['metadata', 'Alex · 18:00 Europe/Warsaw'], ['numbers', '120 PLN · 25 min'], ['code', 'ingress-values.yaml']];
+  const roles = [['page', 'Book a text session'], ['section', 'Public work'], ['body', 'Tell your mentor what failed, what you expected, and what you have already tried.'], ['label', 'Your question'], ['metadata', 'Alex · 18:00 Europe/Warsaw'], ['numbers', '120 zł · 25 min'], ['code', 'ingress-values.yaml']];
   return <div className="foundation-preview">{roles.map(([role, text]) => <div key={role} className="foundation-type-row"><code>{role}</code><p className={`foundation-type-${role}`}>{text}</p></div>)}</div>;
 }
 
 export function SpacingSpecimens() {
-  return <div className="foundation-preview"><div className="foundation-table-scroll"><table><caption>Relationship before measurement</caption><thead><tr><th>Relationship</th><th>Token</th><th>Live sample</th></tr></thead><tbody>{['within-group', 'between-groups', 'panel', 'section'].map(role => <tr key={role}><td>{role}</td><td><code>--space-{role}</code></td><td><span className="foundation-space" style={{ inlineSize: `var(--space-${role})` }} /></td></tr>)}</tbody></table></div><div className="foundation-spacing-panel"><strong>Session details</strong><div className="foundation-spacing-group"><span>25 minutes</span><span>120 PLN</span></div><p>The group, panel and section spaces describe different relationships.</p></div></div>;
+  return <div className="foundation-preview"><div className="foundation-table-scroll"><table><caption>Relationship before measurement</caption><thead><tr><th>Relationship</th><th>Token</th><th>Live sample</th></tr></thead><tbody>{['within-group', 'between-groups', 'panel', 'section'].map(role => <tr key={role}><td>{role}</td><td><code>--space-{role}</code></td><td><span className="foundation-space" style={{ inlineSize: `var(--space-${role})` }} /></td></tr>)}</tbody></table></div><div className="foundation-spacing-panel"><strong>Session details</strong><div className="foundation-spacing-group"><span>25 minutes</span><span>120 zł</span></div><p>The group, panel and section spaces describe different relationships.</p></div></div>;
 }
 
 export function LayoutSpecimen() {

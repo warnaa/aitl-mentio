@@ -1,0 +1,112 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './popover.stories';
+
+<Meta of={Stories} />
+
+# Popover
+
+## 1. Purpose
+
+Show supplementary content or a small interactive tool next to the control that opened it, without leaving the page or blocking it. Sources: WAI-ARIA dialog (non-modal); approved stage-0 inventory (task minimum).
+
+## 2. When to use
+
+No current screen specification requires a popover. Two illustrations use current rules:
+- “Share your page”: the share link with “Copy link” and local “Link copied.” feedback (D02, R02.4).
+- “Why can’t I book this time?”: the 2 hour to 14 day booking window (brief R11).
+
+Use it for content that helps but is not required to continue. Sources: D02; reference R02.4; brief R11; approved stage-0 inventory; user decision 2026-10-31 (Popover not required by current screens).
+
+## 3. When not to use
+
+- If the information is required to act, show it on the page.
+- For a decision, use AlertDialog.
+- For a control's name, use Tooltip.
+- For a list of actions, use DropdownMenu.
+- For forms with more than a couple of fields, use a page or Dialog.
+- Do not show a toast for “Link copied.”: keep it next to the button.
+
+Sources: task How to choose (dialog, popover, tooltip); task What to avoid (tooltip or popover hiding necessary information); reference R02.4.
+
+## 4. Anatomy
+
+- The trigger, usually a Button.
+- An opaque panel: popover surface, 1 px border, 8 px radius, 16 px padding, medium shadow, 18rem wide but never wider than the available space.
+- Optional `PopoverHeader`, holding `PopoverTitle` (medium) and `PopoverDescription` (muted).
+
+The panel has `role="dialog"`. Name it with `aria-labelledby` pointing at the title's `id`, or with `aria-label`. Sources: reference A01.2; retained base geometry; WAI-ARIA (dialogs require an accessible name).
+
+## 5. Variants
+
+There are no visual variants. Placement is set with `side`, `align` and `sideOffset`. `modal` (default false) traps focus only when set. Sources: package API.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.Explanation} /></Unstyled>
+
+Open the popovers with their buttons. The **Open**, **Long content** and **Narrow** stories show them open. Sources: task rule 9; batch-3 verification.
+
+## 6. States
+
+The popover is closed or open. Controls inside keep their own states. Feedback such as “Link copied.” is a status line inside the popover. There is no entrance animation. Sources: reference R02.4; U02.1.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+The trigger has `aria-expanded` and `aria-controls`.
+1. On open, focus moves into the panel, to its first focusable element.
+2. Tab moves through it.
+3. Escape or clicking outside closes it, and focus returns to the trigger.
+4. A missing accessible name fails the automated check (`aria-dialog-name`).
+
+Do not put content in a popover that someone must read before acting. Sources: WAI-ARIA dialog role; WCAG 2.1.1, 2.4.3, 4.1.2; batch-3 verification.
+
+## 8. Content
+
+The title states the topic in a few words. Use one or two short sentences, with numbers and units such as “2 hours”, “14 days” and “zł”. A trigger that asks a question (“Why can’t I book this time?”) is a text Button, not a decorative info icon. Long text wraps inside the panel. Sources: U01.1; reference A01.3 (no decorative icons); brief R11.
+
+## 9. Responsiveness
+
+At 320 px the panel is limited to the available width, text wraps, and Radix flips it to stay on screen. Touch users open it by tapping the trigger. At 768 and 1440 px it stays 18rem wide next to its trigger. Sources: WCAG 1.4.10; approved stage-0 Q3.
+
+## 10. API
+
+<table><thead><tr><th>Part / prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Popover open / defaultOpen / onOpenChange / modal</code></td><td><code>boolean / handler</code></td><td>closed / false</td><td>Visibility and modality.</td></tr><tr><td><code>PopoverTrigger asChild</code></td><td>Radix trigger</td><td>—</td><td>A Button.</td></tr><tr><td><code>PopoverContent side / align / sideOffset</code></td><td>Radix placement</td><td><code>bottom</code> / <code>center</code> / 4</td><td>Placement.</td></tr><tr><td><code>PopoverContent aria-labelledby / aria-label</code></td><td><code>string</code></td><td>unset (required)</td><td>Accessible name of the panel.</td></tr><tr><td><code>PopoverHeader / PopoverTitle / PopoverDescription</code></td><td><code>div</code> / <code>div</code> / <code>p</code> props</td><td>—</td><td>Optional text structure. Give the title an <code>id</code>.</td></tr><tr><td><code>PopoverAnchor</code></td><td>Radix anchor</td><td>—</td><td>Position against an element other than the trigger.</td></tr></tbody></table>
+
+Source: exported package API (Radix Popover).
+
+## 11. Code
+
+Minimal:
+
+```tsx
+import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from '@mentio/ui/components/popover';
+<Popover>
+  <PopoverTrigger asChild><Button variant="link">Why can’t I book this time?</Button></PopoverTrigger>
+  <PopoverContent aria-labelledby="window-title"><PopoverHeader>
+    <PopoverTitle id="window-title">Booking window</PopoverTitle>
+    <PopoverDescription>A slot can be booked from 2 hours to 14 days before it starts.</PopoverDescription>
+  </PopoverHeader></PopoverContent>
+</Popover>
+```
+
+Interactive content:
+
+```tsx
+<PopoverContent aria-label="Share your page">
+  <Label htmlFor="share-url">Share link</Label><Input id="share-url" readOnly value={shareUrl} />
+  <Button size="sm" onClick={copy}>Copy link</Button><span role="status">{copied ? 'Link copied.' : ''}</span>
+</PopoverContent>
+```
+
+Sources: D02; brief R11; package API.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>“Link copied.” shown next to the button.</td><td>A separate toast saying “Link copied!”.</td></tr><tr><td>The booking window explained on request, with the slot also marked as not bookable on the page.</td><td>The only sign that a slot cannot be booked hidden inside a popover.</td></tr><tr><td>The panel named with <code>aria-labelledby</code>.</td><td>An unnamed dialog panel.</td></tr></tbody></table>
+
+Sources: reference R02.4; task What to avoid; WAI-ARIA.
+
+## 13. Related
+
+Tooltip gives short names on hover or focus. Dialog is used for focused, blocking content. DropdownMenu holds action lists. Patterns: publication (share link); availability (visible but not bookable). Sources: approved stage-0 inventory.

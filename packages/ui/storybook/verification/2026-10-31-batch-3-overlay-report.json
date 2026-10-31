@@ -1,0 +1,101 @@
+{
+  "failures": [],
+  "results": [
+    {
+      "theme": "light",
+      "width": 320,
+      "docs": {
+        "dialog": "docs theme ok, in viewport",
+        "alertdialog": "docs theme ok, in viewport",
+        "dropdownmenu": "docs theme ok, in viewport",
+        "popover": "docs theme ok, in viewport",
+        "tooltip": "docs theme ok"
+      },
+      "menuHover": "real hover equals frozen (default and destructive)",
+      "tooltip": "hoverable and dismissible",
+      "dialogFooter": "stacked, primary first; dialog 288px",
+      "overflow": "none in 12 long/narrow stories",
+      "consoleErrors": []
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "docs": {
+        "dialog": "docs theme ok, in viewport",
+        "alertdialog": "docs theme ok, in viewport",
+        "dropdownmenu": "docs theme ok, in viewport",
+        "popover": "docs theme ok, in viewport",
+        "tooltip": "docs theme ok"
+      },
+      "menuHover": "real hover equals frozen (default and destructive)",
+      "tooltip": "hoverable and dismissible",
+      "dialogFooter": "row, primary last; dialog 512px",
+      "overflow": "none in 12 long/narrow stories",
+      "consoleErrors": []
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "docs": {
+        "dialog": "docs theme ok, in viewport",
+        "alertdialog": "docs theme ok, in viewport",
+        "dropdownmenu": "docs theme ok, in viewport",
+        "popover": "docs theme ok, in viewport",
+        "tooltip": "docs theme ok"
+      },
+      "menuHover": "real hover equals frozen (default and destructive)",
+      "tooltip": "hoverable and dismissible",
+      "dialogFooter": "row, primary last; dialog 512px",
+      "overflow": "none in 12 long/narrow stories",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "docs": {
+        "dialog": "docs theme ok, in viewport",
+        "alertdialog": "docs theme ok, in viewport",
+        "dropdownmenu": "docs theme ok, in viewport",
+        "popover": "docs theme ok, in viewport",
+        "tooltip": "docs theme ok"
+      },
+      "menuHover": "real hover equals frozen (default and destructive)",
+      "tooltip": "hoverable and dismissible",
+      "dialogFooter": "stacked, primary first; dialog 288px",
+      "overflow": "none in 12 long/narrow stories",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "docs": {
+        "dialog": "docs theme ok, in viewport",
+        "alertdialog": "docs theme ok, in viewport",
+        "dropdownmenu": "docs theme ok, in viewport",
+        "popover": "docs theme ok, in viewport",
+        "tooltip": "docs theme ok"
+      },
+      "menuHover": "real hover equals frozen (default and destructive)",
+      "tooltip": "hoverable and dismissible",
+      "dialogFooter": "row, primary last; dialog 512px",
+      "overflow": "none in 12 long/narrow stories",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "docs": {
+        "dialog": "docs theme ok, in viewport",
+        "alertdialog": "docs theme ok, in viewport",
+        "dropdownmenu": "docs theme ok, in viewport",
+        "popover": "docs theme ok, in viewport",
+        "tooltip": "docs theme ok"
+      },
+      "menuHover": "real hover equals frozen (default and destructive)",
+      "tooltip": "hoverable and dismissible",
+      "dialogFooter": "row, primary last; dialog 512px",
+      "overflow": "none in 12 long/narrow stories",
+      "consoleErrors": []
+    }
+  ]
+}

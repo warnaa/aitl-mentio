@@ -4,8 +4,8 @@ import { Label } from '@mentio/ui/components/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@mentio/ui/components/select';
 import { FormField } from '@mentio/ui/backend/forms';
 
-// Book-and-pay UI/UX: duration options carry their price (25 minutes — 120 PLN, 50 minutes — 240 PLN).
-const durations = [{ value: '25', label: '25 minutes — 120 PLN' }, { value: '50', label: '50 minutes — 240 PLN' }];
+// Book-and-pay UI/UX: duration options carry their price (25 minutes — 120 zł, 50 minutes — 240 zł).
+const durations = [{ value: '25', label: '25 minutes — 120 zł' }, { value: '50', label: '50 minutes — 240 zł' }];
 
 const meta = {
   title: 'Primitives/Select',
@@ -42,7 +42,7 @@ export const GroupedOptions: Story = {
   render: args => <div className="primitive-demo flex flex-col gap-within-group">
     <Label htmlFor="duration-grouped">Session length</Label>
     <Select {...args} defaultValue="25"><SelectTrigger id="duration-grouped"><SelectValue /></SelectTrigger>
-      <SelectContent><SelectGroup><SelectLabel>Text session, price in PLN</SelectLabel>{durations.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectGroup></SelectContent></Select>
+      <SelectContent><SelectGroup><SelectLabel>Text session, price in zł</SelectLabel>{durations.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectGroup></SelectContent></Select>
   </div>,
 };
 export const States: Story = {
@@ -65,7 +65,7 @@ export const OpenList: Story = {
   parameters: { docs: { disable: true }, a11y: { config: { rules: [{ id: 'aria-hidden-focus', enabled: false }] } } },
   play: async () => {
     const body = within(document.body);
-    const selected = await body.findByRole('option', { name: '25 minutes — 120 PLN' });
+    const selected = await body.findByRole('option', { name: '25 minutes — 120 zł' });
     await waitFor(() => expect(selected).toHaveFocus());
     await expect(selected).toHaveAttribute('aria-selected', 'true');
     await expect(selected).toHaveAttribute('data-highlighted');
@@ -77,7 +77,7 @@ export const LongContent: Story = {
   render: args => <div className="primitive-demo flex flex-col gap-within-group">
     <Label htmlFor="duration-long">Session length for the question about the Kubernetes ingress that stopped responding after the cluster upgrade</Label>
     <Select {...args} defaultValue="long"><SelectTrigger id="duration-long"><SelectValue /></SelectTrigger>
-      <SelectContent><SelectItem value="long">50 minutes — 240 PLN, including time to read the pasted configuration and logs</SelectItem><SelectItem value="25">25 minutes — 120 PLN</SelectItem></SelectContent></Select>
+      <SelectContent><SelectItem value="long">50 minutes — 240 zł, including time to read the pasted configuration and logs</SelectItem><SelectItem value="25">25 minutes — 120 zł</SelectItem></SelectContent></Select>
   </div>,
 };
 export const Narrow: Story = { ...LongContent, globals: { viewport: { value: 'mobile1', isRotated: false } } };
@@ -102,10 +102,10 @@ export const KeyboardSelection: Story = {
     const listbox = await body.findByRole('listbox', {}, { timeout: 3000 });
     await expect(getComputedStyle(listbox.closest('[data-slot=select-content]')!).animationName).toBe('none');
     await userEvent.keyboard('{ArrowDown}');
-    await waitFor(() => expect(body.getByRole('option', { name: '50 minutes — 240 PLN' })).toHaveAttribute('data-highlighted'));
+    await waitFor(() => expect(body.getByRole('option', { name: '50 minutes — 240 zł' })).toHaveAttribute('data-highlighted'));
     await userEvent.keyboard('{Enter}');
     await expect(args.onValueChange).toHaveBeenCalledWith('50');
-    await waitFor(() => expect(trigger).toHaveTextContent('50 minutes — 240 PLN'));
+    await waitFor(() => expect(trigger).toHaveTextContent('50 minutes — 240 zł'));
     await waitFor(() => expect(trigger).toHaveFocus());
   },
 };
@@ -114,8 +114,8 @@ export const PointerSelection: Story = {
     await viewportSettled();
     const trigger = within(canvasElement).getByRole('combobox', { name: 'Session length' });
     await userEvent.click(trigger);
-    await userEvent.click(await within(document.body).findByRole('option', { name: '25 minutes — 120 PLN' }));
+    await userEvent.click(await within(document.body).findByRole('option', { name: '25 minutes — 120 zł' }));
     await expect(args.onValueChange).toHaveBeenCalledWith('25');
-    await waitFor(() => expect(trigger).toHaveTextContent('25 minutes — 120 PLN'));
+    await waitFor(() => expect(trigger).toHaveTextContent('25 minutes — 120 zł'));
   },
 };

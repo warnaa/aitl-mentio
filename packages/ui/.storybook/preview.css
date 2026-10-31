@@ -33,3 +33,6 @@ a.mentio-badge-primary:is([data-preview-state=hover],[data-preview-state=pressed
 a.mentio-badge-destructive:is([data-preview-state=hover],[data-preview-state=pressed]) { background: var(--destructive-hover); }
 a:is(.mentio-badge-secondary,.mentio-badge-outline,.mentio-badge-ghost):is([data-preview-state=hover],[data-preview-state=pressed]) { background: var(--accent); color: var(--accent-foreground); }
 a.mentio-badge-link:is([data-preview-state=hover],[data-preview-state=pressed]) { text-decoration-line: underline; }
+/* Stage 2 batch 3: a frozen highlighted menu row repeats the [data-highlighted] declarations. */
+.mentio-menu-item[data-preview-state=hover] { background: var(--accent); color: var(--accent-foreground); }
+.mentio-menu-item[data-variant=destructive][data-preview-state=hover] { background: var(--error-surface); color: var(--destructive); }
