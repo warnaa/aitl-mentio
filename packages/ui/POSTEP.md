@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 2, batch 1 complete; awaiting “dalej” before batch 2.**
+Date: 2026-10-31. Status: **stage 2, batch 2 complete; awaiting “dalej” before batch 3.**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -287,3 +287,44 @@ Completed Button, Link, Input, Textarea, Label and FormField. Six 13-section doc
 Verified: 118 story tests in both themes; 84 built-page width/theme checks; zero axe findings in 28 MDX audits; real pointer/native focus equals frozen previews; 222 unit tests with 100% coverage; lint/types; app build; 10 integration tests; audit. `check:tokens` now reports 7 findings in later-batch Badge/Card/Table, down from 13, without exceptions. Full report: `storybook/verification/2026-10-31-stage-2-batch-1.md`.
 
 Stage 1 is committed as bbd79ce per the user's checkpoint request; the user subsequently requested a local batch-1 commit (“czas na commit”). That checkpoint includes the verified batch and its reports. No push. Next: wait for “dalej”, then batch 2 only: Select, Checkbox, RadioGroup, Card, Badge, Separator. No pending design questions for completed work.
+
+## Stage 2 batch 2 started — 2026-10-31
+
+New session; the user asked to continue from the next step (treated as “dalej” for batch 2 only). Select, Checkbox and RadioGroup were added with the shadcn CLI; package.json and package-lock.json were unchanged by it. Run log: `.ai/runs/2026-10-31-mentio-primitives-batch-2.md`.
+
+Approved by the user in this session where materials were silent: Badge radius-sm 6 px instead of the base pill; Checkbox 16 px with radius-sm 6 px, 24 px target through its clickable label; Select trigger default 36 px only (generated `sm` removed); CardTitle uses the approved section role 20/28 semibold, which also changes existing /admin cards.
+
+Derived from earlier approvals, not new decisions: Select trigger 36 px/8 px/1 px (Q2); full 3 px focus with 2 px offset and opaque control surfaces (contrast repairs); no zoom/slide overlay motion (U02.1); Separator uses `--divider-width` (R01.3); Card keeps its 14 px radius, existing shadow and 24 px padding (tokens: radii/shadows retained); destructive Badge uses the explicit destructive pair instead of translucent dark fill.
+
+## Stage 2 batch 2 completion — 2026-10-31
+
+Completed Select, Checkbox, RadioGroup, Card, Badge and Separator: six 13-section documentation pages and 52 new stories, for a cumulative 20 MDX pages and 111 stories. No dependencies were added. All existing variants are kept, except the generated Select `sm`, which was removed by decision. Full report: `storybook/verification/2026-10-31-stage-2-batch-2.md`.
+
+Verified:
+- 222 story tests in both themes, plus 15 consecutive clean full runs.
+- 120 built-page width/theme checks with no errors, and zero axe findings in 40 MDX audits.
+- Real hover and focus equal the frozen samples.
+- The Select portal inherits the theme, has no entrance motion and stays in the viewport.
+- 228 unit tests with 100% coverage; lint and types; app build; 10 integration tests; audit.
+- /admin regression in both themes.
+
+`check:tokens` now reports only the 2 Table findings scheduled for batch 4.
+
+Fixed during verification: a Card header overflow at 320 px (container-query reflow plus a regression story), invalid `p > div` nesting in Separator stories, and a flaky Select keyboard test (a late resize from the Narrow story closed the list) with a stability wait. FormField + Select composition is documented as FormField around `SelectTrigger`.
+
+### Proposals awaiting your decision (marked Proposal in the docs)
+
+1. Card header action moves under the title when the header is narrower than 24rem (`--container-sm`). Without it, a 320 px card overflows (WCAG 1.4.10 is the reason; the threshold value is the proposal).
+2. RadioGroup for 2–5 visible options, ordered by value.
+3. Badge weight guidance (filled = positive end state, outline = waiting on someone, destructive = failure needing attention), and status text up to about 40 characters. The final mapping belongs to F6 StatusBadge.
+4. Price and date formats in examples: whole PLN with the currency after the amount; “6 November 2026 at 18:00 (Warsaw time)”. To be settled on the Content page, stage 4.
+5. Inline metadata separators never start a wrapped line.
+
+### Finding for decision
+
+Digits render with Noto Color Emoji on Linux systems without “Noto Sans” (Tailwind's default `--font-sans`, which you approved keeping). The glyphs come out grey and offset. This predates this batch, and changing the font stack would revise an approved decision. Options: keep it as is, or put a generic sans-serif ahead of the emoji fallbacks.
+
+Next: wait for “dalej”, then batch 3 only: Alert, Dialog, AlertDialog, DropdownMenu, Popover, Tooltip.
+
+The user then asked for a local commit and continuation (“commit aktualnych postępów i dalej”). Batch 2 is committed locally on main; no push. The five proposals and the font finding remain open; batch 3 does not depend on them.
+

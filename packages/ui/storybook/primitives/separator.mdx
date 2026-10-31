@@ -1,0 +1,84 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './separator.stories';
+
+<Meta of={Stories} />
+
+# Separator
+
+## 1. Purpose
+
+Separate adjacent records or groups with a thin line, so a dense list stays scannable without heavy boxes. Sources: reference R01.3; approved token table (`--divider-width`).
+
+## 2. When to use
+
+Use it between rows of the mentor's availability or the booking list. Use it between the existing admin navigation header and its links. Use it between inline metadata groups, such as author and time, where a vertical line reads better than spacing. Sources: reference R01.3; mentor-pages UI/UX (availability); existing admin layout; reference R02.3.
+
+## 3. When not to use
+
+Do not use it to separate sections of a page: use section spacing (32 px) and headings. Do not add it under every heading or around a card that already has a border. Do not use it to hold space: it is a 1 px line, not spacing. Sources: approved token table (`--raw-line-1` is not a space); spacing foundations; task What to avoid.
+
+## 4. Anatomy
+
+One line in the border role, 1 px thick. It is horizontal (full width) or vertical (full height of its row). There are no optional parts. Sources: reference R01.3; approved token table.
+
+## 5. Variants
+
+Orientation: horizontal or vertical. Decorative by default (`role="none"`). With `decorative={false}` it is a semantic separator announced by assistive technology. Use that only between distinct groups that have no heading. Sources: package API; WAI-ARIA `separator` role.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.ListRows} /></Unstyled>
+<Unstyled><Canvas of={Stories.Vertical} /></Unstyled>
+
+## 6. States
+
+A separator is not interactive. Default is the only state. Hover, focus, pressed, disabled, loading, selected and error do not apply. Sources: WAI-ARIA (a non-focusable separator is static).
+
+## 7. Behavior and accessibility
+
+A decorative separator is ignored by assistive technology. When the semantic version is used, it is announced as a separator, and a vertical one has `aria-orientation="vertical"`. A list keeps its list semantics (`ul`/`li`): the separator only adds the visual line. The border role is measured against page and card surfaces in both themes. Sources: WAI-ARIA separator role; WCAG 1.3.1, 1.4.11; Color foundations.
+
+## 8. Content
+
+A separator has no text. The content on either side carries the meaning. Sources: not applicable to content.
+
+## 9. Responsiveness
+
+A horizontal separator spans its container at every width. A vertical one needs a row with a set height. At 320 px, inline metadata may wrap: keep the separator between the items, never at the start of a line. Sources: approved stage-0 Q3. Proposal: the wrapping rule for inline metadata.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>orientation</code></td><td><code>'horizontal' | 'vertical'</code></td><td><code>horizontal</code></td><td>Line direction.</td></tr><tr><td><code>decorative</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Hidden from assistive technology when true.</td></tr><tr><td><code>className / div props</code></td><td>native</td><td>unset</td><td>Layout utilities, for example margins.</td></tr></tbody></table>
+
+Source: exported package API (Radix Separator).
+
+## 11. Code
+
+Minimal:
+
+```tsx
+import { Separator } from '@mentio/ui/components/separator';
+<Separator />
+```
+
+Product composition:
+
+```tsx
+<ul aria-label="Your availability">
+  {slots.map((slot, index) => <li key={slot.id}>{index > 0 && <Separator />}<p className="py-2">{slot.label}</p></li>)}
+</ul>
+```
+
+Sources: mentor-pages UI/UX (availability list); reference R01.3.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>Thin lines between availability rows in one list.</td><td>Each row in its own bordered, shadowed box.</td></tr><tr><td>Section spacing and a heading between page sections.</td><td>A separator under every heading as decoration.</td></tr></tbody></table>
+
+Sources: references R01.1 and R01.3; spacing foundations.
+
+## 13. Related
+
+Card is the bounded surface, and Separator works inside it. Table rows already have row borders. Spacing tokens handle grouping. Patterns: list with filters; availability; earnings rows. Sources: approved stage-0 inventory.

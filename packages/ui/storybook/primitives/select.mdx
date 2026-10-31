@@ -1,0 +1,99 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './select.stories';
+
+<Meta of={Stories} />
+
+# Select
+
+## 1. Purpose
+
+Let a person pick one value from a short, fixed list without typing it and without seeing an unsupported value. Sources: platform F4 `select`; book-and-pay UI/UX.
+
+## 2. When to use
+
+Use it for the booking session length, where each option carries its price: “25 minutes — 120 PLN” and “50 minutes — 240 PLN”. The same select appears in the inline “Edit question or length” form of an unpaid booking. Sources: book-and-pay UI/UX (new booking, inline edit); brief R01 (25 or 50 minutes); D10 (PLN).
+
+## 3. When not to use
+
+Use RadioGroup when the person must compare every option at a glance and the screen has room. The booking spec chooses Select, so do not swap it on that screen without a spec change. Use Checkbox for one on/off choice such as listing. Use Input for free values such as a rate in PLN. A searchable list (combobox) is not part of the system. See What is missing. Sources: approved stage-0 inventory; mentor-pages UI/UX; WAI-ARIA APG listbox/radio guidance.
+
+## 4. Anatomy
+
+`Select` is the state root and renders no element. `SelectTrigger` is the visible 36 px control and owns the label association. `SelectValue` shows the chosen text or the placeholder. The chevron is decorative. `SelectContent` is an opaque list in a portal. `SelectItem` is one option with a check mark when selected. Optional parts: `SelectGroup` with `SelectLabel`, `SelectSeparator`, and scroll buttons that appear only when the list overflows. Sources: package API; reference A01.2 (opaque surfaces); WAI-ARIA APG select-only combobox.
+
+## 5. Variants
+
+One visual variant and one size: 36 px high, 8 px radius, 1 px border, opaque field surface, the same as Input. The generated small size was removed by user decision on 2026-10-31. Item-aligned positioning is the default. `position="popper"` places the list below the trigger instead, without a new appearance. Sources: approved stage-0 Q2; user decision 2026-10-31 (Select size); token contrast repairs.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.GroupedOptions} /></Unstyled>
+
+## 6. States
+
+Default shows the placeholder in the muted role. Hover strengthens the border to the ring role. Focus draws the full 3 px ring with a 2 px offset. Open shows the list with the selected option highlighted and checked. Disabled blocks opening: the reason sits in persistent text next to the field, for example “Bookings are temporarily switched off.” Loading sets `aria-busy` with a visible status and keeps the last shown prices. Error sets `aria-invalid` with a linked message. Pressed is the open state. Selected is shown by the trigger text and the item check mark, not by colour alone. The open list appears in place without a zoom or slide. Sources: task stage 2; WCAG 1.4.1, 2.4.7, 3.3.1; U02.1; book-and-pay UI/UX (bookings disabled).
+
+The hover and focus samples use documentation-only `data-preview-state` attributes, wired to the same declarations as the real pseudo-classes. The open list is a separate story, “Open list”, and is not embedded here because an open list takes over the page. Sources: task stage 2 frozen-state requirement.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+The trigger is a `combobox` with `aria-expanded` and `aria-controls`. The list is a `listbox` of `option` elements with `aria-selected`. Tab reaches the trigger. Enter, Space or the arrow keys open the list. The arrow keys move through options, typing a letter jumps to a match, Enter selects, and Escape closes without changing the value. Focus then returns to the trigger. While the list is open it is modal: the page behind is `aria-hidden` and Tab stays in the list. The Open list story therefore has one described exception to the `aria-hidden-focus` rule, and its play test proves focus cannot leave. A screen reader announces the label, the current value and “required” when set. The trigger and 32 px options exceed the 24 × 24 px minimum target. Sources: WAI-ARIA APG select-only combobox; WCAG 2.1.1, 2.4.3, 2.5.8, 4.1.2.
+
+Name the trigger with a visible `Label` (`htmlFor` to the trigger id) or wrap the trigger in `FormField`. Do not wrap the `Select` root: it renders no element, so the label would point at nothing. Sources: WCAG 1.3.1, 3.3.2; package API.
+
+## 8. Content
+
+Write the label as a noun phrase, for example “Session length”. Each option states the value and its consequence, for example “50 minutes — 240 PLN”. The placeholder is an instruction, not the name. Format prices as whole PLN with the currency after the amount. Keep option text to one line where possible. The trigger truncates long text with an ellipsis, so the full text must stay readable in the open list, where options wrap. A longer language makes options wrap in the list. It never shortens the label. Sources: book-and-pay UI/UX (options carry price); D10 (PLN); U01.1; task Content requirements. Proposal: the PLN currency position and whole-amount format await the Content page in stage 4.
+
+## 9. Responsiveness
+
+At 320 px the trigger never grows wider than its column: it truncates its value, and the list stays within the viewport. At 768 and 1440 px keep the trigger as wide as its longest option rather than stretching it across the form. Do not shrink it below 36 px. Sources: approved stage-0 Q2/Q3; WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Part / prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Select value / defaultValue</code></td><td><code>string</code></td><td>unset</td><td>Controlled or initial value. An unset value shows the placeholder.</td></tr><tr><td><code>Select onValueChange</code></td><td><code>(value: string) =&gt; void</code></td><td>unset</td><td>Called with the chosen option's value.</td></tr><tr><td><code>Select open / defaultOpen / onOpenChange</code></td><td><code>boolean / handler</code></td><td>closed</td><td>Controlled or initial list visibility.</td></tr><tr><td><code>Select name / required / disabled</code></td><td><code>string / boolean</code></td><td>unset / false</td><td>Native form submission, required semantics and blocking.</td></tr><tr><td><code>SelectTrigger</code></td><td><code>button props</code></td><td>36 px</td><td><code>id</code>, <code>aria-invalid</code>, <code>aria-describedby</code>, <code>aria-busy</code>, <code>className</code>. No size prop.</td></tr><tr><td><code>SelectValue placeholder</code></td><td><code>ReactNode</code></td><td>unset</td><td>Text shown while no value is chosen.</td></tr><tr><td><code>SelectContent position / align / side</code></td><td><code>item-aligned | popper</code>, Radix alignment</td><td>item-aligned / center</td><td>List placement. Rendered in a portal, so it inherits the root theme.</td></tr><tr><td><code>SelectItem value / disabled</code></td><td><code>string / boolean</code></td><td>— / false</td><td>Option value and blocked option.</td></tr><tr><td><code>SelectGroup, SelectLabel, SelectSeparator</code></td><td>Radix parts</td><td>—</td><td>Optional grouping. No current screen needs groups.</td></tr></tbody></table>
+
+Source: exported package API. The other props are Radix Select props with their documented behavior.
+
+## 11. Code
+
+Minimal:
+
+```tsx
+import { Label } from '@mentio/ui/components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@mentio/ui/components/select';
+<Label htmlFor="length">Session length</Label>
+<Select name="lengthMinutes"><SelectTrigger id="length"><SelectValue placeholder="Choose 25 or 50 minutes" /></SelectTrigger>
+  <SelectContent><SelectItem value="25">25 minutes — 120 PLN</SelectItem><SelectItem value="50">50 minutes — 240 PLN</SelectItem></SelectContent>
+</Select>
+```
+
+Product composition with FormField. FormField wraps the trigger inside the Select:
+
+```tsx
+import { FormField } from '@mentio/ui/backend/forms';
+<Select name="lengthMinutes" required defaultValue="50">
+  <FormField label="Session length" required description="The price follows the mentor's current rate for the chosen length.">
+    <SelectTrigger><SelectValue /></SelectTrigger>
+  </FormField>
+  <SelectContent>{/* SelectItem per length, label carries the price */}</SelectContent>
+</Select>
+```
+
+Sources: book-and-pay UI/UX; package API.
+
+<Unstyled><Canvas of={Stories.InFormField} /></Unstyled>
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>“50 minutes — 240 PLN”: the option shows its consequence before payment.</td><td>“50” alone: the person must guess the unit and look elsewhere for the price.</td></tr><tr><td>Visible “Session length” label linked to the trigger.</td><td>A placeholder “Session length” as the only name: it disappears once a value is chosen.</td></tr><tr><td>FormField around <code>SelectTrigger</code>.</td><td>FormField around the <code>Select</code> root: the label points at no element.</td></tr></tbody></table>
+
+The bad cases are described rather than rendered, so the page has no inaccessible controls. Sources: book-and-pay UI/UX; WCAG 1.3.1, 3.3.2.
+
+## 13. Related
+
+RadioGroup shows every option at once and is the documented alternative. Input takes free values. FormField supplies the label, hint and error. CrudForm will own schema-driven select fields in the Form pattern, stage 3. Patterns: booking and payment recovery; form. Sources: approved stage-0 inventory; platform F4.

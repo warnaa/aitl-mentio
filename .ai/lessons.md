@@ -344,3 +344,39 @@ still cover frozen tokens, native keyboard focus, dimensions and behavior. Also
 theme Canvas source-action chrome separately from Unstyled specimens: its default
 light-theme Show code controls otherwise failed dark-mode contrast. See
 `.ai/runs/2026-10-31-mentio-primitives-batch-1.md`.
+
+## 2026-10-31 - Cloud preview needs a proxy-reachable Storybook listener
+
+A server bound only to 127.0.0.1 returned local HTTP 200 but refused the user's
+cloud preview connection. When the user requests access through the platform's
+preview URL, start Storybook with --host 0.0.0.0 and permit the exact preview host
+through __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS; do not disable all host checks.
+Verify the bound interface and requests carrying that Host header. An unauthenticated
+external 401 is the platform login boundary, not proof of a rendered Storybook page.
+
+## 2026-10-31 - Radix Select closes on resize; Narrow stories resize the test iframe
+
+A Select keyboard story failed in roughly a quarter of full Storybook runs: the list
+opened, then closed. Instrumentation showed a late `resize` event between the two —
+the preceding Narrow story's viewport global is restored asynchronously, and Radix
+Select deliberately closes on window resize (and blur). Disabling file parallelism
+made it worse. Wait until the viewport has been stable (no resize for 250 ms) before
+opening an overlay in a play function. Also: Radix RadioGroup only checks on arrow
+focus while the key is held (`{ArrowDown>}`), because focus moves in a timeout.
+See `.ai/runs/2026-10-31-mentio-primitives-batch-2.md`.
+
+## 2026-10-31 - FormField cannot wrap a Radix Select root; container queries cannot style the container
+
+FormField clones its child to add id/aria-describedby, but `<Select>` renders no
+element, so the label would point at nothing. Wrap `SelectTrigger` inside the Select.
+CardHeader's `container: card-header` cannot be restyled by its own container query;
+change its children (span both columns) instead. Built-page console checks caught
+`p > div` nesting from Separator stories that story tests did not report.
+
+## 2026-10-31 - Tailwind's default sans stack renders digits with Noto Color Emoji
+
+On a Linux host with Noto Color Emoji but without "Noto Sans", Chromium resolves the
+`'Noto Sans'` entry of Tailwind 4's default `--font-sans` to the emoji font for digits
+(CDP `CSS.getPlatformFontsForNode` shows NotoColorEmoji for "128"); letters fall back
+to DejaVu. Digits look grey and offset. The stack is an approved decision; a change is
+pending the user's decision (POSTEP.md).

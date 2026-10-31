@@ -25,3 +25,11 @@ html.dark { color-scheme: dark; }
 /* WCAG 1.4.3: Canvas source controls sit outside the product specimen but inherit its theme. */
 .sbdocs-preview { background: var(--background) !important; border-color: var(--border) !important; }
 .sbdocs-preview-actions, .sbdocs-preview-actions :is(button,div,span) { background: var(--card) !important; color: var(--foreground) !important; }
+/* Stage 2 batch 2: frozen previews repeat the component declarations from globals.css. */
+:is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio,.mentio-badge)[data-preview-state=focus] { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
+:is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio)[data-preview-state=hover]:not(:disabled):not([aria-invalid=true]) { border-color: var(--ring); }
+.mentio-select-item[data-preview-state=hover] { background: var(--accent); color: var(--accent-foreground); }
+a.mentio-badge-primary:is([data-preview-state=hover],[data-preview-state=pressed]) { background: var(--primary-hover); }
+a.mentio-badge-destructive:is([data-preview-state=hover],[data-preview-state=pressed]) { background: var(--destructive-hover); }
+a:is(.mentio-badge-secondary,.mentio-badge-outline,.mentio-badge-ghost):is([data-preview-state=hover],[data-preview-state=pressed]) { background: var(--accent); color: var(--accent-foreground); }
+a.mentio-badge-link:is([data-preview-state=hover],[data-preview-state=pressed]) { text-decoration-line: underline; }

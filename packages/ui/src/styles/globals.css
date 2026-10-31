@@ -83,6 +83,7 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -345,4 +346,112 @@
   /* WCAG 2.5.8: even a one-character navigation label retains a 24px target. */
   .mentio-link { min-inline-size: var(--control-height-compact); }
   .mentio-field-description { max-inline-size: var(--prose-max-width); }
+}
+
+/* Stage 2 batch 2: Select, Checkbox, RadioGroup, Card, Badge, Separator.
+ * User decisions 2026-10-31: badge radius-sm (not a pill), checkbox 16px with radius-sm,
+ * one 36px select size, card title in the section role. Other values retain the base scale. */
+:root {
+  /* Retained base badge rhythm (2px block padding); metadata role text. */
+  --badge-padding-block: calc(var(--spacing) * 0.5);
+  /* WAI-ARIA radio pattern: a circular control distinguishes one choice from a checkbox. */
+  --radius-circle: 50%;
+  /* Retained base option density, reused by later menus: 32px rows, 8px inline padding. */
+  --menu-item-padding-block: calc(var(--spacing) * 1.5);
+  --menu-item-padding-inline: var(--control-padding-compact);
+  --menu-item-indicator-space: calc(var(--spacing) * 8);
+  --menu-min-width: calc(var(--spacing) * 32);
+  --overlay-offset: var(--spacing);
+}
+
+@layer components {
+  :is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio,.mentio-badge) {
+    transition-property: color, background-color, border-color, outline-color;
+    transition-duration: var(--motion-duration);
+    transition-timing-function: var(--motion-ease);
+  }
+  /* Approved contrast repair: full ring with offset, never a translucent ring. */
+  :is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio,.mentio-badge):focus-visible {
+    outline: var(--focus-width) var(--focus-style) var(--ring);
+    outline-offset: var(--focus-offset);
+  }
+  :is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio):disabled { opacity: var(--state-disabled-opacity); cursor: not-allowed; }
+  :is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio,.mentio-badge)[aria-invalid=true] { border-color: var(--destructive); }
+  :is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio):hover:not(:disabled):not([aria-invalid=true]) { border-color: var(--ring); }
+
+  /* Q2: same 36px height, 8px radius, 1px border and opaque surface as Input. */
+  .mentio-select-trigger { display: flex; inline-size: fit-content; max-inline-size: 100%; min-inline-size: 0; block-size: var(--control-height); align-items: center; justify-content: space-between; gap: var(--space-within-group); border: var(--divider-width) solid var(--input); border-radius: var(--radius-md); background: var(--background); color: var(--foreground); padding-inline: var(--control-padding-small); padding-block: var(--space-within-group); font-size: var(--text-label); line-height: var(--line-label); white-space: nowrap; box-shadow: var(--shadow-xs); cursor: pointer; }
+  .mentio-select-trigger[data-placeholder] { color: var(--muted-foreground); }
+  .mentio-select-trigger > [data-slot=select-value] { display: flex; align-items: center; gap: var(--space-within-group); min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; }
+  .mentio-select-trigger svg { pointer-events: none; flex-shrink: 0; inline-size: var(--icon-size); block-size: var(--icon-size); color: var(--muted-foreground); }
+  /* A01.2: opaque popover; U02.1: no zoom/slide entrance, the list appears in place. */
+  .mentio-select-content { position: relative; z-index: 50; max-block-size: var(--radix-select-content-available-height); min-inline-size: var(--menu-min-width); transform-origin: var(--radix-select-content-transform-origin); overflow-x: hidden; overflow-y: auto; border: var(--divider-width) solid var(--border); border-radius: var(--radius-md); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-md); }
+  .mentio-select-content[data-side=bottom] { translate: 0 var(--overlay-offset); }
+  .mentio-select-content[data-side=top] { translate: 0 calc(var(--overlay-offset) * -1); }
+  .mentio-select-content[data-side=left] { translate: calc(var(--overlay-offset) * -1) 0; }
+  .mentio-select-content[data-side=right] { translate: var(--overlay-offset) 0; }
+  .mentio-select-viewport { padding: var(--spacing); }
+  .mentio-select-viewport-popper { block-size: var(--radix-select-trigger-height); inline-size: 100%; min-inline-size: var(--radix-select-trigger-width); scroll-margin-block: var(--spacing); }
+  .mentio-select-label { padding-inline: var(--menu-item-padding-inline); padding-block: var(--menu-item-padding-block); color: var(--muted-foreground); font-size: var(--text-metadata); line-height: var(--line-metadata); }
+  .mentio-select-item { position: relative; display: flex; inline-size: 100%; align-items: center; gap: var(--space-within-group); border-radius: var(--radius-sm); padding-block: var(--menu-item-padding-block); padding-inline: var(--menu-item-padding-inline) var(--menu-item-indicator-space); font-size: var(--text-label); line-height: var(--line-label); outline: none; user-select: none; cursor: default; }
+  .mentio-select-item[data-highlighted] { background: var(--accent); color: var(--accent-foreground); }
+  .mentio-select-item[data-disabled] { pointer-events: none; opacity: var(--state-disabled-opacity); }
+  .mentio-select-item svg { pointer-events: none; flex-shrink: 0; inline-size: var(--icon-size); block-size: var(--icon-size); }
+  .mentio-select-item-indicator { position: absolute; inset-inline-end: var(--menu-item-padding-inline); display: flex; align-items: center; justify-content: center; }
+  .mentio-select-separator { pointer-events: none; margin-inline: calc(var(--spacing) * -1); margin-block: var(--spacing); block-size: var(--divider-width); background: var(--border); }
+  .mentio-select-scroll { display: flex; align-items: center; justify-content: center; padding-block: var(--spacing); cursor: default; }
+  .mentio-select-scroll svg { inline-size: var(--icon-size); block-size: var(--icon-size); }
+
+  /* User decision: 16px box, radius-sm; the visible clickable Label supplies the 24px target. */
+  .mentio-checkbox { display: inline-grid; place-content: center; flex-shrink: 0; inline-size: var(--icon-size); block-size: var(--icon-size); border: var(--divider-width) solid var(--input); border-radius: var(--radius-sm); background: var(--background); color: var(--primary-foreground); box-shadow: var(--shadow-xs); cursor: pointer; }
+  .mentio-checkbox:is([data-state=checked],[data-state=indeterminate]) { border-color: var(--primary); background: var(--primary); }
+  .mentio-checkbox-indicator { display: grid; place-content: center; color: currentColor; }
+  .mentio-checkbox-indicator svg { inline-size: var(--icon-size-small); block-size: var(--icon-size-small); }
+  .mentio-radio-group { display: grid; gap: var(--space-within-group); }
+  .mentio-radio { display: inline-grid; place-content: center; flex-shrink: 0; aspect-ratio: 1; inline-size: var(--icon-size); block-size: var(--icon-size); border: var(--divider-width) solid var(--input); border-radius: var(--radius-circle); background: var(--background); color: var(--primary); box-shadow: var(--shadow-xs); cursor: pointer; }
+  .mentio-radio[data-state=checked] { border-color: var(--primary); }
+  .mentio-radio-indicator { display: flex; align-items: center; justify-content: center; }
+  .mentio-radio-indicator svg { inline-size: calc(var(--spacing) * 2); block-size: calc(var(--spacing) * 2); fill: var(--primary); }
+
+  /* A01.2/R01.4 opaque panel; retained 14px radius, shadow and 24px panel spacing. */
+  .mentio-card { display: flex; flex-direction: column; gap: var(--space-panel); border: var(--divider-width) solid var(--border); border-radius: var(--radius-xl); background: var(--card); color: var(--card-foreground); padding-block: var(--space-panel); box-shadow: var(--shadow-sm); }
+  .mentio-card-header { container: card-header / inline-size; display: grid; grid-auto-rows: min-content; grid-template-rows: auto auto; align-items: start; gap: var(--space-within-group); padding-inline: var(--space-panel); }
+  .mentio-card-header:has(> [data-slot=card-action]) { grid-template-columns: 1fr auto; }
+  .mentio-card-header.border-b { padding-block-end: var(--space-panel); }
+  /* User decision: approved section role, 20/28 semibold. */
+  .mentio-card-title { font-size: var(--text-section); line-height: var(--line-section); font-weight: var(--font-weight-semibold); overflow-wrap: anywhere; }
+  .mentio-card-description { color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); max-inline-size: var(--prose-max-width); }
+  .mentio-card-action { grid-column-start: 2; grid-row: 1 / span 2; align-self: start; justify-self: end; }
+  /* WCAG 1.4.10 reflow: below Tailwind's --container-sm (24rem; var() is invalid in a container
+   * query) the header action moves under the title instead of widening the card. Proposal. */
+  @container card-header (inline-size < 24rem) {
+    /* A container cannot restyle itself; its children span both columns instead. */
+    .mentio-card-header > * { grid-column: 1 / -1; }
+    .mentio-card-action { grid-row: auto; justify-self: start; }
+  }
+  .mentio-card-content { padding-inline: var(--space-panel); }
+  .mentio-card-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group); padding-inline: var(--space-panel); }
+  .mentio-card-footer.border-t { padding-block-start: var(--space-panel); }
+
+  /* User decision: radius-sm label, not a pill; metadata role; status is text, never colour alone. */
+  .mentio-badge { display: inline-flex; inline-size: fit-content; flex-shrink: 0; align-items: center; justify-content: center; gap: var(--spacing); overflow: hidden; border: var(--divider-width) solid transparent; border-radius: var(--radius-sm); padding-inline: var(--control-padding-compact); padding-block: var(--badge-padding-block); font-size: var(--text-metadata); line-height: var(--line-metadata); font-weight: var(--font-weight-medium); white-space: nowrap; }
+  .mentio-badge > svg { pointer-events: none; inline-size: var(--icon-size-small); block-size: var(--icon-size-small); }
+  /* WCAG 2.5.8: an interactive badge keeps a 24px target. */
+  :is(a,button).mentio-badge { min-block-size: var(--control-height-compact); }
+  .mentio-badge-primary { background: var(--primary); color: var(--primary-foreground); }
+  a.mentio-badge-primary:is(:hover,:active) { background: var(--primary-hover); }
+  .mentio-badge-secondary { background: var(--secondary); color: var(--secondary-foreground); }
+  /* T01 contrast repair: explicit destructive pair, no translucent dark fill. */
+  .mentio-badge-destructive { background: var(--destructive); color: var(--destructive-foreground); }
+  a.mentio-badge-destructive:is(:hover,:active) { background: var(--destructive-hover); }
+  .mentio-badge-outline { border-color: var(--border); color: var(--foreground); }
+  .mentio-badge-ghost { color: var(--foreground); }
+  a:is(.mentio-badge-secondary,.mentio-badge-outline,.mentio-badge-ghost):is(:hover,:active) { background: var(--accent); color: var(--accent-foreground); }
+  .mentio-badge-link { color: var(--primary); text-underline-offset: var(--link-underline-offset); }
+  a.mentio-badge-link:is(:hover,:active) { text-decoration-line: underline; }
+
+  /* R01.3: thin separator between adjacent records. */
+  .mentio-separator { flex-shrink: 0; background: var(--border); }
+  .mentio-separator[data-orientation=horizontal] { block-size: var(--divider-width); inline-size: 100%; }
+  .mentio-separator[data-orientation=vertical] { block-size: 100%; inline-size: var(--divider-width); }
 }
