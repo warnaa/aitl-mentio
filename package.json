@@ -19,7 +19,11 @@
     "audit": "node scripts/audit.mjs",
     "db:migration:create": "npm run migration:create -w @mentio/db --",
     "db:migrate": "npm run migrate -w @mentio/db",
-    "db:migrate:down": "npm run migrate:down -w @mentio/db"
+    "db:migrate:down": "npm run migrate:down -w @mentio/db",
+    "storybook": "npm run storybook -w @mentio/ui --",
+    "build-storybook": "npm run build-storybook -w @mentio/ui",
+    "test:storybook": "npm run test:storybook -w @mentio/ui",
+    "check:tokens": "npm run check:tokens -w @mentio/ui"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^12.2.1",

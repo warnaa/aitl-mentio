@@ -93,6 +93,9 @@ const eslintConfig = defineConfig([
     "**/out/**",
     "**/build/**",
     "**/coverage/**",
+    "**/storybook-static/**",
+    // MSW-generated browser worker, regenerated via `msw init`.
+    "packages/ui/.storybook/public/mockServiceWorker.js",
     "**/next-env.d.ts",
   ]),
 ]);

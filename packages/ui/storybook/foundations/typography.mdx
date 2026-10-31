@@ -1,0 +1,16 @@
+import { Meta, Unstyled } from '@storybook/addon-docs/blocks';
+import { TypeSpecimens } from './foundation-previews';
+
+<Meta title="Foundations/Typography" />
+
+# Typography
+
+Use the system sans stack for interface prose. Use the retained monospace stack for code and filenames. These fonts are available locally through the operating system; there is no external font request. Sources: R01.2 and approved token table.
+
+<table><thead><tr><th>Role</th><th>Size / line height</th><th>Weight</th><th>Use</th></tr></thead><tbody><tr><td>page</td><td>24 / 32 px</td><td>Semibold</td><td>One screen title</td></tr><tr><td>section</td><td>20 / 28 px</td><td>Semibold</td><td>A related group such as Public work</td></tr><tr><td>body</td><td>16 / 24 px</td><td>Regular</td><td>Questions and descriptions</td></tr><tr><td>label</td><td>14 / 20 px</td><td>Medium</td><td>Visible control labels</td></tr><tr><td>metadata</td><td>12 / 16 px</td><td>Regular</td><td>Author and time, not the main question</td></tr><tr><td>numbers</td><td>14 / 20 px</td><td>Regular, tabular</td><td>Comparable prices and durations</td></tr><tr><td>code</td><td>14 / 20 px</td><td>Regular, monospace</td><td>Code snippets and filenames</td></tr></tbody></table>
+
+These role assignments were approved in stage 0 Q2; the sizes retain the existing Tailwind scale. Their CSS values live in the token source. The specimen below renders the role tokens rather than recreating a font scale inside Storybook.
+
+Limit continuous prose to `--prose-max-width` (65ch); let code wrap or scroll within its own region rather than widening the screen. Do not truncate the mentee's saved question. Sources: approved Q2/Q3, booking spec UI/UX. Preserve readable content when users zoom; use semantic headings in order instead of selecting heading tags by appearance. Sources: WCAG 1.4.4, 1.4.10 and 1.3.1.
+
+<Unstyled><TypeSpecimens /></Unstyled>

@@ -1,0 +1,16 @@
+import { Meta, Unstyled } from '@storybook/addon-docs/blocks';
+import { IconSpecimens } from './foundation-previews';
+
+<Meta title="Foundations/Icons" />
+
+# Icons
+
+Use the existing Lucide React library. The retained default icon size is 16 px; compact 12 px icons accompany existing compact controls. Size is read from icon tokens, not assigned a new arbitrary value in each screen. Sources: existing `components.json` and Button variants; stage 0 Q2.
+
+An icon accompanying visible text is decorative: hide it from assistive technology. An icon-only control needs an accessible name describing its action, not its drawing. Essential instructions must remain visible outside tooltips. Sources: [WAI-ARIA button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/button/), WCAG 1.1.1/4.1.2 and task Usage and accessibility.
+
+The target is the control, not the glyph: keep it at least 24 × 24 CSS pixels and preserve keyboard focus. Source: WCAG 2.5.8 and task primitive accessibility requirements. A small icon does not justify a smaller target.
+
+No UI emoji or decorative sparkles. Emoji typed by a participant remain message content. Source: R02.5 and A01.3. No rating stars or review scores are introduced; public work is the trust signal (N02, A03).
+
+<Unstyled><IconSpecimens /></Unstyled>

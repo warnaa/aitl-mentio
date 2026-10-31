@@ -1,0 +1,24 @@
+import { Meta, Unstyled } from '@storybook/addon-docs/blocks';
+import { ColorFoundations } from './foundation-previews';
+
+<Meta title="Foundations/Color" />
+
+# Color
+
+Mentio uses warm neutral surfaces, one clear primary action and an explicit error role. The role name describes its job; it does not describe a hue. Sources: R01.4–R01.5, A01.1–A01.2, approved `lekcja-06/tokeny.md`.
+
+## Choose a role
+
+<table><thead><tr><th>Role</th><th>Use</th><th>Avoid</th></tr></thead><tbody><tr><td>background / foreground</td><td>Page and ordinary text</td><td>Foreground text on a filled primary button</td></tr><tr><td>card / card-foreground</td><td>Opaque grouped information</td><td>Glass surfaces or card nesting for decoration</td></tr><tr><td>popover / popover-foreground</td><td>Portalled menu and overlay surface</td><td>Transparent overlay content</td></tr><tr><td>muted / muted-foreground</td><td>Supporting surfaces and metadata</td><td>Color as the only status signal</td></tr><tr><td>primary / primary-foreground</td><td>The main action in this view</td><td>Giving every action equal prominence</td></tr><tr><td>secondary, accent</td><td>Secondary action and local highlighted state</td><td>A second brand color</td></tr><tr><td>destructive / destructive-foreground</td><td>Error text or a destructive action</td><td>Ordinary primary actions</td></tr><tr><td>border, input, ring</td><td>Boundaries and full-color focus against neutral surroundings</td><td>Using these as text colors or reducing the only focus cue's opacity</td></tr></tbody></table>
+
+Source for every role: approved token table, including T01 for errors. Sidebar roles remain aliases to the same semantic system (R02.6). Chart tokens are preserved compatibility tokens; no chart usage or contrast approval is implied.
+
+## Measured contrast
+
+The table below reads the CSS currently loaded in your browser. It measures both themes, all neutral text/surface combinations, aliases, essential boundaries, full focus rings, primary/destructive hover fills and the existing tinted error surface. The backdrop is composited before measurement. A failing row is a blocker: do not substitute another color silently.
+
+Source: [WCAG 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) and [WCAG 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html); approved token pair list. The table does not validate arbitrary color combinations, overlaid content, disabled states or every component implementation.
+
+Use the error's text and an appropriate announcement role in addition to color. A focus ring must be offset from filled controls so it touches the measured neutral surface. Sources: WCAG 1.4.1, 2.4.7; approved token contrast correction. Existing primitive focus/destructive classes are scheduled for stage 2; changing tokens alone does not certify those components.
+
+<Unstyled><ColorFoundations /></Unstyled>

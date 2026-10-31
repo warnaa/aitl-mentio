@@ -23,6 +23,9 @@
     }
   },
   "include": [
-    "src"
+    "src",
+    "storybook",
+    ".storybook/**/*.ts",
+    "vitest.storybook.config.ts"
   ]
 }

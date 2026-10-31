@@ -315,3 +315,22 @@ or "all edits reprice" rule. Pending-payment cancellation was also approved, wit
 immediate release and refund recovery that never revives the booking. These are
 draft design decisions, not implemented behavior; see
 `.ai/runs/2026-10-30-book-and-pay-grilling.md`.
+
+## 2026-10-31 - Storybook 10 / Vite 8 needs eager schema prebundling
+
+Adding the real apiCall client to browser stories introduced its Zod dependency after
+Vite had already started the test page. Automatic dependency optimization reloaded
+the page, invalidated module URLs and failed all stories. Include `zod` explicitly
+in Storybook's optimizeDeps to make a cold test run stable. Also keep MDX JSX tables
+as complete blocks: a table opened on the same line as tbody followed by multiline
+rows was rejected by the MDX parser. Foundations use JSX tables and are verified
+in the built browser, rather than relying on TypeScript checks of MDX files. See
+`.ai/runs/2026-10-31-mentio-storybook-foundations.md`.
+
+## 2026-10-31 - Standalone MDX needs document-level theme synchronization
+
+The themes decorator updates html only when a story renders. Unattached MDX pages
+that render documentation samples directly never run that decorator, so toolbar dark
+mode can leave their root light. Sync SET_GLOBALS/GLOBALS_UPDATED at preview level
+and initialize direct iframe globals, while retaining the decorator for executable
+stories. Verify both direct docs URLs and manager toolbar changes, including portals.

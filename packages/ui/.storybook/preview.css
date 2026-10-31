@@ -1,0 +1,14 @@
+/* Approved Q2/Q3; R01.1/R01.4. Framework chrome follows product roles. */
+html { color-scheme: light; background: var(--background); color: var(--foreground); }
+html.dark { color-scheme: dark; }
+.sbdocs-wrapper { background: var(--background) !important; color: var(--foreground) !important; padding: var(--space-panel) !important; }
+.sbdocs-content { max-width: var(--content-max-width) !important; }
+/* Preserve Unstyled specimens: role-specific metadata and component colors must win there. */
+.sbdocs-wrapper :is(h1,h2,h3,h4,p,li,td,th):not(.sb-unstyled, .sb-unstyled *) { color: var(--foreground) !important; overflow-wrap: anywhere; }
+.sbdocs-wrapper p:not(.sb-unstyled, .sb-unstyled *) { max-inline-size: var(--prose-max-width); }
+.sbdocs-wrapper a:not(.sb-unstyled, .sb-unstyled *) { color: var(--primary) !important; }
+.sbdocs-wrapper :is(table,th,td):not(.sb-unstyled, .sb-unstyled *) { border-color: var(--border) !important; background: var(--card) !important; }
+/* WCAG 1.4.10: reference tables scroll locally instead of widening the document. */
+.sbdocs-wrapper table:not(.sb-unstyled, .sb-unstyled *) { display: block; max-inline-size: 100%; overflow-x: auto; }
+.sbdocs-wrapper code:not(.sb-unstyled, .sb-unstyled *) { color: var(--foreground) !important; background: var(--muted) !important; border-color: var(--border) !important; display: inline-block; max-inline-size: 100%; white-space: pre-wrap; overflow-wrap: anywhere; vertical-align: baseline; }
+.sbdocs-wrapper :focus-visible:not(.sb-unstyled, .sb-unstyled *) { outline: var(--focus-width) solid var(--ring); outline-offset: var(--focus-offset); }

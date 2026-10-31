@@ -48,3 +48,7 @@ next-env.d.ts
 /.ai/qa/artifacts_*/
 /.ai/qa/test-env.json
 /.ai/qa/test-env.env
+
+# Local Storybook output
+/packages/ui/storybook-static/
+/packages/ui/coverage/

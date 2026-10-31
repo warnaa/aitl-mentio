@@ -1,0 +1,16 @@
+import { Meta, Unstyled } from '@storybook/addon-docs/blocks';
+import { ThemeSpecimen } from './foundation-previews';
+
+<Meta title="Foundations/Themes" />
+
+# Themes
+
+Mentio retains both light and dark themes. Use the toolbar to choose one. The theme class is applied to the preview document's root element, so content rendered through a portal receives the same variables. Source: task rule 9 and approved token document.
+
+The portal sample uses the installed Radix Portal and the real package Button. It is a documentation probe, not a new dialog component. Dialog focus trapping, Escape behavior and return focus belong to the real primitive's stage 2 stories. Source: task rule 5 and the approved stage 0 plan.
+
+Both themes use the same role names. Never hardcode a light-only text color, derive dark mode by dimming an entire panel, or use transparency to weaken the sole focus indicator. Sources: token table, approved contrast repairs and task token-only rule. Color measurements on the Color page cover both themes independent of the current toolbar choice.
+
+Chart roles are preserved without a new usage contract. Switch, Avatar, Tabs and Toast are deferred by approved stage 0 Q4; they are not required for the toolbar or for this portal sample. The task's English documentation is separate from the existing application's Polish contract; this Storybook does not translate application routes or API messages.
+
+<Unstyled><ThemeSpecimen /></Unstyled>

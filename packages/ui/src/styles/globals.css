@@ -1,5 +1,5 @@
 /*
- * Shared Tailwind entry point + shadcn/ui theme tokens (neutral, new-york).
+ * Shared Tailwind entry point + approved Mentio semantic tokens.
  * Imported once by the app's root globals.css.
  */
 @import "tailwindcss";
@@ -7,10 +7,75 @@
 
 /* Scan this package's components for class names. */
 @source "../";
+@source "../../storybook";
+
+:root {
+  /* Raw palette: R01.4/T01, approved tokeny.md; literals live only here. */
+  --raw-neutral-50: #FAFAF9;
+  --raw-neutral-100: #F5F5F4;
+  --raw-neutral-200: #E7E5E4;
+  --raw-neutral-400: #A8A29E;
+  --raw-neutral-500: #78716C;
+  --raw-neutral-600: #57534E;
+  --raw-neutral-800: #292524;
+  --raw-neutral-900: #1C1917;
+  --raw-neutral-950: #0C0A09;
+  --raw-red-700: #B91C1C;
+  --raw-red-300: #FCA5A5;
+  --raw-line-1: 1px;
+  --raw-duration-150: 150ms;
+  /* R01.1/R02.1/R02.3: approved relationship spacing. */
+  --space-within-group: calc(var(--spacing) * 2);
+  --space-between-groups: calc(var(--spacing) * 4);
+  --space-panel: calc(var(--spacing) * 6);
+  --space-section: calc(var(--spacing) * 8);
+  /* R01.2: code and filenames; existing system fonts, no remote request. */
+  --font-code: var(--font-mono);
+  --default-font-family: var(--font-sans);
+  /* R01.3: thin list separator. */
+  --divider-width: var(--raw-line-1);
+  /* U02.1/R02.4: local color/border feedback; never delay a result. */
+  --default-transition-duration: var(--raw-duration-150);
+  --default-transition-timing-function: var(--ease-in-out);
+  --motion-duration: var(--default-transition-duration);
+  --motion-ease: var(--default-transition-timing-function);
+  --motion-reduced-duration: 0ms;
+  /* Approved stage-0 Q2: existing density, focus geometry and type scale. */
+  --control-height: 2.25rem;
+  --focus-width: 3px;
+  --focus-offset: 2px;
+  --icon-size: 1rem;
+  --icon-size-small: 0.75rem;
+  --text-page: 1.5rem;
+  --line-page: 2rem;
+  --text-section: 1.25rem;
+  --line-section: 1.75rem;
+  --text-body: 1rem;
+  --line-body: 1.5rem;
+  --text-label: 0.875rem;
+  --line-label: 1.25rem;
+  --text-metadata: 0.75rem;
+  --line-metadata: 1rem;
+  --text-code: var(--text-label);
+  --line-code: var(--line-label);
+  /* Approved stage-0 Q3: content/reading widths and verification viewports. */
+  --content-max-width: 72rem;
+  --prose-max-width: 65ch;
+  --viewport-small: 320px;
+  --viewport-medium: 768px;
+  --viewport-large: 1440px;
+  /* Approved token table: hover opacity and error tint, composited over local surface. */
+  --primary-hover: color-mix(in srgb, var(--primary) 90%, transparent);
+  --destructive-hover: color-mix(in srgb, var(--destructive) 90%, transparent);
+  --error-surface: color-mix(in srgb, var(--destructive) 5%, transparent);
+}
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Stage-0 Q3: scoped documentation breakpoints; existing breakpoints preserved. */
+  --breakpoint-document-medium: 48rem;
+  --breakpoint-document-wide: 90rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -26,6 +91,11 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --spacing-within-group: var(--space-within-group);
+  --spacing-between-groups: var(--space-between-groups);
+  --spacing-panel: var(--space-panel);
+  --spacing-section: var(--space-section);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -50,78 +120,144 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --background: var(--raw-neutral-50);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --foreground: var(--raw-neutral-900);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --card: var(--raw-neutral-100);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --card-foreground: var(--foreground);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --popover: var(--card);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --popover-foreground: var(--foreground);
+  /* R01.5; approved token table. */
+  --primary: var(--raw-neutral-800);
+  /* R01.5; approved token table. */
+  --primary-foreground: var(--raw-neutral-50);
+  /* R01.5; approved token table. */
+  --secondary: var(--muted);
+  /* R01.5; approved token table. */
+  --secondary-foreground: var(--foreground);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --muted: var(--raw-neutral-200);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --muted-foreground: var(--raw-neutral-600);
+  /* R01.5; approved token table. */
+  --accent: var(--muted);
+  /* R01.5; approved token table. */
+  --accent-foreground: var(--foreground);
+  /* T01; approved token table. */
+  --destructive: var(--raw-red-700);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --border: var(--raw-neutral-500);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --input: var(--border);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --ring: var(--raw-neutral-600);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* R02.6; approved token table. */
+  --sidebar: var(--card);
+  /* R02.6; approved token table. */
+  --sidebar-foreground: var(--foreground);
+  /* R02.6; approved token table. */
+  --sidebar-primary: var(--primary);
+  /* R02.6; approved token table. */
+  --sidebar-primary-foreground: var(--primary-foreground);
+  /* R02.6; approved token table. */
+  --sidebar-accent: var(--accent);
+  /* R02.6; approved token table. */
+  --sidebar-accent-foreground: var(--accent-foreground);
+  /* R02.6; approved token table. */
+  --sidebar-border: var(--border);
+  /* R02.6; approved token table. */
+  --sidebar-ring: var(--ring);
+  /* T01: explicit label on destructive fill. */
+  --destructive-foreground: var(--raw-neutral-50);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --background: var(--raw-neutral-950);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --foreground: var(--raw-neutral-50);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --card: var(--raw-neutral-900);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --card-foreground: var(--foreground);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --popover: var(--card);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --popover-foreground: var(--foreground);
+  /* R01.5; approved token table. */
+  --primary: var(--raw-neutral-200);
+  /* R01.5; approved token table. */
+  --primary-foreground: var(--raw-neutral-950);
+  /* R01.5; approved token table. */
+  --secondary: var(--muted);
+  /* R01.5; approved token table. */
+  --secondary-foreground: var(--foreground);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --muted: var(--raw-neutral-800);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --muted-foreground: var(--raw-neutral-400);
+  /* R01.5; approved token table. */
+  --accent: var(--muted);
+  /* R01.5; approved token table. */
+  --accent-foreground: var(--foreground);
+  /* T01; approved token table. */
+  --destructive: var(--raw-red-300);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --border: var(--raw-neutral-500);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --input: var(--border);
+  /* R01.1, R01.3, R01.4, R02.3; approved token table. */
+  --ring: var(--raw-neutral-400);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* R02.6; approved token table. */
+  --sidebar: var(--card);
+  /* R02.6; approved token table. */
+  --sidebar-foreground: var(--foreground);
+  /* R02.6; approved token table. */
+  --sidebar-primary: var(--primary);
+  /* R02.6; approved token table. */
+  --sidebar-primary-foreground: var(--primary-foreground);
+  /* R02.6; approved token table. */
+  --sidebar-accent: var(--accent);
+  /* R02.6; approved token table. */
+  --sidebar-accent-foreground: var(--accent-foreground);
+  /* R02.6; approved token table. */
+  --sidebar-border: var(--border);
+  /* R02.6; approved token table. */
+  --sidebar-ring: var(--ring);
+  /* T01: explicit label on destructive fill. */
+  --destructive-foreground: var(--raw-neutral-950);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* U02.1 + WCAG 2.3.3: reduced motion removes nonessential transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: var(--motion-reduced-duration) !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--motion-reduced-duration) !important;
+    scroll-behavior: auto !important;
   }
 }

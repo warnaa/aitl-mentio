@@ -10,7 +10,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: "unit",
-          include: ["packages/*/src/**/*.test.{ts,tsx}", "scripts/**/*.test.mjs"],
+          include: ["packages/*/src/**/*.test.{ts,tsx}", "scripts/**/*.test.mjs", "packages/ui/scripts/**/*.test.mjs"],
           environment: "node",
         },
       },
@@ -32,7 +32,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       // Listing sources (not just files touched by tests) makes an untested file count as 0%.
-      include: ["packages/*/src/**/*.{ts,tsx}", "scripts/**/*.mjs"],
+      include: ["packages/*/src/**/*.{ts,tsx}", "scripts/**/*.mjs", "packages/ui/scripts/**/*.mjs"],
       exclude: [
         "**/*.test.{ts,tsx,mjs}",
         // shadcn primitives: CLI-generated vendor code, rendered by the integration suite.
