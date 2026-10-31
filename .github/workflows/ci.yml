@@ -131,3 +131,32 @@ jobs:
           name: integration-artifacts
           path: tests/integration/.artifacts/
           if-no-files-found: ignore
+
+  storybook:
+    name: storybook (light + dark)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      # Browser for @vitest/browser-playwright, matching the installed Playwright version.
+      # No `--with-deps`: the runner image already has Chromium's system libraries, and
+      # apt font installs have stalled CI before (.ai/lessons.md, 2026-10-23).
+      - run: npx playwright install chromium
+        timeout-minutes: 5
+      # One run covers both themes: vitest.storybook.config.ts defines a
+      # storybook-light and a storybook-dark project.
+      - run: npm run test:storybook
+        timeout-minutes: 10
+      # Vitest browser mode screenshots failed tests into `__screenshots__/` next to
+      # each story file.
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: storybook-failure-screenshots
+          path: packages/ui/storybook/**/__screenshots__/
+          if-no-files-found: ignore
