@@ -1,0 +1,97 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as ButtonStories from './button.stories';
+
+<Meta of={ButtonStories} />
+
+# Button
+
+## 1. Purpose
+
+Run an action on the current task, such as saving a mentor page or confirming a booking. Source: R01.5; E01/E02 UI/UX.
+
+## 2. When to use
+
+Use a primary button for the next task action: save the draft, continue to payment or pay the displayed price. Use a quieter button for preview, edit or cancel. An action that removes availability uses the destructive treatment after its confirmation step. Sources: R01.5; E01 mentor editor/availability; E02 booking/payment; platform F5.
+
+## 3. When not to use
+
+For ordinary navigation, use Link. A navigation action that needs button emphasis may use `asChild` with an anchor: it must still expose link semantics. Do not use a button to disguise a link or a clickable div to replace a button. Sources: WAI-ARIA button pattern; task implementation anti-patterns; R01.5.
+
+## 4. Anatomy
+
+Required: the visible action label, or an accessible name for an icon-only control. Optional: a leading or trailing Lucide icon, disabled explanation and adjacent action error/status. Decorative icons have `aria-hidden`. The hit target includes the whole control. Sources: task stage 2; WCAG 1.1.1, 2.5.8, 4.1.2; approved Q2.
+
+## 5. Variants and sizes
+
+<table><thead><tr><th>Variant</th><th>Choose it for</th><th>Mentio example</th></tr></thead><tbody><tr><td>default</td><td>The main action in this view</td><td>Save mentor page</td></tr><tr><td>destructive</td><td>A confirmed destructive action</td><td>Remove availability</td></tr><tr><td>outline</td><td>A visibly available secondary choice</td><td>Keep availability</td></tr><tr><td>secondary</td><td>A supporting action in a group</td><td>Preview mentor page</td></tr><tr><td>ghost</td><td>A quiet contextual action</td><td>Edit question</td></tr><tr><td>link</td><td>A text action that stays an action</td><td>Copy share link</td></tr></tbody></table>
+
+Source for the hierarchy: R01.5. Variant names are the retained package API; no additional variant is introduced. Destructive foreground/fill come from the approved T01 pair.
+
+Sizes retain the approved scale: `xs` 24px, `sm` 32px, `default` 36px and `lg` 40px; `icon-xs`, `icon-sm`, `icon`, `icon-lg` use the matching square targets. Default is 36px. Use a compact size for a dense row without reducing any target below 24px. Sources: approved Q2; R01.1; WCAG 2.5.8. The existing 8px control radius remains; a larger action does not require a new shape.
+
+<Unstyled><Canvas of={ButtonStories.Playground} /></Unstyled>
+
+## 6. States
+
+Default, hover, focus and pressed keep the action recognizable. Hover/focus/pressed samples below freeze the same declarations used for real pseudo-classes through documentation-only `data-preview-state`. A selected toggle uses `aria-pressed`; ordinary one-time actions do not. Sources: task state-matrix requirement; WAI-ARIA button pattern.
+
+Disabled means the action cannot run: provide a visible reason near it and connect that reason with `aria-describedby`. A disabled control is skipped by normal Tab navigation, so the explanation must be readable independently. Loading uses `disabled`, `aria-busy` and a truthful progress label; show success only after server confirmation. An action failure remains in adjacent alert text and preserves the task context. Sources: task disabled/loading/error requirements; platform F5; E01 dirty/publish states; E02 payment states; R02.4. There is no custom loading prop or automatic request handling in Button.
+
+<Unstyled><Canvas of={ButtonStories.StateMatrix} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+Native buttons activate with Enter and Space; mouse/touch activation calls the same handler. Use `type="button"` for standalone actions inside forms and `type="submit"` only for the intended submitter. Preserve DOM order as keyboard order, visible full-color focus and its neutral offset. Screen readers hear the accessible name, button role and relevant disabled/pressed/busy state. Sources: native button contract; WAI-ARIA button pattern; WCAG 2.1.1, 2.4.3, 2.4.7; approved contrast correction.
+
+`asChild` delegates to exactly one semantic child; it does not make an anchor disabled or provide button keyboard behavior to an arbitrary element. Use an anchor with a real destination for navigation; do not pass native button-only props to that anchor. Source: retained Radix Slot contract and task semantic-element rule.
+
+## 8. Content
+
+Use a verb and object: “Save mentor page”, “Remove availability” or “Pay 120 PLN”. Avoid “OK” for irreversible confirmation and ambiguous icon-only labels. The tone is direct and friendly. Sources: U01.1; task Content; E02 payment UI.
+
+No label character maximum is enforced by this API or approved material. Keep the label specific; when a translation grows, allow wrapping instead of clipping the object or silently adding an unapproved smaller text size. Price and duration must come from the screen's actual data; examples do not establish a rate. Sources: approved Q2/Q3; task long-content/translation requirement; R03/R08.
+
+## 9. Responsiveness
+
+Check the real control at 320, 768 and 1440px. Long labels must remain readable at 320px, icon buttons keep their named target, and controls may wrap as a group without changing reading order. The target remains at least 24 × 24px. Sources: approved Q3; task stage 2; WCAG 1.4.10, 2.5.8.
+
+<Unstyled><Canvas of={ButtonStories.LongContent} /></Unstyled>
+
+## 10. API
+
+Import: `@mentio/ui/components/button`. Button forwards native button props and exposes retained CVA variants. Source: package implementation.
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td>children</td><td>ReactNode</td><td>None</td><td>Visible content; icon-only controls need aria-label</td></tr><tr><td>variant</td><td>default | destructive | outline | secondary | ghost | link</td><td>default</td><td>Visual action hierarchy</td></tr><tr><td>size</td><td>default | xs | sm | lg | icon | icon-xs | icon-sm | icon-lg</td><td>default</td><td>Retained density scale</td></tr><tr><td>asChild</td><td>boolean</td><td>false</td><td>Render the single child's semantic element through Radix Slot</td></tr><tr><td>type</td><td>button | submit | reset</td><td>Native browser behavior</td><td>Set explicitly in a form</td></tr><tr><td>disabled</td><td>boolean</td><td>Native false</td><td>Prevent native button activation</td></tr><tr><td>onClick</td><td>MouseEventHandler&lt;HTMLButtonElement&gt;</td><td>None</td><td>Action callback; caller owns async state</td></tr><tr><td>aria-busy / aria-pressed / aria-describedby</td><td>Native ARIA attributes</td><td>None</td><td>Expose task state and visible explanation</td></tr><tr><td>className / other native props</td><td>string / native button props</td><td>None</td><td>Composition without a new variant</td></tr></tbody></table>
+
+## 11. Code
+
+Minimal action:
+
+```tsx
+import { Button } from '@mentio/ui/components/button';
+<Button type="button" onClick={saveDraft}>Save mentor page</Button>
+```
+
+Typical pending publication action, with its reason readable outside the control:
+
+```tsx
+<Button type="button" disabled={saving} aria-busy={saving}
+  aria-describedby="publication-status" onClick={publishSavedDraft}>
+  {saving ? 'Publishing page…' : 'Publish mentor page'}
+</Button>
+<p id="publication-status" role="status">
+  {saving ? 'Publishing your saved draft.' : 'Save draft changes before publishing.'}
+</p>
+```
+
+The caller owns the request, synchronous duplicate guard and server result; Button does not perform the mutation. Source: E01 editor/publish contract; platform F5; R02.4.
+
+## 12. Good and bad
+
+Good: “Remove availability” names the destructive action. Bad: “OK” requires the user to reconstruct its meaning from surrounding text. The paired specimen keeps the bad wording explanatory rather than introducing an active inaccessible control. Sources: task confirmation/content requirements; E01 availability.
+
+<Unstyled><Canvas of={ButtonStories.GoodAndBad} /></Unstyled>
+
+## 13. Related
+
+Choose Link for destinations; use FormField for input anatomy and CrudForm for schema-driven submission. Future ActionButton adds mutation/confirmation behavior to this primitive; it is not implemented by this Button page. Sources: approved stage-0 map; platform F4/F5. Dialog/confirmation behavior belongs to the actual overlay stories in their approved batch, not this action primitive.

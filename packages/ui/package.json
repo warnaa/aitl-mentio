@@ -11,7 +11,8 @@
     "./backend/forms": "./src/backend/forms/index.ts",
     "./backend/tables": "./src/backend/tables/index.ts",
     "./backend/feedback": "./src/backend/feedback/index.ts",
-    "./styles.css": "./src/styles/globals.css"
+    "./styles.css": "./src/styles/globals.css",
+    "./backend/actions": "./src/backend/actions/index.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

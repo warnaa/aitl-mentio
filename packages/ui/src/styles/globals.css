@@ -261,3 +261,88 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Stage 2 batch 1: approved Q2 keeps existing sizes/padding; R01.1, R01.5, U02.1.
+ * Values are aliases to the retained Tailwind scale, not a new shape/density direction. */
+:root {
+  --control-height-compact: calc(var(--spacing) * 6);
+  --control-height-small: calc(var(--spacing) * 8);
+  --control-height-large: calc(var(--spacing) * 10);
+  --control-padding-inline: calc(var(--spacing) * 4);
+  --control-padding-compact: calc(var(--spacing) * 2);
+  --control-padding-small: calc(var(--spacing) * 3);
+  --control-padding-large: calc(var(--spacing) * 6);
+  --control-gap-small: calc(var(--spacing) * 1.5);
+  --control-padding-icon-compact: calc(var(--spacing) * 1.5);
+  --control-padding-icon-small: calc(var(--spacing) * 2.5);
+  --field-padding-block: var(--spacing);
+  --field-min-height: calc(var(--spacing) * 16);
+  --state-disabled-opacity: 0.5;
+  --link-underline-offset: var(--spacing);
+  --link-underline-width: var(--raw-line-1);
+  --focus-style: solid;
+}
+
+@layer components {
+  /* Full, offset focus uses the measured neutral surround (approved contrast repair). */
+  :is(.mentio-button,.mentio-input,.mentio-textarea,.mentio-link) {
+    transition-property: color, background-color, border-color, outline-color;
+    transition-duration: var(--motion-duration);
+    transition-timing-function: var(--motion-ease);
+  }
+  :is(.mentio-button,.mentio-input,.mentio-textarea,.mentio-link):focus-visible {
+    outline: var(--focus-width) var(--focus-style) var(--ring);
+    outline-offset: var(--focus-offset);
+  }
+  .mentio-button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: var(--space-within-group); border-radius: var(--radius-md); font-size: var(--text-label); line-height: var(--line-label); font-weight: var(--font-weight-medium); white-space: nowrap; cursor: pointer; }
+  .mentio-button svg { pointer-events: none; flex-shrink: 0; }
+  .mentio-button svg:not([class*='size-']) { inline-size: var(--icon-size); block-size: var(--icon-size); }
+  .mentio-button-primary { background: var(--primary); color: var(--primary-foreground); }
+  .mentio-button-primary:is(:hover,:active,[aria-pressed=true]):not(:disabled) { background: var(--primary-hover); }
+  .mentio-button-destructive { background: var(--destructive); color: var(--destructive-foreground); }
+  .mentio-button-destructive:is(:hover,:active,[aria-pressed=true]):not(:disabled) { background: var(--destructive-hover); }
+  .mentio-button-outline { border: var(--divider-width) solid var(--input); background: var(--background); color: var(--foreground); box-shadow: var(--shadow-xs); }
+  .mentio-button-secondary { background: var(--secondary); color: var(--secondary-foreground); }
+  .mentio-button-ghost { color: var(--foreground); }
+  :is(.mentio-button-outline,.mentio-button-secondary,.mentio-button-ghost):is(:hover,:active,[aria-pressed=true]):not(:disabled) { background: var(--accent); color: var(--accent-foreground); }
+  .mentio-button-link { color: var(--primary); text-underline-offset: var(--link-underline-offset); }
+  .mentio-button-link:is(:hover,:active,[aria-pressed=true]):not(:disabled) { text-decoration-line: underline; }
+  .mentio-button-default { block-size: var(--control-height); padding-inline: var(--control-padding-inline); padding-block: var(--space-within-group); }
+  .mentio-button-default:has(>svg) { padding-inline: var(--control-padding-small); }
+  .mentio-button-xs { block-size: var(--control-height-compact); padding-inline: var(--control-padding-compact); gap: var(--spacing); font-size: var(--text-metadata); line-height: var(--line-metadata); }
+  .mentio-button-xs:has(>svg) { padding-inline: var(--control-padding-icon-compact); }
+  .mentio-button-sm { block-size: var(--control-height-small); padding-inline: var(--control-padding-small); gap: var(--control-gap-small); }
+  .mentio-button-sm:has(>svg) { padding-inline: var(--control-padding-icon-small); }
+  .mentio-button-lg { block-size: var(--control-height-large); padding-inline: var(--control-padding-large); }
+  .mentio-button-lg:has(>svg) { padding-inline: var(--control-padding-inline); }
+  .mentio-button-icon { block-size: var(--control-height); inline-size: var(--control-height); }
+  .mentio-button-icon-xs { block-size: var(--control-height-compact); inline-size: var(--control-height-compact); }
+  .mentio-button-icon-sm { block-size: var(--control-height-small); inline-size: var(--control-height-small); }
+  .mentio-button-icon-lg { block-size: var(--control-height-large); inline-size: var(--control-height-large); }
+  :is(.mentio-button-xs,.mentio-button-icon-xs) svg:not([class*='size-']) { inline-size: var(--icon-size-small); block-size: var(--icon-size-small); }
+  :is(.mentio-button,.mentio-input,.mentio-textarea):disabled { opacity: var(--state-disabled-opacity); cursor: not-allowed; }
+  :is(.mentio-button,.mentio-input,.mentio-textarea)[aria-invalid=true] { border-color: var(--destructive); }
+  :is(.mentio-input,.mentio-textarea) { display: block; inline-size: 100%; min-inline-size: 0; border: var(--divider-width) solid var(--input); border-radius: var(--radius-md); background: var(--background); color: var(--foreground); padding-inline: var(--control-padding-small); font-size: var(--text-body); line-height: var(--line-label); box-shadow: var(--shadow-xs); }
+  .mentio-input { block-size: var(--control-height); padding-block: var(--field-padding-block); }
+  .mentio-textarea { min-block-size: var(--field-min-height); field-sizing: content; padding-block: var(--space-within-group); }
+  :is(.mentio-input,.mentio-textarea):hover:not(:disabled):not([aria-invalid=true]) { border-color: var(--ring); }
+  :is(.mentio-input,.mentio-textarea)::placeholder { color: var(--muted-foreground); }
+  :is(.mentio-input,.mentio-textarea)::selection { background: var(--primary); color: var(--primary-foreground); }
+  .mentio-input::file-selector-button { border: none; background: transparent; color: var(--foreground); font-weight: var(--font-weight-medium); }
+  .mentio-label { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-within-group); min-block-size: var(--control-height-compact); font-size: var(--text-label); line-height: var(--line-label); font-weight: var(--font-weight-medium); cursor: pointer; }
+  .mentio-field { display: flex; flex-direction: column; gap: var(--space-within-group); min-inline-size: 0; }
+  :is(.mentio-field-requirement,.mentio-field-description) { color: var(--muted-foreground); font-size: var(--text-metadata); line-height: var(--line-metadata); }
+  .mentio-field-error { color: var(--destructive); font-size: var(--text-metadata); line-height: var(--line-metadata); }
+  .mentio-link { display: inline-flex; align-items: center; min-block-size: var(--control-height-compact); gap: var(--space-within-group); color: var(--primary); text-decoration-line: underline; text-decoration-thickness: var(--link-underline-width); text-underline-offset: var(--link-underline-offset); overflow-wrap: anywhere; }
+  .mentio-link:is(:hover,:active) { text-decoration-thickness: var(--focus-offset); }
+}
+
+@layer components {
+  /* Approved Q2 retains the original 16px mobile / 14px desktop field scale. */
+  @variant md {
+    :is(.mentio-input,.mentio-textarea) { font-size: var(--text-label); }
+  }
+  /* WCAG 2.5.8: even a one-character navigation label retains a 24px target. */
+  .mentio-link { min-inline-size: var(--control-height-compact); }
+  .mentio-field-description { max-inline-size: var(--prose-max-width); }
+}

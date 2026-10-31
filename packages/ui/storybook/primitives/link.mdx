@@ -1,0 +1,94 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as LinkStories from './link.stories';
+
+<Meta of={LinkStories} />
+
+# Link
+
+## 1. Purpose
+
+Take the mentee or mentor to a named destination while keeping ordinary browser navigation available. Source: E01 public-work/share-page navigation; native anchor semantics.
+
+## 2. When to use
+
+Use Link to open a mentor's public work, move from a booking to its mentor page, or navigate between account screens. Give the destination a meaningful name. Sources: E01/E02 and accounts UI/UX; N02 public-work trust signal; WCAG 2.4.4.
+
+## 3. When not to use
+
+Use Button for saving, copying the share URL, paying or submitting a form. Do not set `href="#"` to create an action or use an onClick-only span for navigation. A prominent navigation control may use Button `asChild` with a real anchor when the hierarchy calls for a filled action. Sources: R01.5; WAI-ARIA button pattern; task semantic-element rule.
+
+## 4. Anatomy
+
+Required: an `href` destination and visible link text (or an equivalent accessible name). Optional: surrounding description, a current-page indication and a visible new-tab suffix. A decorative accompanying icon must be hidden from assistive technology. Sources: native anchor contract; WCAG 1.1.1, 2.4.4, 4.1.2; E01 external-work link contract.
+
+## 5. Variants
+
+Link has one visual style and no size/variant API. A public-work link in a new tab is a native anchor configuration, not a new product variant. Default link appearance uses the semantic primary color and a non-color identification cue; no separate visited-link palette is introduced. Sources: approved component inventory; R01.5; WCAG 1.4.1; approved token palette.
+
+<Unstyled><Canvas of={LinkStories.Playground} /></Unstyled>
+
+## 6. States
+
+Default, hover, focus and pressed retain navigation semantics. Frozen hover/focus/pressed previews use the same declarations as the real state through the documentation-only `data-preview-state` attribute. `aria-current="page"` identifies the current destination when used in navigation. Sources: task state matrix; native anchor and WAI-ARIA current-page semantics.
+
+Disabled, loading, selected-toggle and field-error states are not part of this component: anchors do not have a native disabled attribute and link activation does not prove that a page loaded. If navigation is unavailable, explain why in ordinary text and do not offer an active destination. Loading/errors for the destination belong to that screen. Do not invent a dim disabled Link or announce success on click. Sources: task state applicability rule; E01 page/not-found and E02 detail failure states; WCAG 4.1.2.
+
+<Unstyled><Canvas of={LinkStories.StateMatrix} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+Tab reaches the link in DOM order; Enter follows it. Preserve open-in-new-tab, copy-link and context-menu behavior of a native anchor. Space is not the link activation key. The accessible name identifies the destination and `aria-current` is announced when relevant. Keep a visible offset focus ring and an interactive target of at least 24 × 24px. Sources: native anchor contract; WCAG 2.1.1, 2.4.3, 2.4.7, 2.5.8; approved focus correction.
+
+For mentor-submitted public-work URLs, the consumer validates http/https and passes `target="_blank"` with `rel="noopener noreferrer nofollow ugc"`. Link forwards these attributes; it is not the server's URL validator. Tell the reader when a new tab opens. Sources: E01 public mentor-page link contract; task accessibility/content requirements.
+
+## 8. Content
+
+Use the destination's name: “Read the ingress upgrade notes”, not “Click here”. This remains understandable when a screen reader lists links outside surrounding prose. Sources: WCAG 2.4.4; N02; U01.1.
+
+No character maximum is enforced or approved for Link. Long work titles and translated text must wrap, including long URL strings, rather than disappear behind an ellipsis. Product mentor pages currently show public-work URL strings as link text; using a descriptive title on another screen does not change that DTO or introduce link-label fields. Sources: E01 UI/UX and DTO contract; approved Q3; task long-content requirement.
+
+## 9. Responsiveness
+
+At 320px, long link text wraps within the content column and the focus indicator remains visible. At 768/1440px, it keeps its semantic text style; wider screens do not require a larger or pill-shaped link. Check the 24px minimum target in each layout. Sources: approved Q2/Q3; WCAG 1.4.10, 2.5.8.
+
+<Unstyled><Canvas of={LinkStories.LongContent} /></Unstyled>
+
+## 10. API
+
+Import: `@mentio/ui/backend/actions`. Link renders an anchor and forwards native anchor attributes. Source: package Link implementation.
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td>href</td><td>string, required</td><td>None</td><td>Real navigation destination; consumer validates domain data</td></tr><tr><td>children</td><td>ReactNode</td><td>None</td><td>Visible destination text</td></tr><tr><td>target</td><td>Native HTML anchor target</td><td>Browser default (_self)</td><td>Optional destination browsing context</td></tr><tr><td>rel</td><td>string</td><td>None</td><td>Relationship/safety flags supplied by the consumer</td></tr><tr><td>aria-current</td><td>Native ARIA current value</td><td>None</td><td>Current page, where applicable</td></tr><tr><td>onClick</td><td>MouseEventHandler&lt;HTMLAnchorElement&gt;</td><td>None</td><td>Optional native event; preserve ordinary navigation</td></tr><tr><td>className / other anchor props</td><td>string / native anchor attributes</td><td>None</td><td>Compositional attributes</td></tr></tbody></table>
+
+No `variant`, `size`, `asChild`, `disabled` or custom loading prop exists. Source: approved batch-1 component contract.
+
+## 11. Code
+
+Minimal navigation:
+
+```tsx
+import { Link } from '@mentio/ui/backend/actions';
+<Link href="/mentorzy/alex">View mentor page</Link>
+```
+
+Mentor-provided public work follows the E01 URL-string contract:
+
+```tsx
+<Link href={validatedWorkUrl} target="_blank"
+  rel="noopener noreferrer nofollow ugc">
+  {validatedWorkUrl} (opens in a new tab)
+</Link>
+```
+
+The URLs/data above are examples, not a new route/API implementation. Sources: E01 mentor public-page UI/UX; approved UI-only scope.
+
+## 12. Good and bad
+
+Good: “Read the ingress upgrade notes” identifies the destination. Bad: “Click here” loses that context when links are read as a list. The specimen presents the bad wording as explanatory text. Sources: WCAG 2.4.4; task good/bad requirement.
+
+<Unstyled><Canvas of={LinkStories.GoodAndBad} /></Unstyled>
+
+## 13. Related
+
+Button runs an action; Link navigates. Button's `link` visual variant remains a button. Button `asChild` with an anchor is a visually emphasized navigation choice. PublicWorkList is a planned product composition; its validation/content contract comes from E01, not from a new Link variant. Sources: R01.5; approved stage-0 map; E01; WAI-ARIA button pattern.
+
+Existing `(marketing)` routes retain their plain-Tailwind boundary and do not import UI components. These package examples do not authorize an application migration; Link applies to panel/auth consumers and reusable package demonstrations. Source: AGENTS.md public/frontend boundary; approved stage-0 UI-only scope.

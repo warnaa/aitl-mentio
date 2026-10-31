@@ -26,6 +26,7 @@ const preview: Preview = {
   loaders: [mswLoader],
   parameters: {
     layout: 'padded',
+    viewport: { options: { mobile1: { name: 'Narrow 320', styles: { width: '320px', height: '900px' }, type: 'mobile' } } },
     a11y: { test: 'error' },
     controls: { expanded: true },
     options: { storySort: { order: ['Design system', 'Foundations', 'Primitives', 'Product', 'Patterns'] } },

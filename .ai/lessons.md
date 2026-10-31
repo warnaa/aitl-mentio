@@ -334,3 +334,13 @@ that render documentation samples directly never run that decorator, so toolbar 
 mode can leave their root light. Sync SET_GLOBALS/GLOBALS_UPDATED at preview level
 and initialize direct iframe globals, while retaining the decorator for executable
 stories. Verify both direct docs URLs and manager toolbar changes, including portals.
+
+## 2026-10-31 - Compare frozen states with real browser pointer states
+
+Testing Library userEvent.hover dispatches DOM events but does not move Chromium's
+pointer and cannot establish the native CSS :hover pseudo-class. Use Playwright
+hover for equality checks against data-preview-state samples; browser story tests
+still cover frozen tokens, native keyboard focus, dimensions and behavior. Also
+theme Canvas source-action chrome separately from Unstyled specimens: its default
+light-theme Show code controls otherwise failed dark-mode contrast. See
+`.ai/runs/2026-10-31-mentio-primitives-batch-1.md`.

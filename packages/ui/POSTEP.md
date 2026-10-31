@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 1 complete; awaiting “dalej” before stage 2, batch 1.**
+Date: 2026-10-31. Status: **stage 2, batch 1 complete; awaiting “dalej” before batch 2.**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -275,3 +275,15 @@ The token checker correctly fails on **13 existing violations** in Badge/Button/
 Resolved implementation findings: complete JSX table blocks are required by MDX; prebundle Zod/core-events for stable Vite browser tests; standalone MDX requires root-theme synchronization in addition to story decorators; docs typography overrides must preserve Unstyled and explicitly theme table text. Lessons recorded.
 
 Next: **stage 2, batch 1 only — Button, Link, Input, Textarea, Label, FormField**, including the approved density/shape/state differences and tests. Stop after that batch. No further decisions are needed for stage 1. No push/publication/commit performed.
+
+## Stage 2 batch 1 started — 2026-10-31
+
+The user authorized continuation, then requested a local checkpoint first. Stage 1 was committed as bbd79ce; no push. Batch 1 now covers Button, Link, Input, Textarea, Label and FormField only. Approved retained density/shape: default 36px, optional 24/32/40px buttons, 8px medium radius, 1px border, existing padding. Differences: full 3px ring with 2px offset; opaque neutral field surface; explicit destructive foreground; local color/border transitions 150ms, no transition-all. Sources: approved Q2, token contrast repairs, R01.5/U02.1.
+
+## Stage 2 batch 1 completion — 2026-10-31
+
+Completed Button, Link, Input, Textarea, Label and FormField. Six 13-section documentation pages, 52 new stories; cumulative 14 MDX pages and 59 stories. Native/public API and existing variants/sizes retained; no dependencies added. FormField remains presentation-only and does not replace CrudForm.
+
+Verified: 118 story tests in both themes; 84 built-page width/theme checks; zero axe findings in 28 MDX audits; real pointer/native focus equals frozen previews; 222 unit tests with 100% coverage; lint/types; app build; 10 integration tests; audit. `check:tokens` now reports 7 findings in later-batch Badge/Card/Table, down from 13, without exceptions. Full report: `storybook/verification/2026-10-31-stage-2-batch-1.md`.
+
+Stage 1 is committed as bbd79ce per the user's checkpoint request; the user subsequently requested a local batch-1 commit (“czas na commit”). That checkpoint includes the verified batch and its reports. No push. Next: wait for “dalej”, then batch 2 only: Select, Checkbox, RadioGroup, Card, Badge, Separator. No pending design questions for completed work.

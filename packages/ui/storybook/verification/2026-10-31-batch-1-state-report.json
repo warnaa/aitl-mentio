@@ -1,0 +1,50 @@
+[
+  {
+    "theme": "light",
+    "width": 320,
+    "hover": "same declarations",
+    "focus": "3px offset 2px",
+    "fields": "opaque with 8px radius",
+    "longButton": "no overflow"
+  },
+  {
+    "theme": "light",
+    "width": 768,
+    "hover": "same declarations",
+    "focus": "3px offset 2px",
+    "fields": "opaque with 8px radius",
+    "longButton": "no overflow"
+  },
+  {
+    "theme": "light",
+    "width": 1440,
+    "hover": "same declarations",
+    "focus": "3px offset 2px",
+    "fields": "opaque with 8px radius",
+    "longButton": "no overflow"
+  },
+  {
+    "theme": "dark",
+    "width": 320,
+    "hover": "same declarations",
+    "focus": "3px offset 2px",
+    "fields": "opaque with 8px radius",
+    "longButton": "no overflow"
+  },
+  {
+    "theme": "dark",
+    "width": 768,
+    "hover": "same declarations",
+    "focus": "3px offset 2px",
+    "fields": "opaque with 8px radius",
+    "longButton": "no overflow"
+  },
+  {
+    "theme": "dark",
+    "width": 1440,
+    "hover": "same declarations",
+    "focus": "3px offset 2px",
+    "fields": "opaque with 8px radius",
+    "longButton": "no overflow"
+  }
+]

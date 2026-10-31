@@ -12,3 +12,16 @@ html.dark { color-scheme: dark; }
 .sbdocs-wrapper table:not(.sb-unstyled, .sb-unstyled *) { display: block; max-inline-size: 100%; overflow-x: auto; }
 .sbdocs-wrapper code:not(.sb-unstyled, .sb-unstyled *) { color: var(--foreground) !important; background: var(--muted) !important; border-color: var(--border) !important; display: inline-block; max-inline-size: 100%; white-space: pre-wrap; overflow-wrap: anywhere; vertical-align: baseline; }
 .sbdocs-wrapper :focus-visible:not(.sb-unstyled, .sb-unstyled *) { outline: var(--focus-width) solid var(--ring); outline-offset: var(--focus-offset); }
+/* Stage 2 task: frozen previews use the same token declarations as real pseudo states. */
+:is(.mentio-button,.mentio-input,.mentio-textarea,.mentio-link)[data-preview-state=focus] { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
+.mentio-button-primary:is([data-preview-state=hover],[data-preview-state=pressed]):not(:disabled) { background: var(--primary-hover); }
+.mentio-button-destructive:is([data-preview-state=hover],[data-preview-state=pressed]):not(:disabled) { background: var(--destructive-hover); }
+:is(.mentio-button-outline,.mentio-button-secondary,.mentio-button-ghost):is([data-preview-state=hover],[data-preview-state=pressed]):not(:disabled) { background: var(--accent); color: var(--accent-foreground); }
+.mentio-button-link:is([data-preview-state=hover],[data-preview-state=pressed]):not(:disabled) { text-decoration-line: underline; }
+:is(.mentio-input,.mentio-textarea)[data-preview-state=hover]:not(:disabled):not([aria-invalid=true]) { border-color: var(--ring); }
+.mentio-link:is([data-preview-state=hover],[data-preview-state=pressed]) { text-decoration-thickness: var(--focus-offset); }
+.primitive-demo { padding: var(--space-panel); color: var(--foreground); background: var(--background); max-inline-size: var(--content-max-width); }
+.primitive-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-between-groups); }
+/* WCAG 1.4.3: Canvas source controls sit outside the product specimen but inherit its theme. */
+.sbdocs-preview { background: var(--background) !important; border-color: var(--border) !important; }
+.sbdocs-preview-actions, .sbdocs-preview-actions :is(button,div,span) { background: var(--card) !important; color: var(--foreground) !important; }
