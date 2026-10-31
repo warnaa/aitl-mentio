@@ -13,11 +13,11 @@ export function ErrorMessage({
   className?: string;
 }) {
   return (
-    <div role="alert" className={cn("rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm", className)}>
-      <p className="font-medium text-destructive">{title}</p>
-      <p className="mt-1 text-muted-foreground">{message}</p>
+    <div role="alert" className={cn("mentio-error-message", className)}>
+      <p className="mentio-error-message-title">{title}</p>
+      <p className="mentio-error-message-text">{message}</p>
       {onRetry && (
-        <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>
+        <Button variant="outline" size="sm" className="mentio-feedback-action" onClick={onRetry}>
           Try again
         </Button>
       )}

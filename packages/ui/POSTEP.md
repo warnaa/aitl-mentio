@@ -1,13 +1,13 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 2, batch 3 complete; no open decisions; awaiting “dalej” before batch 4.**
+Date: 2026-10-31. Status: **stage 2 complete (batches 1–4); awaiting “dalej” before stage 3.**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
 
 - [x] 0 — inventory existing UI, materials, dependencies and screen requirements; propose a plan.
 - [x] 1 — foundations, Storybook setup, token checks, accessibility test setup.
-- [ ] 2 — primitives, batches of approximately six; stop after each batch.
+- [x] 2 — primitives, batches of approximately six; stop after each batch.
 - [ ] 3 — product components, patterns and screen compositions.
 - [ ] 4 — usage documentation and agent reference.
 - [ ] 5 — build, lint, types, token audit, accessibility, responsive/theme/keyboard checks; prepare a separate-session agent test.
@@ -405,4 +405,68 @@ The user approved proposals 1, 2, 3 and 5 as written. Proposal 4 is approved wit
 Applied: every example amount in stories, docs and unit tests now reads “… zł”, including rate labels (“Rate per 25 minutes (zł)”). The “Proposal” marks for 1–5 are replaced with the decision and its date, including the Card container-query comment in the token file.
 
 No open decisions remain for stages 0–2 so far. Next: “dalej” for batch 4 (Table, Skeleton, LoadingMessage, EmptyState, ErrorMessage), or a local commit of batch 3 first.
+
+## Stage 2 batch 4 started — 2026-10-31
+
+Batch 3 and the decisions were committed locally as dd10f0f; no push. A separate commit (16a8309) added a CI job that runs the story tests in both themes. Skeleton was added with the CLI and the manifests are unchanged. Run log: `.ai/runs/2026-10-31-mentio-primitives-batch-4.md`.
+
+User decisions:
+- The spinner stays; Skeleton is static, with no pulse.
+- ErrorMessage keeps `--error-surface` with a full destructive border.
+- EmptyState stays centred, as a recorded exception to “everything centred”.
+- Table rows have no hover highlight.
+
+Derived:
+- The aria-expanded row tint is removed.
+- The table footer uses full `--muted`.
+- The checkbox cell offset becomes a token.
+- Skeleton is `aria-hidden` by default.
+
+## Stage 2 batch 4 completion — 2026-10-31
+
+Completed Table, Skeleton, LoadingMessage, EmptyState and ErrorMessage. That adds five 13-section pages and 35 stories. Report: `storybook/verification/2026-10-31-stage-2-batch-4.md`.
+
+Verified:
+- **`check:tokens` passes with zero findings in the whole package.**
+- 376 story tests, with 3 clean runs.
+- 186 built-page checks and 62 MDX axe audits with zero findings.
+- Real hover leaves table rows unchanged.
+- The spinner runs without a motion preference and stops with reduced motion.
+- Skeletons are static.
+- No regressions in batches 2–3.
+- /admin with a database (cards, users DataTable with a signed session) and without one (ErrorMessage), in both themes at 320 and 1440 px.
+- 237 unit tests with 100% coverage; lint and types; app build; 10 integration tests; audit.
+
+Open proposals, marked Proposal in the docs:
+- Table: about four columns at most on mobile-first screens.
+- Skeleton: shape heights h-4, h-5 and h-6.
+
+## Stage 2 summary — 2026-10-31
+
+23 primitive and shared-feedback documentation pages, each with all 13 sections:
+- Batch 1: Button, Link, Input, Textarea, Label, FormField.
+- Batch 2: Select, Checkbox, RadioGroup, Card, Badge, Separator.
+- Batch 3: Alert, Dialog, AlertDialog, DropdownMenu, Popover, Tooltip.
+- Batch 4: Table, Skeleton, LoadingMessage, EmptyState, ErrorMessage.
+
+Totals:
+- Storybook: 31 MDX pages, 188 stories and 44 play tests, all tested in both themes with axe set to fail.
+- Unit tests: 237, with 100% coverage.
+- Token checker: zero findings, down from 13 when stage 2 began.
+- No dependencies were added after stage 1, and no existing component, variant, theme or page was removed. Two generated base sizes (Select `sm`, AlertDialog `sm`) were not adopted, by decision.
+
+Against the task's minimum set, these are deferred by the approved Q4 and will go on the What is missing page (stage 4): Switch, Avatar, Tabs and Toast (no approved use case; R02.4 local feedback). Combobox, Sheet and the date picker remain decision-guide entries only.
+
+Not yet done, by plan:
+- Product components, patterns and screen state maps (stage 3).
+- Teaching pages, epic pages and the agent reference (stage 4).
+- The final audit (stage 5).
+
+E03–E05 still lack dedicated screen contracts, so their stage-3 stories stay preliminary, as recorded in stage 0.
+
+Next: wait for “dalej”, then stage 3 only. Batch 4 is not committed; no push.
+
+## Decisions on batch-4 proposals — 2026-10-31
+
+The user approved both remaining proposals: tables have about four columns at most on mobile-first screens, and skeleton shape heights are h-4 (line), h-5 (badge) and h-6 (title). The “Proposal” marks are replaced with the decision. No open decisions remain for stages 0–2. Next: “dalej” for stage 3, optionally after a local commit of batch 4.
 

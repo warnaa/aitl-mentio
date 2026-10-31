@@ -1,0 +1,83 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './loading-message.stories';
+
+<Meta of={Stories} />
+
+# LoadingMessage
+
+## 1. Purpose
+
+Tell a person that a region is loading and what is loading, when its layout is not known yet. Sources: existing `backend/feedback`; task How to choose (skeleton vs loading indicator).
+
+## 2. When to use
+
+- DataTable's first load before any rows exist.
+- A panel whose shape depends on the result.
+
+The default label is “Loading…”; prefer a specific one such as “Loading your bookings…”. Sources: existing DataTable; platform F (default labels); book-and-pay UI/UX.
+
+## 3. When not to use
+
+- If the layout is known, use Skeleton.
+- For a pending action, use the Button's pending state next to it.
+- To show progress of a payment, use a status Alert (“Payment in progress…”).
+- Never block the whole page with an overlay spinner.
+
+Sources: task How to choose; book-and-pay UI/UX; reference R02.4.
+
+## 4. Anatomy
+
+A row with 8 px gap and 32 px block padding, in the muted 14/20 role. It has a 16 px circular spinner with a 2 px ring in the text colour and an open top, which is decorative and `aria-hidden`, followed by the label. Sources: retained base geometry; approved spacing tokens; WAI-ARIA.
+
+## 5. Variants
+
+There are no variants. Only the label changes. Sources: package API.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.DefaultLabel} /></Unstyled>
+
+## 6. States
+
+There is one state: in progress. The spinner turns (user decision 2026-10-31). When the reduced-motion setting is on, it stops through the global rule, and the text alone carries the meaning. Hover, focus, disabled, selected and error do not apply. Replace it with content, EmptyState or ErrorMessage. Sources: user decision 2026-10-31; U02.1; WCAG 2.3.3.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+It has `role="status"` with `aria-live="polite"`, so the label is announced once without moving focus. The spinner is hidden from assistive technology. It does not flash: one continuous rotation is far below three flashes per second. Sources: WAI-ARIA status role; WCAG 2.3.1, 4.1.3.
+
+## 8. Content
+
+Write “Loading” plus the object, with an ellipsis: “Loading your bookings…”, “Loading mentors…”. Never write “Please wait” on its own. Long labels wrap. Sources: U01.1; platform F default labels.
+
+## 9. Responsiveness
+
+It is the same at every width. At 320 px the label wraps beside the spinner. Sources: approved stage-0 Q3; WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>label</code></td><td><code>string</code></td><td>“Loading…”</td><td>What is loading.</td></tr><tr><td><code>className</code></td><td><code>string</code></td><td>unset</td><td>Layout utilities.</td></tr></tbody></table>
+
+Source: exported package API (`@mentio/ui/backend/feedback`).
+
+## 11. Code
+
+```tsx
+import { LoadingMessage } from '@mentio/ui/backend/feedback';
+<LoadingMessage label="Loading your bookings…" />
+```
+
+Sources: book-and-pay UI/UX; package API.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>“Loading your bookings…” where the list will appear.</td><td>A full-screen spinner overlay that hides the page.</td></tr><tr><td>The spinner stops under reduced motion and the text remains.</td><td>A spinner with no text.</td></tr></tbody></table>
+
+Sources: U02.1; WCAG 4.1.3.
+
+## 13. Related
+
+Skeleton is used for known layouts. The Button pending state covers actions. Alert with `role="status"` covers progress messages. DataTable uses LoadingMessage. Patterns: list with filters; form (pending). Sources: approved stage-0 inventory.

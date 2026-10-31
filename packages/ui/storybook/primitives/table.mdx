@@ -1,0 +1,111 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './table.stories';
+
+<Meta of={Stories} />
+
+# Table
+
+## 1. Purpose
+
+Let a person compare several records across the same columns in a dense, readable grid. Sources: references R01.1 (dense, readable lists) and R01.3 (thin row separators).
+
+## 2. When to use
+
+- The mentee's bookings on `/rezerwacje`: time, mentor, status badge and a link, newest first, with an unpaid booking first.
+- The existing admin users list.
+- The mentor's availability rows.
+
+For paged data from an API, use `DataTable`, which composes Table. Sources: book-and-pay UI/UX; existing `/admin/users`; mentor-pages UI/UX; platform F3.
+
+## 3. When not to use
+
+- If records do not share columns, or each needs prose (such as the mentor discovery cards), use a list or Cards.
+- For a single record, use a detail layout.
+- For layout, use flex or grid utilities.
+- For a paged API list, use `DataTable` instead of reimplementing loading, empty and error states.
+
+Sources: task How to choose (table, list and cards); mentor-pages UI/UX (`/mentorzy` cards); existing `backend/tables`.
+
+## 4. Anatomy
+
+- The container scrolls horizontally.
+- `Table` uses the 14/20 label role.
+- `TableCaption`: optional, muted, below the table. It names the table.
+- `TableHeader` holds `TableHead` cells: 40 px high, medium weight, start-aligned.
+- `TableBody` holds `TableRow`s with a 1 px border-role separator, the last one without it, and `TableCell`s with 8 px padding.
+- `TableFooter`: optional, on the auxiliary surface, medium weight.
+
+Sources: tokens (`--divider-width`; the panel spacing is not used for dense cells); retained base geometry; WCAG 1.3.1.
+
+## 5. Variants
+
+There are no visual variants. Use `tabular-nums` on time and amount columns, following the approved numbers role. Use a selection column with Checkbox only when a screen specifies bulk actions; none does today. Sources: approved stage-0 Q2 (numbers tabular); package API.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.WithFooter} /></Unstyled>
+
+## 6. States
+
+- Default.
+- Selected (`data-state="selected"`): the auxiliary surface plus a checked checkbox, so selection is not shown by colour alone.
+- Rows have no hover highlight, because they are not interactive (user decision 2026-10-31).
+- Focus belongs to links and controls inside cells.
+- Loading, empty and error states of a whole table come from Skeleton, EmptyState and ErrorMessage, through DataTable.
+- Disabled does not apply.
+
+Sources: user decision 2026-10-31; tokens (`--muted`: selected row); WCAG 1.4.1.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+It uses native `table`, `th` and `td` semantics, so a screen reader announces the column header with each cell. Name the table with `TableCaption` or `aria-label`. Give a column of row links a visually hidden header such as “Details”. Make link text unique, for example “View booking”, with the mentor and time added for screen readers. Tab reaches only the interactive elements inside cells. Do not make a whole row clickable. A wide table scrolls inside its container and the page does not scroll sideways. Sources: WCAG 1.3.1, 2.4.4, 1.4.10; WAI-ARIA (native table semantics).
+
+## 8. Content
+
+- Column headers are short nouns: “Time”, “Mentor”, “Status”.
+- Dates and times are in Warsaw time, stated once in the caption.
+- Amounts are written like “240 zł”.
+- Status is a Badge with text.
+- Cell text does not wrap; a long value scrolls with the table. Keep the first column the identifying one.
+
+Sources: book-and-pay UI/UX; D10; user decision 2026-10-31 (zł); U01.1.
+
+## 9. Responsiveness
+
+At 320 px the table scrolls horizontally inside its container and the page never does, as tested by **Scrolls inside container**. Keep at most about four columns on mobile-first screens. At 768 and 1440 px the table fills the content column up to 1152 px. Sources: WCAG 1.4.10 (data tables may scroll in two dimensions); approved stage-0 Q3; user decision 2026-10-31 (about four columns at most for mobile-first screens).
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Part</th><th>Element</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Table</code></td><td><code>table</code> props (inside a scroll container)</td><td>The grid.</td></tr><tr><td><code>TableCaption</code></td><td><code>caption</code></td><td>Accessible name and context, shown below.</td></tr><tr><td><code>TableHeader / TableBody / TableFooter</code></td><td><code>thead / tbody / tfoot</code></td><td>Row groups.</td></tr><tr><td><code>TableRow</code></td><td><code>tr</code>, optional <code>data-state="selected"</code></td><td>One record, with a separator.</td></tr><tr><td><code>TableHead / TableCell</code></td><td><code>th / td</code></td><td>Header and data cells. <code>colSpan</code> and other native attributes are supported.</td></tr></tbody></table>
+
+Source: exported package API. All parts accept `className`.
+
+## 11. Code
+
+Minimal:
+
+```tsx
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@mentio/ui/components/table';
+<Table>
+  <TableCaption>Your bookings, newest first. Times are Warsaw time.</TableCaption>
+  <TableHeader><TableRow><TableHead>Time</TableHead><TableHead>Mentor</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+  <TableBody><TableRow><TableCell className="tabular-nums">6 November 2026, 18:00</TableCell><TableCell>Alex</TableCell>
+    <TableCell><Badge variant="outline">Awaiting payment</Badge></TableCell></TableRow></TableBody>
+</Table>
+```
+
+Use `DataTable` from `@mentio/ui/backend/tables` for paged API lists. Sources: book-and-pay UI/UX; platform F3.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>“View booking” links named with the mentor and time for screen readers.</td><td>Five identical “View” links.</td></tr><tr><td>The table scrolls inside its container at 320 px.</td><td>The whole page scrolls sideways.</td></tr><tr><td>Thin separators between rows.</td><td>Every row in its own bordered card.</td></tr></tbody></table>
+
+Sources: WCAG 2.4.4, 1.4.10; references R01.1 and R01.3.
+
+## 13. Related
+
+DataTable adds paging and states. Badge shows status in cells. Separator is used for plain lists. Card is used for prose records. Patterns: list with filters; availability; earnings. Sources: approved stage-0 inventory.

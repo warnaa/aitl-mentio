@@ -544,3 +544,50 @@
     .mentio-dialog-footer { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; }
   }
 }
+
+/* Stage 2 batch 4: Table, Skeleton, LoadingMessage, EmptyState, ErrorMessage.
+ * User decisions 2026-10-31: spinner kept, static skeleton, error surface with a full
+ * destructive border, centred empty state (recorded exception), no row hover. */
+:root {
+  /* Retained base geometry: 2px checkbox alignment in cells, 16px spinner with 2px ring,
+   * 40px empty-state block padding. */
+  --table-checkbox-offset: 2px;
+  --spinner-size: var(--icon-size);
+  --spinner-width: calc(var(--spacing) * 0.5);
+  --empty-state-padding-block: calc(var(--spacing) * 10);
+}
+
+@layer components {
+  /* R01.1/R01.3: dense rows separated by thin lines; tables scroll inside their container. */
+  .mentio-table-container { position: relative; inline-size: 100%; overflow-x: auto; }
+  .mentio-table { inline-size: 100%; caption-side: bottom; font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-table-row { border-bottom: var(--divider-width) solid var(--border); transition-property: background-color; transition-duration: var(--motion-duration); transition-timing-function: var(--motion-ease); }
+  .mentio-table-body > .mentio-table-row:last-child { border-bottom-width: 0; }
+  /* tokeny.md: --muted is the auxiliary surface and the selected row. No hover tint (user decision). */
+  .mentio-table-row[data-state=selected] { background: var(--muted); }
+  .mentio-table-footer { border-top: var(--divider-width) solid var(--border); background: var(--muted); font-weight: var(--font-weight-medium); }
+  .mentio-table-footer > .mentio-table-row:last-child { border-bottom-width: 0; }
+  .mentio-table-head { block-size: var(--control-height-large); padding-inline: var(--control-padding-compact); text-align: start; vertical-align: middle; font-weight: var(--font-weight-medium); white-space: nowrap; color: var(--foreground); }
+  .mentio-table-cell { padding: var(--control-padding-compact); vertical-align: middle; white-space: nowrap; }
+  :is(.mentio-table-head,.mentio-table-cell):has([role=checkbox]) { padding-inline-end: 0; }
+  :is(.mentio-table-head,.mentio-table-cell) > [role=checkbox] { translate: 0 var(--table-checkbox-offset); }
+  .mentio-table-caption { margin-block-start: var(--space-between-groups); color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); }
+
+  /* User decision: static placeholder in the auxiliary surface role; no continuous motion. */
+  .mentio-skeleton { border-radius: var(--radius-md); background: var(--muted); }
+
+  /* User decision: the spinner stays; the global reduced-motion rule stops it (U02.1, WCAG 2.3.3). */
+  .mentio-loading { display: flex; align-items: center; gap: var(--space-within-group); padding-block: var(--space-section); color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-spinner { flex-shrink: 0; inline-size: var(--spinner-size); block-size: var(--spinner-size); border: var(--spinner-width) solid currentColor; border-block-start-color: transparent; border-radius: var(--radius-circle); animation: var(--animate-spin); }
+
+  /* User decision: approved, measured error surface (tokeny.md T01) with a full destructive border. */
+  .mentio-error-message { border: var(--divider-width) solid var(--destructive); border-radius: var(--radius-lg); background: var(--error-surface); padding: var(--space-between-groups); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-error-message-title { color: var(--destructive); font-weight: var(--font-weight-medium); overflow-wrap: anywhere; }
+  .mentio-error-message-text { margin-block-start: var(--spacing); color: var(--muted-foreground); max-inline-size: var(--prose-max-width); overflow-wrap: anywhere; }
+  .mentio-feedback-action { margin-block-start: var(--control-padding-small); }
+
+  /* User decision: centred empty state, a recorded exception to “everything centred”. */
+  .mentio-empty-state { display: flex; flex-direction: column; align-items: center; gap: var(--spacing); padding-block: var(--empty-state-padding-block); text-align: center; font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-empty-state-title { font-weight: var(--font-weight-medium); overflow-wrap: anywhere; }
+  .mentio-empty-state-description { color: var(--muted-foreground); max-inline-size: var(--prose-max-width); }
+}

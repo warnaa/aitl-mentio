@@ -13,10 +13,10 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center gap-1 py-10 text-center text-sm", className)}>
-      <p className="font-medium">{title}</p>
-      {description && <p className="text-muted-foreground">{description}</p>}
-      {action && <div className="mt-3">{action}</div>}
+    <div className={cn("mentio-empty-state", className)}>
+      <p className="mentio-empty-state-title">{title}</p>
+      {description && <p className="mentio-empty-state-description">{description}</p>}
+      {action && <div className="mentio-feedback-action">{action}</div>}
     </div>
   );
 }

@@ -1,0 +1,85 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './skeleton.stories';
+
+<Meta of={Stories} />
+
+# Skeleton
+
+## 1. Purpose
+
+Hold the place and rough shape of content that is loading for the first time, so the page does not jump when it arrives. Sources: task How to choose (skeleton vs loading indicator); approved stage-0 inventory (first-load shapes).
+
+## 2. When to use
+
+Use it on the first load of a list or detail whose layout is known: the bookings list on `/rezerwacje`, the mentor cards on `/mentorzy`, and a mentor's page. Sources: book-and-pay UI/UX; mentor-pages UI/UX; approved stage-0 inventory.
+
+## 3. When not to use
+
+- Do not use it on a refresh when content is already shown: keep the content and mark it `aria-busy`.
+- For short waits for an action, use the pending Button state.
+- For a whole region with no known layout, use LoadingMessage.
+- Never leave skeletons without a text status.
+
+Sources: task How to choose; WAI-ARIA (`aria-busy`); WCAG 4.1.3.
+
+## 4. Anatomy
+
+A block on the auxiliary surface (`--muted`) with an 8 px radius. Its size comes from layout utilities that match the content it replaces. It is hidden from assistive technology by default. The surrounding region carries `aria-busy="true"` and a status line such as “Loading your bookings…”. Sources: tokens (`--muted`); approved radius scale; WAI-ARIA.
+
+## 5. Variants
+
+There are no variants. Shapes are composed: text lines (`h-4`), a badge (`h-5`), a title (`h-6`). Match the real content's size rather than inventing decorative shapes. Sources: package API; user decision 2026-10-31 (shape heights h-4 line, h-5 badge, h-6 title).
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.ListRows} /></Unstyled>
+<Unstyled><Canvas of={Stories.MentorCard} /></Unstyled>
+
+## 6. States
+
+There is one static state, with no pulse (user decision 2026-10-31). Hover, focus, disabled, selected and error do not apply. When loading fails, replace the skeletons with ErrorMessage. When the result is empty, use EmptyState. Sources: user decision 2026-10-31; U02.1.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+It is not focusable and is `aria-hidden` by default. Announce loading once with a `role="status"` line, and set `aria-busy` on the region until content arrives. Do not move focus. When content replaces the skeletons, the status line can be removed. Sources: WAI-ARIA `aria-busy` and `status`; WCAG 4.1.3.
+
+## 8. Content
+
+A skeleton has no text. The status line names what is loading: “Loading your bookings…”, not just “Loading…”. Sources: U01.1; task Content.
+
+## 9. Responsiveness
+
+Shapes follow the responsive layout of the real content. At 320 px use one column of rows. At 768 and 1440 px match the table or card grid. Never make the placeholder wider than the content will be. Sources: approved stage-0 Q3; WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>className</code></td><td><code>string</code></td><td>unset</td><td>Size utilities, for example <code>h-4 w-40</code>.</td></tr><tr><td><code>aria-hidden</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Decorative by default. Override only in exceptional cases.</td></tr><tr><td><code>div props</code></td><td>native</td><td>—</td><td>Passed through.</td></tr></tbody></table>
+
+Source: exported package API.
+
+## 11. Code
+
+```tsx
+import { Skeleton } from '@mentio/ui/components/skeleton';
+<section aria-busy="true" aria-labelledby="bookings-heading">
+  <h2 id="bookings-heading">Your bookings</h2>
+  <p role="status">Loading your bookings…</p>
+  <div className="flex items-center gap-between-groups"><Skeleton className="h-4 w-40" /><Skeleton className="h-5 w-32" /></div>
+</section>
+```
+
+Sources: book-and-pay UI/UX; WAI-ARIA.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>Three static rows shaped like bookings, with “Loading your bookings…”.</td><td>A pulsing grey page with no text: nothing is announced, and the movement distracts.</td></tr><tr><td>Existing content kept and marked busy on refresh.</td><td>Content replaced by skeletons on every refresh.</td></tr></tbody></table>
+
+Sources: U02.1; WCAG 4.1.3; task How to choose.
+
+## 13. Related
+
+LoadingMessage is used when the layout is unknown. A Button's pending state covers actions. EmptyState and ErrorMessage show what comes after loading. Patterns: list with filters; detail view. Sources: approved stage-0 inventory.

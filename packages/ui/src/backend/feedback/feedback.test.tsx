@@ -51,3 +51,15 @@ describe("LoadingMessage", () => {
     expect(screen.getByRole("status").textContent).toBe("Fetching users");
   });
 });
+
+describe("token classes", () => {
+  it("renders the approved error surface, centred empty state and spinner classes", () => {
+    const { container } = render(<><ErrorMessage message="Check your connection." onRetry={() => {}} /><EmptyState title="You have no bookings yet" action={<button>Find a mentor</button>} /><LoadingMessage /></>);
+
+    expect(screen.getByRole("alert").className).toBe("mentio-error-message");
+    expect(screen.getByRole("button", { name: "Try again" }).className).toContain("mentio-feedback-action");
+    expect(container.querySelector(".mentio-empty-state")).not.toBeNull();
+    expect(screen.getByRole("status").querySelector(".mentio-spinner")!.getAttribute("aria-hidden")).toBe("true");
+  });
+});
+

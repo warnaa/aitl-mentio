@@ -420,3 +420,15 @@ The user approved English UI copy but wants amounts shown as "240 zł" (whole am
 symbol after the number), not "240 PLN". Keep "PLN" only where the currency itself is
 named (D10, data contracts such as `currency: "PLN"`). Story labels double as test
 selectors, so a copy change must update play-function and unit-test names together.
+
+## 2026-10-31 - Background servers in verification: never detach with setsid
+
+Starting `npm run start` under `setsid … &` made `$!`/`ss -p` useless: the server
+survived in its own session, and a second "no database" server failed to bind the same
+port, so its checks silently hit the first server. Start `next start` directly from
+`packages/app` in the background, keep `$!`, kill that PID, and assert the port is
+closed before the next variant. Identify leftovers by their environment
+(`/proc/<pid>/environ` DATABASE_URL) and never pattern-kill: the user's `next dev`
+runs alongside. Also scope Playwright selectors to `#storybook-root` — Storybook
+renders hidden internal tables that match `tbody tr` first. `var(--animate-spin)` in
+CSS is enough for Tailwind 4 to emit `@keyframes spin` (verified in the browser).
