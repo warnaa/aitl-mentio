@@ -628,7 +628,8 @@
   .mentio-panel-nav > ul { display: flex; gap: var(--spacing); }
   .mentio-panel-nav-link { display: flex; align-items: center; min-block-size: var(--control-height-small); border-radius: var(--radius-md); padding-inline: var(--control-padding-small); font-size: var(--text-label); line-height: var(--line-label); font-weight: var(--font-weight-medium); white-space: nowrap; transition-property: color, background-color, outline-color; transition-duration: var(--motion-duration); transition-timing-function: var(--motion-ease); }
   .mentio-panel-nav-link:is(:hover,[aria-current=page]) { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); }
-  .mentio-panel-nav-link[aria-current=page] { box-shadow: inset var(--focus-width) 0 0 var(--sidebar-primary); }
+  /* Current page: a bar under the item in the compact row, beside it in the sidebar (not colour alone). */
+  .mentio-panel-nav-link[aria-current=page] { box-shadow: inset 0 calc(var(--focus-width) * -1) 0 var(--sidebar-primary); }
   :is(.mentio-panel-title,.mentio-panel-nav-link):focus-visible { outline: var(--focus-width) var(--focus-style) var(--sidebar-ring); outline-offset: var(--focus-offset); }
   .mentio-panel-body { display: flex; flex: 1 1 auto; flex-direction: column; min-inline-size: 0; }
   .mentio-panel-header { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-within-group); min-block-size: var(--control-height-large); border-bottom: var(--divider-width) solid var(--border); padding-inline: var(--space-panel); }
@@ -638,6 +639,50 @@
     .mentio-panel { flex-direction: row; }
     .mentio-panel-sidebar { flex-direction: column; flex-wrap: nowrap; align-items: stretch; inline-size: calc(var(--spacing) * 60); flex-shrink: 0; border-bottom: 0; border-inline-end: var(--divider-width) solid var(--sidebar-border); padding: var(--space-panel) var(--space-between-groups); gap: var(--space-between-groups); }
     .mentio-panel-nav > ul { flex-direction: column; }
+    .mentio-panel-nav-link[aria-current=page] { box-shadow: inset var(--focus-width) 0 0 var(--sidebar-primary); }
     .mentio-panel-main { padding: var(--space-panel); }
   }
+}
+
+/* Stage 3b: public presentation (mentors, auth) and the mentor status card. Plain markup on
+ * tokens for (marketing)/(auth) pages (stage-3 decision 1); Q2 page role, Q3 widths, R01.1/R01.3 rows. */
+:root {
+  /* Retained base form width for single-column auth pages (Tailwind max-w-md). */
+  --auth-width: calc(var(--spacing) * 112);
+}
+@layer components {
+  .mentio-public-page { display: flex; flex-direction: column; gap: var(--space-section); inline-size: 100%; max-inline-size: var(--content-max-width); margin-inline: auto; padding: var(--space-panel) var(--space-between-groups); }
+  .mentio-public-title { font-size: var(--text-page); line-height: var(--line-page); font-weight: var(--font-weight-semibold); overflow-wrap: anywhere; }
+  .mentio-public-heading { font-size: var(--text-section); line-height: var(--line-section); font-weight: var(--font-weight-semibold); }
+  .mentio-public-lead, .mentio-public-empty { color: var(--muted-foreground); max-inline-size: var(--prose-max-width); }
+  .mentio-directory { display: flex; flex-direction: column; }
+  .mentio-directory-item { display: flex; flex-direction: column; gap: var(--space-within-group); padding-block: var(--space-between-groups); border-bottom: var(--divider-width) solid var(--border); }
+  .mentio-directory-item:first-child { border-top: var(--divider-width) solid var(--border); }
+  .mentio-directory-name { font-size: var(--text-body); line-height: var(--line-body); font-weight: var(--font-weight-semibold); overflow-wrap: anywhere; }
+  .mentio-directory-excerpt { max-inline-size: var(--prose-max-width); overflow-wrap: anywhere; }
+  .mentio-directory-meta { display: flex; flex-wrap: wrap; gap: var(--space-within-group) var(--space-between-groups); color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); font-variant-numeric: tabular-nums; }
+  .mentio-public-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-between-groups); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-profile-description { white-space: pre-line; max-inline-size: var(--prose-max-width); overflow-wrap: anywhere; }
+  .mentio-profile-section { display: flex; flex-direction: column; gap: var(--space-within-group); }
+  .mentio-profile-work, .mentio-profile-prices, .mentio-profile-slots { display: flex; flex-direction: column; gap: var(--space-within-group); }
+  /* R01.2: URLs are technical identifiers, shown in the code role and allowed to break. */
+  .mentio-profile-url { font-family: var(--font-code); font-size: var(--text-code); line-height: var(--line-code); overflow-wrap: anywhere; }
+  .mentio-profile-prices, .mentio-profile-slot-time { font-variant-numeric: tabular-nums; }
+  .mentio-profile-day { display: flex; flex-direction: column; gap: var(--spacing); padding-block: var(--space-within-group); border-bottom: var(--divider-width) solid var(--border); }
+  .mentio-profile-day-label { font-weight: var(--font-weight-medium); }
+  .mentio-profile-slots { flex-direction: row; flex-wrap: wrap; gap: var(--space-within-group) var(--space-between-groups); }
+  .mentio-profile-note { color: var(--muted-foreground); }
+  .mentio-site-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-within-group) var(--space-between-groups); border-bottom: var(--divider-width) solid var(--border); padding: var(--space-within-group) var(--space-between-groups); }
+  .mentio-site-brand { font-size: var(--text-body); line-height: var(--line-body); font-weight: var(--font-weight-semibold); }
+  .mentio-site-nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-between-groups); }
+  /* R01.5: the main account action is filled; sign-in stays a quieter link. */
+  .mentio-site-cta { display: inline-flex; align-items: center; min-block-size: var(--control-height); border-radius: var(--radius-md); background: var(--primary); color: var(--primary-foreground); padding-inline: var(--control-padding-inline); font-size: var(--text-label); line-height: var(--line-label); font-weight: var(--font-weight-medium); transition-property: background-color, outline-color; transition-duration: var(--motion-duration); transition-timing-function: var(--motion-ease); }
+  .mentio-site-cta:is(:hover,:active) { background: var(--primary-hover); }
+  :is(.mentio-site-brand,.mentio-site-cta):focus-visible { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
+  .mentio-auth { display: flex; flex-direction: column; gap: var(--space-between-groups); inline-size: 100%; max-inline-size: var(--auth-width); margin-inline: auto; padding: var(--space-section) var(--space-between-groups); }
+  .mentio-auth-footer { display: flex; flex-direction: column; gap: var(--space-within-group); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-status-heading { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group); }
+  .mentio-status-body { display: flex; flex-direction: column; gap: var(--space-between-groups); }
+  .mentio-share { display: flex; flex-direction: column; gap: var(--space-within-group); }
+  .mentio-share-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group) var(--space-between-groups); }
 }

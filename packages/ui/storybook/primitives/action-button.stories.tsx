@@ -21,10 +21,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
 export const WithConfirmation: Story = {
-  parameters: { msw: { handlers: [http.delete('/api/availability/slots/s1', () => HttpResponse.json({ ok: true, data: null }))] } },
+  parameters: { msw: { handlers: [http.delete('/api/availability/slots', () => HttpResponse.json({ ok: true, data: null }))] } },
   args: {
     label: 'Remove slot', pendingLabel: 'Removing slot…', variant: 'destructive',
-    run: () => apiCall('/api/availability/slots/s1', { method: 'DELETE' }),
+    run: () => apiCall('/api/availability/slots', { method: 'DELETE', query: { id: 's1' } }),
     confirm: { title: 'Remove the slot on Thursday, 6 November 2026 at 18:00?', description: 'Mentees will no longer see this time on your page.', confirmLabel: 'Remove slot', cancelLabel: 'Keep slot' },
   },
 };

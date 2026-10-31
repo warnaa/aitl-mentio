@@ -22,7 +22,8 @@ propose a spec (see SDD below) before changing any of them.
   connection pooling. No other ORM / query builder / raw `pg` client.
 - **Awilix** is the dependency-injection container.
 - **Tailwind CSS v4** for all styling. Public **frontend** pages use plain Tailwind
-  utilities.
+  utilities (and may use the plain-Tailwind presentational components listed under
+  `@mentio/app` below).
 - **shadcn/ui** (Radix + Tailwind) for the **backend/admin** pages, consumed from
   `@mentio/ui`.
 - **npm workspaces** — use `npm` only (single root `package-lock.json`); never add a
@@ -124,8 +125,12 @@ import `core`. Keep them in sync; a shared package for it is an Ask First change
 ### `@mentio/app`
 
 - Routes live in `packages/app/src/app/`: `(marketing)/` (public pages, plain Tailwind,
-  no `@mentio/ui`), `admin/` (backend panel at `/admin`, built from `@mentio/ui`), and
-  `api/<concept>/route.ts`. Page files default-export `<Segment>Page`.
+  no `@mentio/ui` — except the public presentational components in
+  `@mentio/ui/components/mentors` and `@mentio/ui/components/auth`, which are plain
+  Tailwind on the design tokens, server-safe, with no Radix/shadcn and no client JS;
+  approved 2026-10-31, see `docs/design-system.md`), `admin/` (backend panel at
+  `/admin`, built from `@mentio/ui`), and `api/<concept>/route.ts`. Page files
+  default-export `<Segment>Page`.
 - A route file is HTTP wiring only: `makeCrudRoute(...)` or `apiHandler(...)` that calls
   `requireSession`/ownership checks, then service methods through `withScope`. Business
   rules live in `core` services.

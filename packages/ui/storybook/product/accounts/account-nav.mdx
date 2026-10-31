@@ -1,0 +1,79 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './account-nav.stories';
+
+<Meta of={Stories} />
+
+# AccountNav
+
+## 1. Purpose
+
+Give public visitors a way to sign in or create an account, and signed-in people a way to sign out, on every public page. Sources: accounts UI/UX (header `AccountNav`).
+
+## 2. When to use
+
+Use it as the header of the `(marketing)` and `(auth)` layouts. Sources: accounts UI/UX.
+
+## 3. When not to use
+
+Panel screens use PanelShell with their own header actions. Do not show the user's name: the cookie hint carries none. Sources: accounts UI/UX; platform F8.
+
+## 4. Anatomy
+
+The brand link and a named `nav`. When signed out, the nav holds “Sign in” (a quieter link) and “Create account” (filled, the main action). When signed in, it holds the app's sign-out control. Sources: accounts UI/UX; reference R01.5.
+
+## 5. Variants
+
+There are no visual variants; the state comes from `signedIn`. Sources: package API.
+
+<Unstyled><Canvas of={Stories.SignedOut} /></Unstyled>
+<Unstyled><Canvas of={Stories.SignedIn} /></Unstyled>
+
+## 6. States
+
+- **Signed out.**
+- **Signed in:** an optimistic hint from the cookie's presence, never an authorization.
+- **Sign-out failed:** the app shows feedback next to its control and allows a retry, without claiming the session ended.
+
+The links have focus and hover states. Sources: accounts UI/UX.
+
+<Unstyled><Canvas of={Stories.SignOutFailed} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+It is a `header` (banner landmark) with a named `nav`. Tab order is brand, then sign-in, then create account. The filled link is at least 36 px high with the standard focus ring. It is server-safe; the only client JS is the app's sign-out control. Sources: WCAG 2.4.3, 2.4.7, 2.5.8.
+
+## 8. Content
+
+Use verb phrases: “Sign in”, “Create account”, “Sign out”. All text comes through props. Sources: accounts UI/UX; task Content.
+
+## 9. Responsiveness
+
+At 320 px the brand and nav wrap onto two lines. Sources: WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Meaning</th></tr></thead><tbody><tr><td><code>brand / navLabel</code></td><td><code>{'{ href, label }'}</code> / <code>string</code></td><td>Brand link and nav name.</td></tr><tr><td><code>signedIn</code></td><td><code>boolean</code></td><td>Cookie-presence hint.</td></tr><tr><td><code>signIn / signUp</code></td><td><code>{'{ href, label }'}</code></td><td>Links that keep <code>returnTo</code>.</td></tr><tr><td><code>signOut</code></td><td><code>ReactNode</code></td><td>The app's client sign-out control.</td></tr><tr><td><code>linkComponent</code></td><td><code>ComponentType</code></td><td><code>next/link</code>.</td></tr></tbody></table>
+
+Source: `@mentio/ui/components/auth/AccountNav`.
+
+## 11. Code
+
+```tsx
+<AccountNav brand={{ href: '/', label: 'Mentio' }} navLabel="Konto" signedIn={hasSessionCookie}
+  signIn={{ href: `/logowanie?returnTo=${returnTo}`, label: 'Zaloguj się' }} signUp={{ href: `/rejestracja?returnTo=${returnTo}`, label: 'Załóż konto' }}
+  signOut={<SignOutButton />} linkComponent={Link} />
+```
+
+Sources: accounts UI/UX.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>A filled “Create account” and a quieter “Sign in”.</td><td>Two identical filled buttons.</td></tr><tr><td>No name in the header.</td><td>A database read on every public page to show a name.</td></tr></tbody></table>
+
+Sources: reference R01.5; accounts UI/UX.
+
+## 13. Related
+
+AuthPanel, PanelShell. Screens: sign in, registration, mentor list and page. Sources: approved stage-0 inventory.

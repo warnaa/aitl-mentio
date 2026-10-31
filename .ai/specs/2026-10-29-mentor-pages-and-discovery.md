@@ -145,7 +145,7 @@ URL validation keeps top-level `fieldErrors.publicWorkLinks`; invalid entries in
 
 ## 📝 UI/UX
 
-All copy is Polish (R15), written directly in the code (F1). Times are Europe/Warsaw and money is in `zł`, both through `@mentio/ui/lib/format` (F7). Public pages use plain Tailwind; mentor screens use `PanelShell` with shadcn components.
+All copy is Polish (R15), written directly in the code (F1). Times are Europe/Warsaw and money is in `zł`, both through `@mentio/ui/lib/format` (F7). Public pages use plain Tailwind; mentor screens use `PanelShell` with shadcn components. *Design-system note (2026-10-31, approved by the user):* the public list and mentor page may render the plain-Tailwind, server-safe presentational components `MentorDirectory` and `MentorProfile` from `@mentio/ui/components/mentors` (no Radix/shadcn, no client JS, all copy and formatted values passed as props); the colocated-card rule above is superseded for these two pages. Design-system run: `.ai/runs/2026-10-31-mentio-stage-3b-accounts-e01.md`.
 
 - **`/mentorzy/<slug>` — public mentor page** (`MentorProfilePage`, `(marketing)`, `loadPage("public")`).
   - Content in order: the display name; the description (`whitespace-pre-line`, plain text); "Publiczna praca" with the link list; prices ("25 min — 120 zł", "50 min — 240 zł") or "Mentor nie ustalił jeszcze stawki — rezerwacja jest niedostępna"; "Wolne terminy" grouped by day; and the line "Sesje odbywają się wyłącznie tekstowo" (N01).

@@ -450,3 +450,12 @@ focus the button. Also: React 19's react-hooks lint rejects setState inside effe
 adopt changed props by adjusting state during render, keep imperative targets in refs.
 Activating a `#hash` link inside a Vitest browser story navigates the test frame and
 closes the runner connection; assert the link target instead.
+
+## 2026-10-31 - Check API paths in stories against the spec contract
+
+Story fixtures and code samples teach the contract to the next developer or agent. A 3a
+story used `DELETE /api/availability/slots/:id`, while the E01 spec defines
+`DELETE /api/availability/slots?id=<uuid>`; it passed every test because MSW mocked the
+invented path. Before writing an MSW handler, copy the method, path, status and error
+code from the spec's API table. Also: look at screenshots of screen stories — metrics
+missed a compact-nav current marker that read as a bracket in a horizontal row.

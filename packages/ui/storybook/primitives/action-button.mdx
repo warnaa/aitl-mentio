@@ -86,7 +86,7 @@ Source: exported package API (`@mentio/ui/backend/actions`). F3's `useApiMutatio
 ```tsx
 import { ActionButton } from '@mentio/ui/backend/actions';
 <ActionButton label="Remove slot" pendingLabel="Removing slot…" variant="destructive"
-  run={() => apiCall(`/api/availability/slots/${slot.id}`, { method: 'DELETE' })}
+  run={() => apiCall('/api/availability/slots', { method: 'DELETE', query: { id: slot.id } })}
   confirm={{ title: `Remove the slot on ${slotLabel}?`, description: 'Mentees will no longer see this time on your page.', confirmLabel: 'Remove slot', cancelLabel: 'Keep slot' }}
   onSuccess={() => router.refresh()} />
 ```

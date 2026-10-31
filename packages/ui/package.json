@@ -13,7 +13,9 @@
     "./backend/feedback": "./src/backend/feedback/index.ts",
     "./styles.css": "./src/styles/globals.css",
     "./backend/actions": "./src/backend/actions/index.ts",
-    "./backend/layout": "./src/backend/layout/index.ts"
+    "./backend/layout": "./src/backend/layout/index.ts",
+    "./components/mentors/*": "./src/components/mentors/*.tsx",
+    "./components/auth/*": "./src/components/auth/*.tsx"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

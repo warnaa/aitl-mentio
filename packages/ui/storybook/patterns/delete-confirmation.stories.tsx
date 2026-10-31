@@ -6,7 +6,7 @@ import { ActionButton } from '@mentio/ui/backend/actions';
 import { apiCall } from '@mentio/ui/backend/api';
 import { Separator } from '@mentio/ui/components/separator';
 
-// Mentor-pages `/mentor/terminy`: remove a slot behind a confirm step (F5); `409 slot_held`.
+// Mentor-pages `/mentor/terminy`: `DELETE /api/availability/slots?id=…` behind a confirm step (F5); `409 slot_held` (E02).
 const slots = [{ id: 's1', label: 'Thursday, 6 November 2026, 18:00' }, { id: 's2', label: 'Friday, 7 November 2026, 09:30' }];
 
 function SlotList() {
@@ -20,7 +20,7 @@ function SlotList() {
       <div className="flex flex-wrap items-center justify-between gap-within-group py-2">
         <span className="tabular-nums">{slot.label} (Warsaw time)</span>
         <ActionButton label="Remove slot" pendingLabel="Removing slot…" variant="destructive" size="sm"
-          run={() => apiCall(`/api/availability/slots/${slot.id}`, { method: 'DELETE' })}
+          run={() => apiCall('/api/availability/slots', { method: 'DELETE', query: { id: slot.id } })}
           confirm={{ title: `Remove the slot on ${slot.label}?`, description: 'Mentees will no longer see this time on your page.', confirmLabel: 'Remove slot', cancelLabel: 'Keep slot' }}
           onSuccess={() => { setRows(current => current.filter(item => item.id !== slot.id)); setRemoved(slot.label); }} />
       </div>
@@ -28,7 +28,7 @@ function SlotList() {
   </section>;
 }
 
-const removedOk = http.delete('/api/availability/slots/:id', () => HttpResponse.json({ ok: true, data: null }));
+const removedOk = http.delete('/api/availability/slots', () => HttpResponse.json({ ok: true, data: null }));
 const meta = { title: 'Patterns/Delete confirmation', parameters: { msw: { handlers: [removedOk] } }, render: () => <SlotList /> } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -48,7 +48,7 @@ export const Confirming: Story = {
   },
 };
 export const Pending: Story = {
-  parameters: { msw: { handlers: [http.delete('/api/availability/slots/:id', async () => { await delay('infinite'); return HttpResponse.json({}); })] } },
+  parameters: { msw: { handlers: [http.delete('/api/availability/slots', async () => { await delay('infinite'); return HttpResponse.json({}); })] } },
   play: async ({ canvasElement }) => {
     const dialog = await openFirst(canvasElement);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Remove slot' }));
@@ -67,7 +67,7 @@ export const Removed: Story = {
   },
 };
 export const Refused: Story = {
-  parameters: { msw: { handlers: [http.delete('/api/availability/slots/:id', () => HttpResponse.json({ ok: false, error: { code: 'slot_held', message: 'This slot is held by a booking in progress and cannot be removed.' } }, { status: 409 }))] } },
+  parameters: { msw: { handlers: [http.delete('/api/availability/slots', () => HttpResponse.json({ ok: false, error: { code: 'slot_held', message: 'This slot is held by a booking in progress and cannot be removed.' } }, { status: 409 }))] } },
   play: async ({ canvasElement }) => {
     const dialog = await openFirst(canvasElement);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Remove slot' }));
@@ -76,7 +76,7 @@ export const Refused: Story = {
   },
 };
 export const NetworkError: Story = {
-  parameters: { msw: { handlers: [http.delete('/api/availability/slots/:id', () => HttpResponse.error())] } },
+  parameters: { msw: { handlers: [http.delete('/api/availability/slots', () => HttpResponse.error())] } },
   play: async ({ canvasElement }) => {
     const dialog = await openFirst(canvasElement);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Remove slot' }));

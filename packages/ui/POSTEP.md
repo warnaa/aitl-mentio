@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 3b in progress (accounts and E01).**
+Date: 2026-10-31. Status: **stage 3b complete; awaiting “dalej” before 3c (E02).**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -521,4 +521,34 @@ None new. Every new rule cites a spec, WCAG/WAI-ARIA, an earlier decision or a v
 - The PanelShell sidebar appears from 1024 px (Tailwind `lg`). Q3 fixes only 768 = compact and 1440 = separate. **Approved by the user 2026-10-31.**
 
 Next: “dalej” for 3b (accounts and E01). That part includes the public mentor components in `@mentio/ui/components/mentors` and the AGENTS.md/E01 spec note. Not committed; no push.
+
+## Stage 3b completion — 2026-10-31
+
+What was built (report: `storybook/verification/2026-10-31-stage-3b.md`):
+- **Architecture exception applied:** AGENTS.md and an E01 spec note allow public pages to use `@mentio/ui/components/mentors` and `/auth` (plain Tailwind, server-safe).
+- **Five product components:** MentorDirectory, MentorProfile, MentorPageStatus, AccountNav and AuthPanel, each with 13-section docs and 100% unit coverage.
+- **Screens with MSW and state maps:** 16 accounts states and 22 E01 states.
+- **Totals:** cumulative 352 stories, 47 MDX pages, 99 play functions.
+
+Verified:
+- `check:tokens` with zero findings.
+- 704 story tests, 3 clean runs.
+- 282 page checks and 94 axe audits with zero findings.
+- No overflow in any product story at 3 widths × 2 themes.
+- Visual review of three screens.
+- 274 unit tests with 100% coverage; lint, types, app build, 10 integration tests, audit.
+
+Fixed during verification:
+- The 3a slot-removal endpoint didn't match the spec.
+- The share field's ARIA use.
+- The compact-navigation current marker.
+
+### Interpretations for your confirmation (also on the E01 state map)
+
+1. The mentor list uses dense rows with separators instead of cards (R01.1 and R01.3; the content is as specified).
+2. The slug warning is a persistent hint while the page is published.
+3. A slot in a DST gap shows the same field-error state as one outside the window.
+4. The 404 and error-boundary pages are not designed here; they go on What is missing.
+
+Next: “dalej” for 3c (E02: new booking, payment, booking details, bookings list, recovery and cancellation). Not committed; no push.
 
