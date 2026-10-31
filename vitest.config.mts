@@ -44,7 +44,7 @@ export default defineConfig({
         "packages/db/src/index.ts",
         "packages/core/src/container/index.ts",
         "packages/core/src/http/index.ts",
-        "packages/ui/src/backend/{actions,api,feedback,forms,tables}/index.ts",
+        "packages/ui/src/backend/{actions,api,feedback,forms,layout,tables}/index.ts",
         "packages/ui/src/lib/utils.ts",
         "packages/core/src/container/cradle.ts",
         "packages/ui/src/backend/api/types.ts",

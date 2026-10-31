@@ -1,0 +1,53 @@
+{
+  "failures": [],
+  "results": [
+    {
+      "theme": "light",
+      "width": 320,
+      "panel": "compact nav above content; skip link hidden until Tab",
+      "stories": 88,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "panel": "compact nav above content; skip link hidden until Tab",
+      "stories": 88,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "panel": "sidebar beside content; skip link hidden until Tab",
+      "stories": 88,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "panel": "compact nav above content; skip link hidden until Tab",
+      "stories": 88,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "panel": "compact nav above content; skip link hidden until Tab",
+      "stories": 88,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "panel": "sidebar beside content; skip link hidden until Tab",
+      "stories": 88,
+      "overflow": "none",
+      "consoleErrors": []
+    }
+  ]
+}

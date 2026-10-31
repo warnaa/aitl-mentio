@@ -4,6 +4,9 @@ import { envelopeSchema, type ApiErrorBody, type ApiResult, type FieldErrors } f
 export const CSRF_HEADER = "x-mentio-request";
 const CSRF_HEADER_VALUE = "1";
 
+/** Fixed, actionable text for network failures (F1; becomes Polish with the F1 sweep). */
+export const NETWORK_ERROR_MESSAGE = "Check your connection, then try again.";
+
 export type ApiPath = `/api/${string}`;
 
 export interface ApiCallOptions extends Omit<RequestInit, "body"> {
@@ -48,11 +51,9 @@ export async function apiCall<T>(path: ApiPath, options: ApiCallOptions = {}): P
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     payload = await readJsonSafe(response);
-  } catch (error) {
-    return failure(0, {
-      code: "network_error",
-      message: error instanceof Error ? error.message : "Network request failed",
-    });
+  } catch {
+    // F1: a network failure shows a fixed message, never the browser's `error.message`.
+    return failure(0, { code: "network_error", message: NETWORK_ERROR_MESSAGE });
   }
 
   const envelope = envelopeSchema.safeParse(payload);

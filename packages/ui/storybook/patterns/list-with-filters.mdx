@@ -1,0 +1,33 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './list-with-filters.stories';
+
+<Meta of={Stories} />
+
+# List with filters
+
+The current specs define pagination but no filters, so do not add filtering to the app without a spec. This page shows how to build one when a spec asks for it, using bookings as illustrative data. Sources: task pattern requirements; approved stage-0 inventory.
+
+## Rules
+
+1. Show the result count as a polite status (“1 booking”), updated when filters change. Sources: task pattern; WCAG 4.1.3.
+2. Show each active filter as a visible, removable Button named “Remove filter Status: …”. Removing it returns focus to the filter control. Sources: task pattern; WCAG 2.4.3.
+3. “No bookings match these filters”, with a “Clear filters” action, is a separate state from “You have no bookings yet”, which has a create or find action. Sources: task pattern; book-and-pay UI/UX empty copy.
+4. Filter options come from the full set of values, so a filter taken from the URL stays visible even when nothing matches. Sources: batch 3a verification.
+5. Changing a filter resets to the first page. Rows are kept while refreshing. Sources: platform F3.
+6. Use at most about four columns on mobile-first screens. Sources: user decision 2026-10-31.
+
+## States and stories
+
+<table><thead><tr><th>State</th><th>Story</th></tr></thead><tbody><tr><td>Results</td><td>Results</td></tr><tr><td>Filter applied, removable</td><td>Filter applied; Remove filter returns focus</td></tr><tr><td>No results for these filters</td><td>No results for filters; Clear filters from no results</td></tr><tr><td>Nothing here yet (create or find)</td><td>Nothing yet</td></tr><tr><td>First load</td><td>First load</td></tr><tr><td>Refreshing</td><td>Refreshing</td></tr><tr><td>Failed</td><td>Failed</td></tr><tr><td>Many results, paginated</td><td>Many results</td></tr><tr><td>Narrow</td><td>Narrow</td></tr></tbody></table>
+
+<Unstyled><Canvas of={Stories.FilterApplied} /></Unstyled>
+<Unstyled><Canvas of={Stories.NoResultsForFilters} /></Unstyled>
+<Unstyled><Canvas of={Stories.NothingYet} /></Unstyled>
+
+## Composition
+
+`Label` + `Select` (filter), an outline `Button` with an X icon (active filter), a status paragraph (count), then `DataTable`, or `EmptyState` with “Clear filters”, or `EmptyState` with the create action.
+
+## Related
+
+Components: DataTable, Select, Button, EmptyState, StatusBadge. Sources: approved stage-0 inventory.

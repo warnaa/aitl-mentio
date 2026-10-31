@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { apiCall, apiCallOrThrow, ApiError, CSRF_HEADER } from "./apiCall";
+import { apiCall, apiCallOrThrow, ApiError, CSRF_HEADER, NETWORK_ERROR_MESSAGE } from "./apiCall";
 
 function mockFetch(response: Response | Error) {
   const fetchMock = vi.fn(async () => {
@@ -55,18 +55,19 @@ describe("apiCall", () => {
     expect(!result.ok && result.error.code).toBe("invalid_response");
   });
 
-  it("reports network failures without throwing", async () => {
+  it("reports network failures without throwing or leaking the browser's message", async () => {
     mockFetch(new TypeError("Failed to fetch"));
 
-    expect(await apiCall("/api/things")).toMatchObject({ ok: false, status: 0, error: { code: "network_error" } });
+    expect(await apiCall("/api/things")).toEqual({ ok: false, status: 0, error: { code: "network_error", message: NETWORK_ERROR_MESSAGE } });
+    expect(NETWORK_ERROR_MESSAGE).toBe("Check your connection, then try again.");
   });
 
-  it("uses a generic message when the failure is not an Error", async () => {
+  it("uses the same fixed message when the failure is not an Error", async () => {
     vi.stubGlobal("fetch", vi.fn(() => Promise.reject("offline")));
 
     expect(await apiCall("/api/things")).toMatchObject({
       ok: false,
-      error: { code: "network_error", message: "Network request failed" },
+      error: { code: "network_error", message: NETWORK_ERROR_MESSAGE },
     });
   });
 

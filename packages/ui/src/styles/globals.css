@@ -591,3 +591,53 @@
   .mentio-empty-state-title { font-weight: var(--font-weight-medium); overflow-wrap: anywhere; }
   .mentio-empty-state-description { color: var(--muted-foreground); max-inline-size: var(--prose-max-width); }
 }
+
+/* Stage 3a: CrudForm field kinds and form layout (F4). Spacing follows the approved
+ * relationship tokens; controls reuse the primitives' own classes. */
+@layer components {
+  .mentio-crud-form { display: flex; flex-direction: column; gap: var(--space-between-groups); }
+  .mentio-crud-label-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group); }
+  .mentio-crud-checkbox { display: flex; align-items: center; gap: var(--space-within-group); }
+  .mentio-crud-list { min-inline-size: 0; border: 0; padding: 0; margin: 0; }
+  .mentio-crud-legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group); margin-block-end: var(--space-within-group); padding: 0; }
+  .mentio-crud-list-row { display: flex; align-items: center; gap: var(--space-within-group); }
+  .mentio-input-affix { display: flex; align-items: center; gap: var(--space-within-group); }
+  .mentio-input-affix > .mentio-input { inline-size: auto; flex: 1 1 auto; }
+  .mentio-input-suffix { color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-crud-form-error { color: var(--destructive); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-crud-form-error:focus-visible { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
+  .mentio-crud-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-within-group); }
+}
+
+/* Stage 3a: ActionButton, PanelShell (F5, F8). R02.6 separate task navigation; Q3 widths. */
+@layer components {
+  .mentio-action { display: inline-flex; flex-direction: column; align-items: flex-start; gap: var(--space-within-group); max-inline-size: 100%; }
+  .mentio-action > .mentio-button[aria-disabled=true] { cursor: progress; }
+  /* WCAG 1.4.10: an action label wraps only when the column is too narrow; height keeps the size's minimum. */
+  .mentio-action > .mentio-button { max-inline-size: 100%; block-size: auto; white-space: normal; text-align: start; }
+  .mentio-action > .mentio-button-default { min-block-size: var(--control-height); }
+  .mentio-action > .mentio-button-sm { min-block-size: var(--control-height-small); padding-block: var(--spacing); }
+  .mentio-action > .mentio-button-lg { min-block-size: var(--control-height-large); padding-block: var(--space-within-group); }
+  .mentio-action > .mentio-button-xs { min-block-size: var(--control-height-compact); padding-block: calc(var(--spacing) * 0.5); }
+  .mentio-skip-link { position: absolute; inset-inline-start: var(--space-between-groups); inset-block-start: var(--space-between-groups); z-index: 50; translate: 0 -200%; border-radius: var(--radius-md); background: var(--primary); color: var(--primary-foreground); padding-inline: var(--control-padding-inline); padding-block: var(--space-within-group); font-weight: var(--font-weight-medium); }
+  .mentio-skip-link:focus-visible { translate: 0 0; outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
+  .mentio-panel { position: relative; display: flex; flex-direction: column; min-block-size: 100dvh; background: var(--background); color: var(--foreground); }
+  .mentio-panel-sidebar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group) var(--space-between-groups); border-bottom: var(--divider-width) solid var(--sidebar-border); background: var(--sidebar); color: var(--sidebar-foreground); padding: var(--space-within-group) var(--space-between-groups); }
+  .mentio-panel-title { font-size: var(--text-body); line-height: var(--line-body); font-weight: var(--font-weight-semibold); }
+  .mentio-panel-nav { min-inline-size: 0; max-inline-size: 100%; overflow-x: auto; }
+  .mentio-panel-nav > ul { display: flex; gap: var(--spacing); }
+  .mentio-panel-nav-link { display: flex; align-items: center; min-block-size: var(--control-height-small); border-radius: var(--radius-md); padding-inline: var(--control-padding-small); font-size: var(--text-label); line-height: var(--line-label); font-weight: var(--font-weight-medium); white-space: nowrap; transition-property: color, background-color, outline-color; transition-duration: var(--motion-duration); transition-timing-function: var(--motion-ease); }
+  .mentio-panel-nav-link:is(:hover,[aria-current=page]) { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); }
+  .mentio-panel-nav-link[aria-current=page] { box-shadow: inset var(--focus-width) 0 0 var(--sidebar-primary); }
+  :is(.mentio-panel-title,.mentio-panel-nav-link):focus-visible { outline: var(--focus-width) var(--focus-style) var(--sidebar-ring); outline-offset: var(--focus-offset); }
+  .mentio-panel-body { display: flex; flex: 1 1 auto; flex-direction: column; min-inline-size: 0; }
+  .mentio-panel-header { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-within-group); min-block-size: var(--control-height-large); border-bottom: var(--divider-width) solid var(--border); padding-inline: var(--space-panel); }
+  .mentio-panel-main { flex: 1 1 auto; inline-size: 100%; max-inline-size: var(--content-max-width); margin-inline: auto; padding: var(--space-panel) var(--space-between-groups); outline: none; }
+  /* Q3: compact navigation at 768 px, a separate sidebar at 1440 px; the switch uses Tailwind's lg. */
+  @variant lg {
+    .mentio-panel { flex-direction: row; }
+    .mentio-panel-sidebar { flex-direction: column; flex-wrap: nowrap; align-items: stretch; inline-size: calc(var(--spacing) * 60); flex-shrink: 0; border-bottom: 0; border-inline-end: var(--divider-width) solid var(--sidebar-border); padding: var(--space-panel) var(--space-between-groups); gap: var(--space-between-groups); }
+    .mentio-panel-nav > ul { flex-direction: column; }
+    .mentio-panel-main { padding: var(--space-panel); }
+  }
+}

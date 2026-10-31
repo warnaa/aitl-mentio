@@ -1,0 +1,93 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './status-badge.stories';
+
+<Meta of={Stories} />
+
+# StatusBadge
+
+## 1. Purpose
+
+Show the state of a record with a consistent weight per kind of state, so lists can be scanned. Sources: platform F6.
+
+## 2. When to use
+
+- The booking status on `/rezerwacje` and the booking details.
+- The mentor page status (draft or published).
+- The slot visibility in the mentor's slot list.
+
+The concept owns the state → tone and label map. Sources: platform F6; book-and-pay and mentor-pages UI/UX.
+
+## 3. When not to use
+
+- For any label that is not a state, use Badge.
+- For an explanation or a failure that needs action, use Alert.
+- Never show ratings.
+
+Sources: Badge page; N02.
+
+## 4. Anatomy
+
+A Badge with a text label and a tone. There is no icon by default, because the text carries the meaning. Sources: Badge page; WCAG 1.4.1.
+
+## 5. Variants
+
+Tones and their Badge weights:
+- `neutral`: secondary (draft, cancelled, expired).
+- `waiting`: outline (awaiting payment, awaiting a decision, in progress).
+- `success`: filled (published).
+- `danger`: destructive (declined, refund failed).
+
+Sources: platform F6 tones; user decision 2026-10-31 (weight guidance).
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.Neutral} /></Unstyled>
+<Unstyled><Canvas of={Stories.Waiting} /></Unstyled>
+<Unstyled><Canvas of={Stories.Success} /></Unstyled>
+<Unstyled><Canvas of={Stories.Danger} /></Unstyled>
+
+## 6. States
+
+It is read-only: hover, focus, disabled, selected and loading do not apply. A change of state renders a new label. Sources: platform F6.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+It is plain text in reading order, exposing `data-tone` for tests. It is not a live region. Colour is never the only signal. Sources: WCAG 1.3.1, 1.4.1.
+
+## 8. Content
+
+Use the spec's status wording in sentence case, at most about 40 characters, for example “Awaiting mentor decision”. A pending refund reads “refund in progress”, never “refunded” (B9). Sources: book-and-pay UI/UX; user decision 2026-10-31.
+
+## 9. Responsiveness
+
+As Badge: it wraps beside its object, and the long-label classes allow a longer language to wrap. Sources: WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>tone</code></td><td><code>'neutral' | 'waiting' | 'success' | 'danger'</code></td><td>required</td><td>Weight of the state.</td></tr><tr><td><code>label</code></td><td><code>string</code></td><td>required</td><td>The state's name.</td></tr><tr><td><code>className</code></td><td><code>string</code></td><td>unset</td><td>Layout utilities.</td></tr></tbody></table>
+
+Source: exported package API (`@mentio/ui/backend/feedback`).
+
+## 11. Code
+
+```tsx
+import { StatusBadge } from '@mentio/ui/backend/feedback';
+const { tone, label } = bookingStatus[booking.status]; // concept map, built with E02
+<StatusBadge tone={tone} label={label} />
+```
+
+Sources: platform F6; book-and-pay UI/UX.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>“Refund in progress” in the waiting tone.</td><td>“Refunded” while the refund is still pending.</td></tr><tr><td>A danger tone with “Payment declined”.</td><td>A red dot without text.</td></tr></tbody></table>
+
+Sources: book-and-pay B9; WCAG 1.4.1.
+
+## 13. Related
+
+Badge is the primitive. Alert gives explanations. Patterns: Booking and payment recovery, Cancellation, Publication, Availability. Sources: approved stage-0 inventory.

@@ -1,0 +1,99 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './panel-shell.stories';
+
+<Meta of={Stories} />
+
+# PanelShell
+
+## 1. Purpose
+
+Give signed-in task screens a consistent frame: the area name, task navigation kept separate from the content, header actions, and the main content at a readable width. Sources: platform F8; reference R02.6.
+
+## 2. When to use
+
+Use it for the layouts of the `(mentor)` routes (my page, my slots) and the `(mentee)` routes (bookings, payment, booking details). `/admin` can move to it later; that migration is out of scope for this task. Sources: platform F8; mentor-pages and book-and-pay UI/UX; user decision 2026-10-31.
+
+## 3. When not to use
+
+- Public `(marketing)` pages and `(auth)` headers use plain Tailwind layouts.
+- The text session room has its own layout: conversation first, with secondary information after it on narrow screens.
+
+Sources: AGENTS.md; approved stage-0 Q3; reference R02.1.
+
+## 4. Anatomy
+
+- A skip link that appears on the first Tab.
+- A sidebar: an area title link and a named `nav` list. The current page is marked with `aria-current`, an accent surface and an inset bar.
+- An optional header with actions, such as “Sign out”.
+- `main`, at most 1152 px wide.
+
+Sources: WCAG 2.4.1, 2.4.8; approved stage-0 Q3; reference R02.6.
+
+## 5. Variants
+
+There are no visual variants. Navigation items and actions vary by area. `linkComponent` lets the app pass `next/link`. Sources: package API.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+
+The shell fills the viewport height, so the other stories (**Mentee**, **Without header actions**, **States**, **Long content**) are listed in the sidebar rather than embedded here.
+
+## 6. States
+
+Navigation links have these states:
+- Default.
+- Hover: the accent surface.
+- Focus: the sidebar ring.
+- Current: `aria-current`, the accent surface and the inset bar, so colour is not the only signal.
+
+The skip link is hidden until focused. Disabled and loading do not apply. Sources: WCAG 1.4.1, 2.4.7.
+
+
+## 7. Behavior and accessibility
+
+1. The first Tab reaches the skip link, which targets `main` (`tabindex=-1`).
+2. Then come the title, the navigation links in order, the header actions and the content.
+3. The navigation has an `aria-label` that names the area.
+
+Links are at least 32 px high. Sources: WCAG 2.4.1, 2.4.3, 2.5.8; WAI-ARIA landmarks.
+
+## 8. Content
+
+The area title is the product and area, such as “Mentio — mentor”. Navigation labels are short nouns: “My page”, “My slots”, “My bookings”. All text comes through props. Sources: user decision 2026-10-31 (copy through props); U01.1.
+
+## 9. Responsiveness
+
+- Up to tablet widths (768 px included) the navigation is a compact row above the content, with the title and a horizontally scrollable list.
+- From 1024 px (Tailwind `lg`) it is a 240 px sidebar, so at 1440 px the task navigation is separate.
+- Content is padded and limited to 1152 px.
+
+Sources: approved stage-0 Q3 (compact at 768, separate at 1440); user decision 2026-10-31 (sidebar from 1024 px); WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>title / homeHref</code></td><td><code>string</code></td><td>required</td><td>Area name and its link.</td></tr><tr><td><code>items / currentHref</code></td><td><code>{'{ href, label }[]'}</code> / <code>string</code></td><td>required / unset</td><td>Task navigation and the current page.</td></tr><tr><td><code>navLabel / skipLabel</code></td><td><code>string</code></td><td>required</td><td>Accessible navigation name and skip-link text.</td></tr><tr><td><code>linkComponent</code></td><td><code>ComponentType&lt;PanelLinkProps&gt;</code></td><td>anchor</td><td>Pass <code>next/link</code> from the app.</td></tr><tr><td><code>actions / children</code></td><td><code>ReactNode</code></td><td>unset / required</td><td>Header actions and page content.</td></tr></tbody></table>
+
+Source: exported package API (`@mentio/ui/backend/layout`).
+
+## 11. Code
+
+```tsx
+import Link from 'next/link';
+import { PanelShell } from '@mentio/ui/backend/layout';
+<PanelShell title="Mentio — mentor" homeHref="/mentor/strona" navLabel="Mentor" skipLabel="Skip to content"
+  items={[{ href: '/mentor/strona', label: 'My page' }, { href: '/mentor/terminy', label: 'My slots' }]}
+  currentHref={pathname} linkComponent={Link} actions={<SignOutButton />}>{children}</PanelShell>
+```
+
+Sources: platform F8; mentor-pages UI/UX.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>Two navigation items for the mentor's two tasks.</td><td>A sidebar with every possible link, competing with the content (R02.6).</td></tr><tr><td>A compact navigation row on mobile.</td><td>Navigation hidden on mobile with no alternative (the existing <code>/admin</code> layout).</td></tr></tbody></table>
+
+Sources: reference R02.6; approved stage-0 Q3.
+
+## 13. Related
+
+Link for links in content. Separator. Pages built in it: the mentor editor, slots, booking screens. Patterns: Detail, List with filters. Sources: approved stage-0 inventory.

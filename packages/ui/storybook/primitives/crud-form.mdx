@@ -1,0 +1,125 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './crud-form.stories';
+
+<Meta of={Stories} />
+
+# CrudForm
+
+## 1. Purpose
+
+Let a person enter and submit data that the server validates with the same schema, without losing input or guessing what went wrong. Sources: AGENTS.md (forms use CrudForm); platform F4; task Form pattern.
+
+## 2. When to use
+
+Every create or edit form in the panel and auth screens:
+- registration and sign-in,
+- the mentor page editor (address, name, description, public-work links),
+- the rate, the listing opt-in and adding a slot,
+- the new booking (length and question) and the inline booking edit.
+
+Sources: accounts, mentor-pages and book-and-pay UI/UX; platform F4.
+
+## 3. When not to use
+
+- A one-click action with no input, such as publish, unpublish or remove slot: use ActionButton.
+- A single control that saves immediately: use ActionButton or a dedicated control.
+- A control that fits no field kind: add a new kind with tests, or write a bespoke form with a stated reason, never a generic render escape hatch.
+
+Sources: platform F4 and F5; AGENTS.md (bespoke implementations need a stated reason).
+
+## 4. Anatomy
+
+- Fields in order, each with a visible Label, a Required/Optional marker next to it, the control, a hint (hidden while an error is shown) and a linked error.
+- A form-level `role="alert"` line for server errors that name no field.
+- An action row with optional Cancel and the submit Button (filled, primary).
+
+Sources: task field anatomy; WCAG 1.3.1, 3.3.1, 3.3.2; reference R01.5.
+
+## 5. Variants
+
+Field kinds:
+- `text`, `email`, `password`, `number`, `textarea` (existing).
+- `select`: options carry their consequence, such as a price.
+- `checkbox`: a boolean.
+- `money`: an integer amount with a linked “zł” unit.
+- `datetime`: native `datetime-local`, 15-minute step.
+- `urlList`: repeatable URL rows with add/remove and a maximum.
+
+There are no visual variants of the form. Sources: platform F4; user decision 2026-10-31 (zł).
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.MentorPageEditor} /></Unstyled>
+<Unstyled><Canvas of={Stories.Money} /></Unstyled>
+<Unstyled><Canvas of={Stories.Checkbox} /></Unstyled>
+<Unstyled><Canvas of={Stories.DateTime} /></Unstyled>
+<Unstyled><Canvas of={Stories.SelectAndTextarea} /></Unstyled>
+<Unstyled><Canvas of={Stories.ExternalErrors} /></Unstyled>
+
+## 6. States
+
+- **Default.**
+- **Field error after blur:** the field is validated when it loses focus and re-checked while typing, so the error disappears once the value is fixed.
+- **Errors after submit:** focus moves to the first invalid field in field order.
+- **Pending:** fields and buttons are disabled, the button reads “Saving…” with `aria-busy`, and a second submit is ignored.
+- **Server field errors:** shown under their fields, with focus on the first one.
+- **Server error without a field:** shown in the alert line, which receives focus.
+- **Success:** only after the server confirms. The form becomes clean (`onDirtyChange(false)`).
+
+Entered values are always kept. External errors (for example from publish) show until a local result replaces them. Each state is a separate story; the five API outcomes are on Patterns › Form. Sources: task form pattern; platform F4; WCAG 3.3.1, 3.3.3.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+- Labels use `htmlFor`. Errors and hints are linked by `aria-describedby`, and an invalid field has `aria-invalid`. Required fields set `required` (`aria-required` for select).
+- A URL list is a `fieldset` with a legend, and each row is named “Link 1”, “Link 2”. Adding a row focuses it; removing one focuses the previous row.
+- Ctrl/Cmd+Enter submits. Escape cancels when `onCancel` is given.
+- Validation is local first, and the server result is shown as returned.
+
+Sources: WCAG 1.3.1, 2.1.1, 2.4.3, 3.3.1, 4.1.2; platform F4.
+
+## 8. Content
+
+- Labels are nouns: “Email address”, “Rate per 25 minutes”. The placeholder is an example, never the name.
+- Error messages say what to change: “Use at least 10 characters”, not “Invalid”.
+- The submit label is a verb and object: “Create account”, “Save draft”, “Continue to payment”.
+- Units go next to the amount (“zł”). Times state “Warsaw time”.
+- Give every required field a message for a missing value in the schema, for example `z.string({ error: 'Enter your name' })`. Otherwise an empty field shows the validator's technical text (“Invalid input: expected string, received undefined”).
+
+Sources: task Content; U01.1; D10; user decision 2026-10-31.
+
+## 9. Responsiveness
+
+At 320 px the fields fill the column, labels and hints wrap, and the actions wrap with the submit button last. At 768 and 1440 px keep the form at a readable width inside the content column; do not stretch it to 1152 px. Sources: approved stage-0 Q3; WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>schema</code></td><td>Zod object</td><td>required</td><td>The same schema the API route validates with.</td></tr><tr><td><code>fields</code></td><td><code>CrudField[]</code></td><td>required</td><td><code>name</code>, <code>label</code>, <code>type</code>, <code>placeholder</code>, <code>description</code>, <code>autoComplete</code>; <code>options</code> (select); <code>suffix</code> (money, default “zł”); <code>step</code> (datetime, default 900); <code>max</code>, <code>itemLabel</code>, <code>addLabel</code>, <code>removeLabel</code> (urlList).</td></tr><tr><td><code>initialValues</code></td><td>string, number, boolean, string[] or null per field</td><td>empty</td><td>Prefill. Refreshed values are adopted only while the form is clean.</td></tr><tr><td><code>onSubmit</code></td><td><code>(values) =&gt; Promise&lt;ApiResult&gt;</code></td><td>required</td><td>Usually <code>apiCall</code>. Receives only parsed schema output.</td></tr><tr><td><code>onSuccess / onCancel</code></td><td>handlers</td><td>unset</td><td>After server confirmation. Cancel adds the button and Escape.</td></tr><tr><td><code>submitLabel</code></td><td><code>string</code></td><td>“Save”</td><td>Verb and object.</td></tr><tr><td><code>externalFieldErrors</code></td><td><code>Record&lt;string, string[]&gt;</code></td><td>unset</td><td>Errors from another action, such as publish.</td></tr><tr><td><code>onDirtyChange</code></td><td><code>(dirty: boolean) =&gt; void</code></td><td>unset</td><td>Called when values start or stop differing from the last save.</td></tr></tbody></table>
+
+Source: exported package API (`@mentio/ui/backend/forms`).
+
+## 11. Code
+
+```tsx
+import { CrudForm } from '@mentio/ui/backend/forms';
+import { apiCall } from '@mentio/ui/backend/api';
+<CrudForm schema={registrationSchema} submitLabel="Create account"
+  fields={[{ name: 'email', label: 'Email address', type: 'email', autoComplete: 'email' }]}
+  onSubmit={values => apiCall('/api/auth/register', { method: 'POST', body: values })}
+  onSuccess={() => router.push(returnTo)} />
+```
+
+Sources: accounts UI/UX; package API.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>A visible label, with “alex@example.test” as an example placeholder.</td><td>The placeholder as the only name of the field.</td></tr><tr><td>After a failed submit, focus on the first invalid field and all input kept.</td><td>A cleared form with a generic “Error” toast.</td></tr><tr><td>“Account created” shown after the server returns 201.</td><td>Success shown when the button is clicked.</td></tr></tbody></table>
+
+Sources: task form pattern; WCAG 3.3.1.
+
+## 13. Related
+
+FormField is the anatomy for single custom fields. ActionButton is for actions without input. Patterns: Form (API outcomes), Delete confirmation, Publication, Availability. Sources: approved stage-0 inventory.

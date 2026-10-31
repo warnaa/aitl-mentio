@@ -432,3 +432,21 @@ closed before the next variant. Identify leftovers by their environment
 runs alongside. Also scope Playwright selectors to `#storybook-root` — Storybook
 renders hidden internal tables that match `tbody tr` first. `var(--animate-spin)` in
 CSS is enough for Tailwind 4 to emit `@keyframes spin` (verified in the browser).
+
+## 2026-10-31 - Zod reports a missing value with its own technical text
+
+`CrudForm` turns empty inputs into `undefined` so `.optional()` works; a required
+`z.string().min(10, { message })` then fails on type, not length, and shows
+"Invalid input: expected string, received undefined". Every required field's schema
+needs a missing-value message (`z.string({ error: "Enter your name" })`, `z.email({ error })`).
+Found by a story asserting the visible error after submitting an empty form.
+
+## 2026-10-31 - Radix dialogs opened without their Trigger do not return focus
+
+A dialog controlled by state (no `AlertDialogTrigger`) returns focus to nothing on
+close; Radix only refocuses its own trigger ref. Components that open a dialog from
+their own button (ActionButton) must use `onCloseAutoFocus` → `preventDefault()` +
+focus the button. Also: React 19's react-hooks lint rejects setState inside effects —
+adopt changed props by adjusting state during render, keep imperative targets in refs.
+Activating a `#hash` link inside a Vitest browser story navigates the test frame and
+closes the runner connection; assert the link target instead.

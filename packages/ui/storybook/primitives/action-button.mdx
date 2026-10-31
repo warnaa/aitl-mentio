@@ -1,0 +1,104 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './action-button.stories';
+
+<Meta of={Stories} />
+
+# ActionButton
+
+## 1. Purpose
+
+Run one server action from a button, with optional confirmation, no duplicate requests and the failure shown right next to it. Sources: platform F5; reference R02.4.
+
+## 2. When to use
+
+- Publish and unpublish the mentor page.
+- Remove a slot, with a confirmation.
+- Pay, abandon and cancel a booking.
+- Accept and decline a question (E03).
+
+Sources: platform F5; mentor-pages and book-and-pay UI/UX.
+
+## 3. When not to use
+
+- For actions that need input, use CrudForm.
+- For navigation, use Link or `Button asChild`.
+- For purely local actions such as copying a link, use Button with local status text.
+
+Sources: platform F4 and F5; task How to choose.
+
+## 4. Anatomy
+
+- A Button (any variant).
+- An optional reason line when it is disabled.
+- An inline `role="alert"` error after a failed run.
+- An optional AlertDialog that names the object, the consequence, a verb-and-object confirm button and a cancel button that names what is kept.
+
+Sources: platform F5; task delete confirmation; task What to avoid (disabled without explanation).
+
+## 5. Variants
+
+The Button variant and size are passed through. Confirmation is optional; use it for removal, cancellation and abandonment, not for reversible actions. Sources: Button variants; user decision 2026-10-31 (no confirmation for reversible actions).
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.WithConfirmation} /></Unstyled>
+<Unstyled><Canvas of={Stories.DisabledWithReason} /></Unstyled>
+
+## 6. States
+
+- **Default.**
+- **Disabled:** native disabled, with a visible reason such as “Save your changes before publishing.”
+- **Pending:** the pending label and `aria-busy`. The button stays focusable (`aria-disabled`), so focus is not lost, and further clicks are ignored.
+- **Failed:** the inline alert, and `onError` runs once.
+- **Succeeded:** `onSuccess` runs once. The screen refreshes or navigates.
+- **Confirming:** the dialog stays open while pending and closes when the result is known. Focus returns to the button.
+
+Stories: Pending keeps focus, Failure inline, Network failure, Confirm keyboard. Sources: platform F3 and F5; WCAG 2.4.3, 4.1.3.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+- Enter or Space runs the action, or opens the confirmation. The duplicate guard is synchronous.
+- In the confirmation, focus starts on the cancel button and Escape cancels, unless a request is running.
+- Failure is announced with `role="alert"`, and the button references the alert and the disabled reason through `aria-describedby`.
+
+Sources: WAI-ARIA APG alert dialog; WCAG 2.1.1, 3.3.1, 4.1.3.
+
+## 8. Content
+
+Labels are a verb and object: “Publish page”, “Remove slot”, “Pay 240 zł”. The pending label is a present participle: “Publishing…”. Confirmation copy follows AlertDialog. Errors say what to do. All text comes through props. Sources: task Content; user decision 2026-10-31 (copy through props).
+
+## 9. Responsiveness
+
+The reason and error lines wrap under the button at every width. A long label wraps by itself when the column is too narrow, and the button keeps its size's minimum height. Sources: WCAG 1.4.10; batch 3a verification.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>label / pendingLabel</code></td><td><code>string</code></td><td>required / label</td><td>Idle and running text.</td></tr><tr><td><code>run</code></td><td><code>() =&gt; Promise&lt;ApiResult&gt;</code></td><td>required</td><td>Usually <code>apiCall</code>. Never throws.</td></tr><tr><td><code>confirm</code></td><td><code>{'{ title, description, confirmLabel, cancelLabel }'}</code></td><td>unset</td><td>Asks first.</td></tr><tr><td><code>onSuccess / onError</code></td><td>handlers</td><td>unset</td><td>Once per accepted run.</td></tr><tr><td><code>disabled / disabledReason</code></td><td>boolean / string</td><td>false / unset</td><td>Unavailable, with a visible reason.</td></tr><tr><td><code>variant / size</code></td><td>Button props</td><td>Button defaults</td><td>Visual weight.</td></tr></tbody></table>
+
+Source: exported package API (`@mentio/ui/backend/actions`). F3's `useApiMutation` replaces the internal guard in its feature PR without changing this contract.
+
+## 11. Code
+
+```tsx
+import { ActionButton } from '@mentio/ui/backend/actions';
+<ActionButton label="Remove slot" pendingLabel="Removing slot…" variant="destructive"
+  run={() => apiCall(`/api/availability/slots/${slot.id}`, { method: 'DELETE' })}
+  confirm={{ title: `Remove the slot on ${slotLabel}?`, description: 'Mentees will no longer see this time on your page.', confirmLabel: 'Remove slot', cancelLabel: 'Keep slot' }}
+  onSuccess={() => router.refresh()} />
+```
+
+Sources: mentor-pages UI/UX; platform F5.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>A disabled Publish button with “Save your changes before publishing.” under it.</td><td>A disabled Publish button with no reason.</td></tr><tr><td>The failure shown under the button that caused it.</td><td>A toast that disappears.</td></tr></tbody></table>
+
+Sources: task What to avoid; reference R02.4.
+
+## 13. Related
+
+Button is the visual part. AlertDialog is the confirmation. CrudForm is for actions with input. Patterns: Delete confirmation, Publication, Booking and payment recovery. Sources: approved stage-0 inventory.

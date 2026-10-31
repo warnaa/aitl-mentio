@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 2 complete (batches 1–4); awaiting “dalej” before stage 3.**
+Date: 2026-10-31. Status: **stage 3b in progress (accounts and E01).**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -469,4 +469,56 @@ Next: wait for “dalej”, then stage 3 only. Batch 4 is not committed; no push
 ## Decisions on batch-4 proposals — 2026-10-31
 
 The user approved both remaining proposals: tables have about four columns at most on mobile-first screens, and skeleton shape heights are h-4 (line), h-5 (badge) and h-6 (title). The “Proposal” marks are replaced with the decision. No open decisions remain for stages 0–2. Next: “dalej” for stage 3, optionally after a local commit of batch 4.
+
+## Stage 3 started — 2026-10-31
+
+Batch 4 was committed as fd1f4fa; no push. Run log: `.ai/runs/2026-10-31-mentio-stage-3a-shared-patterns.md`.
+
+User decisions for stage 3:
+1. **Public presentation components** may live in `@mentio/ui/components/mentors`: plain Tailwind on tokens, with no Radix or shadcn and no client JS. The AGENTS.md rule and the E01 spec will get a note in 3b, together with those components.
+2. **Copy through props:** product components have no copy or date/money formatting of their own. Stories pass English text; the app passes Polish (F1). Concept label maps are built by feature PRs.
+3. **Behavior built now, except the F3 hooks:**
+   - CrudForm extensions: blur and submit validation, focus on the first error, preserved input, duplicate guard, the F4 field kinds, external errors and dirty tracking.
+   - ActionButton, with an internal guard and confirmation.
+   - StatusBadge and PanelShell.
+
+   `/admin` is not migrated.
+4. **Stage 3 parts**, with a stop after each:
+   - 3a: shared components and generic patterns.
+   - 3b: accounts and E01.
+   - 3c: E02.
+   - 3d: E03–E05, as preliminary proposals.
+
+## Stage 3a completion — 2026-10-31
+
+What was built (report: `storybook/verification/2026-10-31-stage-3a.md`):
+- **CrudForm (F4):** blur and submit validation, focus on the first error, a duplicate guard, Required/Optional markers, the five field kinds, external errors and dirty tracking.
+- **ActionButton (F5)** with confirmation, and **StatusBadge (F6)**.
+- **PanelShell (F8)** at `@mentio/ui/backend/layout`.
+- **apiCall:** a fixed network-error message (F1).
+- **Docs:** five component pages and four pattern pages (Form with five API outcomes via MSW, List with filters, Detail, Delete confirmation).
+- **Totals:** 88 new stories; cumulative 276 stories, 40 MDX pages and 75 play functions.
+
+Verified:
+- `check:tokens` with zero findings.
+- 552 story tests, 2 clean runs.
+- 240 page checks and 80 axe audits, all clean.
+- PanelShell layout at 320/768/1440 and the skip link on a real Tab.
+- No overflow in any new story.
+- 265 unit tests with 100% coverage; lint, types, app build, 10 integration tests, audit.
+
+Fixed during verification:
+- Lost focus after ActionButton's confirmation.
+- Zod's technical text shown for empty required fields (the schema-message rule is now documented).
+- The browser's network error text shown to users.
+- A long ActionButton label overflowing (regression story proven to fail without the fix).
+- The PanelShell breakpoint contradicting Q3.
+- setState inside effects in CrudForm.
+
+### Proposals for your decision (marked in docs)
+
+None new. Every new rule cites a spec, WCAG/WAI-ARIA, an earlier decision or a verification finding. One adjustment is worth your attention:
+- The PanelShell sidebar appears from 1024 px (Tailwind `lg`). Q3 fixes only 768 = compact and 1440 = separate. **Approved by the user 2026-10-31.**
+
+Next: “dalej” for 3b (accounts and E01). That part includes the public mentor components in `@mentio/ui/components/mentors` and the AGENTS.md/E01 spec note. Not committed; no push.
 

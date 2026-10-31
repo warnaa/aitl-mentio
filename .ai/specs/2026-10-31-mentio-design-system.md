@@ -13,7 +13,7 @@ English documentation and story UI; current app language and business APIs uncha
 0. Inventory and approved plan (complete).
 1. Install pinned Storybook 10.6.5 React/Vite and approved addons. Recalculate contrasts before writing warm neutral/error tokens into existing theme. Add raw/semantic/compatibility aliases, semantic type/spacing/layout/motion roles with source comments. Add seven Foundations pages using computed CSS variables, MDX JSX tables, root theme switch and browser interaction/a11y tests in both themes. Add token checker that reports existing violations without suppressing them. Existing primitive fixes belong to stage 2.
 2. Batch 1 completed 2026-10-31 (Button, Link, Input, Textarea, Label, FormField); batch 2 completed 2026-10-31 (Select, Checkbox, RadioGroup, Card, Badge, Separator); batch 3 completed 2026-10-31 (Alert, Dialog, AlertDialog, DropdownMenu, Popover, Tooltip); batch 4 completed 2026-10-31 (Table, Skeleton, LoadingMessage, EmptyState, ErrorMessage). Stage 2 complete; Switch/Avatar/Tabs/Toast deferred per Q4. Adapt/document existing and approved new primitives in approved batches, preserving APIs/variants.
-3. Build reusable product presentations/patterns and screen state maps; do not fabricate unspecified behavior.
+3. Build reusable product presentations/patterns and screen state maps; do not fabricate unspecified behavior. Split by user decision into 3a (shared components + generic patterns — completed 2026-10-31), 3b accounts + E01, 3c E02, 3d E03–E05 preliminary; stop after each.
 4. Add usage guides, all epic pages and agent documentation/reference.
 5. Run complete audits and report evidence; prepare independent-session agent test.
 

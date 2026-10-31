@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { EmptyState } from "./EmptyState";
 import { ErrorMessage } from "./ErrorMessage";
 import { LoadingMessage } from "./LoadingMessage";
+import { StatusBadge } from "./StatusBadge";
 
 afterEach(cleanup);
 
@@ -60,6 +61,19 @@ describe("token classes", () => {
     expect(screen.getByRole("button", { name: "Try again" }).className).toContain("mentio-feedback-action");
     expect(container.querySelector(".mentio-empty-state")).not.toBeNull();
     expect(screen.getByRole("status").querySelector(".mentio-spinner")!.getAttribute("aria-hidden")).toBe("true");
+  });
+});
+
+describe("StatusBadge", () => {
+  it("maps each tone to its approved badge weight and keeps the label as text", () => {
+    const tones = { neutral: "secondary", waiting: "outline", success: "default", danger: "destructive" } as const;
+    for (const [tone, variant] of Object.entries(tones)) {
+      render(<StatusBadge tone={tone as keyof typeof tones} label={`Label ${tone}`} className="extra" />);
+      const badge = screen.getByText(`Label ${tone}`);
+      expect(badge.getAttribute("data-variant")).toBe(variant);
+      expect(badge.getAttribute("data-tone")).toBe(tone);
+      expect(badge.className).toContain("extra");
+    }
   });
 });
 
