@@ -17,3 +17,17 @@ export const manyBookingRows: BookingRow[] = Array.from({ length: 45 }, (_, inde
   const base = bookingRows[index % bookingRows.length];
   return { ...base, id: `p${index + 1}`, time: `${String(30 - (index % 28)).padStart(2, '0')} ${index < 28 ? 'October' : 'September'} 2026, ${String(8 + (index % 12)).padStart(2, '0')}:00` };
 });
+
+// Book-and-pay UI/UX: status, mentor, time, length, price, full question (pre-wrapped, monospace), N01.
+export const bookingFacts = [
+  { term: 'Mentor', detail: 'Alex' },
+  { term: 'Time', detail: 'Thursday, 6 November, 18:00 (Warsaw time)' },
+  { term: 'Length', detail: '50 minutes' },
+  { term: 'Price', detail: '240 zł' },
+];
+export const bookingQuestion = `The ingress stopped responding after the cluster upgrade.
+
+kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --since=1h
+W1031 18:02:11 controller.go:1214 Service "shop/api" does not have any active Endpoint
+
+What I checked: the pods are Running and the Service selector matches.`;

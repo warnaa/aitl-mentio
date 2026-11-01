@@ -1,0 +1,92 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './booking-summary.stories';
+
+<Meta of={Stories} />
+
+# BookingSummary
+
+## 1. Purpose
+
+Show a mentee what they are booking or have booked (mentor, time, length, price, state and their question) in one consistent place. Sources: book-and-pay UI/UX.
+
+## 2. When to use
+
+- The new-booking screen: mentor and slot time before the form.
+- The payment screen: the booking being paid for.
+- The booking details: status, all facts and the full question.
+
+Sources: book-and-pay UI/UX (all three screens list these facts).
+
+## 3. When not to use
+
+For many bookings, use DataTable (`/rezerwacje`). For mentor-side decisions (E03), wait for that spec. Payment and refund actions sit next to it, not inside it. Sources: book-and-pay UI/UX; E03 contract missing.
+
+## 4. Anatomy
+
+- A Card with a title (h1 when it is the page heading, otherwise h2).
+- An optional StatusBadge.
+- A description list of facts (term and detail).
+- An optional question section: a heading one level below the title, and the text pre-wrapped in the code role.
+- The N01 text-only line.
+
+Sources: book-and-pay UI/UX; reference R01.2; WCAG 1.3.1.
+
+## 5. Variants
+
+There are no visual variants. Optional parts: status, question and heading level. Sources: package API.
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.BeforeBooking} /></Unstyled>
+
+## 6. States
+
+The summary itself is static. The booking states (awaiting payment, payment in progress, awaiting a decision, declined, expired, abandoned, cancelled with refund in progress or completed, late cancellation) come through `status` from the E02 map, and money states come through a fact such as “Refund of 240 zł started”. A pending refund is never shown as completed. Sources: book-and-pay UI/UX and B9.
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+It uses a `dl` with terms and details. The question region is named by its heading. The heading levels follow the page outline: the question heading is one level below the title, which was found by axe in batch 3c. It has no interactive parts. Sources: WCAG 1.3.1, 2.4.6.
+
+## 8. Content
+
+Facts are pre-formatted by the app:
+- Time in Warsaw time.
+- Length in minutes.
+- Price written like “240 zł”.
+
+The question is shown exactly as typed. The N01 line is always present. Sources: book-and-pay UI/UX; D10; user decisions 2026-10-31.
+
+## 9. Responsiveness
+
+At 320 px terms stack above their details and long code lines wrap inside the card. The question stops at 65ch. Sources: approved stage-0 Q3; WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>title / headingLevel</code></td><td><code>string / 1 | 2</code></td><td>— / 2</td><td>Heading and its level.</td></tr><tr><td><code>status</code></td><td><code>{'{ tone, label }'}</code></td><td>unset</td><td>From the E02 status map.</td></tr><tr><td><code>facts</code></td><td><code>{'{ term, detail }[]'}</code></td><td>required</td><td>Pre-formatted facts.</td></tr><tr><td><code>question</code></td><td><code>{'{ heading, text }'}</code></td><td>unset</td><td>The full question.</td></tr><tr><td><code>textOnlyNote</code></td><td><code>string</code></td><td>required</td><td>N01 line.</td></tr></tbody></table>
+
+Source: `@mentio/ui/components/bookings/BookingSummary`.
+
+## 11. Code
+
+```tsx
+const { tone, label } = bookingStatus[booking.status]; // F6 map, built with E02
+<BookingSummary title={`Rezerwacja u ${booking.mentor.displayName}`} headingLevel={1} status={{ tone, label }}
+  facts={[{ term: 'Termin', detail: formatSlotTime(booking.startsAt) }, { term: 'Długość', detail: `${booking.lengthMinutes} minut` }, { term: 'Cena', detail: formatMoney(booking.price) }]}
+  question={{ heading: 'Twoje pytanie', text: booking.question }} textOnlyNote="Sesja odbywa się wyłącznie tekstowo — bez rozmowy wideo" />
+```
+
+Sources: book-and-pay UI/UX.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>“Refund of 240 zł started” while the refund is pending.</td><td>“Refunded” before the refund operation succeeds.</td></tr><tr><td>The question in the code role with its line breaks.</td><td>The question collapsed into one paragraph.</td></tr></tbody></table>
+
+Sources: book-and-pay B9; reference R01.2.
+
+## 13. Related
+
+StatusBadge, Card, ActionButton (actions next to it), Alert (payment banner and outcomes). Screens: E02. Patterns: Booking and payment recovery, Cancellation. Sources: approved stage-0 inventory.

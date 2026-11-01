@@ -14,7 +14,7 @@ const meta = {
   argTypes: { disabled: { control: 'boolean' }, defaultValue: { control: 'select', options: [undefined, '25', '50'] }, onValueChange: { control: false } },
   render: args => <div className="primitive-demo flex flex-col gap-within-group">
     <Label htmlFor="duration-playground">Session length</Label>
-    <Select {...args}><SelectTrigger id="duration-playground"><SelectValue placeholder="Choose 25 or 50 minutes" /></SelectTrigger>
+    <Select {...args}><SelectTrigger id="duration-playground"><SelectValue placeholder="Select a length" /></SelectTrigger>
       <SelectContent>{durations.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
   </div>,
 } satisfies Meta<typeof Select>;
@@ -50,7 +50,7 @@ export const States: Story = {
     {(['default', 'hover', 'focus', 'disabled', 'loading', 'error'] as const).map(state => <div key={state} className="flex flex-col gap-within-group">
       <Label htmlFor={`duration-${state}`}>Session length — {state}</Label>
       <Select defaultValue={state === 'default' ? undefined : '25'} disabled={state === 'disabled'}>
-        <SelectTrigger id={`duration-${state}`} data-preview-state={state} aria-busy={state === 'loading'} aria-invalid={state === 'error'} aria-describedby={`duration-${state}-hint`}><SelectValue placeholder="Choose 25 or 50 minutes" /></SelectTrigger>
+        <SelectTrigger id={`duration-${state}`} data-preview-state={state} aria-busy={state === 'loading'} aria-invalid={state === 'error'} aria-describedby={`duration-${state}-hint`}><SelectValue placeholder="Select a length" /></SelectTrigger>
         <SelectContent>{durations.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
       </Select>
       <p id={`duration-${state}-hint`}>{state === 'disabled' ? 'Bookings are temporarily switched off. Your saved question stays here.' : state === 'error' ? 'Choose 25 or 50 minutes.' : state === 'loading' ? 'Loading the mentor’s current prices; the last shown prices stay visible.' : 'The price is shown next to each length.'}</p>

@@ -682,7 +682,21 @@
   .mentio-auth { display: flex; flex-direction: column; gap: var(--space-between-groups); inline-size: 100%; max-inline-size: var(--auth-width); margin-inline: auto; padding: var(--space-section) var(--space-between-groups); }
   .mentio-auth-footer { display: flex; flex-direction: column; gap: var(--space-within-group); font-size: var(--text-label); line-height: var(--line-label); }
   .mentio-status-heading { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group); }
+  /* WCAG 1.4.10: a long status next to a heading wraps inside the card instead of widening the page. */
+  .mentio-status-heading > .mentio-badge { max-inline-size: 100%; white-space: normal; text-align: start; }
   .mentio-status-body { display: flex; flex-direction: column; gap: var(--space-between-groups); }
   .mentio-share { display: flex; flex-direction: column; gap: var(--space-within-group); }
   .mentio-share-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group) var(--space-between-groups); }
+}
+
+/* Stage 3c: BookingSummary (book-and-pay UI/UX). R01.2 code role for pasted questions. */
+@layer components {
+  .mentio-booking-body { display: flex; flex-direction: column; gap: var(--space-between-groups); }
+  .mentio-booking-facts { display: grid; gap: var(--space-within-group); }
+  .mentio-booking-fact { display: flex; flex-wrap: wrap; gap: var(--spacing) var(--space-between-groups); }
+  .mentio-booking-fact > dt { min-inline-size: calc(var(--spacing) * 24); color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-booking-fact > dd { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .mentio-booking-question { display: flex; flex-direction: column; gap: var(--space-within-group); }
+  /* Pasted code and errors keep their line breaks; long lines wrap inside the card. */
+  .mentio-booking-question-text { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-code); font-size: var(--text-code); line-height: var(--line-code); max-inline-size: var(--prose-max-width); }
 }

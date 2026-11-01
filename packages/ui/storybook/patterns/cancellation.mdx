@@ -1,0 +1,24 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Patterns/Cancellation" />
+
+# Cancellation
+
+Before a person cancels, the page tells them exactly what will happen to their money, following the R14 table. Sources: book-and-pay R14 cancellation table; brief R14.
+
+## Rules
+
+1. The confirmation names the booking and the expected outcome: “You will receive a full refund of 240 zł”, or “Less than 12 hours remain before the session — cancelling gives no refund, and the mentor is paid.” Sources: book-and-pay UI/UX.
+2. The request sends that outcome (`expectedOutcome`). If the terms changed meanwhile (`409 cancel_outcome_changed`), the person sees the new terms and confirms again; nothing is cancelled silently. Sources: book-and-pay API contract.
+3. At or after the start, cancellation is unavailable, and the reason is shown next to the disabled button. Sources: R14; task What to avoid (disabled without explanation).
+4. The confirm button is “Cancel booking”, and the way out is “Keep booking”, never “OK” and “Cancel”. Sources: task delete-confirmation rules.
+5. After cancelling, the status and money facts update in place, with the refund shown as in progress until it succeeds. Sources: B9.
+6. The rule is stated before booking: “You can cancel free of charge until the mentor accepts, and after that up to 12 hours before the session.” Sources: book-and-pay UI/UX (R14 line under the form).
+
+## States and stories (Product › E02 › Screens)
+
+<table><thead><tr><th>State</th><th>Story</th></tr></thead><tbody><tr><td>Rule before booking</td><td>New booking — form</td></tr><tr><td>Full refund</td><td>Details — cancel with full refund</td></tr><tr><td>No refund (late, E03 preliminary)</td><td>Details — late cancellation, no refund</td></tr><tr><td>Terms changed</td><td>Details — cancellation terms changed</td></tr><tr><td>Unavailable after the start</td><td>Details — session started, cancel unavailable</td></tr><tr><td>Release while unpaid / refund while pending</td><td>Payment — abandon with confirmation; Payment — abandon while in progress</td></tr></tbody></table>
+
+## Composition
+
+ActionButton with `confirm` (the AlertDialog names the outcome), BookingSummary (status and money facts), Alert (failed refund). Sources: approved stage-0 inventory.

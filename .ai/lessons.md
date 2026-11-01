@@ -459,3 +459,12 @@ story used `DELETE /api/availability/slots/:id`, while the E01 spec defines
 invented path. Before writing an MSW handler, copy the method, path, status and error
 code from the spec's API table. Also: look at screenshots of screen stories — metrics
 missed a compact-nav current marker that read as a bracket in a horizontal row.
+
+## 2026-10-31 - Stories files export only stories; placeholders never equal error text
+
+Storybook indexes every named export of a `*.stories.tsx` file as a story, so exporting
+shared constants (`facts`, `question`) from one broke both files ("Cannot create property
+'parameters' on string"). Shared data goes in `storybook/fixtures/`. Separately, a select
+placeholder identical to its validation message ("Choose 25 or 50 minutes") makes the
+error repeat what is already on screen and makes `getByText` ambiguous — write the
+placeholder as an instruction ("Select a length") and the error as the fix.

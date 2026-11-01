@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 3b complete; awaiting “dalej” before 3c (E02).**
+Date: 2026-10-31. Status: **stage 3c complete; awaiting “dalej” before 3d (E03–E05, preliminary).**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -551,4 +551,47 @@ Fixed during verification:
 4. The 404 and error-boundary pages are not designed here; they go on What is missing.
 
 Next: “dalej” for 3c (E02: new booking, payment, booking details, bookings list, recovery and cancellation). Not committed; no push.
+
+## Stage 3c started — 2026-10-31
+
+3b was committed as a27f023; no push. The four 3b interpretations were not addressed and remain open. Run log: `.ai/runs/2026-10-31-mentio-stage-3c-e02.md`.
+
+Derived decision: only `BookingSummary` is a new component, because it repeats on three screens. The other stage-0 E02 items are compositions of existing components, so fewer components than planned and none outside the plan.
+
+## Stage 3c completion — 2026-10-31
+
+What was built (report: `storybook/verification/2026-10-31-stage-3c.md`):
+- **BookingSummary** (13 sections, 100% unit coverage).
+- **38 E02 screen states** with MSW using the spec's endpoints and codes, plus a state map.
+- **Two patterns:** Booking and payment recovery, and Cancellation.
+- **Totals:** cumulative 398 stories and 51 MDX pages.
+
+Verified:
+- `check:tokens` with zero findings.
+- 796 story tests, 3 clean runs.
+- 306 page checks and 102 axe audits with zero findings.
+- No overflow in any of the 122 product stories.
+- Visual review of three screens.
+- 277 unit tests with 100% coverage; lint, types, build, 10 integration tests, audit.
+
+Fixed during verification:
+- A skipped heading level.
+- A long status overflowing at 320 px (regression proven).
+- A placeholder identical to its error message, fixed in all stories.
+
+### Open for your confirmation
+
+- **From 3b:**
+  1. List rows instead of cards.
+  2. The slug hint.
+  3. The DST error state.
+  4. 404 and error pages deferred.
+- **From 3c:**
+  5. The `accepted` label waits for E03.
+  6. The edit toggle uses `aria-expanded`.
+  7. The pending-money retry is an outline “Try again”.
+  8. A failed refund shows no contact.
+- **Derived:** only BookingSummary was added for E02; the other planned items are compositions.
+
+Next: “dalej” for 3d (E03–E05). These epics have no screen specs, so everything there will be preliminary proposals marked for your decision, built from the backlog stories and brief rules. Not committed; no push.
 

@@ -1,0 +1,26 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Patterns/Booking and payment recovery" />
+
+# Booking and payment recovery
+
+Money and slot states must never look more final than they are. This pattern shows how a mentee is guided through each unfinished payment state. Sources: book-and-pay UI/UX, B9 and the settle-on-mount rules.
+
+## Rules
+
+1. The payment screen always says the payment is simulated, and shows the hold deadline once, as text: no live countdown. Sources: D13; book-and-pay accessibility.
+2. A price change is stated above the amount and action, and survives refreshes: “before … now …”. Sources: 2026-10-30 decision.
+3. A pending charge reads “Payment in progress…”. When no result arrives, offer “Try again”, which runs one settle attempt. There is no automatic retry loop. Sources: book-and-pay settle-on-mount.
+4. Declined, expired and cutoff are different outcomes with different texts. Never describe an unresolved or refunded charge as declined. Sources: book-and-pay UI/UX.
+5. A pending refund is “started” or “in progress” until it succeeds. A failed refund says so, without a contact. Sources: B9; decision 2026-10-29.
+6. Abandoning while a charge is pending tells the person the refund rule before they confirm. Sources: book-and-pay UI/UX.
+7. A stale edit or pay (`409 booking_changed`) refreshes, keeps the person's input and asks for a fresh confirmation. Sources: book-and-pay UI/UX.
+8. Outcomes stay on the page, next to the action: no toast. Sources: reference R02.4.
+
+## States and stories (Product › E02 › Screens)
+
+<table><thead><tr><th>State</th><th>Story</th></tr></thead><tbody><tr><td>Awaiting payment</td><td>Payment — awaiting payment</td></tr><tr><td>Price changed</td><td>Payment — price changed notice</td></tr><tr><td>Changed in another tab</td><td>Payment — changed in another tab</td></tr><tr><td>Pay request failed</td><td>Payment — pay request failed</td></tr><tr><td>In progress, with retry</td><td>Payment — in progress</td></tr><tr><td>Declined</td><td>Payment — declined</td></tr><tr><td>Not confirmed before the session</td><td>Payment — not confirmed before the session</td></tr><tr><td>Time ran out</td><td>Payment — time ran out</td></tr><tr><td>Abandoned with payment unconfirmed</td><td>Details — abandoned, payment unconfirmed</td></tr><tr><td>Refund in progress / failed</td><td>Details — refund in progress; Details — refund failed</td></tr></tbody></table>
+
+## Composition
+
+BookingSummary, Alert (simulated banner as a note; outcomes as alert or status), ActionButton (pay, try again, abandon with confirm), CrudForm (inline edit). Sources: approved stage-0 inventory.

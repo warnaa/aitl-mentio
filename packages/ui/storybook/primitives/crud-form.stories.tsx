@@ -73,7 +73,7 @@ export const SelectAndTextarea: Story = {
     schema: booking,
     submitLabel: 'Continue to payment',
     fields: [
-      { name: 'lengthMinutes', label: 'Session length', type: 'select', placeholder: 'Choose 25 or 50 minutes', options: [{ value: '25', label: '25 minutes — 120 zł' }, { value: '50', label: '50 minutes — 240 zł' }] },
+      { name: 'lengthMinutes', label: 'Session length', type: 'select', placeholder: 'Select a length', options: [{ value: '25', label: '25 minutes — 120 zł' }, { value: '50', label: '50 minutes — 240 zł' }] },
       { name: 'question', label: 'Your question', type: 'textarea', description: 'Paste error messages and code directly; the mentor reads them before the session.' },
     ],
     onSubmit: fn(async () => ({ ok: true as const, data: null, status: 201 })),
@@ -164,7 +164,7 @@ export const LongContent: Story = {
   args: {
     ...SelectAndTextarea.args,
     fields: [
-      { name: 'lengthMinutes', label: 'How long a text session do you need for this question about the Kubernetes ingress?', type: 'select', placeholder: 'Choose 25 or 50 minutes', options: [{ value: '25', label: '25 minutes — 120 zł, enough for one focused error message' }, { value: '50', label: '50 minutes — 240 zł, time to read the pasted configuration and logs' }] },
+      { name: 'lengthMinutes', label: 'How long a text session do you need for this question about the Kubernetes ingress?', type: 'select', placeholder: 'Select a length', options: [{ value: '25', label: '25 minutes — 120 zł, enough for one focused error message' }, { value: '50', label: '50 minutes — 240 zł, time to read the pasted configuration and logs' }] },
       { name: 'question', label: 'Your question, including what you expected, what happened and what you already checked', type: 'textarea', description: 'Paste error messages and code directly; the mentor reads them before the session. Remove passwords and tokens first.' },
     ],
   },
