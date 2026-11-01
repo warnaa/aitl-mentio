@@ -1,0 +1,35 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design system/E04 — The text session" />
+
+# E04 — The text session
+
+At the slot time, the mentee and the mentor hold a 25- or 50-minute text session. A session that did not happen is settled by fault the next time either side opens it. Backlog: E04-S01, E04-S02. **No E04 spec yet**: the room follows the brief, references R02.1–R02.6 and the user decisions of 2026-11-01. Sources: R01, R02, R09, R10, D07, D16, N01; approved Q3, Q5.
+
+## Flow
+
+1. Before the start, both see the question and the R10 rule; there is no field.
+2. At the start, the mentor has 10 minutes to post the first reply.
+3. During the session: messages with author and time, code blocks, replies quoting their source, and sending that keeps the text on failure.
+4. At the end, the conversation becomes a read-only transcript visible to the two participants.
+5. On the next visit, a missed session is settled: the mentor's no-show is refunded, and the mentee's no-show pays the mentor.
+
+## Screens and stories
+
+<table className="ds-table"><thead><tr><th>Screen</th><th>Route</th><th>Built from</th><th>Stories</th></tr></thead><tbody><tr><td data-label="Screen">Session room (both participants)</td><td data-label="Route"><code>/sesje/[id]</code></td><td data-label="Built from">PanelShell, Message, MessageComposer, BookingSummary, Alert, EarningsSummary</td><td data-label="Stories">Product › E04 › Screens</td></tr></tbody></table>
+
+State map: <a href="./?path=/docs/product-e04-the-text-session-screen-states--docs" target="_top">E04</a>. Patterns: <a href="./?path=/docs/patterns-conversation-and-reply--docs" target="_top">Conversation and reply</a>, <a href="./?path=/docs/patterns-next-visit-settlement--docs" target="_top">Next-visit settlement</a>.
+
+## States
+
+There are 25 states: before the start, first reply due, conversation in progress (mentee and mentor), send, sending, send failed, ended while writing, reply and cancel reply, long code, narrow, the ended transcript, checking, check failed, both no-shows from both sides, and not available.
+
+## Source files
+
+- Components: `packages/ui/src/components/messages/`.
+- Stories: `packages/ui/storybook/product/e04/`; fixtures `storybook/fixtures/sessions.ts`.
+
+## Work that remains in the product
+
+- Write the E04 spec: message transport, limits and editing, how “opened the session” is detected, and showing D07.
+- The notice texts and the excerpt length are still proposals.

@@ -54,6 +54,8 @@
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
     "test:storybook": "vitest run --config vitest.storybook.config.ts",
-    "check:tokens": "node scripts/check-tokens.mjs"
+    "check:tokens": "node scripts/check-tokens.mjs",
+    "docs:agent": "node scripts/agent-doc.mjs",
+    "check:agent-doc": "node scripts/agent-doc.mjs --check"
   }
 }

@@ -1,0 +1,44 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design system/Contributing" />
+
+# Contributing
+
+## Add a component, a variant, or nothing?
+
+<table className="ds-table"><thead><tr><th>Situation</th><th>Do</th><th>Source</th></tr></thead><tbody><tr><td data-label="Situation">The same need appears in at least two places</td><td data-label="Do">Add a component in its designated home: a shadcn primitive, <code>backend/&lt;category&gt;</code>, or <code>components/&lt;concept&gt;</code></td><td data-label="Source">task stage 4; AGENTS.md (one designated home)</td></tr><tr><td data-label="Situation">One page needs it</td><td data-label="Do">Compose it next to that page from existing components; move it when a second consumer appears</td><td data-label="Source">AGENTS.md (rule 4)</td></tr><tr><td data-label="Situation">An existing component almost fits</td><td data-label="Do">Use it with its existing props; propose a variant only when two screens need the same difference</td><td data-label="Source">task rule 6</td></tr><tr><td data-label="Situation">It is a shadcn primitive</td><td data-label="Do"><code>cd packages/ui &amp;&amp; npx shadcn@latest add &lt;name&gt;</code>, then check <code>package.json</code> and remove any dependency outside the plan</td><td data-label="Source">AGENTS.md; task rule 6</td></tr><tr><td data-label="Situation">The need is a business rule</td><td data-label="Do">Nothing in the UI package: the rule belongs to <code>core</code>, with the copy passed through props</td><td data-label="Source">AGENTS.md; stage-3 decision 2</td></tr><tr><td data-label="Situation">Nothing fits and the need is real</td><td data-label="Do">Add it to What is missing and ask for a decision</td><td data-label="Source">task rule 6</td></tr></tbody></table>
+
+## What a new component needs
+
+- A docs page with all 13 sections (purpose, when, when not, anatomy, variants, states, behaviour and accessibility, content, responsiveness, API, code, good and bad, related), each rule with its source. Write **Proposal** where there is no source, and report it. Sources: task stage 2; task rule 4.
+- Stories:
+  - Playground with controls;
+  - every variant and size;
+  - a state matrix, with hover and focus frozen through `data-preview-state`;
+  - long content and narrow;
+  - a play function for its main behaviour.
+
+  Source: task stage 2.
+- No story-only copies of components; real package components only. Source: task rule 5.
+- Unit tests with 100% coverage, and a regression test for every bug. Source: AGENTS.md (Testing).
+- An entry in `storybook/design-system/inventory.ts`, then `npm run docs:agent` to update the table in `docs/design-system.md` (`npm run check:agent-doc` fails when it is stale). Source: this site.
+- Ids from `useId`, one landmark per page-level component, and no landmark per repeated item. Source: verification 2026-11-01.
+
+## Changing a token
+
+1. Change the raw value or the semantic alias in `src/styles/globals.css`, keeping the source comment. Sources: task stage 1; tokeny.md.
+2. Recalculate contrast for every pair in both themes; stop and ask if a pair drops below 4.5:1 (text) or 3:1 (interface). Sources: task stage 1; WCAG 1.4.3, 1.4.11.
+3. Run every story in both themes, the built-page checks, and check `/admin` in both themes: global CSS reaches the app. Source: approved stage-0 plan.
+
+## Who approves
+
+Damian approves everything: he owns the design system as well as the product (user decision 2026-11-01). That covers:
+- new components, variants and tokens;
+- changes to approved decisions;
+- product rules (R, D and N in the brief), through a superseding row in the brief.
+
+Until approved, write **Proposal** in the docs.
+
+## Commands (from the repository root unless noted)
+
+<table className="ds-table"><thead><tr><th>Command</th><th>What it does</th></tr></thead><tbody><tr><td data-label="Command"><code>npm run storybook</code></td><td data-label="What it does">Storybook on port 6006</td></tr><tr><td data-label="Command"><code>npm run build-storybook</code></td><td data-label="What it does">Static build in <code>packages/ui/storybook-static</code></td></tr><tr><td data-label="Command"><code>npm run test:storybook</code></td><td data-label="What it does">Every story as a browser test, axe set to fail, in both themes</td></tr><tr><td data-label="Command"><code>npm run check:tokens</code></td><td data-label="What it does">Fails on colours outside the tokens file, palette classes and arbitrary values</td></tr><tr><td data-label="Command"><code>npm run docs:agent</code>, <code>npm run check:agent-doc</code></td><td data-label="What it does">Regenerate or check the component table in <code>docs/design-system.md</code></td></tr><tr><td data-label="Command"><code>npm run lint</code>, <code>npm run typecheck</code></td><td data-label="What it does">ESLint (with package boundaries) and TypeScript</td></tr><tr><td data-label="Command"><code>npm run test:coverage</code></td><td data-label="What it does">Unit tests with the 100% gate</td></tr><tr><td data-label="Command"><code>npm run build</code>, <code>npm run test:integration</code>, <code>npm run audit</code></td><td data-label="What it does">App build, integration tests (Docker or <code>TEST&#95;DATABASE&#95;URL</code>) and the dependency audit</td></tr></tbody></table>

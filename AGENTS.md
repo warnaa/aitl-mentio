@@ -175,6 +175,12 @@ import `core`. Keep them in sync; a shared package for it is an Ask First change
 
 ### `@mentio/ui`
 
+- **Building or changing a screen? Read `docs/design-system.md` first.** It is the design
+  system's agent reference: character, the component table (import, when, when not),
+  semantic tokens, “if… use…” guides, what to avoid and the Storybook commands. The full
+  manual is the Storybook in `packages/ui` (`npm run storybook`, start at Design system ›
+  Start here). The component table is generated (`npm run docs:agent`;
+  `npm run check:agent-doc` fails when stale).
 - shadcn/ui components live in `packages/ui/src/components/ui/` and are imported as
   `@mentio/ui/components/<name>`; `cn` from `@mentio/ui/lib/utils`.
 - Add components from `packages/ui`: `cd packages/ui && npx shadcn@latest add <name>`.

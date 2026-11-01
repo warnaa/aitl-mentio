@@ -1,0 +1,53 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design system/Usage and accessibility" />
+
+# Usage and accessibility
+
+Rules every screen follows. Each component page repeats the ones that apply to it. The target is WCAG 2.2 AA; every story runs axe in both themes and fails on any violation.
+
+## Keyboard and focus
+
+- Everything works with a keyboard alone, in visual order. Never use a positive `tabindex`. Sources: WCAG 2.1.1, 2.4.3.
+- Focus is always visible: a 3 px ring with a 2 px offset in the ring colour (`--focus-width`, `--focus-offset`, `--ring`). Never remove an outline without that replacement. Sources: WCAG 2.4.7, 2.4.11; approved contrast repairs.
+- Panel screens start with “Skip to content” (PanelShell). Source: WCAG 2.4.1.
+- Dialogs trap focus and return it to the button that opened them, even when opened from state (ActionButton does this). Sources: WAI-ARIA APG dialog; lesson 2026-10-31.
+- After a failed submit, focus moves to the first field with an error. Choosing Reply on a message moves focus to the message field. Sources: task form rules; approved Q5.
+- Targets are at least 24 × 24 px. Controls are 36 px by default; small ones are 32 px, and compact ones are 24 px. Sources: WCAG 2.5.8; approved Q2.
+
+## Forms and messages
+
+- Every field has a visible label. A placeholder is an example, never the name, and differs from the error text. Sources: task form rules; WCAG 3.3.2; lesson 2026-10-31.
+- Fields are validated when you leave them and when you submit. Input stays after any failure. A second submit is blocked while one runs. Success shows only after the server confirms. Sources: task form rules; platform F4.
+- Errors say what happened and what to do, next to the cause. Field errors sit under the field; action failures sit next to the action. Nothing that needs action is a toast. Sources: R02.4; WCAG 3.3.1, 3.3.3.
+- A disabled control always says why, in visible text linked with `aria-describedby`. Source: task What to avoid.
+- Results that change the page are announced: `role="status"` for outcomes, `role="alert"` for failures. Source: WCAG 4.1.3.
+
+## Colour
+
+- Use only semantic tokens. Text pairs reach 4.5:1 and interface parts 3:1 in both themes; the Color page lists the measured pairs. Sources: WCAG 1.4.3, 1.4.11; approved token table.
+- Colour never carries meaning alone. A status is a word in a badge, and errors have text; a current page has a bar as well as a tint. Sources: WCAG 1.4.1; F6.
+- Warm neutral surfaces, opaque, with no gradients or glass. Sources: R01.4; A01.1, A01.2.
+
+## Motion
+
+- Only 150 ms colour and border transitions near the changed element. Nothing slides, zooms or bounces. Sources: U02.1; approved motion tokens.
+- `prefers-reduced-motion` removes transitions and stops the spinner. Sources: WCAG 2.3.3; U02.1.
+- There are no live countdowns: deadlines are text. Sources: D13; book-and-pay accessibility.
+
+## Content
+
+Write in the second person, warmly and plainly, and say what to do next. Formats and examples are on the Content page. Sources: U01.1; task Content.
+
+## Layout at 320, 768 and 1440 px
+
+- **320 px:** one column; nothing scrolls sideways except inside code where unavoidable. DataTable rows stack, and session details follow the conversation. Sources: WCAG 1.4.10; approved Q3; user decision 2026-11-01.
+- **768 px:** one content column with compact task navigation above it. Source: approved Q3.
+- **1440 px:** task navigation in a sidebar (from 1024 px). Content is at most 1152 px wide and prose at most 65ch. The session shows details beside the conversation from 1280 px. Sources: approved Q3; user decisions 2026-10-31 and 2026-11-01.
+- Landmarks: one `main` and one banner per page. Name repeated regions by their headings, and generate ids with `useId`. Sources: WCAG 1.3.1; verification 2026-11-01.
+
+## Product rules the interface keeps
+
+These are business rules from the brief that the screens make visible. A screen must not hide or contradict them.
+
+<table className="ds-table"><thead><tr><th>Rule</th><th>What the interface does</th><th>Where</th><th>Source</th></tr></thead><tbody><tr><td data-label="Rule">Price before the question; pay before the session</td><td data-label="What the interface does">The price is on the mentor page and the booking form; payment comes before the session</td><td data-label="Where">E01, E02</td><td data-label="Source">R03</td></tr><tr><td data-label="Rule">Sessions last 25 or 50 minutes</td><td data-label="What the interface does">Length is a Select with exactly two priced options</td><td data-label="Where">E02</td><td data-label="Source">R01, R08</td></tr><tr><td data-label="Rule">Text only</td><td data-label="What the interface does">Every session screen carries the N01 line (BookingSummary <code>textOnlyNote</code>)</td><td data-label="Where">E02–E04</td><td data-label="Source">N01</td></tr><tr><td data-label="Rule">No ratings</td><td data-label="What the interface does">No stars, averages, review counts or rating sort anywhere; public work is the trust signal</td><td data-label="Where">E01</td><td data-label="Source">N02; A03.1–A03.3</td></tr><tr><td data-label="Rule">One unpaid booking at a time</td><td data-label="What the interface does">The booking form is replaced by a link to the unpaid booking</td><td data-label="Where">E02</td><td data-label="Source">R17</td></tr><tr><td data-label="Rule">Booking window 2 h – 14 days</td><td data-label="What the interface does">Slots outside the window are not bookable; the reason is text, not a tooltip</td><td data-label="Where">E01, E02</td><td data-label="Source">R11</td></tr><tr><td data-label="Rule">Hold for 30 minutes, shown once</td><td data-label="What the interface does">The hold deadline is text, with no countdown</td><td data-label="Where">E02</td><td data-label="Source">R22; D13 (no timers)</td></tr><tr><td data-label="Rule">Cancellation terms</td><td data-label="What the interface does">The confirmation names the outcome (“full refund of 240 zł” or “no refund”); terms that changed meanwhile are confirmed again</td><td data-label="Where">E02</td><td data-label="Source">R14</td></tr><tr><td data-label="Rule">Unaccepted by the start means declined</td><td data-label="What the interface does">The mentor sees the rule next to Accept; the mentee sees the refund on the next visit</td><td data-label="Where">E03</td><td data-label="Source">R12, R09</td></tr><tr><td data-label="Rule">First reply within 10 minutes</td><td data-label="What the interface does">Both sides see the rule before and at the start; a missed reply is settled on the next visit</td><td data-label="Where">E04</td><td data-label="Source">R10, R09</td></tr><tr><td data-label="Rule">Nothing is published without the mentee's approval</td><td data-label="What the interface does">An ended transcript is read-only and visible to the two participants only</td><td data-label="Where">E04</td><td data-label="Source">R02</td></tr><tr><td data-label="Rule">Money is simulated</td><td data-label="What the interface does">Payment and earnings screens say so; no payout dates</td><td data-label="Where">E02, E05</td><td data-label="Source">D13, D14</td></tr><tr><td data-label="Rule">Price minus commission</td><td data-label="What the interface does">Earnings always show price, commission and share</td><td data-label="Where">E05</td><td data-label="Source">R06, R21</td></tr><tr><td data-label="Rule">Pending money is never final</td><td data-label="What the interface does">Refunds read “started” or “in progress” until they succeed</td><td data-label="Where">E02–E05</td><td data-label="Source">book-and-pay B9</td></tr></tbody></table>

@@ -519,3 +519,15 @@ cells 13 px wider than a 320 px column. Use `grid-template-columns: minmax(0, 1f
 wrap. Changing `display` on table elements can drop table semantics, so set explicit roles
 (table/rowgroup/row/columnheader/cell). Keep the visible per-cell column name `aria-hidden` to avoid a
 double announcement.
+
+## 2026-11-01 - Docs content: nested tables, asterisks in MDX tables, forbidden-class examples
+
+- A component preview inside a docs `<table>` cell still gets Storybook's docs table styling (text
+  colour, striped rows), even under `<Unstyled>`. In dark mode, a DataTable preview had dark-grey
+  text on a light stripe (axe color-contrast). Scope an override to the preview cell
+  (`color: inherit`, transparent non-selected rows).
+- Inside JSX tables in MDX, `*` still starts emphasis (`bg-linear-*` broke indexing). Escape it as
+  `&#42;`; Markdown bold is not parsed there either, so use `<strong>`.
+- `check:tokens` scans MDX prose, so a “never write this” example such as a palette class or a
+  bracket value fails the gate. Describe the form in words (“a colour family with a shade”)
+  instead of weakening the checker.

@@ -23,7 +23,9 @@
     "storybook": "npm run storybook -w @mentio/ui --",
     "build-storybook": "npm run build-storybook -w @mentio/ui",
     "test:storybook": "npm run test:storybook -w @mentio/ui",
-    "check:tokens": "npm run check:tokens -w @mentio/ui"
+    "check:tokens": "npm run check:tokens -w @mentio/ui",
+    "docs:agent": "npm run docs:agent -w @mentio/ui",
+    "check:agent-doc": "npm run check:agent-doc -w @mentio/ui"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^12.2.1",

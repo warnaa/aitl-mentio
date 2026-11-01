@@ -51,6 +51,8 @@ jobs:
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
       - run: npm run lint
+      # Design system: the agent reference's component table must match the Storybook inventory.
+      - run: npm run check:agent-doc
 
   typecheck:
     needs: changes

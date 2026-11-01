@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 3 complete (3d preliminary); awaiting “dalej” before stage 4.**
+Date: 2026-10-31. Status: **stage 4 complete; awaiting “dalej” before stage 5.**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -9,7 +9,7 @@ Documentation and story UI: English, as explicitly requested in `lekcja-06/story
 - [x] 1 — foundations, Storybook setup, token checks, accessibility test setup.
 - [x] 2 — primitives, batches of approximately six; stop after each batch.
 - [x] 3 — product components, patterns and screen compositions (E03–E05 preliminary, pending specs).
-- [ ] 4 — usage documentation and agent reference.
+- [x] 4 — usage documentation and agent reference.
 - [ ] 5 — build, lint, types, token audit, accessibility, responsive/theme/keyboard checks; prepare a separate-session agent test.
 
 The instruction to write **only POSTEP.md in stage 0** takes precedence over creating separate spec/run/lesson files now. This file records the stage's work and outcome. Before implementation, turn the approved plan into a dated `.ai/specs/YYYY-MM-DD-mentio-design-system.md` with Done means and create the dated run log, subject to the agreed documentation exception to the directory scope. No implementation is authorized by this inventory alone.
@@ -689,3 +689,55 @@ Next: “dalej” for stage 4. Not committed; no push.
 Gate after both: lint, types, 293 unit tests at 100%, 958 story tests, tokens, 366 page checks and 122 axe audits (0 findings, best-practice included), app build, 10 integration tests and audit all pass.
 
 Open: interpretations 1–8. Next: “dalej” for stage 4. Not committed; no push.
+
+## Stage 4 — 2026-11-01
+
+3d with decisions 9–17 was committed as 81023e2; no push. Run log: `.ai/runs/2026-11-01-mentio-stage-4-teaching-pages.md`. Report: `storybook/verification/2026-11-01-stage-4.md`.
+
+What was built:
+- **Eight guides under Design system:** Start here, Components (live catalog), How to choose, Usage and accessibility, Content, What to avoid, What is missing, Contributing.
+- **Six epic pages:** E01–E06 (E06 parked, no screens).
+- **The agent reference** `docs/design-system.md`, linked from AGENTS.md as the first read for screen work.
+- **One inventory** (`storybook/design-system/inventory.ts`) feeds Start here, Components and the agent table. `npm run docs:agent` and `npm run check:agent-doc` keep them in sync.
+
+Verified:
+- 450 docs-page checks and 150 axe audits with zero findings, best-practice rules included.
+- 89 internal links resolve.
+- 201 stories with no overflow and no table scrolling.
+- Visual review of four pages.
+- The full gate (run log).
+
+Fixed during verification:
+- Dark-mode contrast of nested previews.
+- Asterisks breaking MDX.
+- Forbidden-class examples tripping `check:tokens` (now described in words).
+- Missing numbers on ordered lists across docs.
+- Docs tables at 320 px (now stacked).
+- Names wrapping mid-word.
+- The PanelShell thumbnail.
+
+### Open for your decision
+
+- **From 3b/3c:** interpretations 1–8.
+- **New, marked Proposal in the docs:**
+  18. The six tone examples (Content).
+  19. The long date format “Thursday, 6 November, 18:00 (Warsaw time)”.
+  20. Who approves (Contributing).
+  21. Priority on What is missing follows the brief's Scope.
+  22. Add `npm run check:agent-doc` to CI.
+
+Next: “dalej” for stage 5 (full audit, the 320/768/1440, theme, keyboard and overlay checks, counts, and the separate-session agent test description). Not committed; no push.
+
+## Decisions 18–22 — 2026-11-01
+
+- 18 approved: the six tone examples (Content).
+- 19 approved: long date “Thursday, 6 November, 18:00 (Warsaw time)”.
+- 20: Damian also owns the design system, so he alone approves everything: components, variants, tokens, changes to decisions and product rules (Contributing).
+- 21: priorities on What is missing were set item by item:
+  - High: E01-S01-T01, E01-S01, E02-S01.
+  - Medium: E01-S02, E01-S03, E02-S01-T01, E03-S01, E04-S01.
+  - Low: E01-S04, E02-S02, E04-S02, E05-S01.
+  - Later: E06.
+- 22 approved: `npm run check:agent-doc` runs in the CI lint job.
+
+Open: interpretations 1–8. Next: “dalej” for stage 5. Not committed; no push.

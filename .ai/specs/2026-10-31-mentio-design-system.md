@@ -26,8 +26,8 @@ Storybook build, lint, typecheck, unit coverage, app production build, integrati
 - [x] Stage 1: seven working Foundations pages; approved tokens have measured contrast and source comments; themes work at document root, including portals.
 - [x] Stage 1: story build and browser tests in both themes, lint/types/coverage/app build/integration/audit results recorded; checker catches bad fixtures and reports existing violations.
 - [x] Stage 2: each approved component has 13 documentation sections, variants and state matrix, interaction/a11y evidence (23 pages; token checker at zero; deferred Q4 components listed for What is missing).
-- [ ] Stage 3: patterns cover API/data states; specified key screens have stories and state maps; unresolved contracts appear in What is missing.
-- [ ] Stage 4: guides/epics/component catalog/agent reference complete and linked.
+- [x] Stage 3: patterns cover API/data states; specified key screens have stories and state maps; unresolved contracts appear in What is missing (E03–E05 preliminary, decided 2026-11-01).
+- [x] Stage 4: guides/epics/component catalog/agent reference complete and linked (2026-11-01; docs/design-system.md generated from the inventory).
 - [ ] Stage 5: full gate and responsive/theme/keyboard/overlay checks documented; counts and prepared independent-session test recorded.
 - [ ] Separate-session agent test performed by the user and its documentation gaps resolved or tracked.
 - [ ] Fully implemented spec moved to implemented only after all applicable criteria are met.

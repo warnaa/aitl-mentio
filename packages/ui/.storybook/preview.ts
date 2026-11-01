@@ -29,7 +29,7 @@ const preview: Preview = {
     viewport: { options: { mobile1: { name: 'Narrow 320', styles: { width: '320px', height: '900px' }, type: 'mobile' } } },
     a11y: { test: 'error' },
     controls: { expanded: true },
-    options: { storySort: { order: ['Design system', 'Foundations', 'Primitives', 'Product', 'Patterns'] } },
+    options: { storySort: { order: ['Design system', ['Start here', 'Components', 'How to choose', 'Usage and accessibility', 'Content', 'What to avoid', 'What is missing', 'Contributing', 'E01 — Mentor page and discovery', 'E02 — Book and pay', 'E03 — Mentor decides', 'E04 — The text session', 'E05 — Mentor earnings', 'E06 — Later (parked)', 'Stage 1'], 'Foundations', 'Primitives', 'Product', 'Patterns'] } },
   },
 };
 export default preview;

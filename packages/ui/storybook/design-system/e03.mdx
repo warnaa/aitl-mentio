@@ -1,0 +1,35 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design system/E03 — Mentor decides" />
+
+# E03 — Mentor decides
+
+The mentor reads a paid question before the session and accepts or declines it; a decline is refunded at once, and a question not accepted by the start counts as declined. Backlog: E03-S01. **No E03 spec yet**: the screens follow the book-and-pay contract with E03 and the user decisions of 2026-11-01 (routes, endpoints, labels). Sources: R09, R12, R14, D19.
+
+## Flow
+
+1. A paid question appears on “My sessions”, waiting for a decision first.
+2. The mentor opens it: facts, their share after commission, the R12 rule, Accept and Decline above the question.
+3. Accept, or decline after a confirmation that names the refund.
+4. The mentee sees the outcome on their booking; an unaccepted booking is settled on the next visit.
+
+## Screens and stories
+
+<table className="ds-table"><thead><tr><th>Screen</th><th>Route</th><th>Built from</th><th>Stories</th></tr></thead><tbody><tr><td data-label="Screen">My sessions</td><td data-label="Route"><code>/mentor/sesje</code></td><td data-label="Built from">PanelShell, DataTable, StatusBadge</td><td data-label="Stories">Product › E03 › Screens</td></tr><tr><td data-label="Screen">Decision</td><td data-label="Route"><code>/mentor/sesje/[id]</code></td><td data-label="Built from">BookingSummary, ActionButton, Message, Alert</td><td data-label="Stories">Product › E03 › Screens</td></tr><tr><td data-label="Screen">Booking details (mentee)</td><td data-label="Route"><code>/rezerwacje/[id]</code></td><td data-label="Built from">BookingSummary, Alert</td><td data-label="Stories">Product › E03 › Screens</td></tr></tbody></table>
+
+State map: <a href="./?path=/docs/product-e03-mentor-decides-screen-states--docs" target="_top">E03</a>. Pattern: <a href="./?path=/docs/patterns-mentor-decision--docs" target="_top">Mentor decision</a>.
+
+## States
+
+There are 20 states: awaiting decision, accept and accepting, decline with refund, already started (R12), network error, accepted, cancelled by the mentee, not accepted in time, refund failed with retry, not available, and the mentee's accepted, declined and not-accepted views.
+
+## Source files
+
+- Contract: `.ai/specs/2026-10-29-book-and-pay.md` (Contract with E03).
+- Stories: `packages/ui/storybook/product/e03/`, `storybook/product/shells.tsx`; fixtures `storybook/fixtures/sessions.ts`.
+
+## Work that remains in the product
+
+- Write the E03 spec and check these screens against it.
+- Decide whether a mentor can cancel after accepting.
+- Design the in-app notice of a new question (D19).
