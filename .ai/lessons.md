@@ -551,3 +551,17 @@ maximum token avoids that intrinsic sizing cycle. Negative controls reproduced a
 three. For interactive width sweeps, wait for Storybook's finished render/play phase
 before navigating; a short timer can interrupt async assertions and report false
 console failures.
+
+## 2026-11-01 - A wide DataTable without focusable cells fails axe `scrollable-region-focusable`
+
+Table cells are `white-space: nowrap` above the 48rem stacking threshold, so long values make the
+`.mentio-table-container` scroll sideways. The Table stories pass axe only because their cells contain
+links (focusable content inside the scroll region). A read-only list such as admin Users has none, so
+the container is a scroll region keyboard users cannot reach: axe fails in both themes. Fixed in `Table`
+(user decision): while it overflows, the container gets `tabindex="0"` and, when the table is named, a
+`region` role with that name. Test long data at 1440 px, not only at 320 px.
+
+Related, same day: a `disabled` button that has focus drops focus to `<body>` in Chromium, so DataTable
+paging now uses `aria-disabled`. And a column utility such as `text-right` outranks `@layer components`, so
+the stacked-row reset needs `!important`. Ledger: `.ai/runs/2026-11-01-admin-users-stories.md`. Also: in
+this Storybook (10.6) the preview's `currentRender.phase` reads `finished` when play is done.

@@ -82,3 +82,23 @@ export const ScrollsInsideContainer: Story = {
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth);
   },
 };
+
+// User decision 2026-11-01 (admin Users ledger L-14): a table with no links in its cells that scrolls sideways
+// is still reachable by keyboard. While it overflows, the container is a focusable region named like the table.
+export const ScrollRegionWithoutLinks: Story = {
+  render: () => <div className="primitive-demo"><div className="w-full max-w-(--viewport-small)"><Table aria-label="Accounts">
+    <TableHeader><TableRow><TableHead>Email</TableHead><TableHead>Name</TableHead><TableHead>Created</TableHead></TableRow></TableHeader>
+    <TableBody>
+      <TableRow><TableCell>aleksandra.wisniewska-kowalczyk@instytut-informatyki-stosowanej.example.test</TableCell><TableCell>Aleksandra Wiśniewska-Kowalczyk</TableCell><TableCell className="tabular-nums">1 November 2026</TableCell></TableRow>
+      <TableRow><TableCell>kasia.nowak@example.test</TableCell><TableCell>Kasia Nowak</TableCell><TableCell className="tabular-nums">31 October 2026</TableCell></TableRow>
+    </TableBody>
+  </Table></div></div>,
+  play: async ({ canvasElement }) => {
+    const region = await within(canvasElement).findByRole('region', { name: 'Accounts' });
+    await expect(region.scrollWidth).toBeGreaterThan(region.clientWidth);
+    await userEvent.tab();
+    await expect(region).toHaveFocus();
+    await expect(getComputedStyle(region).outlineStyle).toBe('solid');
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth);
+  },
+};

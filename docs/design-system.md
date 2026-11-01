@@ -125,7 +125,7 @@ Both themes (light, dark) switch on `<html class="dark">`. Dialogs and menus inh
 | First load, known layout | Skeleton plus a text status; unknown layout: LoadingMessage |
 | API list | DataTable (rows stack below 48rem); public mentor list: MentorDirectory |
 | Different tasks | Separate pages in the task navigation (there are no Tabs) |
-| Money | “240 zł”, “−48 zł”; table dates “4 Nov, 18:00”; times in Warsaw time |
+| Money | “240 zł”, “−48 zł”; table dates “4 Nov, 18:00” (a date with no time, such as account creation: “31 October 2026”); times in Warsaw time |
 
 ## What to avoid
 

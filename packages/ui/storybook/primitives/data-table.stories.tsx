@@ -27,13 +27,22 @@ export const Playground: Story = {};
 export const FirstLoad: Story = { args: { rows: undefined } };
 export const Refreshing: Story = { args: { isLoading: true } };
 export const Empty: Story = { args: { rows: [] } };
-export const Failed: Story = { args: { error: 'Check your connection, then try again.' } };
+export const Failed: Story = { args: { rows: undefined, error: 'Check your connection, then try again.' } };
+// User decision 2026-11-01: a failed refresh keeps the rows already shown, with the error and Try again above them.
+export const RefreshFailed: Story = {
+  args: { error: 'Check your connection, then try again.' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('alert')).toHaveTextContent('Check your connection, then try again.');
+    await expect(canvas.getAllByRole('row')).toHaveLength(6);
+  },
+};
 export const States: Story = {
   render: args => <div className="primitive-demo flex flex-col gap-section">
-    <p>Each data state is also its own story: First load, Refreshing (rows kept, aria-busy), Empty, Failed, Paginated.</p>
+    <p>Each data state is also its own story: First load, Refreshing (rows kept, aria-busy), Empty, Failed, Refresh failed (rows kept), Paginated.</p>
     <DataTable {...args} rows={undefined} />
     <DataTable {...args} rows={[]} />
-    <DataTable {...args} error="Check your connection, then try again." />
+    <DataTable {...args} rows={undefined} error="Check your connection, then try again." />
   </div>,
 };
 function Paged() {
@@ -45,16 +54,18 @@ export const Paginated: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('1–20 of 45')).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    // Unavailable buttons are aria-disabled, so they keep focus while loading and at the ends.
+    await expect(canvas.getByRole('button', { name: 'Previous' })).toHaveAttribute('aria-disabled', 'true');
     await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
     await expect(canvas.getByText('41–45 of 45')).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'Next' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Next' })).toHaveAttribute('aria-disabled', 'true');
+    await expect(canvas.getByRole('status')).toHaveTextContent('41–45 of 45');
     await expect(canvas.getAllByRole('row')).toHaveLength(6);
   },
 };
 export const RetryAfterFailure: Story = {
-  args: { error: 'Check your connection, then try again.' },
+  args: { rows: undefined, error: 'Check your connection, then try again.' },
   play: async ({ canvasElement, args }) => {
     await userEvent.click(within(canvasElement).getByRole('button', { name: 'Try again' }));
     await expect(args.onRetry).toHaveBeenCalledTimes(1);

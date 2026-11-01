@@ -29,6 +29,8 @@ export interface DataTablePagination {
 }
 
 export interface DataTableProps<T> {
+  /** Accessible name of the table; it also names the scroll region when wide content overflows. */
+  label?: string;
   columns: DataTableColumn<T>[];
   /** `undefined` while the first load is in flight. */
   rows: T[] | undefined;
@@ -43,6 +45,7 @@ export interface DataTableProps<T> {
 }
 
 export function DataTable<T>({
+  label,
   columns,
   rows,
   getRowId,
@@ -54,7 +57,9 @@ export function DataTable<T>({
   rowActions,
   pagination,
 }: DataTableProps<T>) {
-  if (error) return <ErrorMessage message={error} onRetry={onRetry} />;
+  // User decision 2026-11-01: a failed refresh keeps the rows already shown, with the error above them.
+  const hasRows = rows !== undefined && rows.length > 0;
+  if (error && !hasRows) return <ErrorMessage message={error} onRetry={onRetry} />;
   if (!rows) return <LoadingMessage />;
   if (rows.length === 0 && !isLoading) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
@@ -67,7 +72,8 @@ export function DataTable<T>({
   const cellLabel = (label: string | undefined) => label && <span className="mentio-table-cell-label" aria-hidden="true">{label}</span>;
   return (
     <div className="mentio-data-table flex flex-col gap-3" aria-busy={isLoading}>
-      <Table role="table">
+      {error && <ErrorMessage message={error} onRetry={onRetry} />}
+      <Table role="table" aria-label={label}>
         <TableHeader role="rowgroup">
           <TableRow role="row">
             {columns.map((column) => (
@@ -106,28 +112,31 @@ function PaginationControls({
 }: DataTablePagination & { isDisabled: boolean }) {
   const first = total === 0 ? 0 : offset + 1;
   const last = Math.min(offset + limit, total);
-  const hasPrevious = offset > 0;
-  const hasNext = offset + limit < total;
+  const canGoBack = !isDisabled && offset > 0;
+  const canGoForward = !isDisabled && offset + limit < total;
 
+  // User decision 2026-11-01: unavailable buttons use aria-disabled, not disabled, so the focused button keeps
+  // focus while the next page loads and at either end (WCAG 2.4.3). The range is a polite status, so the new
+  // page is announced once it has loaded (WCAG 4.1.3).
   return (
-    <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
-      <span>
+    <div className="mentio-data-table-pagination flex items-center justify-between gap-4 text-sm text-muted-foreground">
+      <span role="status">
         {first}–{last} of {total}
       </span>
       <div className="flex gap-2">
         <Button
           variant="outline"
           size="sm"
-          disabled={isDisabled || !hasPrevious}
-          onClick={() => onOffsetChange(Math.max(0, offset - limit))}
+          aria-disabled={!canGoBack || undefined}
+          onClick={() => canGoBack && onOffsetChange(Math.max(0, offset - limit))}
         >
           Previous
         </Button>
         <Button
           variant="outline"
           size="sm"
-          disabled={isDisabled || !hasNext}
-          onClick={() => onOffsetChange(offset + limit)}
+          aria-disabled={!canGoForward || undefined}
+          onClick={() => canGoForward && onOffsetChange(offset + limit)}
         >
           Next
         </Button>

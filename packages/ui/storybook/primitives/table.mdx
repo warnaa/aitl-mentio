@@ -28,7 +28,7 @@ Sources: task How to choose (table, list and cards); mentor-pages UI/UX (`/mento
 
 ## 4. Anatomy
 
-- The container scrolls horizontally.
+- The container scrolls horizontally. While it overflows, it is a focusable region named like the table.
 - `Table` uses the 14/20 label role.
 - `TableCaption`: optional, muted, below the table. It names the table.
 - `TableHeader` holds `TableHead` cells: 40 px high, medium weight, start-aligned.
@@ -49,7 +49,7 @@ There are no visual variants. Use `tabular-nums` on time and amount columns, fol
 - Default.
 - Selected (`data-state="selected"`): the auxiliary surface plus a checked checkbox, so selection is not shown by colour alone.
 - Rows have no hover highlight, because they are not interactive (user decision 2026-10-31).
-- Focus belongs to links and controls inside cells.
+- Focus belongs to links and controls inside cells, and to the container while it scrolls sideways; it shows the standard focus ring.
 - Loading, empty and error states of a whole table come from Skeleton, EmptyState and ErrorMessage, through DataTable.
 - Disabled does not apply.
 
@@ -59,13 +59,14 @@ Sources: user decision 2026-10-31; tokens (`--muted`: selected row); WCAG 1.4.1.
 
 ## 7. Behavior and accessibility
 
-It uses native `table`, `th` and `td` semantics, so a screen reader announces the column header with each cell. Name the table with `TableCaption` or `aria-label`. Give a column of row links a visually hidden header such as “Details”. Make link text unique, for example “View booking”, with the mentor and time added for screen readers. Tab reaches only the interactive elements inside cells. Do not make a whole row clickable. A wide table scrolls inside its container and the page does not scroll sideways. Sources: WCAG 1.3.1, 2.4.4, 1.4.10; WAI-ARIA (native table semantics).
+It uses native `table`, `th` and `td` semantics, so a screen reader announces the column header with each cell. Name the table with `TableCaption` or `aria-label`. Give a column of row links a visually hidden header such as “Details”. Make link text unique, for example “View booking”, with the mentor and time added for screen readers. Tab reaches the interactive elements inside cells. Do not make a whole row clickable. A wide table scrolls inside its container and the page does not scroll sideways. While the container overflows it takes `tabindex="0"`, so keyboard users can scroll it with the arrow keys even when no cell holds a link; with an `aria-label` or `aria-labelledby` on the table it is also a `region` with that name. It returns to a plain box when the content fits. Story: **Scroll Region Without Links**. Sources: WCAG 1.3.1, 2.1.1, 2.4.4, 1.4.10; WAI-ARIA (native table semantics); axe `scrollable-region-focusable`; user decision 2026-11-01 (admin Users ledger L-14).
 
 ## 8. Content
 
 - Column headers are short nouns: “Time”, “Mentor”, “Status”.
 - Dates and times are in Warsaw time, stated once in the caption.
 - Dates in cells use the short form “4 Nov, 18:00”: no weekday and no year. The full date with the weekday is on the details page. This keeps about four columns within 320 px. Source: user decision 2026-11-01 (stage 3d finding).
+- A date with no time that can lie in another year, such as when an account was created, uses the day form with the year, “31 October 2026” (platform F7 `formatDay`). Source: user decision 2026-11-01 (admin Users ledger L-04).
 - Amounts are written like “240 zł”.
 - Status is a Badge with text.
 - Cell text does not wrap; a long value scrolls with the table. Keep the first column the identifying one. Screen lists use DataTable, whose rows stack in narrow containers instead (user decision 2026-11-01).

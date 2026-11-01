@@ -1,0 +1,68 @@
+[
+  {
+    "id": "design-system-what-is-missing--docs",
+    "theme": "light",
+    "width": 320,
+    "all": [
+      "landmark-one-main(1)",
+      "region(1)"
+    ],
+    "withoutPageLandmarkRules": [],
+    "overflow": 0
+  },
+  {
+    "id": "design-system-what-is-missing--docs",
+    "theme": "light",
+    "width": 768,
+    "all": [
+      "landmark-one-main(1)",
+      "region(1)"
+    ],
+    "withoutPageLandmarkRules": [],
+    "overflow": 0
+  },
+  {
+    "id": "design-system-what-is-missing--docs",
+    "theme": "light",
+    "width": 1440,
+    "all": [
+      "landmark-one-main(1)",
+      "region(1)"
+    ],
+    "withoutPageLandmarkRules": [],
+    "overflow": 0
+  },
+  {
+    "id": "design-system-what-is-missing--docs",
+    "theme": "dark",
+    "width": 320,
+    "all": [
+      "landmark-one-main(1)",
+      "region(1)"
+    ],
+    "withoutPageLandmarkRules": [],
+    "overflow": 0
+  },
+  {
+    "id": "design-system-what-is-missing--docs",
+    "theme": "dark",
+    "width": 768,
+    "all": [
+      "landmark-one-main(1)",
+      "region(1)"
+    ],
+    "withoutPageLandmarkRules": [],
+    "overflow": 0
+  },
+  {
+    "id": "design-system-what-is-missing--docs",
+    "theme": "dark",
+    "width": 1440,
+    "all": [
+      "landmark-one-main(1)",
+      "region(1)"
+    ],
+    "withoutPageLandmarkRules": [],
+    "overflow": 0
+  }
+]

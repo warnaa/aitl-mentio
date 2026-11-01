@@ -560,6 +560,8 @@
 @layer components {
   /* R01.1/R01.3: dense rows separated by thin lines; tables scroll inside their container. */
   .mentio-table-container { position: relative; inline-size: 100%; overflow-x: auto; }
+  /* User decision 2026-11-01: a scrolling container is focusable (Table), so it shows the focus ring. */
+  .mentio-table-container:focus-visible { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
   .mentio-table { inline-size: 100%; caption-side: bottom; font-size: var(--text-label); line-height: var(--line-label); }
   .mentio-table-row { border-bottom: var(--divider-width) solid var(--border); transition-property: background-color; transition-duration: var(--motion-duration); transition-timing-function: var(--motion-ease); }
   .mentio-table-body > .mentio-table-row:last-child { border-bottom-width: 0; }
@@ -572,6 +574,9 @@
   :is(.mentio-table-head,.mentio-table-cell):has([role=checkbox]) { padding-inline-end: 0; }
   :is(.mentio-table-head,.mentio-table-cell) > [role=checkbox] { translate: 0 var(--table-checkbox-offset); }
   .mentio-table-caption { margin-block-start: var(--space-between-groups); color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); }
+  /* User decision 2026-11-01: DataTable paging keeps focus, so unavailable buttons are aria-disabled; same look as :disabled. */
+  .mentio-data-table-pagination .mentio-button[aria-disabled=true] { opacity: var(--state-disabled-opacity); cursor: not-allowed; }
+  .mentio-data-table-pagination .mentio-button-outline[aria-disabled=true]:is(:hover,:active) { background: var(--background); color: var(--foreground); }
 
   /* User decision: static placeholder in the auxiliary surface role; no continuous motion. */
   .mentio-skeleton { border-radius: var(--radius-md); background: var(--muted); }
@@ -748,7 +753,9 @@
     .mentio-table-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-within-group); padding-block: var(--space-between-groups); }
     /* WCAG 1.4.10: a long status wraps inside the stacked cell (as in card headings, 3c). */
     .mentio-table-cell .mentio-badge { max-inline-size: 100%; white-space: normal; text-align: start; }
-    .mentio-table-cell { padding: 0; white-space: normal; overflow-wrap: anywhere; text-align: start; }
+    /* User decision 2026-11-01: column alignment utilities (text-right) apply to the table layout only; a
+     * stacked value sits under its left-aligned name. Important, because utilities outrank this layer. */
+    .mentio-table-cell { padding: 0; white-space: normal; overflow-wrap: anywhere; text-align: start !important; }
     .mentio-table-cell-label { display: block; color: var(--muted-foreground); font-size: var(--text-metadata); line-height: var(--line-metadata); }
     .mentio-table-cell:not(:has(.mentio-table-cell-label)) { margin-block-start: var(--spacing); }
   }
