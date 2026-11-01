@@ -7,9 +7,9 @@ import { Link } from '@mentio/ui/backend/actions';
 
 // Book-and-pay UI/UX `/rezerwacje`: time, mentor, status badge and a link; unpaid booking first.
 const bookings = [
-  { id: 'b1', time: '6 November 2026, 18:00', mentor: 'Alex', status: 'Awaiting payment', tone: 'outline' as const },
-  { id: 'b2', time: '4 November 2026, 09:30', mentor: 'Marta', status: 'Awaiting mentor decision', tone: 'outline' as const },
-  { id: 'b3', time: '3 November 2026, 17:00', mentor: 'Piotr', status: 'Cancelled — refunded', tone: 'secondary' as const },
+  { id: 'b1', time: '6 Nov, 18:00', mentor: 'Alex', status: 'Awaiting payment', tone: 'outline' as const },
+  { id: 'b2', time: '4 Nov, 09:30', mentor: 'Marta', status: 'Awaiting mentor decision', tone: 'outline' as const },
+  { id: 'b3', time: '3 Nov, 17:00', mentor: 'Piotr', status: 'Cancelled — refunded', tone: 'secondary' as const },
 ];
 
 const BookingsTable = ({ rows = bookings }: { rows?: typeof bookings }) => <Table>
@@ -45,15 +45,15 @@ export const States: Story = {
     <Table>
       <TableHeader><TableRow><TableHead><Checkbox aria-label="Select all bookings" /></TableHead><TableHead>Time</TableHead><TableHead>Mentor</TableHead><TableHead>State</TableHead></TableRow></TableHeader>
       <TableBody>
-        <TableRow><TableCell><Checkbox aria-label="Select booking with Alex" /></TableCell><TableCell className="tabular-nums">6 November 2026, 18:00</TableCell><TableCell>Alex</TableCell><TableCell>Default</TableCell></TableRow>
-        <TableRow data-state="selected"><TableCell><Checkbox aria-label="Select booking with Marta" defaultChecked /></TableCell><TableCell className="tabular-nums">4 November 2026, 09:30</TableCell><TableCell>Marta</TableCell><TableCell>Selected</TableCell></TableRow>
-        <TableRow><TableCell><Checkbox aria-label="Select booking with Piotr" /></TableCell><TableCell className="tabular-nums">3 November 2026, 17:00</TableCell><TableCell>Piotr</TableCell><TableCell><Link href="#piotr">Focusable link inside a cell</Link></TableCell></TableRow>
+        <TableRow><TableCell><Checkbox aria-label="Select booking with Alex" /></TableCell><TableCell className="tabular-nums">6 Nov, 18:00</TableCell><TableCell>Alex</TableCell><TableCell>Default</TableCell></TableRow>
+        <TableRow data-state="selected"><TableCell><Checkbox aria-label="Select booking with Marta" defaultChecked /></TableCell><TableCell className="tabular-nums">4 Nov, 09:30</TableCell><TableCell>Marta</TableCell><TableCell>Selected</TableCell></TableRow>
+        <TableRow><TableCell><Checkbox aria-label="Select booking with Piotr" /></TableCell><TableCell className="tabular-nums">3 Nov, 17:00</TableCell><TableCell>Piotr</TableCell><TableCell><Link href="#piotr">Focusable link inside a cell</Link></TableCell></TableRow>
       </TableBody>
     </Table>
   </div>,
 };
 export const LongContent: Story = {
-  render: () => <div className="primitive-demo"><BookingsTable rows={[{ id: 'long', time: 'Thursday, 6 November 2026, 18:00', mentor: 'Aleksandra Wiśniewska-Kowalczyk', status: 'Cancelled after the deadline — no refund', tone: 'secondary' }, ...bookings]} /></div>,
+  render: () => <div className="primitive-demo"><BookingsTable rows={[{ id: 'long', time: '6 Nov, 18:00', mentor: 'Aleksandra Wiśniewska-Kowalczyk', status: 'Cancelled after the deadline — no refund', tone: 'secondary' }, ...bookings]} /></div>,
 };
 export const Narrow: Story = { ...LongContent, globals: { viewport: { value: 'mobile1', isRotated: false } } };
 export const SemanticsAndDensity: Story = {
@@ -71,7 +71,7 @@ export const SemanticsAndDensity: Story = {
     await userEvent.hover(cell);
     await expect(getComputedStyle(firstRow).backgroundColor).toBe(before);
     await userEvent.tab();
-    await expect(canvas.getByRole('link', { name: 'View booking with Alex on 6 November 2026, 18:00' })).toHaveFocus();
+    await expect(canvas.getByRole('link', { name: 'View booking with Alex on 6 Nov, 18:00' })).toHaveFocus();
   },
 };
 export const ScrollsInsideContainer: Story = {

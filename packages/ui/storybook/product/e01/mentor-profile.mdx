@@ -34,7 +34,9 @@ Sources: mentor-pages UI/UX; N01.
 There are no visual variants. Slots are plain text (E01), or links when `href` is given (E02). Sources: mentor-pages and book-and-pay UI/UX.
 
 <Unstyled><Canvas of={Stories.Playground} /></Unstyled>
-<Unstyled><Canvas of={Stories.BookableSlotsE02} /></Unstyled>
+Also see these stories: **Bookable slots (E02 links)** (slot times as Book links).
+
+Other examples are standalone stories in the sidebar (each is tested in both themes). They are not embedded here, because every example repeats the component’s landmarks and a docs page is one document. Source: verification 2026-11-01 (axe landmark rules).
 
 ## 6. States
 
@@ -44,8 +46,7 @@ There are no visual variants. Slots are plain text (E01), or links when `href` i
 
 A draft or unknown page is a 404 from the app. Errors go to the app's error boundary. Links have Link states. Sources: mentor-pages UI/UX; R03; platform F2.
 
-<Unstyled><Canvas of={Stories.NoRate} /></Unstyled>
-<Unstyled><Canvas of={Stories.NoSlots} /></Unstyled>
+Also see these stories: **No Rate** (booking unavailable without a rate); **No Slots** (no available slots).
 
 ## 7. Behavior and accessibility
 
@@ -65,8 +66,8 @@ Sources: mentor-pages UI/UX; reference R01.2; user decisions 2026-10-31.
 
 Prose stops at 65ch. At 320 px long URLs break anywhere, and slot times wrap within each day. Sources: approved stage-0 Q3; WCAG 1.4.10.
 
-<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
-<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+Also see these stories: **Long Content** (long description, URLs and many days).
+The 320 px rendering is the **Narrow** story in the sidebar. It is not embedded here: a docs page renders every example at the page’s own width, so it would look the same as the examples above. Source: verification 2026-11-01 (axe best-practice).
 
 ## 10. API
 

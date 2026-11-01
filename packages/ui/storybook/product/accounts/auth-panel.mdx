@@ -29,9 +29,7 @@ There are no visual variants. Sources: package API.
 
 ## 6. States
 
-It is a static frame. States belong to the form or action inside it; see Screens. Sources: package API.
-
-<Unstyled><Canvas of={Stories.States} /></Unstyled>
+It is a static frame. States belong to the form or action inside it; see **Product › Platform and accounts › Screens**. The **States** story shows the frame alone; it is not embedded because it would repeat the page's `main` landmark. Sources: package API; verification 2026-11-01 (axe landmark rules).
 
 ## 7. Behavior and accessibility
 
@@ -45,8 +43,10 @@ The title names the task: “Sign in”, “Create a mentor account”. The foot
 
 At 320 px it fills the width with 16 px padding. Wider screens keep the 28rem column. Sources: approved stage-0 Q3; WCAG 1.4.10.
 
-<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
-<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+Also see these stories: **Long Content** (long title and description).
+
+Other examples are standalone stories in the sidebar (each is tested in both themes). They are not embedded here, because every example repeats the component’s landmarks and a docs page is one document. Source: verification 2026-11-01 (axe landmark rules).
+The 320 px rendering is the **Narrow** story in the sidebar. It is not embedded here: a docs page renders every example at the page’s own width, so it would look the same as the examples above. Source: verification 2026-11-01 (axe best-practice).
 
 ## 10. API
 

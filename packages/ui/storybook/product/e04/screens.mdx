@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Product/E04 — The text session/Screen states" />
+
+# E04 — screens and states (preliminary)
+
+E04 has no screen specification (approved stage-0 Q4). The session room follows:
+- E04-S01/S02, R01, R02, R09, R10, D16 and N01;
+- references R02.1–R02.6: the conversation is the main area, with replies to a specific message, author and time, no extra pop-ups, no decorative emoji, and focused navigation;
+- approved Q3: details after the conversation on narrow screens, beside it from Tailwind `xl` (the breakpoint: user decision 2026-11-01);
+- approved Q5: inline quoted replies.
+
+Each state is a story under **Product › E04 › Screens**.
+
+**Decided by the user on 2026-11-01** (POSTEP 9, 10, 12, 13), except the notice texts, which stay a **Proposal** until the E04 spec:
+- one route `/sesje/[id]` for both participants;
+- `POST /api/bookings/[id]/messages` with `{ body, replyToId }`;
+- the 409 code `session_ended`;
+- no writing before the start, and a read-only transcript after the end;
+- the backtick code format and Ctrl+Enter to send;
+- no optimistic messages;
+- the notice texts.
+
+<table><thead><tr><th>State</th><th>Story</th><th>Source</th></tr></thead><tbody><tr><td>Before the start (mentee / mentor): the question, the R10 rule, no field</td><td>Mentee — before the start; Mentor — before the start</td><td>R01, R10</td></tr><tr><td>Started, first reply due by start + 10 min</td><td>Mentor — started, first reply due; Mentee — waiting for the first reply</td><td>R10</td></tr><tr><td>Conversation in progress, code, quotes</td><td>Mentee — conversation in progress; Mentor — conversation in progress</td><td>E04-S01, R02.1–R02.3, R01.2</td></tr><tr><td>Send, sending, failed with text kept</td><td>Mentee — send a message; sending; send failed, text kept</td><td>task form rules, F1</td></tr><tr><td>Reply to a message; cancel a reply</td><td>Mentee — reply to a message; cancel a reply</td><td>R02.2, Q5</td></tr><tr><td>Session ended while writing</td><td>Mentee — session ended while writing</td><td>R01</td></tr><tr><td>Long code; narrow layout</td><td>Mentee — long code; narrow</td><td>R01.2, Q3, WCAG 1.4.10</td></tr><tr><td>Ended: read-only transcript, visible to the two participants only</td><td>Ended — read-only transcript; Mentor — ended transcript</td><td>R02 (nothing published without approval)</td></tr><tr><td>Next visit: checking; check failed</td><td>Next visit — checking the outcome; check failed</td><td>R09, D16 (no timers)</td></tr><tr><td>Mentor no-show: the mentee's refund; the mentor earns nothing</td><td>Next visit — mentee sees a mentor no-show; mentor sees their no-show</td><td>R09, R10</td></tr><tr><td>Mentee no-show: counts as held; the mentor is paid (EarningsSummary)</td><td>Next visit — mentor sees a mentee no-show; mentee sees their no-show</td><td>R10, R06</td></tr><tr><td>Not available</td><td>Not available</td><td>task detail pattern</td></tr></tbody></table>
+
+Not covered, for **What is missing**:
+- how new messages arrive without a reload (transport);
+- whether the mentee is notified of the first reply (D19 in-app, no design);
+- message length limits and editing or deleting;
+- how “opened the session” is detected for a mentee no-show;
+- the D07 first-reply measure, which is recorded but not shown.

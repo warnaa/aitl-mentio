@@ -468,3 +468,54 @@ shared constants (`facts`, `question`) from one broke both files ("Cannot create
 placeholder identical to its validation message ("Choose 25 or 50 minutes") makes the
 error repeat what is already on screen and makes `getByText` ambiguous — write the
 placeholder as an instruction ("Select a length") and the error as the fix.
+
+
+## 2026-11-01 - Empty certificate overrides break Git HTTPS in the managed workspace
+
+The workspace launch environment exports `GIT_SSL_CAINFO=""` (and empty CA
+variables for other clients). Git treats the empty value as an explicit invalid
+CA file and fails with “Problem with the SSL CA cert” despite a valid system
+bundle. Unset empty overrides, preserving nonempty custom CA paths; disabling
+verification is unnecessary. Startup cleanup fixes new shells, but agent commands
+can reinject the original environment after startup, so `/usr/local/bin/git` now
+clears only empty overrides and delegates to `/usr/bin/git`. Both repository
+lookups and a real skills clone passed. This is a workspace workaround; the
+upstream launcher must omit empty CA variables for a fix across container rebuilds.
+See `.ai/runs/2026-11-01-git-ca-repair.md` for changes, scope, verification and undo.
+
+## 2026-11-01 - Accessible names from adjacent inline spans run together
+
+An `article` labelled by one `<p>` holding `<span>Alex</span><span>Mentor</span><time>18:04</time>`
+gets the name "AlexMentor18:04": flex `gap` is visual only, and accessible-name computation adds
+no space between inline children. Give each part an id and list them in `aria-labelledby`
+(referenced names are joined with spaces). Similarly, a `.sr-only` suffix inside a link may or may
+not get a space in Chromium — match link names with a regex that allows optional whitespace.
+
+## 2026-11-01 - Page-overflow checks miss scroll containers; play tests must not assume the viewport global
+
+A width sweep measuring `documentElement.scrollWidth` reported no overflow for an earnings table
+whose columns were all off-screen at 320 px — the Table container scrolls by design. Look at
+screenshots of list screens at 320 px. Separately, a story's `globals.viewport` is not applied
+when the iframe is opened directly at another width, so a layout assertion in `play` must branch on
+`matchMedia`, or assert DOM order instead of positions.
+
+## 2026-11-01 - Docs pages are one document: landmarks repeat across examples
+
+Axe best-practice rules (`landmark-unique`, `landmark-no-duplicate-main/banner`) failed on docs pages
+that embedded several examples of a page-level component. They passed as standalone stories.
+Root causes: (1) fixed heading ids (`id="mentor-profile-work"`) in components, so every instance's
+`aria-labelledby` resolved to the first — use `useId` (server-safe) for any id a component owns;
+(2) a landmark per repeated item (a `section aria-label` per slot day); (3) inline `Narrow` canvases,
+which render at the docs page's width and only duplicate the example above. Embed one example per
+landmark-bearing component per docs page and point to the other stories by name. A docs-only
+wrapper that narrows the box does not help: Tailwind breakpoints follow the window, not the box.
+
+## 2026-11-01 - Stacking table rows: grid tracks keep min-content; container queries beat media queries
+
+DataTable rows stack through `@container` on the table wrapper, so a table in a narrow column or a
+docs preview stacks too. Media queries follow the window, not the column. With `display: grid` on the
+row, the implicit track's minimum is the widest unbreakable child: a nowrap status badge kept
+cells 13 px wider than a 320 px column. Use `grid-template-columns: minmax(0, 1fr)` and let badges
+wrap. Changing `display` on table elements can drop table semantics, so set explicit roles
+(table/rowgroup/row/columnheader/cell). Keep the visible per-cell column name `aria-hidden` to avoid a
+double announcement.

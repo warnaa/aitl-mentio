@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Patterns/Conversation and reply" />
+
+# Conversation and reply (preliminary)
+
+The session room is a text conversation that both people can follow under time pressure: who said what, when, about which message, and whether code is code. E04 has no screen specification. Sources: E04-S01; references R02.1–R02.6; approved Q3, Q5.
+
+## Rules
+
+1. The conversation is the main area. Session details (time, length, price, the N01 line) sit beside it at wide widths and after it on narrow screens. Sources: R02.1, R02.6; approved Q3.
+2. Every message names its author and time. Messages are left-aligned rows, not bubbles. Sources: R02.3; WCAG 1.4.1.
+3. The question sent with the booking is the first message, shown exactly as typed in the code role. Sources: E02 UI/UX; R01.2.
+4. A reply quotes its source inline (author, excerpt, “Go to …’s message”). The link focuses the source, which is marked in place without animation. There is no side thread panel. Sources: R02.2, R02.6, U02.1; approved Q5.
+5. Code between fences, and inline code, uses the code role and wraps (user decision 2026-11-01: the backtick format). Sources: R01.2; WCAG 1.4.10.
+6. A message appears only after the server confirms it. A failed send keeps the text and says why under the field; it never shows a toast. Sources: task form rules; R02.4.
+7. Enter adds a line; Ctrl+Enter or Cmd+Enter sends, and the hint says so (user decision 2026-11-01). Sources: pasted code in the research (YAML, logs).
+8. Writing is possible only during the session. Before the start and after the end, a notice replaces the field; the ended transcript is read-only and private to the two participants (Proposal). Sources: R01; R02.
+9. The interface adds no emoji; people's own emoji stay. Sources: R02.5.
+
+## States and stories (Product › E04 › Screens)
+
+<table><thead><tr><th>State</th><th>Story</th></tr></thead><tbody><tr><td>Before the start; first reply due</td><td>Mentee/Mentor — before the start; started, first reply due</td></tr><tr><td>In progress</td><td>Mentee/Mentor — conversation in progress</td></tr><tr><td>Send, sending, failed, ended while writing</td><td>Mentee — send a message; sending; send failed; session ended while writing</td></tr><tr><td>Reply and cancel</td><td>Mentee — reply to a message; cancel a reply</td></tr><tr><td>Long content and narrow</td><td>Mentee — long code; narrow</td></tr><tr><td>Read-only transcript</td><td>Ended — read-only transcript</td></tr></tbody></table>
+
+## Composition
+
+Message, MessageComposer, BookingSummary (side details), StatusBadge with the page heading, Alert (notices), PanelShell (task navigation). Sources: approved stage-0 inventory; derived decision 3d (SessionHeader is a composition).

@@ -102,3 +102,25 @@ it("explains a failed copy and omits the view link for a draft", async () => {
   await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Select the link and copy it manually"));
   expect(screen.queryByRole("link")).toBeNull();
 });
+
+// Regression (axe landmark-unique on the docs page): fixed ids made every instance's sections
+// resolve to the first instance's headings.
+it("names each instance's landmarks by its own headings when two render on one page", () => {
+  const { container } = render(<>
+    <MentorProfile {...profile} />
+    <MentorProfile {...profile} displayName="Marta" />
+    <MentorDirectory heading="Mentors" items={items} emptyText="" />
+    <MentorDirectory heading="More mentors" items={items} emptyText="" />
+  </>);
+  expect(screen.getByRole("article", { name: "Marta" })).toBeTruthy();
+  expect(screen.getByRole("region", { name: "More mentors" })).toBeTruthy();
+  const ids = Array.from(container.querySelectorAll("[id]")).map((element) => element.id);
+  expect(new Set(ids).size).toBe(ids.length);
+});
+
+it("groups slots by day under headings without making each day a landmark", () => {
+  render(<MentorProfile {...profile} />);
+  const regions = screen.getAllByRole("region").map((region) => region.getAttribute("aria-labelledby"));
+  expect(regions).toHaveLength(3);
+  expect(screen.getAllByRole("heading", { level: 3 }).length).toBeGreaterThan(0);
+});

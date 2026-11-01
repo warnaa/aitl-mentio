@@ -1,0 +1,20 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Product/E05 — Mentor earnings/Screen states" />
+
+# E05 — screens and states (preliminary)
+
+E05 has no screen specification (approved stage-0 Q4). The earnings page follows E05-S01, R06 and R21. It displays the book-and-pay spec's `MentorEarning` rows (price, commission, share, reason), which E02 Phase 3 and E04-S02 write. No money moves (D13): the page says so, and promises no payout (D14, R16). Each state is a story under **Product › E05 › Screens**.
+
+**Decided by the user on 2026-11-01** (POSTEP 9, 14, 15):
+- the route `/mentor/zarobki`;
+- totals over all time, with no period filter;
+- four columns (Session, Outcome, Price, Your share), within the approved four-column mobile limit; the commission per row is on the session's details;
+- the outcome labels.
+
+<table><thead><tr><th>Screen (route)</th><th>State</th><th>Story</th><th>Source</th></tr></thead><tbody><tr><td>Earnings (<code>/mentor/zarobki</code>)</td><td>Totals and per-session rows (held, mentee no-show, late cancellation, older rate)</td><td>Earnings — settled sessions</td><td>E05-S01, R06, R10, R14, R21</td></tr><tr><td></td><td>None yet, with what earns</td><td>Earnings — none yet</td><td>task empty state</td></tr><tr><td></td><td>Loading / failed</td><td>Earnings — loading; failed to load</td><td>F3</td></tr><tr><td></td><td>Many sessions, pagination</td><td>Earnings — many sessions, page 1 of 3</td><td>F3 (Page&lt;T&gt;)</td></tr><tr><td></td><td>Narrow</td><td>Earnings — narrow</td><td>Q3; four-column decision</td></tr><tr><td>Session details (<code>/mentor/sesje/[id]</code>, Proposal)</td><td>Held, with the breakdown</td><td>Session details — held, with earnings</td><td>R06</td></tr><tr><td></td><td>Late cancellation, with the breakdown</td><td>Session details — late cancellation, with earnings</td><td>R14, book-and-pay Phase 3</td></tr></tbody></table>
+
+Not covered, for **What is missing**:
+- payouts, Stripe Connect setup and held earnings (D14, R16, E06);
+- Stripe's fees out of the mentor's share (D11, once real Stripe exists);
+- a totals endpoint, and filtering by month.

@@ -1,0 +1,49 @@
+{
+  "failures": [],
+  "expectedNetworkLogs": 54,
+  "tablesThatScroll": [],
+  "results": [
+    {
+      "theme": "light",
+      "width": 320,
+      "stories": 201,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "stories": 201,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "stories": 201,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "stories": 201,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "stories": 201,
+      "overflow": "none",
+      "consoleErrors": []
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "stories": 201,
+      "overflow": "none",
+      "consoleErrors": []
+    }
+  ]
+}

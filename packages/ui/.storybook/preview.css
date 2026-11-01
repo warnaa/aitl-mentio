@@ -36,3 +36,6 @@ a.mentio-badge-link:is([data-preview-state=hover],[data-preview-state=pressed]) 
 /* Stage 2 batch 3: a frozen highlighted menu row repeats the [data-highlighted] declarations. */
 .mentio-menu-item[data-preview-state=hover] { background: var(--accent); color: var(--accent-foreground); }
 .mentio-menu-item[data-variant=destructive][data-preview-state=hover] { background: var(--error-surface); color: var(--destructive); }
+/* Stage 3d: a frozen linked (:target) or focused message repeats the component's declarations. */
+[data-preview-state=target] > .mentio-message { background: var(--muted); }
+[data-preview-state=focus] > .mentio-message { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }

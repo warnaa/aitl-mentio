@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 3c complete; awaiting “dalej” before 3d (E03–E05, preliminary).**
+Date: 2026-10-31. Status: **stage 3 complete (3d preliminary); awaiting “dalej” before stage 4.**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -8,7 +8,7 @@ Documentation and story UI: English, as explicitly requested in `lekcja-06/story
 - [x] 0 — inventory existing UI, materials, dependencies and screen requirements; propose a plan.
 - [x] 1 — foundations, Storybook setup, token checks, accessibility test setup.
 - [x] 2 — primitives, batches of approximately six; stop after each batch.
-- [ ] 3 — product components, patterns and screen compositions.
+- [x] 3 — product components, patterns and screen compositions (E03–E05 preliminary, pending specs).
 - [ ] 4 — usage documentation and agent reference.
 - [ ] 5 — build, lint, types, token audit, accessibility, responsive/theme/keyboard checks; prepare a separate-session agent test.
 
@@ -595,3 +595,97 @@ Fixed during verification:
 
 Next: “dalej” for 3d (E03–E05). These epics have no screen specs, so everything there will be preliminary proposals marked for your decision, built from the backlog stories and brief rules. Not committed; no push.
 
+
+## Stage 3d started — 2026-11-01
+
+3c was committed as 353e099; no push. Interpretations 1–8 were not addressed and remain open. Run log: `.ai/runs/2026-11-01-mentio-stage-3d-e03-e05.md`.
+
+## Stage 3d completion — 2026-11-01
+
+What was built (report: `storybook/verification/2026-11-01-stage-3d.md`):
+- **Message** and **MessageComposer** (`components/messages`) and **EarningsSummary** (`components/earnings`): 13 sections each and 100% unit coverage.
+- **Screens with MSW and state maps:** 20 E03 states (the mentor's list and decision, and the mentee's outcomes), 25 E04 states (session room, replies, sending, transcript, next-visit settlement) and 8 E05 states (earnings).
+- **Four patterns:** Mentor decision, Conversation and reply, Next-visit settlement, Earnings.
+- **Totals:** cumulative 477 stories and 61 MDX pages.
+
+Derived decision: E03 adds no component. The stage-0 MentorDecision, SessionHeader, SettlementNotice and EarningRow are compositions, as in 3c. The earnings folder follows the spec's `earnings` concept.
+
+Verified:
+- `check:tokens` with zero findings.
+- 954 story tests, 2 clean runs.
+- 366 page checks and 122 axe audits (WCAG A/AA) with zero violations.
+- No overflow in any of the 201 product and pattern stories.
+- Visual review of four screens.
+- 289 unit tests with 100% coverage; lint, types, build, 10 integration tests, audit.
+
+Fixed during verification:
+- Run-together accessible names on messages.
+- Focus taken on the first render.
+- A shell component declared inside render.
+- Multi-line MDX tables.
+- A width-dependent play test.
+
+### Open for your confirmation
+
+- **From 3b/3c:** interpretations 1–8 above.
+- **3d proposals (E03–E05 have no specs; each is listed on its state map):**
+  9. Routes `/mentor/sesje`, `/mentor/sesje/[id]`, `/sesje/[id]` (one room for both participants) and `/mentor/zarobki`, with the nav items “My sessions” and “Earnings”.
+  10. Endpoints `POST /api/bookings/[id]/accept`, `/decline`, `/messages`, and the codes `booking_not_decidable` and `session_ended`.
+  11. Decision buttons above the question (the task's detail rule); Accept is primary, Decline is outline with a confirmation.
+  12. Messages: backtick code format; Enter adds a line and Ctrl/Cmd+Enter sends; no optimistic messages; no writing before the start; a read-only transcript after the end.
+  13. The session side column starts at Tailwind `xl` (80rem); a 2 px rule marks a quote.
+  14. Earnings: totals over all time; columns Session, Outcome, Price, Your share; commission per row on the session's details.
+  15. The mentor-facing status labels; “Accepted” replaces E02's “(E03 label pending)” once approved.
+- **Findings:**
+  - Tables scroll at 320 px, because cells do not wrap and the first column holds a full date (proposal: a shorter date in tables).
+  - Axe best-practice landmark findings on seven older docs pages, from stacked full-page stories (not WCAG failures).
+
+Next: “dalej” for stage 4 (teaching pages, epic pages, What is missing, the agent reference). Not committed; no push.
+
+## Decisions on 3d proposals and follow-up fixes — 2026-11-01
+
+The user approved proposals 9–15 and the short table date, and asked for the axe best-practice findings to be fixed at once. The “Proposal” marks for 9–15 are replaced with the decision in the docs, stories and CSS comments. Still proposals, because they were not in 9–15: the E04 notice texts and the about-80-character reply excerpt. The E02 label “Accepted (E03 label pending)” is now “Accepted” (15).
+
+Axe best-practice findings fixed (all 61 docs pages now have zero findings, best-practice rules included):
+- **Component defect:** MentorProfile, MentorDirectory and AuthPanel used fixed heading ids, so two instances on one page named their landmarks after the first. They now use `useId`, which is server-safe. Regression tests fail without the fix.
+- **Landmark overuse:** each MentorProfile slot day was a `section` landmark (14 days would make 14 regions). Days are now plain sections under their h3 (unit test).
+- **Docs pages:**
+  - Inline `Narrow` canvases (27 pages) are replaced with a pointer to the standalone Narrow story. A docs page renders examples at its own width, so they duplicated the examples above them.
+  - On six pages, extra examples of a landmark-bearing component (AccountNav, AuthPanel, MentorDirectory, MentorProfile, BookingSummary, list with filters) became named pointers to their stories.
+
+  Every story is still tested in both themes.
+
+Short table dates (“4 Nov, 18:00”) are applied to every table, and the rule is on the Table and DataTable pages. **Measured: this is not enough at 320 px.** Hidden width that still scrolls inside the table:
+- E05 earnings: 241–243 px;
+- E02 bookings: 293 px;
+- E01 slots: 360 px;
+- E03 “My sessions”: 525 px at 320 px, and 77 px at 768 px.
+
+The rest comes from long status texts in non-wrapping cells (the approved stage-2 Table rule). Decision needed (16): let text cells such as status and outcome wrap while dates and amounts stay on one line, or stack rows on narrow screens.
+
+Verified after the changes:
+- 954 story tests pass.
+- Built-page checks: 366 checks, 122 axe audits and 201 stories with zero findings.
+- 292 unit tests at 100%.
+- Types, app build, 10 integration tests and audit pass; tokens are clean.
+
+`npm run lint` at the repository root now fails on 10 errors in `.agents/skills/` from commit 29e9281 (“chore: update Open Mercato skills”, made outside this session). `eslint packages` is clean. Decision needed (17): fix those files, or ignore `.agents/` in `eslint.config.mjs`.
+
+Next: “dalej” for stage 4. Not committed; no push.
+
+## Decisions 16–17 — 2026-11-01
+
+16. **Stacked rows** (user decision). DataTable is now a CSS container. When the table's own width is below 48rem (derived from approved Q3: 768 px is the compact layout):
+    - each row is a block, with every value under its column name (`aria-hidden`; the header association names the cell);
+    - values and status badges wrap;
+    - the header row is visually hidden;
+    - explicit `role`s keep the table semantics.
+
+    It is a container query, so narrow columns and docs previews stack too. A new optional column `label` names cells whose header is not plain text. The raw Table primitive keeps horizontal scrolling. Docs: DataTable sections 9–10 and the Table notes. Stories: Stacked Rows and Wide Keeps Table. Unit test included.
+    - Result: no table container scrolls at 320, 768 or 1440 px in any of the 201 product and pattern stories (measured).
+    - Found while testing: a grid row's track kept the long badge's min-content width (+13 px at 320 px). The fix is `minmax(0, 1fr)` plus wrapping badges.
+17. **`.agents/**` is ignored in `eslint.config.mjs`** (user decision): vendored agent skills, not project code. Root `npm run lint` passes with 0 problems.
+
+Gate after both: lint, types, 293 unit tests at 100%, 958 story tests, tokens, 366 page checks and 122 axe audits (0 findings, best-practice included), app build, 10 integration tests and audit all pass.
+
+Open: interpretations 1–8. Next: “dalej” for stage 4. Not committed; no push.

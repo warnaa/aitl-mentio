@@ -36,3 +36,9 @@ it("renders the auth page body with optional description and footer", () => {
   expect(bare.container.querySelector(".mentio-public-lead")).toBeNull();
   expect(bare.container.querySelector(".mentio-auth-footer")).toBeNull();
 });
+
+it("names each auth panel by its own title when two render on one page", () => {
+  render(<><AuthPanel title="Sign in"><span /></AuthPanel><AuthPanel title="Create account"><span /></AuthPanel></>);
+  expect(screen.getByRole("main", { name: "Create account" })).toBeTruthy();
+  expect(screen.getByRole("main", { name: "Sign in" })).toBeTruthy();
+});

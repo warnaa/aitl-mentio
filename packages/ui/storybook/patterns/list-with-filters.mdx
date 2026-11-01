@@ -21,8 +21,9 @@ The current specs define pagination but no filters, so do not add filtering to t
 <table><thead><tr><th>State</th><th>Story</th></tr></thead><tbody><tr><td>Results</td><td>Results</td></tr><tr><td>Filter applied, removable</td><td>Filter applied; Remove filter returns focus</td></tr><tr><td>No results for these filters</td><td>No results for filters; Clear filters from no results</td></tr><tr><td>Nothing here yet (create or find)</td><td>Nothing yet</td></tr><tr><td>First load</td><td>First load</td></tr><tr><td>Refreshing</td><td>Refreshing</td></tr><tr><td>Failed</td><td>Failed</td></tr><tr><td>Many results, paginated</td><td>Many results</td></tr><tr><td>Narrow</td><td>Narrow</td></tr></tbody></table>
 
 <Unstyled><Canvas of={Stories.FilterApplied} /></Unstyled>
-<Unstyled><Canvas of={Stories.NoResultsForFilters} /></Unstyled>
-<Unstyled><Canvas of={Stories.NothingYet} /></Unstyled>
+Also see these stories: **No Results For Filters** (with Clear filters); **Nothing Yet** (with the create action).
+
+Other examples are standalone stories in the sidebar (each is tested in both themes). They are not embedded here, because every example repeats the component’s landmarks and a docs page is one document. Source: verification 2026-11-01 (axe landmark rules).
 
 ## Composition
 

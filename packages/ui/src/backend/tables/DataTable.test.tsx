@@ -87,4 +87,28 @@ describe("DataTable", () => {
     expect(screen.queryByRole("columnheader", { name: "Actions" })).toBeNull();
     expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
   });
+
+  // User decision 2026-11-01: rows stack in narrow containers, so each cell carries its column name.
+  it("labels each cell with its column name for stacked rows, keeping table semantics", () => {
+    const { container } = render(
+      <DataTable
+        rows={[{ id: "1", name: "Alex" }]}
+        getRowId={getRowId}
+        columns={[
+          { id: "name", header: "Name", cell: (row: Row) => row.name },
+          { id: "time", header: <span>Time</span>, label: "Session time", cell: () => "6 Nov, 18:00" },
+          { id: "link", header: <span className="sr-only">Details</span>, cell: () => <a href="#/b1">View</a> },
+        ]}
+        rowActions={() => <button type="button">Edit</button>}
+      />,
+    );
+    expect(container.querySelector(".mentio-data-table")).toBeTruthy();
+    expect(screen.getByRole("table")).toBeTruthy();
+    expect(screen.getAllByRole("columnheader").map((header) => header.textContent)).toEqual(["Name", "Time", "Details", "Actions"]);
+    const cells = screen.getAllByRole("cell");
+    const labels = cells.map((cell) => cell.querySelector(".mentio-table-cell-label")?.textContent ?? null);
+    expect(labels).toEqual(["Name", "Session time", null, "Actions"]);
+    expect(cells[0].querySelector(".mentio-table-cell-label")?.getAttribute("aria-hidden")).toBe("true");
+    expect(cells[0].querySelector(".mentio-table-cell-value")?.textContent).toBe("Alex");
+  });
 });

@@ -97,12 +97,12 @@ function Payment({ state = 'awaiting', priceNotice = false }: { state?: PayState
 type DetailState = 'paid' | 'acceptedLate' | 'refundPending' | 'refunded' | 'refundFailed' | 'abandonedPending' | 'started';
 const detailStatus: Record<DetailState, { tone: StatusTone; label: string }> = {
   paid: { tone: 'waiting', label: 'Awaiting mentor decision' },
-  acceptedLate: { tone: 'success', label: 'Accepted (E03 label pending)' },
+  acceptedLate: { tone: 'success', label: 'Accepted' },
   refundPending: { tone: 'waiting', label: 'Cancelled — refund in progress' },
   refunded: { tone: 'neutral', label: 'Cancelled — refunded' },
   refundFailed: { tone: 'danger', label: 'Refund failed' },
   abandonedPending: { tone: 'waiting', label: 'Abandoned — waiting for payment confirmation' },
-  started: { tone: 'success', label: 'Accepted (E03 label pending)' },
+  started: { tone: 'success', label: 'Accepted' },
 };
 function Details({ state = 'paid' }: { state?: DetailState }) {
   const [current, setCurrent] = useState<DetailState>(state);
@@ -255,7 +255,7 @@ export const DetailsCancelFullRefund: Story = { name: 'Details — cancel with f
     await expect(await canvas.findByText('Cancelled — refund in progress')).toBeInTheDocument();
     await expect(canvas.getByText('Refund of 240 zł started')).toBeInTheDocument();
   } };
-export const DetailsCancelLate: Story = { name: 'Details — late cancellation, no refund (E03 preliminary)', render: () => <Details state="acceptedLate" />,
+export const DetailsCancelLate: Story = { name: 'Details — late cancellation, no refund', render: () => <Details state="acceptedLate" />,
   play: async ({ canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole('button', { name: 'Cancel booking' }));
     await expect(await within(document.body).findByRole('alertdialog')).toHaveAccessibleDescription(/no refund, and the mentor is paid/);

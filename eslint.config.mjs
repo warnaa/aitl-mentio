@@ -97,6 +97,8 @@ const eslintConfig = defineConfig([
     // MSW-generated browser worker, regenerated via `msw init`.
     "packages/ui/.storybook/public/mockServiceWorker.js",
     "**/next-env.d.ts",
+    // Vendored agent skills (Open Mercato), updated from upstream and not project code. User decision 2026-11-01.
+    ".agents/**",
   ]),
 ]);
 

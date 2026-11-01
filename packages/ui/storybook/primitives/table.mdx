@@ -65,18 +65,19 @@ It uses native `table`, `th` and `td` semantics, so a screen reader announces th
 
 - Column headers are short nouns: “Time”, “Mentor”, “Status”.
 - Dates and times are in Warsaw time, stated once in the caption.
+- Dates in cells use the short form “4 Nov, 18:00”: no weekday and no year. The full date with the weekday is on the details page. This keeps about four columns within 320 px. Source: user decision 2026-11-01 (stage 3d finding).
 - Amounts are written like “240 zł”.
 - Status is a Badge with text.
-- Cell text does not wrap; a long value scrolls with the table. Keep the first column the identifying one.
+- Cell text does not wrap; a long value scrolls with the table. Keep the first column the identifying one. Screen lists use DataTable, whose rows stack in narrow containers instead (user decision 2026-11-01).
 
 Sources: book-and-pay UI/UX; D10; user decision 2026-10-31 (zł); U01.1.
 
 ## 9. Responsiveness
 
-At 320 px the table scrolls horizontally inside its container and the page never does, as tested by **Scrolls inside container**. Keep at most about four columns on mobile-first screens. At 768 and 1440 px the table fills the content column up to 1152 px. Sources: WCAG 1.4.10 (data tables may scroll in two dimensions); approved stage-0 Q3; user decision 2026-10-31 (about four columns at most for mobile-first screens).
+The raw Table: at 320 px it scrolls horizontally inside its container and the page never does (DataTable stacks rows instead; see DataTable), as tested by **Scrolls inside container**. Keep at most about four columns on mobile-first screens. At 768 and 1440 px the table fills the content column up to 1152 px. Sources: WCAG 1.4.10 (data tables may scroll in two dimensions); approved stage-0 Q3; user decision 2026-10-31 (about four columns at most for mobile-first screens).
 
 <Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
-<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+The 320 px rendering is the **Narrow** story in the sidebar. It is not embedded here: a docs page renders every example at the page’s own width, so it would look the same as the examples above. Source: verification 2026-11-01 (axe best-practice).
 
 ## 10. API
 

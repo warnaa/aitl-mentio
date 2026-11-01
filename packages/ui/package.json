@@ -16,7 +16,9 @@
     "./backend/layout": "./src/backend/layout/index.ts",
     "./components/mentors/*": "./src/components/mentors/*.tsx",
     "./components/auth/*": "./src/components/auth/*.tsx",
-    "./components/bookings/*": "./src/components/bookings/*.tsx"
+    "./components/bookings/*": "./src/components/bookings/*.tsx",
+    "./components/messages/*": "./src/components/messages/*.tsx",
+    "./components/earnings/*": "./src/components/earnings/*.tsx"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

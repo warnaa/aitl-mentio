@@ -60,5 +60,30 @@ export const RetryAfterFailure: Story = {
     await expect(args.onRetry).toHaveBeenCalledTimes(1);
   },
 };
-export const LongContent: Story = { args: { rows: [{ id: 'long', time: 'Thursday, 6 November 2026, 18:00', mentor: 'Aleksandra Wiśniewska-Kowalczyk', status: 'Cancelled after the deadline — no refund', tone: 'neutral' }, ...bookingRows] } };
+export const LongContent: Story = { args: { rows: [{ id: 'long', time: '6 Nov, 18:00', mentor: 'Aleksandra Wiśniewska-Kowalczyk', status: 'Cancelled after the deadline — no refund', tone: 'neutral' }, ...bookingRows] } };
 export const Narrow: Story = { ...LongContent, globals: { viewport: { value: 'mobile1', isRotated: false } } };
+
+// User decision 2026-11-01: below 48rem of its own width each row stacks, values under their column names.
+export const StackedRows: Story = {
+  ...LongContent,
+  render: args => <div className="w-full max-w-(--viewport-small)"><DataTable {...args} /></div>,
+  play: async ({ canvasElement }) => {
+    const container = canvasElement.querySelector('.mentio-table-container')!;
+    await expect(container.scrollWidth).toBeLessThanOrEqual(container.clientWidth);
+    const row = canvasElement.querySelector('tbody tr')!;
+    await expect(getComputedStyle(row).display).toBe('grid');
+    const label = row.querySelector('.mentio-table-cell-label')!;
+    await expect(getComputedStyle(label).display).toBe('block');
+    await expect(label).toHaveAttribute('aria-hidden', 'true');
+    await expect(within(canvasElement).getAllByRole('columnheader').length).toBeGreaterThan(0);
+    await expect(within(canvasElement).getByText('Cancelled after the deadline — no refund').getBoundingClientRect().right).toBeLessThanOrEqual(container.getBoundingClientRect().right);
+  },
+};
+export const WideKeepsTable: Story = {
+  render: args => <div className="w-full max-w-(--viewport-large)"><DataTable {...args} /></div>,
+  play: async ({ canvasElement }) => {
+    if (canvasElement.querySelector('.mentio-data-table')!.getBoundingClientRect().width < 768) return;
+    await expect(getComputedStyle(canvasElement.querySelector('tbody tr')!).display).toBe('table-row');
+    await expect(getComputedStyle(canvasElement.querySelector('.mentio-table-cell-label')!).display).toBe('none');
+  },
+};

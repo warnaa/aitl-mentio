@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from "react";
+import { useId, type ComponentType, type ReactNode } from "react";
 
 export interface PublicLinkProps {
   href: string;
@@ -47,9 +47,11 @@ function Anchor({ children, ...props }: PublicLinkProps) {
  * N02: no ratings. Server-safe plain markup: all copy and formatted values are props.
  */
 export function MentorDirectory({ heading, intro, items, emptyText, pagination, linkComponent: LinkComponent = Anchor }: MentorDirectoryProps) {
+  // Generated ids: two instances on one page (or a docs page) never share heading ids. useId is server-safe.
+  const uid = useId();
   return (
-    <section className="mentio-public-page" aria-labelledby="mentor-directory-heading">
-      <h1 id="mentor-directory-heading" className="mentio-public-title">
+    <section className="mentio-public-page" aria-labelledby={`${uid}-heading`}>
+      <h1 id={`${uid}-heading`} className="mentio-public-title">
         {heading}
       </h1>
       {intro && <p className="mentio-public-lead">{intro}</p>}

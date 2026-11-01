@@ -34,7 +34,9 @@ Rows are separated by thin lines. Sources: mentor-pages UI/UX; references R01.1 
 There are no visual variants. Optional parts: intro, pagination and `linkComponent`. Sources: package API.
 
 <Unstyled><Canvas of={Stories.Playground} /></Unstyled>
-<Unstyled><Canvas of={Stories.WithPagination} /></Unstyled>
+Also see these stories: **With Pagination** (page 2 of 3 with previous and next links).
+
+Other examples are standalone stories in the sidebar (each is tested in both themes). They are not embedded here, because every example repeats the component’s landmarks and a docs page is one document. Source: verification 2026-11-01 (axe landmark rules).
 
 ## 6. States
 
@@ -45,8 +47,7 @@ There are no visual variants. Optional parts: intro, pagination and `linkCompone
 
 Loading and errors happen on the server: the page renders complete or the app's error boundary handles it (F2). Hover and focus are the Link states. Sources: mentor-pages UI/UX; platform F2.
 
-<Unstyled><Canvas of={Stories.Empty} /></Unstyled>
-<Unstyled><Canvas of={Stories.PartialData} /></Unstyled>
+Also see these stories: **Empty** (no listed mentors); **Partial Data** (no rate and no slots shown as text).
 
 ## 7. Behavior and accessibility
 
@@ -60,8 +61,8 @@ All text and formatted values come through props: prices in “zł”, slot time
 
 Rows fill the content width up to 1152 px, and excerpts stop at 65ch. At 320 px the facts wrap under each other and long names break. Sources: approved stage-0 Q3; WCAG 1.4.10.
 
-<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
-<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+Also see these stories: **Long Content** (long names and excerpts).
+The 320 px rendering is the **Narrow** story in the sidebar. It is not embedded here: a docs page renders every example at the page’s own width, so it would look the same as the examples above. Source: verification 2026-11-01 (axe best-practice).
 
 ## 10. API
 

@@ -54,18 +54,28 @@ It uses native table semantics. `aria-busy` is set while refreshing. Pagination 
 
 ## 8. Content
 
-The empty title follows the screen spec, for example “You have no bookings yet”. The error message says what to do next. The range reads “1–20 of 45”. Column headers are short nouns. The default labels (“Nothing here yet”, “Actions”, “Previous”, “Next”) are English and become Polish with F1. Sources: platform F1; task Content.
+The empty title follows the screen spec, for example “You have no bookings yet”. The error message says what to do next. The range reads “1–20 of 45”. Column headers are short nouns. Dates in cells use the short form “4 Nov, 18:00” (user decision 2026-11-01; see Table). The default labels (“Nothing here yet”, “Actions”, “Previous”, “Next”) are English and become Polish with F1. Sources: platform F1; task Content.
 
 ## 9. Responsiveness
 
-At 320 px the table scrolls inside its container, and the pagination row wraps. At 768 and 1440 px it fills the content column. Sources: WCAG 1.4.10; user decision 2026-10-31 (about four columns at most on mobile-first screens).
+When the table's own width is below 48rem, each row stacks as a block:
+- every value sits under its column name;
+- long values wrap;
+- the header row is visually hidden but stays for screen readers;
+- explicit roles keep the table semantics.
 
-<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
-<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+It is a container query, so a table in a narrow column stacks too. At 320 and 768 px (compact layout, Q3) rows stack. At 1440 px the table fills the content column up to 1152 px. The pagination row wraps.
+
+A column whose header is not plain text (for example a visually hidden “Details”) shows no column name; pass `label` to give it one.
+
+Sources: user decision 2026-11-01 (stacked rows, after the 3d measurement); approved Q3; WCAG 1.3.1, 1.4.10; user decision 2026-10-31 (about four columns at most on mobile-first screens).
+
+<Unstyled><Canvas of={Stories.StackedRows} /></Unstyled>
+The 320 px rendering is the **Narrow** story in the sidebar. It is not embedded here: a docs page renders every example at the page’s own width, so it would look the same as the examples above. Source: verification 2026-11-01 (axe best-practice).
 
 ## 10. API
 
-<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>columns</code></td><td><code>{'{ id, header, cell, className }[]'}</code></td><td>required</td><td>Column definitions.</td></tr><tr><td><code>rows</code></td><td><code>T[] | undefined</code></td><td>required</td><td><code>undefined</code> during the first load.</td></tr><tr><td><code>getRowId</code></td><td><code>(row) =&gt; string</code></td><td>required</td><td>Stable key.</td></tr><tr><td><code>isLoading / error / onRetry</code></td><td>boolean / string / handler</td><td>false / unset</td><td>Refreshing and failure.</td></tr><tr><td><code>emptyTitle / emptyDescription</code></td><td><code>string</code></td><td>“Nothing here yet”</td><td>Empty state copy.</td></tr><tr><td><code>rowActions</code></td><td><code>(row) =&gt; ReactNode</code></td><td>unset</td><td>Per-row ActionButton or link.</td></tr><tr><td><code>pagination</code></td><td><code>{'{ offset, limit, total, onOffsetChange }'}</code></td><td>unset</td><td>Offset paging.</td></tr></tbody></table>
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>columns</code></td><td><code>{'{ id, header, label?, cell, className }[]'}</code></td><td>required</td><td>Column definitions; <code>label</code> names the value in stacked rows (defaults to a text <code>header</code>).</td></tr><tr><td><code>rows</code></td><td><code>T[] | undefined</code></td><td>required</td><td><code>undefined</code> during the first load.</td></tr><tr><td><code>getRowId</code></td><td><code>(row) =&gt; string</code></td><td>required</td><td>Stable key.</td></tr><tr><td><code>isLoading / error / onRetry</code></td><td>boolean / string / handler</td><td>false / unset</td><td>Refreshing and failure.</td></tr><tr><td><code>emptyTitle / emptyDescription</code></td><td><code>string</code></td><td>“Nothing here yet”</td><td>Empty state copy.</td></tr><tr><td><code>rowActions</code></td><td><code>(row) =&gt; ReactNode</code></td><td>unset</td><td>Per-row ActionButton or link.</td></tr><tr><td><code>pagination</code></td><td><code>{'{ offset, limit, total, onOffsetChange }'}</code></td><td>unset</td><td>Offset paging.</td></tr></tbody></table>
 
 Source: exported package API (`@mentio/ui/backend/tables`).
 

@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import { useId, type ComponentType } from "react";
 import type { PublicLinkProps } from "./MentorDirectory";
 
 export interface MentorProfileSlot {
@@ -37,15 +37,17 @@ function Anchor({ children, ...props }: PublicLinkProps) {
  * description, public work, prices, slots by day, the text-only line. N02: no ratings.
  */
 export function MentorProfile({ displayName, description, work, prices, slots, textOnlyNote, linkComponent: LinkComponent = Anchor }: MentorProfileProps) {
+  // Generated ids: two instances on one page (or a docs page) never share heading ids. useId is server-safe.
+  const uid = useId();
   return (
-    <article className="mentio-public-page" aria-labelledby="mentor-profile-name">
-      <h1 id="mentor-profile-name" className="mentio-public-title">
+    <article className="mentio-public-page" aria-labelledby={`${uid}-name`}>
+      <h1 id={`${uid}-name`} className="mentio-public-title">
         {displayName}
       </h1>
       <p className="mentio-profile-description">{description}</p>
 
-      <section className="mentio-profile-section" aria-labelledby="mentor-profile-work">
-        <h2 id="mentor-profile-work" className="mentio-public-heading">
+      <section className="mentio-profile-section" aria-labelledby={`${uid}-work`}>
+        <h2 id={`${uid}-work`} className="mentio-public-heading">
           {work.heading}
         </h2>
         <ul className="mentio-profile-work">
@@ -60,8 +62,8 @@ export function MentorProfile({ displayName, description, work, prices, slots, t
         </ul>
       </section>
 
-      <section className="mentio-profile-section" aria-labelledby="mentor-profile-prices">
-        <h2 id="mentor-profile-prices" className="mentio-public-heading">
+      <section className="mentio-profile-section" aria-labelledby={`${uid}-prices`}>
+        <h2 id={`${uid}-prices`} className="mentio-public-heading">
           {prices.heading}
         </h2>
         {prices.items ? (
@@ -75,15 +77,16 @@ export function MentorProfile({ displayName, description, work, prices, slots, t
         )}
       </section>
 
-      <section className="mentio-profile-section" aria-labelledby="mentor-profile-slots">
-        <h2 id="mentor-profile-slots" className="mentio-public-heading">
+      <section className="mentio-profile-section" aria-labelledby={`${uid}-slots`}>
+        <h2 id={`${uid}-slots`} className="mentio-public-heading">
           {slots.heading}
         </h2>
         {slots.days.length === 0 ? (
           <p>{slots.emptyText}</p>
         ) : (
+          // A day groups slot links under its h3; it is not a landmark (14 days would add 14 regions).
           slots.days.map((day) => (
-            <section key={day.label} className="mentio-profile-day" aria-label={day.label}>
+            <section key={day.label} className="mentio-profile-day">
               <h3 className="mentio-profile-day-label">{day.label}</h3>
               <ul className="mentio-profile-slots">
                 {day.slots.map((slot) => (

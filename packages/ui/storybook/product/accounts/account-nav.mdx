@@ -26,7 +26,9 @@ The brand link and a named `nav`. When signed out, the nav holds “Sign in” (
 There are no visual variants; the state comes from `signedIn`. Sources: package API.
 
 <Unstyled><Canvas of={Stories.SignedOut} /></Unstyled>
-<Unstyled><Canvas of={Stories.SignedIn} /></Unstyled>
+Also see these stories: **Signed In** (the app's sign-out control instead of the links).
+
+Other examples are standalone stories in the sidebar (each is tested in both themes). They are not embedded here, because every example repeats the component’s landmarks and a docs page is one document. Source: verification 2026-11-01 (axe landmark rules).
 
 ## 6. States
 
@@ -36,7 +38,7 @@ There are no visual variants; the state comes from `signedIn`. Sources: package 
 
 The links have focus and hover states. Sources: accounts UI/UX.
 
-<Unstyled><Canvas of={Stories.SignOutFailed} /></Unstyled>
+Also see these stories: **Sign Out Failed** (the failure stays next to the control).
 
 ## 7. Behavior and accessibility
 
@@ -50,7 +52,7 @@ Use verb phrases: “Sign in”, “Create account”, “Sign out”. All text 
 
 At 320 px the brand and nav wrap onto two lines. Sources: WCAG 1.4.10.
 
-<Unstyled><Canvas of={Stories.Narrow} /></Unstyled>
+The 320 px rendering is the **Narrow** story in the sidebar. It is not embedded here: a docs page renders every example at the page’s own width, so it would look the same as the examples above. Source: verification 2026-11-01 (axe best-practice).
 
 ## 10. API
 

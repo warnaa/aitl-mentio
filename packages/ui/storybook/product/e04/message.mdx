@@ -1,0 +1,117 @@
+import { Meta, Canvas, Unstyled } from '@storybook/addon-docs/blocks';
+import * as Stories from './message.stories';
+
+<Meta of={Stories} />
+
+# Message
+
+**Preliminary.** E04 has no screen specification yet (approved stage-0 Q4). Everything here follows the backlog, the brief and the references; points marked **Proposal** wait for your decision or the E04 spec.
+
+## 1. Purpose
+
+Show one message in a text session, so both participants can see who wrote what, when, and which message it answers. Sources: E04-S01; references R02.2, R02.3.
+
+## 2. When to use
+
+- The session room (`/sesje/[id]`, user decision 2026-11-01), for the mentee and the mentor, during and after the session.
+- The question sent with the booking: it is the conversation's first message (`preformatted`) and appears again on the mentor's decision screen (E03).
+
+Sources: E04-S01; E03-S01 (the mentor reads the question before deciding); brief key flow step 5.
+
+## 3. When not to use
+
+- A booking's facts (time, length, price) belong in BookingSummary.
+- Outcomes of an action (sent, failed, session ended) go next to the action, not into the conversation as fake messages. Sources: R02.4.
+- Notifications and system events are not messages. Use Alert. Sources: R02.4; D19.
+
+## 4. Anatomy
+
+- An `article` named by author, role and time.
+- A metadata line: the author in semibold, an optional role, and `<time>`.
+- An optional quote of the answered message: author, excerpt and a “Go to …’s message” link.
+- The body: text paragraphs with line breaks kept, and code blocks and inline code in the code role.
+- An optional Reply button. It is absent from a read-only transcript.
+
+Sources: R02.2, R02.3, R01.2; approved Q5.
+
+## 5. Variants
+
+There are no visual variants. Optional parts: `role`, `replyTo`, `reply`, and `preformatted` (the whole body in the code role, used for the question, as BookingSummary shows it in E02). Sources: package API; book-and-pay UI/UX (question in the code role).
+
+<Unstyled><Canvas of={Stories.Playground} /></Unstyled>
+<Unstyled><Canvas of={Stories.WithReplyQuote} /></Unstyled>
+<Unstyled><Canvas of={Stories.Question} /></Unstyled>
+
+## 6. States
+
+- **Default.**
+- **Linked:** after someone follows a quote's link, the message is the URL target. It gets the muted surface, with no animation. Sources: U02.1, R02.4.
+- **Focused:** the target receives focus (`tabIndex={-1}`) and shows the focus ring. Sources: WCAG 2.4.3, 2.4.7.
+- **Read-only:** no Reply button.
+
+A message is never shown as “sending” or “failed”: it appears only after the server confirms it, and a failure stays in the composer (MessageComposer). Disabled, pressed, selected and error states do not apply to the message itself. The Reply button has the Button states. Sources: task form rules (success only after server confirmation); Proposal (no optimistic messages).
+
+<Unstyled><Canvas of={Stories.States} /></Unstyled>
+
+## 7. Behavior and accessibility
+
+- Every message is an `article`. Its accessible name is built from separate ids (author, role, time), so it reads “Alex Mentor 18:09” rather than one run-together word.
+- The conversation is an ordered list (`ol`).
+- The Reply button is described by the same name, so a screen reader hears which message it answers.
+- The quote link moves focus to its target.
+- The button target is 32 px (`sm`), above the 24 × 24 px minimum.
+
+Sources: WCAG 1.3.1, 2.4.4, 2.5.8; found by the unit test on accessible names.
+
+## 8. Content
+
+- **Author:** the display name.
+- **Role:** “Mentor” or “Mentee”; for the question, “Question sent with the booking”.
+- **Time:** Warsaw time, formatted by the app.
+- **Excerpt:** the first line of the source message without fence markers, cut by the app at about 80 characters with an ellipsis (Proposal).
+- **Body:** shown exactly as typed. The interface adds no emoji.
+
+Code format (user decision 2026-11-01): text between lines of three backticks becomes a code block, and text between single backticks becomes inline code. An unclosed fence stays text. Long lines wrap; names and URLs break anywhere.
+
+Sources: R02.3, R02.5, R01.2; D10.
+
+## 9. Responsiveness
+
+At 320 px the metadata wraps and code lines wrap inside the column (no horizontal scroll). Text and code stop at 65ch at every width. Sources: approved Q3; WCAG 1.4.10.
+
+<Unstyled><Canvas of={Stories.LongContent} /></Unstyled>
+
+## 10. API
+
+<table><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>id</code></td><td><code>string</code></td><td>required</td><td>DOM id; the target of quote links.</td></tr><tr><td><code>author / role</code></td><td><code>string / string</code></td><td>— / unset</td><td>Who wrote it, and their part in the session.</td></tr><tr><td><code>dateTime / time</code></td><td><code>string / string</code></td><td>required</td><td>ISO timestamp and its formatted text.</td></tr><tr><td><code>body</code></td><td><code>string</code></td><td>required</td><td>Plain text with fenced and inline code.</td></tr><tr><td><code>preformatted</code></td><td><code>boolean</code></td><td><code>false</code></td><td>The whole body in the code role (the question).</td></tr><tr><td><code>replyTo</code></td><td><code>{'{ author, excerpt, href, goToLabel }'}</code></td><td>unset</td><td>The answered message.</td></tr><tr><td><code>reply</code></td><td><code>{'{ label, onReply }'}</code></td><td>unset</td><td>Shows the Reply button.</td></tr></tbody></table>
+
+Source: `@mentio/ui/components/messages/Message`.
+
+## 11. Code
+
+```tsx
+<ol className="mentio-conversation">
+  {messages.map((message) => (
+    <li key={message.id}>
+      <Message id={`message-${message.id}`} author={message.author.displayName} role={roleLabel[message.role]}
+        dateTime={message.createdAt} time={formatTime(message.createdAt)} body={message.body}
+        replyTo={message.replyTo && { author: message.replyTo.author.displayName, excerpt: excerpt(message.replyTo.body), href: `#message-${message.replyTo.id}`, goToLabel: `Przejdź do wiadomości: ${message.replyTo.author.displayName}` }}
+        reply={session.writable ? { label: 'Odpowiedz', onReply: () => setReplyTo(message) } : undefined} />
+    </li>
+  ))}
+</ol>
+```
+
+Sources: user decision 2026-11-01 (endpoint and route); the message DTO waits for the E04 spec.
+
+## 12. Good and bad
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td>Left-aligned rows with the author named on each message.</td><td>Chat bubbles where only the side and colour say who wrote it: colour and position alone carry the meaning (WCAG 1.4.1).</td></tr><tr><td>A short quote with a link to the source message.</td><td>A nested thread panel beside the conversation (R02.6, approved Q5).</td></tr><tr><td>Code in a code block that wraps.</td><td>Code in proportional text, or a block that scrolls sideways at 320 px.</td></tr></tbody></table>
+
+## 13. Related
+
+- MessageComposer writes the reply.
+- BookingSummary shows the session details beside the conversation.
+- Alert carries session notices.
+- Patterns: Conversation and reply; Next-visit settlement.
+- Screens: E04, and E03 (the question on the decision screen).

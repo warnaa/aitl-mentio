@@ -15,6 +15,8 @@ import { EmptyState, ErrorMessage, LoadingMessage } from "../feedback";
 export interface DataTableColumn<T> {
   id: string;
   header: ReactNode;
+  /** Shown above the value when rows stack (narrow container). Defaults to `header` when it is text. */
+  label?: string;
   cell: (row: T) => ReactNode;
   className?: string;
 }
@@ -58,28 +60,34 @@ export function DataTable<T>({
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
   }
 
+  // User decision 2026-11-01: below 48rem of its own width a row stacks as a block, each value under its
+  // column name. Explicit roles keep the table semantics when CSS changes `display`; the visible
+  // column name is aria-hidden because the header association already names the cell.
+  const labelOf = (column: DataTableColumn<T>) => column.label ?? (typeof column.header === "string" ? column.header : undefined);
+  const cellLabel = (label: string | undefined) => label && <span className="mentio-table-cell-label" aria-hidden="true">{label}</span>;
   return (
-    <div className="flex flex-col gap-3" aria-busy={isLoading}>
-      <Table>
-        <TableHeader>
-          <TableRow>
+    <div className="mentio-data-table flex flex-col gap-3" aria-busy={isLoading}>
+      <Table role="table">
+        <TableHeader role="rowgroup">
+          <TableRow role="row">
             {columns.map((column) => (
-              <TableHead key={column.id} className={column.className}>
+              <TableHead key={column.id} role="columnheader" className={column.className}>
                 {column.header}
               </TableHead>
             ))}
-            {rowActions && <TableHead className="text-right">Actions</TableHead>}
+            {rowActions && <TableHead role="columnheader" className="text-right">Actions</TableHead>}
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody role="rowgroup">
           {rows.map((row) => (
-            <TableRow key={getRowId(row)}>
+            <TableRow key={getRowId(row)} role="row">
               {columns.map((column) => (
-                <TableCell key={column.id} className={column.className}>
-                  {column.cell(row)}
+                <TableCell key={column.id} role="cell" className={column.className}>
+                  {cellLabel(labelOf(column))}
+                  <div className="mentio-table-cell-value">{column.cell(row)}</div>
                 </TableCell>
               ))}
-              {rowActions && <TableCell className="text-right">{rowActions(row)}</TableCell>}
+              {rowActions && <TableCell role="cell" className="text-right">{cellLabel("Actions")}<div className="mentio-table-cell-value">{rowActions(row)}</div></TableCell>}
             </TableRow>
           ))}
         </TableBody>

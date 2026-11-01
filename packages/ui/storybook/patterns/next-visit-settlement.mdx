@@ -1,0 +1,29 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Patterns/Next-visit settlement" />
+
+# Next-visit settlement (preliminary)
+
+Nothing in Mentio runs on a timer. A session that didn't happen, or a booking nobody accepted, is settled when either person next opens it. The screen first checks, then states the outcome and what it means for the money. Sources: E04-S02; R09, R10, R12; D13, D16.
+
+## Rules
+
+1. While the check runs, say what is happening: “Checking what happened in this session…”. If it fails, say that nothing changed and offer “Try again”. Sources: B9 settle; F1.
+2. State the outcome as a fact with its rule, from the reader's side:
+   - **Mentor no-show:** the mentee reads “Alex did not post within 10 minutes of the start”, and the mentor reads “You did not post…”.
+   - **Mentee no-show:** the mentor reads “Kasia did not open the session”.
+   - **Not accepted in time (R12):** the mentee reads “Alex did not accept before the session started”.
+
+   Sources: R10, R12.
+3. Name the money consequence on the same screen: “Your refund of 240 zł has started”, “Nothing is earned for it”, or the EarningsSummary for a paid mentor. A refund is “started” until it succeeds. Sources: R09, R06; B9.
+4. Never promise when it happens (“today”, “within an hour”): no timers run, and the refund follows the next visit. Sources: D16 (“the same day” is no longer guaranteed).
+5. A mentee who missed a held session keeps the mentor's answer. Sources: R10; R02 (the transcript stays private).
+6. Outcomes are shown in place, as a note: no toast and no colour-only status. Sources: R02.4; WCAG 1.4.1.
+
+## States and stories (Product › E04 › Screens; Product › E03 › Screens)
+
+<table><thead><tr><th>State</th><th>Story</th></tr></thead><tbody><tr><td>Checking / check failed</td><td>Next visit — checking the outcome; check failed</td></tr><tr><td>Mentor no-show</td><td>Next visit — mentee sees a mentor no-show; mentor sees their no-show</td></tr><tr><td>Mentee no-show</td><td>Next visit — mentor sees a mentee no-show; mentee sees their no-show</td></tr><tr><td>Not accepted in time (R12)</td><td>E03: Decision — not accepted in time; Mentee — not accepted in time</td></tr></tbody></table>
+
+## Composition
+
+LoadingMessage, ErrorMessage with retry, Alert (the outcome as a note), StatusBadge, EarningsSummary, BookingSummary (money facts). Sources: approved stage-0 inventory; derived decision 3d (SettlementNotice is an Alert composition).

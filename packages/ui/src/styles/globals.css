@@ -700,3 +700,56 @@
   /* Pasted code and errors keep their line breaks; long lines wrap inside the card. */
   .mentio-booking-question-text { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-code); font-size: var(--text-code); line-height: var(--line-code); max-inline-size: var(--prose-max-width); }
 }
+
+/* Stage 3d (preliminary, E04/E05 contracts missing): Message, MessageComposer, the session layout
+ * and EarningsSummary. R02.1 conversation first, R02.2 reply quote, R02.3 author and time,
+ * R01.2 code role, U02.1 no motion, approved Q3 (secondary information after the conversation). */
+@layer components {
+  .mentio-session { display: grid; gap: var(--space-section); align-items: start; }
+  .mentio-session-main { display: flex; flex-direction: column; gap: var(--space-between-groups); min-inline-size: 0; }
+  .mentio-session-aside { display: flex; flex-direction: column; gap: var(--space-between-groups); min-inline-size: 0; }
+  /* User decision 2026-11-01: the side column appears from Tailwind's xl, where the conversation keeps about 65ch. */
+  @variant xl { .mentio-session { grid-template-columns: minmax(0, 1fr) calc(var(--spacing) * 72); } }
+  .mentio-conversation { display: flex; flex-direction: column; gap: var(--space-within-group); margin: 0; padding: 0; list-style: none; }
+  .mentio-message { display: flex; flex-direction: column; gap: var(--space-within-group); border-radius: var(--radius-md); padding: var(--space-within-group); scroll-margin-block: var(--space-section); outline: none; }
+  /* U02.1/R02.4: the linked message is marked in place, without animation. */
+  .mentio-message:target { background: var(--muted); }
+  .mentio-message:focus-visible { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
+  .mentio-message-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spacing) var(--space-within-group); color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-message-author { color: var(--foreground); font-weight: var(--font-weight-semibold); overflow-wrap: anywhere; }
+  .mentio-message-meta > time { font-variant-numeric: tabular-nums; }
+  .mentio-message-body { display: flex; flex-direction: column; gap: var(--space-within-group); }
+  .mentio-message-text { max-inline-size: var(--prose-max-width); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .mentio-message-preformatted, .mentio-message-code { font-family: var(--font-code); font-size: var(--text-code); line-height: var(--line-code); }
+  .mentio-message-code { max-inline-size: var(--prose-max-width); border-radius: var(--radius-md); background: var(--muted); padding: var(--space-within-group) var(--space-between-groups); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .mentio-message-inline-code { border-radius: var(--radius-sm); background: var(--muted); padding-inline: var(--spacing); font-family: var(--font-code); font-size: var(--text-code); }
+  /* User decision 2026-11-01: a 2 px rule in the metadata colour marks a quote; the author line says it in words too. */
+  .mentio-message-quote { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing); max-inline-size: var(--prose-max-width); border-inline-start: calc(var(--divider-width) * 2) solid var(--muted-foreground); padding-inline-start: var(--space-within-group); font-size: var(--text-label); line-height: var(--line-label); }
+  .mentio-message-quote-author { font-weight: var(--font-weight-medium); }
+  .mentio-message-quote-excerpt { color: var(--muted-foreground); overflow-wrap: anywhere; }
+  .mentio-composer { display: flex; flex-direction: column; gap: var(--space-within-group); }
+  .mentio-composer-reply { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-within-group); }
+  .mentio-earnings-body { display: flex; flex-direction: column; gap: var(--space-between-groups); }
+  .mentio-earnings-lines { display: grid; gap: var(--space-within-group); max-inline-size: var(--prose-max-width); }
+  .mentio-earnings-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--spacing) var(--space-between-groups); }
+  .mentio-earnings-line > dd { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+  .mentio-earnings-share { border-top: var(--divider-width) solid var(--border); padding-block-start: var(--space-within-group); font-weight: var(--font-weight-semibold); }
+}
+
+/* User decision 2026-11-01 (POSTEP 16): DataTable rows stack below 48rem of the table's own width
+ * (approved Q3: 768 px is the compact layout). Each value sits under its column name; values wrap.
+ * A container query, so narrow columns and docs previews stack too, not only narrow windows. */
+@layer components {
+  .mentio-data-table { container: data-table / inline-size; }
+  .mentio-table-cell-label { display: none; }
+  @container data-table (width < 48rem) {
+    :is(.mentio-table, .mentio-table-body, .mentio-table-row, .mentio-table-cell) { display: block; }
+    .mentio-table-header { position: absolute; inline-size: var(--raw-line-1); block-size: var(--raw-line-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .mentio-table-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-within-group); padding-block: var(--space-between-groups); }
+    /* WCAG 1.4.10: a long status wraps inside the stacked cell (as in card headings, 3c). */
+    .mentio-table-cell .mentio-badge { max-inline-size: 100%; white-space: normal; text-align: start; }
+    .mentio-table-cell { padding: 0; white-space: normal; overflow-wrap: anywhere; text-align: start; }
+    .mentio-table-cell-label { display: block; color: var(--muted-foreground); font-size: var(--text-metadata); line-height: var(--line-metadata); }
+    .mentio-table-cell:not(:has(.mentio-table-cell-label)) { margin-block-start: var(--spacing); }
+  }
+}
