@@ -49,7 +49,7 @@ There are no visual variants. Optional parts: `role`, `replyTo`, `reply`, and `p
 - **Focused:** the target receives focus (`tabIndex={-1}`) and shows the focus ring. Sources: WCAG 2.4.3, 2.4.7.
 - **Read-only:** no Reply button.
 
-A message is never shown as “sending” or “failed”: it appears only after the server confirms it, and a failure stays in the composer (MessageComposer). Disabled, pressed, selected and error states do not apply to the message itself. The Reply button has the Button states. Sources: task form rules (success only after server confirmation); Proposal (no optimistic messages).
+A message is never shown as “sending” or “failed”: it appears only after the server confirms it, and a failure stays in the composer (MessageComposer). Disabled, pressed, selected and error states do not apply to the message itself. The Reply button has the Button states. Sources: task form rules (success only after server confirmation); user decision 12 (2026-11-01: no optimistic messages).
 
 <Unstyled><Canvas of={Stories.States} /></Unstyled>
 

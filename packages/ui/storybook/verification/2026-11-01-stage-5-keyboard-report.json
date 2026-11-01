@@ -1,0 +1,221 @@
+{
+  "results": [
+    {
+      "theme": "light",
+      "width": 320,
+      "kind": "dialog",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "kind": "alertdialog",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "kind": "dropdownmenu",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "kind": "popover",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "kind": "select",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "kind": "checkbox",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "kind": "dialog",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "kind": "alertdialog",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "kind": "dropdownmenu",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "kind": "popover",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "kind": "select",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "kind": "checkbox",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "kind": "dialog",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "kind": "alertdialog",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "kind": "dropdownmenu",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "kind": "popover",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "kind": "select",
+      "result": "pass"
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "kind": "checkbox",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "kind": "dialog",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "kind": "alertdialog",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "kind": "dropdownmenu",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "kind": "popover",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "kind": "select",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "kind": "checkbox",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "kind": "dialog",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "kind": "alertdialog",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "kind": "dropdownmenu",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "kind": "popover",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "kind": "select",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "kind": "checkbox",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "kind": "dialog",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "kind": "alertdialog",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "kind": "dropdownmenu",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "kind": "popover",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "kind": "select",
+      "result": "pass"
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "kind": "checkbox",
+      "result": "pass"
+    }
+  ],
+  "failures": []
+}

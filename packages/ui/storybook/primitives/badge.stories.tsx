@@ -21,10 +21,13 @@ export const Outline: Story = { args: { variant: 'outline', children: 'Awaiting 
 export const Ghost: Story = { args: { variant: 'ghost', children: 'Cancelled — refunded' } };
 export const LinkVariant: Story = { name: 'Link', args: { variant: 'link', asChild: true, children: <a href="#booking-details">Cancelled — refund in progress</a> } };
 export const StatusInContext: Story = {
+  play: async () => {
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
   render: () => <div className="primitive-demo flex flex-col gap-within-group">
     <p className="flex flex-wrap items-center gap-within-group">Booking with Alex, 6 November 2026 at 18:00 <Badge variant="outline">Awaiting mentor decision</Badge></p>
     <p className="flex flex-wrap items-center gap-within-group">Booking with Marta, 7 November 2026 at 09:30 <Badge variant="destructive">Payment declined</Badge></p>
-    <p className="flex flex-wrap items-center gap-within-group">Booking with Piotr, 3 November 2026 at 17:00 <Badge variant="secondary">Cancelled after the deadline — no refund</Badge></p>
+    <p className="flex flex-wrap items-center gap-within-group">Booking with Piotr, 3 November 2026 at 17:00 <Badge variant="secondary" className="whitespace-normal text-left">Cancelled after the deadline — no refund</Badge></p>
   </div>,
 };
 export const States: Story = {

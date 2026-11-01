@@ -1,6 +1,6 @@
 # Mentio design system — progress and stage 0 plan
 
-Date: 2026-10-31. Status: **stage 4 complete; awaiting “dalej” before stage 5.**
+Date: 2026-10-31. Status: **stage 5 audit complete; awaiting the independent agent test in a fresh session.**
 Documentation and story UI: English, as explicitly requested in `lekcja-06/storybook-mentio.md`. This file is the only output of stage 0. No dependencies, styles, components, application code or remote resources were changed.
 
 ## Stage checklist
@@ -10,7 +10,7 @@ Documentation and story UI: English, as explicitly requested in `lekcja-06/story
 - [x] 2 — primitives, batches of approximately six; stop after each batch.
 - [x] 3 — product components, patterns and screen compositions (E03–E05 preliminary, pending specs).
 - [x] 4 — usage documentation and agent reference.
-- [ ] 5 — build, lint, types, token audit, accessibility, responsive/theme/keyboard checks; prepare a separate-session agent test.
+- [x] 5 — build, lint, types, token audit, accessibility, responsive/theme/keyboard checks; prepare a separate-session agent test.
 
 The instruction to write **only POSTEP.md in stage 0** takes precedence over creating separate spec/run/lesson files now. This file records the stage's work and outcome. Before implementation, turn the approved plan into a dated `.ai/specs/YYYY-MM-DD-mentio-design-system.md` with Done means and create the dated run log, subject to the agreed documentation exception to the directory scope. No implementation is authorized by this inventory alone.
 
@@ -741,3 +741,83 @@ Next: “dalej” for stage 5 (full audit, the 320/768/1440, theme, keyboard and
 - 22 approved: `npm run check:agent-doc` runs in the CI lint job.
 
 Open: interpretations 1–8. Next: “dalej” for stage 5. Not committed; no push.
+
+## Stage 5 — audit and separate-session test — 2026-11-01
+
+User requested continuation from the next step. The supplied filename
+`lekcja-06/prompt-storybook.md` is absent; the governing task referenced throughout
+this file is `lekcja-06/storybook-mentio.md`, which was read and followed.
+Run log: `.ai/runs/2026-11-01-mentio-stage-5-audit.md`.
+Report: `storybook/verification/2026-11-01-stage-5.md`.
+
+Stage 5 audit complete; the design system as a whole still awaits the separate-session test.
+User subsequently requested a local commit of stage 5. No push or publication.
+
+Verified:
+- 75 docs pages, 37 documented catalog components, 479 stories.
+- 151 authored play definitions; 157 stories with play including inheritance
+  (314 executions in both themes; 644 render/axe-only tests; 958 total).
+- 450 built docs width/theme checks, 150 axe audits and 89 internal links pass;
+  all 37 component pages have 13 sections.
+- 2,874 story width/theme checks found three narrow fixture overflows; fixed
+  with documented classes, then rechecked in 48 targeted width/theme checks.
+  No production components or tokens changed. Negative controls restore all
+  three overflows (53/16/1 px); the corrected stories have none.
+- 36 keyboard checks, six overlay groups, eight motion groups, and actual toolbar
+  theme switching (including an already-open portal) pass.
+- Lint, types, tokens, agent-reference check, 298 unit tests at 100%, 958 story
+  tests, app build, 10 integration tests and dependency audit pass. After the
+  final Skeleton adjustment, its affected 14 tests also pass.
+- Corrected E04 counts 25 → 23 and an obsolete Proposal marker for decision 12.
+
+The report lists the cold-run timing failures and the initial sweep's transient
+service-worker/unfinished-play errors, all cleared by the recorded rechecks.
+Accepted Tooltip/font limitations, Select/Open's documented axe exception,
+manual screen-reader/cross-browser checks and product-spec gaps remain explicit.
+The only new proposal is the test-screen choice below.
+
+### Prepared test for a fresh, separate agent session (not run here)
+
+**Proposed test screen: administrator Users, `/admin/users`.** It has no screen
+story in this Storybook. It already exists in the application, so this tests a new
+Storybook composition rather than inventing product scope. Backlog authority:
+E01-S01-T01 (#24); accounts spec UI/UX → Admin pages and Stage B.4 → Admin guard.
+This choice does not approve a new admin design or migration to PanelShell.
+
+Use this prompt in a fresh session (do not inherit this conversation):
+
+> Build the presentation of the administrator Users screen as new Storybook stories.
+> Read `docs/design-system.md` first, then the Storybook guides and relevant component
+> pages. Sources: `.ai/specs/backlog.md` E01-S01-T01;
+> `.ai/specs/2026-10-30-accounts-and-sign-in.md`, UI/UX → Admin pages and Stage B.4;
+> the existing `packages/app/src/app/admin/users/` list and its service/API contract.
+> Preserve the established columns Email, Name (missing: “—”), Created, newest first,
+> and pagination of 20. Keep English story UI, fictional realistic data and no invented
+> admin actions. Use the current admin layout as the reference; do not migrate it to
+> PanelShell. Compose the real package components, use semantic tokens, and add no new
+> variants, tokens, dependencies or production components. Do not edit the application,
+> publish, push, or copy its page wholesale into the story.
+>
+> Show first load, results, empty, load failure with retry, refresh/pagination with
+> existing rows retained, missing names and long data. Verify 320/768/1440 px in light
+> and dark, keyboard and axe. If simulating requests, use the existing apiCall contract
+> and MSW; never implement a parallel fetch helper. The server guard is a contract,
+> not a story implementation: anonymous → sign-in with returnTo; signed-in non-admin →
+> 404. Do not simulate client-side authorization as evidence that the guard works.
+>
+> Keep a decision ledger: for each choice record the source file and section. For
+> anything the files cannot answer, record the exact missing instruction, where you
+> searched, and its effect on the screen. Ask or mark a proposal; never silently guess.
+> Deliver the stories, validation evidence and the ledger. Do not modify the design
+> system documentation to hide a gap before the reviewer sees it.
+
+Acceptance of the **test**, assessed after that session: existing component imports
+and APIs are correct; no invented style/business rules; loading/error/empty/refresh
+are distinct; responsive stacking and keyboard work; all guesses/missing guidance
+are listed with sources. Review that ledger, then fix each documentation gap or add
+it explicitly to **What is missing**. Only then can the separate-session Done-means
+item be checked and the design-system spec be moved to `implemented/`.
+
+Next after the audit: run this test in a fresh session. The present session must not
+execute it (task stage 5.5). Interpretations 1–8 and the previously recorded product
+spec gaps remain open; continuation is not approval of those decisions.

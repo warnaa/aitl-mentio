@@ -531,3 +531,23 @@ double announcement.
 - `check:tokens` scans MDX prose, so a “never write this” example such as a palette class or a
   bracket value fails the gate. Describe the form in words (“a colour family with a shade”)
   instead of weakening the checker.
+
+## 2026-11-01 - Browser audit readiness must include portals
+
+An open Dialog/AlertDialog story can render all visible content into a body portal;
+its `#storybook-root` children may be hidden. Waiting for a visible root child made
+the stage-5 audit time out on valid open-overlay stories. Wait for attached story
+content or a portal, then measure the visible overlay as well as the document.
+Also distinguish authored `play` definitions, stories inheriting `play` through
+spread, and render/axe tests when reporting interaction coverage.
+
+## 2026-11-01 - Sweep primitive examples too; wait for play completion
+
+The stage-5 full width sweep found three overflows missed by the earlier Product/
+Patterns-only sweep. Fixed-width demo wrappers must fit their padded parent, long
+Badge text needs the documented wrapping classes, and a fixed-width Skeleton in an
+implicit grid can expand the track despite max-width 100%. A fluid width with a
+maximum token avoids that intrinsic sizing cycle. Negative controls reproduced all
+three. For interactive width sweeps, wait for Storybook's finished render/play phase
+before navigating; a short timer can interrupt async assertions and report false
+console failures.

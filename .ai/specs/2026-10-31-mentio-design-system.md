@@ -1,6 +1,6 @@
 # Mentio design system and Storybook
 
-Date: 2026-10-31. Status: approved plan, staged implementation underway.
+Date: 2026-10-31. Status: stages 0–5 complete; independent-session agent test pending.
 
 Authority: user approved all five decisions in packages/ui/POSTEP.md and authorized stage 1. Detailed scope, sources, component/screen mapping, dependency allowlist, menu and estimates live in that file and lekcja-06/storybook-mentio.md. Approved appearance and token values: lekcja-06/referencje.md and tokeny.md. Later stages require explicit “dalej”; stage 2 additionally stops after each batch.
 
@@ -28,6 +28,6 @@ Storybook build, lint, typecheck, unit coverage, app production build, integrati
 - [x] Stage 2: each approved component has 13 documentation sections, variants and state matrix, interaction/a11y evidence (23 pages; token checker at zero; deferred Q4 components listed for What is missing).
 - [x] Stage 3: patterns cover API/data states; specified key screens have stories and state maps; unresolved contracts appear in What is missing (E03–E05 preliminary, decided 2026-11-01).
 - [x] Stage 4: guides/epics/component catalog/agent reference complete and linked (2026-11-01; docs/design-system.md generated from the inventory).
-- [ ] Stage 5: full gate and responsive/theme/keyboard/overlay checks documented; counts and prepared independent-session test recorded.
+- [x] Stage 5: full gate and responsive/theme/keyboard/overlay checks documented; counts and prepared independent-session test recorded (2026-11-01; final audit report in packages/ui/storybook/verification/).
 - [ ] Separate-session agent test performed by the user and its documentation gaps resolved or tracked.
 - [ ] Fully implemented spec moved to implemented only after all applicable criteria are met.

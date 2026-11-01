@@ -1,0 +1,72 @@
+{
+  "checks": 6,
+  "pages": 1,
+  "checkedLinks": 0,
+  "axeAudits": 2,
+  "axeGate": "WCAG 2.0/2.1/2.2 A and AA rules",
+  "errors": [],
+  "violations": [],
+  "bestPracticeInformational": [],
+  "report": [
+    {
+      "id": "product-e04-the-text-session-message--docs",
+      "theme": "dark",
+      "width": 320,
+      "title": "Message",
+      "rootTheme": "dark",
+      "overflow": 0,
+      "sections": 13,
+      "rawTables": 0
+    },
+    {
+      "id": "product-e04-the-text-session-message--docs",
+      "theme": "light",
+      "width": 768,
+      "title": "Message",
+      "rootTheme": "light",
+      "overflow": 0,
+      "sections": 13,
+      "rawTables": 0
+    },
+    {
+      "id": "product-e04-the-text-session-message--docs",
+      "theme": "light",
+      "width": 320,
+      "title": "Message",
+      "rootTheme": "light",
+      "overflow": 0,
+      "sections": 13,
+      "rawTables": 0
+    },
+    {
+      "id": "product-e04-the-text-session-message--docs",
+      "theme": "light",
+      "width": 1440,
+      "title": "Message",
+      "rootTheme": "light",
+      "overflow": 0,
+      "sections": 13,
+      "rawTables": 0
+    },
+    {
+      "id": "product-e04-the-text-session-message--docs",
+      "theme": "dark",
+      "width": 768,
+      "title": "Message",
+      "rootTheme": "dark",
+      "overflow": 0,
+      "sections": 13,
+      "rawTables": 0
+    },
+    {
+      "id": "product-e04-the-text-session-message--docs",
+      "theme": "dark",
+      "width": 1440,
+      "title": "Message",
+      "rootTheme": "dark",
+      "overflow": 0,
+      "sections": 13,
+      "rawTables": 0
+    }
+  ]
+}

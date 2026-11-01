@@ -103,7 +103,7 @@ export const StructureAndFocusOrder: Story = {
 };
 // WCAG 1.4.10 regression: a header narrower than 24rem moves the action under the title.
 export const NarrowHeaderReflow: Story = {
-  render: () => <div className="w-(--viewport-small)"><Card>
+  render: () => <div className="w-(--viewport-small) max-w-full"><Card>
     <CardHeader>
       <CardTitle><h2>Booking summary</h2></CardTitle>
       <CardDescription>Text session with Aleksandra Wiśniewska-Kowalczyk, 6 November 2026 at 18:00 (Warsaw time).</CardDescription>
@@ -112,6 +112,7 @@ export const NarrowHeaderReflow: Story = {
   </Card></div>,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     const card = canvasElement.querySelector('[data-slot=card]')!.getBoundingClientRect();
     const title = canvas.getByRole('heading', { name: 'Booking summary' }).getBoundingClientRect();
     const action = canvas.getByRole('button', { name: 'Edit question or length' }).getBoundingClientRect();

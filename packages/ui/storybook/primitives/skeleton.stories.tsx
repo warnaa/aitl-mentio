@@ -28,9 +28,12 @@ export const ListRows: Story = {
   </section>,
 };
 export const MentorCard: Story = {
+  play: async () => {
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
   render: () => <div className="primitive-demo" aria-busy="true">
     <p role="status" className="sr-only">Loading mentors…</p>
-    <Card><CardHeader><Skeleton className="h-6 w-48" /><Skeleton className="h-4 w-64" /></CardHeader><CardContent className="flex flex-col gap-within-group"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></CardContent></Card>
+    <Card><CardHeader><Skeleton className="h-6 w-full max-w-48" /><Skeleton className="h-4 w-full max-w-64" /></CardHeader><CardContent className="flex flex-col gap-within-group"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></CardContent></Card>
   </div>,
 };
 export const States: Story = {
