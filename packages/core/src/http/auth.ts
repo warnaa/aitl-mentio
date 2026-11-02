@@ -1,5 +1,6 @@
 import { User, type EntityManager } from '@devmentor/db';
 import type { AppEnv } from '../config/env';
+import { reconcileOperatorRole, type ReconcileDeps, type Role, type RoleSet } from '../services/auth/roles';
 import type { SessionService } from '../services/auth/session.service';
 import { ForbiddenError, UnauthorizedError } from './errors';
 
@@ -11,16 +12,15 @@ import { ForbiddenError, UnauthorizedError } from './errors';
  * roles. `loadSession` — the one live-session operation, registered per request scope
  * as the cradle's `session` — verifies the token, reloads the user (one primary-key
  * lookup), rejects a stale `sessionVersion`, and resolves the role set from the row:
- * stored `mentee`/`mentor`, `operator` derived live from `OPERATOR_EMAILS`.
+ * stored `mentee`/`mentor`, `operator` derived live from `OPERATOR_EMAILS`. The role
+ * vocabulary itself lives in `services/auth/roles.ts` and is re-exported here.
  */
-export const ROLES = ['mentee', 'mentor', 'operator'] as const;
-
-export type Role = (typeof ROLES)[number];
+export { ROLES, resolveRoles, type Role, type RoleSet, type RoleSource } from '../services/auth/roles';
 
 export interface Session {
   userId: string;
   /** Never empty: a user always holds at least one role. */
-  roles: readonly [Role, ...Role[]];
+  roles: RoleSet;
 }
 
 /** The custom header `apiCall` sends on every request; a plain HTML form cannot set it. */
@@ -28,37 +28,10 @@ export const CSRF_HEADER_NAME = 'x-devmentor-request';
 /** The value `apiCall` sends in `CSRF_HEADER_NAME`. */
 export const CSRF_HEADER_VALUE = '1';
 
-/** The row fields role resolution reads. */
-export interface RoleSource {
-  email: string;
-  emailVerifiedAt?: Date | null;
-  roles: readonly string[];
-}
-
-/**
- * The effective role set for a user row, in `ROLES` order and without duplicates.
- * Stored `mentee`/`mentor` are authoritative. Stored `operator` is only a cache and is
- * ignored: `operator` is granted exactly when the row's own email, lower-cased, is in
- * `operatorEmails` (already trimmed and lower-cased by the env schema) **and** the row
- * is verified. Pure, so `UserService` reconciles the stored cache against the same
- * answer: the cache is stale whenever this differs from `user.roles`.
- */
-export function resolveRoles(user: RoleSource, operatorEmails: readonly string[]): Role[] {
-  const operator =
-    user.emailVerifiedAt != null && operatorEmails.includes(user.email.toLowerCase());
-  return ROLES.filter((role) =>
-    role === 'operator' ? operator : user.roles.includes(role),
-  );
-}
-
-function isNonEmpty<T>(items: T[]): items is [T, ...T[]] {
-  return items.length > 0;
-}
-
 /** What `loadSession` needs from the request scope. */
-export interface SessionLoaderDeps {
+export interface SessionLoaderDeps extends ReconcileDeps {
   sessionService: Pick<SessionService, 'verify'>;
-  em: Pick<EntityManager, 'findOne'>;
+  em: Pick<EntityManager, 'findOne' | 'nativeUpdate'>;
   env: Pick<AppEnv, 'OPERATOR_EMAILS'>;
 }
 
@@ -70,15 +43,22 @@ export interface SessionLoaderDeps {
  * Internal: the request scope calls this once and caches the answer as `session`.
  * Route code uses `requireSession`; pages use the app's session helper.
  *
- * @throws Error when the user's effective role set is empty — corrupt data surfaces
- *   as a logged 500, never as a 401 that would loop the user through sign-in.
+ * On the happy path this is one primary-key lookup. Only when the stored role set
+ * disagrees with the live answer (the allowlist gained or lost the user's email) does
+ * `reconcileOperatorRole` write the stored set to match — without bumping
+ * `sessionVersion`, so the session stays valid. A de-listed operator whose only
+ * stored role was `operator` resolves to `mentee`, never to an empty set.
+ *
+ * @throws Error when the stored role set holds no valid role at all — corrupt data
+ *   surfaces as a logged 500, never as a 401 that would loop the user through sign-in.
  * @throws ServiceUnavailableError when a cookie is present but `SESSION_SECRET` is not
  *   configured (from `SessionService.verify`).
  */
 export async function loadSession(
   token: string | null | undefined,
-  { sessionService, em, env }: SessionLoaderDeps,
+  deps: SessionLoaderDeps,
 ): Promise<Session | null> {
+  const { sessionService, em } = deps;
   const claims = await sessionService.verify(token);
   if (!claims) {
     return null;
@@ -87,11 +67,7 @@ export async function loadSession(
   if (!user || user.sessionVersion !== claims.sessionVersion) {
     return null;
   }
-  const roles = resolveRoles(user, env.OPERATOR_EMAILS);
-  if (!isNonEmpty(roles)) {
-    throw new Error(`User ${user.id} has no effective role (stored roles: [${user.roles.join(', ')}])`);
-  }
-  return { userId: user.id, roles };
+  return { userId: user.id, roles: await reconcileOperatorRole(user, deps) };
 }
 
 /**

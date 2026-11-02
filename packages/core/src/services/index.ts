@@ -1,4 +1,14 @@
-export { UserService } from './auth/user.service';
+export {
+  UserService,
+  UnverifiedAccountLinkError,
+  GithubAccountConflictError,
+  ASSIGNABLE_ROLES,
+  type AssignableRole,
+  type CreateUserInput,
+  type GithubSignIn,
+  type UserDto,
+  type UserServiceDeps,
+} from './auth/user.service';
 export {
   SessionService,
   readSessionCookie,

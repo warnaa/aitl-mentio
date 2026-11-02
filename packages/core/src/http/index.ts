@@ -38,6 +38,7 @@ export {
   requireRole,
   requireCsrfHeader,
   assertOwnership,
+  type RoleSet,
   type RoleSource,
   type Session,
   type Role,

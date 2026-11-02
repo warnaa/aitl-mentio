@@ -134,6 +134,21 @@ describe('getContainer', () => {
 
     expect(state.logger.info).toHaveBeenCalledWith({ userId: 'u1' }, 'auth.user.created');
   });
+
+  it('logs auth.user.roles_changed through the default subscriber', async () => {
+    const container = await getContainer();
+
+    await container.cradle.eventBus.emit('auth.user.roles_changed', {
+      userId: 'u1',
+      added: ['operator'],
+      removed: [],
+    });
+
+    expect(state.logger.info).toHaveBeenCalledWith(
+      { userId: 'u1', added: ['operator'], removed: [] },
+      'auth.user.roles_changed',
+    );
+  });
 });
 
 describe('identity adapter selection', () => {

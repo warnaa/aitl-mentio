@@ -54,10 +54,11 @@ async function tokenFor(user: { id: string; sessionVersion: number }, at: Date =
 
 let stored: Row | null;
 let operatorEmails: readonly string[];
-const em = { findOne: vi.fn(async () => stored) };
+const em = { findOne: vi.fn(async () => stored), nativeUpdate: vi.fn(async () => 1) };
+const eventBus = { emit: vi.fn(async () => undefined) };
 
 function deps(service = sessionService()) {
-  return { sessionService: service, em, env: { OPERATOR_EMAILS: operatorEmails } } as never;
+  return { sessionService: service, em, eventBus, env: { OPERATOR_EMAILS: operatorEmails } } as never;
 }
 
 beforeEach(() => {
@@ -66,39 +67,12 @@ beforeEach(() => {
   operatorEmails = [];
 });
 
-describe('resolveRoles', () => {
-  it('returns the stored mentee and mentor roles in canonical order', () => {
-    expect(resolveRoles(row({ roles: ['mentor', 'mentee'] }), [])).toEqual(['mentee', 'mentor']);
-  });
+describe('role vocabulary re-exports', () => {
+  it('re-exports ROLES and resolveRoles from the roles module', async () => {
+    const roles = await import('../services/auth/roles');
 
-  it('drops duplicates and values outside the role union', () => {
-    expect(resolveRoles(row({ roles: ['mentor', 'mentor', 'student'] }), [])).toEqual(['mentor']);
-  });
-
-  it('ignores a stored operator cache that the allowlist no longer backs', () => {
-    expect(resolveRoles(row({ email: FOUNDER, roles: ['mentor', 'operator'] }), [])).toEqual([
-      'mentor',
-    ]);
-  });
-
-  it('grants operator live to a verified allowlisted email, matched case-insensitively', () => {
-    expect(resolveRoles(row({ email: 'Founder@DevMentor.test', roles: ['mentee'] }), [FOUNDER])).toEqual([
-      'mentee',
-      'operator',
-    ]);
-  });
-
-  it('does not grant operator to an unverified row, even when allowlisted', () => {
-    expect(resolveRoles(row({ email: FOUNDER, emailVerifiedAt: null }), [FOUNDER])).toEqual(['mentee']);
-    expect(resolveRoles({ email: FOUNDER, roles: ['mentee'] }, [FOUNDER])).toEqual(['mentee']);
-  });
-
-  it('can resolve to an empty set, which the caller must treat as corrupt', () => {
-    expect(resolveRoles(row({ roles: [] }), [])).toEqual([]);
-  });
-
-  it('lists every role in the fixed union', () => {
-    expect(ROLES).toEqual(['mentee', 'mentor', 'operator']);
+    expect(ROLES).toBe(roles.ROLES);
+    expect(resolveRoles).toBe(roles.resolveRoles);
   });
 });
 
@@ -126,6 +100,8 @@ describe('loadSession', () => {
     });
     expect(em.findOne).toHaveBeenCalledTimes(1);
     expect(em.findOne).toHaveBeenCalledWith(UserEntity, { id: 'user-1' });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+    expect(eventBus.emit).not.toHaveBeenCalled();
   });
 
   it('is null for an expired token', async () => {
@@ -180,22 +156,45 @@ describe('loadSession', () => {
     await expect(failure).rejects.not.toBeInstanceOf(UnauthorizedError);
   });
 
-  it('throws an internal error when only a stale operator cache remains', async () => {
+  it('falls back to mentee, not a 500, when a de-listed operator held nothing else', async () => {
     const token = await tokenFor(row());
     stored = row({ email: FOUNDER, roles: ['operator'] });
 
-    await expect(loadSession(token, deps())).rejects.toThrow(/stored roles: \[operator\]/);
+    await expect(loadSession(token, deps())).resolves.toEqual({ userId: 'user-1', roles: ['mentee'] });
+    expect(em.nativeUpdate).toHaveBeenCalledWith(
+      UserEntity,
+      { id: 'user-1', sessionVersion: 2 },
+      { roles: ['mentee'] },
+    );
+    expect(eventBus.emit).toHaveBeenCalledWith('auth.user.roles_changed', {
+      userId: 'user-1',
+      added: ['mentee'],
+      removed: ['operator'],
+    });
   });
 
-  it('revokes operator on the next request once the email leaves the allowlist', async () => {
+  it('revokes operator on the next request once the email leaves the allowlist, reconciling the cache', async () => {
     const token = await tokenFor(row());
     stored = row({ email: FOUNDER, roles: ['mentor', 'operator'] });
     operatorEmails = [FOUNDER];
     await expect(loadSession(token, deps())).resolves.toMatchObject({ roles: ['mentor', 'operator'] });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
 
     operatorEmails = [];
 
-    await expect(loadSession(token, deps())).resolves.toMatchObject({ roles: ['mentor'] });
+    await expect(loadSession(token, deps())).resolves.toEqual({ userId: 'user-1', roles: ['mentor'] });
+    // The cache is rewritten without touching sessionVersion, so the same token stays live.
+    expect(em.nativeUpdate).toHaveBeenCalledTimes(1);
+    expect(em.nativeUpdate).toHaveBeenCalledWith(
+      UserEntity,
+      { id: 'user-1', sessionVersion: 2 },
+      { roles: ['mentor'] },
+    );
+    expect(eventBus.emit).toHaveBeenCalledWith('auth.user.roles_changed', {
+      userId: 'user-1',
+      added: [],
+      removed: ['operator'],
+    });
   });
 
   it('grants operator on the next request once the email joins the allowlist, without a new token', async () => {
@@ -206,6 +205,16 @@ describe('loadSession', () => {
     operatorEmails = [FOUNDER];
 
     await expect(loadSession(token, deps())).resolves.toMatchObject({ roles: ['mentee', 'operator'] });
+    expect(em.nativeUpdate).toHaveBeenCalledWith(
+      UserEntity,
+      { id: 'user-1', sessionVersion: 2 },
+      { roles: ['mentee', 'operator'] },
+    );
+    expect(eventBus.emit).toHaveBeenCalledWith('auth.user.roles_changed', {
+      userId: 'user-1',
+      added: ['operator'],
+      removed: [],
+    });
   });
 
   it('fails with 503 when a cookie is present but SESSION_SECRET is not configured', async () => {

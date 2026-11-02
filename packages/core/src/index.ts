@@ -8,7 +8,17 @@ export {
   type Cradle,
 } from './container/index';
 export { systemClock, type Clock } from './time/clock';
-export { UserService, type UserDto } from './services/auth/user.service';
+export {
+  UserService,
+  UnverifiedAccountLinkError,
+  GithubAccountConflictError,
+  ASSIGNABLE_ROLES,
+  type AssignableRole,
+  type CreateUserInput,
+  type GithubSignIn,
+  type UserDto,
+  type UserServiceDeps,
+} from './services/auth/user.service';
 export {
   SessionService,
   readSessionCookie,
@@ -27,7 +37,6 @@ export {
   type GithubIdentityPort,
 } from './services/auth/github-identity.port';
 export { EventBus, type EventHandler, type EventId, type EventMap } from './events/index';
-export { userCreateSchema, type UserCreateInput } from './validators/auth/user-create.schema';
 
 // Reusable HTTP layer (typed errors, route wrappers, auth guards).
 export * from './http/index';

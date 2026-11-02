@@ -23,6 +23,8 @@ import type { Clock } from '../time/clock';
  *   `withSessionCookieScope`: the caller's live `Session`, or `null` when signed out.
  *   A promise, because resolving it verifies the cookie and loads the user; awilix
  *   caches it, so the whole scope shares one lookup.
+ *   `userService` takes it as a constructor dependency but reads it only inside
+ *   `list`, so resolving the service in a plain `withScope` still works.
  *
  * As services grow to ~9 concepts, each new one is a new explicit line here and in
  * `container.ts` — never auto-discovered from a folder scan.

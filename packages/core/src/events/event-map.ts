@@ -1,3 +1,5 @@
+import type { Role } from '../services/auth/roles';
+
 /**
  * Registry of domain events. Event IDs follow `concept.entity.action` (past tense);
  * the value type is the event's payload. Add an entry here when a concept needs to
@@ -8,6 +10,12 @@
  */
 export interface EventMap {
   'auth.user.created': { userId: string; email: string };
+  /**
+   * A user's stored role set changed membership: `grantRole`/`revokeRole`, or the
+   * operator cache reconciled against `OPERATOR_EMAILS`. `added`/`removed` are in
+   * `ROLES` order. Observability only — the R18 record is the allowlist commit.
+   */
+  'auth.user.roles_changed': { userId: string; added: Role[]; removed: Role[] };
 }
 
 export type EventId = keyof EventMap;

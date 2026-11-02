@@ -220,9 +220,11 @@ by Next.js via `transpilePackages`.
 - **Scoped** — a forked `EntityManager` and the domain services that use it.
 
 Request handlers call `withScope(fn)`, which opens a scope with its own forked
-`EntityManager`, runs the callback, and disposes the scope. The admin users page is a
-worked example: `withScope((c) => c.userService.list())` → forked EM → repository →
-entity with a populated 1:1 relation.
+`EntityManager`, runs the callback, and disposes the scope. Work done for a request
+uses `withRequestScope(req, fn)`, which also registers the caller's lazily-resolved
+`session`. `GET /api/users` is a worked example: `withRequestScope(req, (c) =>
+c.userService.list())` → operator check → forked EM → repository → entity with a
+populated 1:1 relation.
 
 ### Database
 

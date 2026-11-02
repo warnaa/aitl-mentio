@@ -37,7 +37,12 @@ a required integration or credential is missing, or an upstream timed out, faile
 answered non-2xx; see `fetchJson` in `outbound.ts`), and the concept-owned 403
 `github_email_unverified` (`GithubEmailUnverifiedError` in
 `services/auth/github-identity.port.ts`: the GitHub account has no verified primary
-email). An `AppError` may carry optional
+email), and the GitHub sign-in refusals thrown by `UserService.findOrCreateFromGithub`
+(`services/auth/user.service.ts`): 403 `account_link_unverified`
+(`UnverifiedAccountLinkError`: the email matches an account whose own address is not
+verified, so nothing is linked) and 409 `github_account_conflict`
+(`GithubAccountConflictError`: the verified account with that email is already linked to
+a different GitHub account). An `AppError` may carry optional
 `headers`, which `apiHandler` copies onto the response. The client adds
 `network_error` and `invalid_response` in `apiCall.ts`.
 
@@ -47,10 +52,20 @@ email). An `AppError` may carry optional
   `{ status: "ok", app, environment, database: "up" | "down", databaseError? }`, HTTP
   200 even when the database is down. `tests/integration/global-setup.ts` polls it and
   waits for `status === "ok"` and `database === "up"`; `README.md` documents it.
-- `GET /api/users` returns `UserDto[]`; `POST /api/users` takes
-  `{ email, displayName }` (`userCreateSchema`) and returns `UserDto`, where
-  `UserDto = { id, email, displayName, createdAt (ISO string), mentorProfile: { id, headline } | null }`.
-  The route is intentionally public until the `auth` concept lands.
+- `GET /api/users` returns `UserDto[]`, where
+  `UserDto = { id, email, displayName, roles, githubLogin, avatarUrl, createdAt (ISO string), mentorProfile: { id, headline } | null }`
+  (`roles` is the stored set in `ROLES` order; `UserDto` never carries `passwordHash`,
+  `emailVerifiedAt`, `sessionVersion` or `githubId`). **Operators only** since E01: the
+  route's `authorize` answers 401 `unauthorized` without a live session and 403
+  `forbidden` without the `operator` role, before the service runs, and
+  `UserService.list` repeats the check.
+  *Breaking change recorded (E01, `.ai/specs/2026-09-04-accounts-and-roles.md`
+  breaking changes 2 and 3):* the route was public before E01, and `POST /api/users`
+  (`{ email, displayName }` → `UserDto`) has been **removed** — accounts are created by
+  sign-in only. In-repo consumers: `admin/users/page.tsx` (client-side `apiCall`, moves
+  under the operator page guard) and `tests/integration/setup.integration.test.ts`
+  (fetches the route anonymously and must sign in as an operator first); the `POST` had
+  no caller.
 - `makeCrudRoute` behavior asserted by `packages/core/src/http/makeCrudRoute.test.ts`:
   the default id parameter `id`, and the messages "This operation is not supported",
   "Missing resource id", and "Request body must be valid JSON".
@@ -79,21 +94,29 @@ API between packages. `npm run typecheck` is the consumer check.
   GitHub identity port (`GithubIdentityPort` with `authorizeUrl({ state, login? })`,
   `exchangeCode`, `fetchIdentity`; `GithubIdentity`, `AuthorizeUrlInput`,
   `GithubEmailUnverifiedError`, `GITHUB_CALLBACK_PATH`, `githubCallbackUrl`),
-  `Clock` and `systemClock`, `UserService` and
-  `UserDto`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`,
+  `Clock` and `systemClock`, `UserService` (`list`, `findByEmail`,
+  `create(CreateUserInput)`, `findOrCreateFromGithub(GithubIdentity) → GithubSignIn`,
+  `grantRole`/`revokeRole(userId, AssignableRole) → sessionVersion`) with `UserDto`,
+  `CreateUserInput`, `GithubSignIn`, `UserServiceDeps`, `AssignableRole`,
+  `ASSIGNABLE_ROLES`, `UnverifiedAccountLinkError` and `GithubAccountConflictError`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`,
   `SESSION_COOKIE_NAME` and `SESSION_TTL_SECONDS`, `TokenService` with
   `PurposeTokenInput`, the `AppError` family
   (with its optional `headers`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`
   (with `ApiHandlerOptions`), `jsonOk`, `jsonError`, `makeCrudRoute` with `CrudService` and
   `MakeCrudRouteOptions`, `requireSession(req, cradle)`, `requireRole`,
-  `requireCsrfHeader`, `assertOwnership`, `resolveRoles` with `RoleSource`, `ROLES`,
+  `requireCsrfHeader`, `assertOwnership`, `resolveRoles` with `RoleSource`, `ROLES`, `RoleSet`,
   `CSRF_HEADER_NAME`, `CSRF_HEADER_VALUE`, `Session` (`{ userId, roles }`, `roles` a
   non-empty `readonly [Role, ...Role[]]`), `Role` (`'mentee' | 'mentor' | 'operator'`), `EventBus`,
-  `EventMap`, `userCreateSchema`, and the re-exported `checkDbConnection`.
+  `EventMap`, and the re-exported `checkDbConnection`.
+  *Breaking change recorded (E01 breaking change 3):* `userCreateSchema` and
+  `UserCreateInput` (`validators/auth/user-create.schema.ts`) were **removed** with
+  `POST /api/users`; they had no in-repo consumer. `UserService.create` now takes the
+  explicit `CreateUserInput` (`{ email, displayName }`) and cannot set roles.
 - `@devmentor/db` (`.`, `./entities`, `./config`): `User`, `MentorProfile`, `IUser`,
   `IMentorProfile`, `baseProperties`, `entities`, `createOrmConfig`, `getOrm`,
   `closeOrm`, `checkDbConnection`, `getDbEnv`, `MikroORM`, `EntityManager`, and the
-  re-exported `EntityRepository`, `FilterQuery`, `Loaded`, `RequiredEntityData`.
+  re-exported `EntityRepository`, `UniqueConstraintViolationException`, `FilterQuery`,
+  `Loaded`, `RequiredEntityData`.
 - `@devmentor/ui` (`.`, `./backend`, `./tokens.css`, `./lib/utils`, `./components/*`):
   `cn`, `Button` and `buttonVariants`, the `Card*` family; from `./backend`:
   `apiCall`, `apiCallOrThrow`, `ApiError`, `ApiCallOptions`, `ApiResult`,
@@ -178,7 +201,10 @@ maintainer updates the ruleset before the PR merges, otherwise the PR blocks its
 ### 6. Domain events (`packages/core/src/events/event-map.ts`)
 
 Event ids follow `concept.entity.action`. Today: `auth.user.created` with payload
-`{ userId, email }`, subscribed in `packages/core/src/container/container.ts`.
+`{ userId, email }`, and `auth.user.roles_changed` with payload
+`{ userId, added: Role[], removed: Role[] }` (emitted by `grantRole`/`revokeRole` and by
+operator-cache reconciliation), both subscribed in
+`packages/core/src/container/container.ts`.
 
 **Breaking:** renaming an event id; removing or retyping a payload field.
 
@@ -189,15 +215,20 @@ PR; adding a payload field is additive.
 
 The session cookie name `devmentor_session` lives in
 `packages/core/src/services/auth/session.service.ts`; the `Role` union
-(`'mentee' | 'mentor' | 'operator'`), the `Session` shape (`{ userId, roles }`) and the
-CSRF header name and value live in `packages/core/src/http/auth.ts`. `apiCall` in
+(`'mentee' | 'mentor' | 'operator'`) is defined in
+`packages/core/src/services/auth/roles.ts` and re-exported from
+`packages/core/src/http/auth.ts`, where the `Session` shape (`{ userId, roles }`) and the
+CSRF header name and value live. `apiCall` in
 `packages/ui/src/backend/api/apiCall.ts` sends `x-devmentor-request: 1` on every
 request, and `apiHandler` **enforces** it on every method other than GET, HEAD and
 OPTIONS — so every mutating route, including `makeCrudRoute`'s `POST`/`PUT`/`DELETE`,
 answers `403 forbidden` without it. The only opt-out, `apiHandler(logic, { csrf: false })`,
 is reserved for the payment-webhook route. `requireSession(req, cradle)` verifies the
 cookie, reloads the user, rejects a bumped `session_version`, and returns the stored
-`mentee`/`mentor` roles with `operator` derived live from `OPERATOR_EMAILS`.
+`mentee`/`mentor` roles with `operator` derived live from `OPERATOR_EMAILS`; when the
+stored set disagrees it is reconciled (a de-listed operator-only account resolves to
+`mentee`) without bumping `session_version`. `session_version` is bumped only by
+sign-out and `grantRole`/`revokeRole`.
 
 **Breaking:** renaming the cookie or the header, changing the header's value, changing
 the `Role` values or the `Session` shape, or adding a CSRF opt-out other than the

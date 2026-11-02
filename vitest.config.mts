@@ -23,9 +23,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: [
+        'packages/app/src/app/api/users/route.ts',
         'packages/core/src/config/env.ts',
         'packages/core/src/container/container.ts',
         'packages/core/src/container/cradle.ts',
+        'packages/core/src/events/event-map.ts',
         'packages/core/src/http/apiHandler.ts',
         'packages/core/src/http/auth.ts',
         'packages/core/src/http/errors.ts',
@@ -36,8 +38,10 @@ export default defineConfig({
         'packages/core/src/services/auth/adapters/mock-github-identity.ts',
         'packages/core/src/services/auth/github-identity.port.ts',
         'packages/core/src/services/auth/jwt.ts',
+        'packages/core/src/services/auth/roles.ts',
         'packages/core/src/services/auth/session.service.ts',
         'packages/core/src/services/auth/token.service.ts',
+        'packages/core/src/services/auth/user.service.ts',
         'packages/core/src/time/clock.ts',
         'packages/db/migrations/Migration20261102230816_auth_identity.ts',
         'packages/db/src/config.ts',
