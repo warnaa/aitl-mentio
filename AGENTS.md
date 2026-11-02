@@ -219,6 +219,18 @@ the reference example every new concept copies. See
 - Unit tests live next to their source as `*.test.ts` / `*.test.tsx`. Test every
   success, error, validation, authorization, and edge-case branch. Every bug fix
   requires a regression test that fails without the fix.
+- **Component tests.** `vitest.config.mts` keeps `environment: 'node'` and loads
+  `@vitejs/plugin-react`. *Server components* (`page.tsx`, `layout.tsx`) are async
+  functions returning an element tree: invoke them directly and assert the returned
+  tree in the node environment, with no DOM or renderer. *Client components* opt in
+  with a per-file `// @vitest-environment jsdom` pragma and use
+  `@testing-library/react` + `@testing-library/user-event`.
+- **Guarded pages have two mocking seams**, because `redirect()` throws a framework
+  control-flow error instead of returning. Page tests mock `app/src/lib/session.ts`,
+  assert the tree on the allowed path and a sentinel throw on the denied one;
+  `session.test.ts` mocks `next/navigation` and asserts the `redirect` arguments.
+  Never assert against Next internals. The cost: every guarded `page.tsx` is a
+  `coverage.include` entry that needs both the authorized and the redirected branch.
 - Integration/browser tests **supplement but never replace unit tests** or the 100%
   unit-coverage requirement. Add integration coverage whenever behavior crosses the
   app/database/API/browser boundary.

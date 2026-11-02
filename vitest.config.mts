@@ -1,7 +1,11 @@
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  plugins: [react()],
   test: {
+    // Node stays the default; a client-component test opts in to the DOM with a
+    // per-file `// @vitest-environment jsdom` pragma (see AGENTS.md, Testing).
     environment: 'node',
     include: [
       'packages/**/*.test.ts',
