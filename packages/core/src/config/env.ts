@@ -1,62 +1,35 @@
-import { z } from "zod";
-import { ConfigError } from "../http/errors";
+import { z } from 'zod';
 
-/** Minimum HS256 secret length in bytes (RFC 7518 §3.2: key ≥ hash output size). */
-const JWT_SECRET_MIN_BYTES = 32;
+/**
+ * Application-wide environment schema. This is the single source of truth for config
+ * across the app — nothing outside `core` (and `db`'s own narrow copy) should read
+ * `process.env` directly. Add new config here so it is validated once at boot.
+ */
+const appEnvSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  APP_NAME: z.string().default('DevMentor'),
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+    .default('info'),
 
-/** `KEY=` in an env file means "not set", not "set to an empty string". */
-const unsetIfEmpty = <T extends z.ZodType>(schema: T) =>
-  z.preprocess((value) => (value === "" ? undefined : value), schema);
-
-// Parsed on its own so a bad unrelated setting (e.g. JWT_SECRET) can't break logging.
-const logEnvSchema = z.object({
-  LOG_LEVEL: unsetIfEmpty(
-    z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
-  ),
-});
-
-const appEnvSchema = logEnvSchema.extend({
-  NODE_ENV: unsetIfEmpty(z.enum(["development", "test", "production"]).default("development")),
-  // Optional at boot so the app builds and starts without auth configured;
-  // `getJwtSecret()` fails closed when it is missing.
-  JWT_SECRET: unsetIfEmpty(
-    z
-      .string()
-      .refine((value) => Buffer.byteLength(value, "utf8") >= JWT_SECRET_MIN_BYTES, {
-        message: `must be at least ${JWT_SECRET_MIN_BYTES} bytes (generate with \`openssl rand -base64 32\`)`,
-      })
-      .optional(),
-  ),
+  // Database — mirrors packages/db `env.ts`. Kept here too so config validation is
+  // centralised; `db` reads its own copy for CLI use without importing `core`.
+  DATABASE_URL: z.string().url().optional(),
+  DB_HOST: z.string().default('127.0.0.1'),
+  DB_PORT: z.coerce.number().int().positive().default(5432),
+  DB_NAME: z.string().default('devmentor'),
+  DB_USER: z.string().default('devmentor'),
+  DB_PASSWORD: z.string().default('devmentor'),
 });
 
 export type AppEnv = z.infer<typeof appEnvSchema>;
 
-let cachedEnv: AppEnv | undefined;
+let cached: AppEnv | undefined;
 
-/** Parses and caches the app environment. Throws `ConfigError` on invalid values. */
-export function getEnv(): AppEnv {
-  cachedEnv ??= parseEnv(process.env);
-  return cachedEnv;
-}
-
-export function parseEnv(env: NodeJS.ProcessEnv): AppEnv {
-  return parseWithSchema(appEnvSchema, env);
-}
-
-export function getLogLevel(env: NodeJS.ProcessEnv = process.env): AppEnv["LOG_LEVEL"] {
-  return parseWithSchema(logEnvSchema, env).LOG_LEVEL;
-}
-
-function parseWithSchema<S extends z.ZodType>(schema: S, env: NodeJS.ProcessEnv): z.output<S> {
-  const result = schema.safeParse(env);
-  if (!result.success) {
-    throw new ConfigError(`Invalid environment:\n${z.prettifyError(result.error)}`);
+/** Parse and cache the validated application environment. */
+export function getEnv(env: NodeJS.ProcessEnv = process.env): AppEnv {
+  if (!cached) {
+    cached = appEnvSchema.parse(env);
   }
-  return result.data;
-}
-
-export function getJwtSecret(): Uint8Array {
-  const secret = getEnv().JWT_SECRET;
-  if (!secret) throw new ConfigError("JWT_SECRET is not set");
-  return new TextEncoder().encode(secret);
+  return cached;
 }

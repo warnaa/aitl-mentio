@@ -1,6 +1,0 @@
-# D01 — The first build is paid text sessions; the notes library, coding-tool access and subscription wait
-- Date, owner: 2026-10-27, Damian (founder C), confirmed in the om-discover quick pass
-- Context and the options weighed: the 2026-08-26 workshop (founder A deciding, for DevMentor, Mentio's former name) asked for "the smallest product that earns for a mentor without a call", i.e. the mentor's paid notes library ("vault"). Options: (a) paid text sessions only, library later; (b) sessions plus a small library; (c) library first, as the workshop aimed. Origin: the agent's recommendation, accepted.
-- Decision and why: (a). All four interviews with potential mentees (2026-08-20, 2026-09-01, 2026-09-02 ×2) describe wanting a fast answer to one specific problem; none asked for saved answers; two said no to saved answers and three said no to a subscription. Only the mentors (2026-08-22, 2026-09-03 ×2) value their notes. Option text as confirmed: question and price up front, payment before the session.
-- Consequences, and what would make us revisit it: the first build earns only while a mentor answers, which drops the workshop's aim for now. Revisit when mentors and mentees have been asked about the notes library, or when sessions show repeat questions a library would answer.
-- Status: active

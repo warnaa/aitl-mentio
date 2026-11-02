@@ -1,6 +1,6 @@
 # Discovery board (Miro) — Revenue Streams, Cost Factors, Channels. Exported 2026-09-02 by founder A (Oliwia)
 
-Document type: the founders' own discovery board; business-model positions, not evidence.
+Document type: the founders' own discovery board; business-model positions, not evidence. Decision D11 fixed the session fee at 20%; the vault fee is set when the vault returns to scope (D05).
 
 ## Revenue Streams
 - Session commission: 15–20% of every booked 25/50-min session.

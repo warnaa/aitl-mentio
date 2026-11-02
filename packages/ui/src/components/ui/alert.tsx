@@ -1,27 +1,33 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "cn"
+import { cn } from "../../lib/utils"
 
-const alertVariants = cva("mentio-alert", {
-  variants: {
-    variant: {
-      default: "mentio-alert-default",
-      destructive: "mentio-alert-destructive",
+const alertVariants = cva(
+  "dm-alert",
+  {
+    variants: {
+      variant: {
+        default: "dm-alert-information",
+        destructive: "dm-alert-error",
+        success: "dm-alert-success",
+        warning: "dm-alert-warning",
+      },
     },
-  },
-  defaultVariants: {
-    variant: "default",
-  },
-})
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
 
 function Alert({
   className,
-  variant,
+  variant = "default",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
   return (
     <div
       data-slot="alert"
+      data-variant={variant}
       role="alert"
       className={cn(alertVariants({ variant }), className)}
       {...props}
@@ -33,7 +39,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-title"
-      className={cn("mentio-alert-title", className)}
+      className={cn("dm-alert-title", className)}
       {...props}
     />
   )
@@ -46,7 +52,7 @@ function AlertDescription({
   return (
     <div
       data-slot="alert-description"
-      className={cn("mentio-alert-description", className)}
+      className={cn("dm-alert-description", className)}
       {...props}
     />
   )

@@ -1,65 +1,62 @@
-/* Approved Q2/Q3; R01.1/R01.4. Framework chrome follows product roles. */
-html { color-scheme: light; background: var(--background); color: var(--foreground); }
-html.dark { color-scheme: dark; }
-.sbdocs-wrapper { background: var(--background) !important; color: var(--foreground) !important; padding: var(--space-panel) !important; }
-.sbdocs-content { max-width: var(--content-max-width) !important; }
-/* Preserve Unstyled specimens: role-specific metadata and component colors must win there. */
-.sbdocs-wrapper :is(h1,h2,h3,h4,p,li,td,th):not(.sb-unstyled, .sb-unstyled *) { color: var(--foreground) !important; overflow-wrap: anywhere; }
-.sbdocs-wrapper p:not(.sb-unstyled, .sb-unstyled *) { max-inline-size: var(--prose-max-width); }
-.sbdocs-wrapper a:not(.sb-unstyled, .sb-unstyled *) { color: var(--primary) !important; }
-.sbdocs-wrapper :is(table,th,td):not(.sb-unstyled, .sb-unstyled *) { border-color: var(--border) !important; background: var(--card) !important; }
-/* WCAG 1.4.10: reference tables scroll locally instead of widening the document. */
-.sbdocs-wrapper table:not(.sb-unstyled, .sb-unstyled *) { display: block; max-inline-size: 100%; overflow-x: auto; }
-.sbdocs-wrapper code:not(.sb-unstyled, .sb-unstyled *) { color: var(--foreground) !important; background: var(--muted) !important; border-color: var(--border) !important; display: inline-block; max-inline-size: 100%; white-space: pre-wrap; overflow-wrap: anywhere; vertical-align: baseline; }
-.sbdocs-wrapper :focus-visible:not(.sb-unstyled, .sb-unstyled *) { outline: var(--focus-width) solid var(--ring); outline-offset: var(--focus-offset); }
-/* Stage 2 task: frozen previews use the same token declarations as real pseudo states. */
-:is(.mentio-button,.mentio-input,.mentio-textarea,.mentio-link)[data-preview-state=focus] { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
-.mentio-button-primary:is([data-preview-state=hover],[data-preview-state=pressed]):not(:disabled) { background: var(--primary-hover); }
-.mentio-button-destructive:is([data-preview-state=hover],[data-preview-state=pressed]):not(:disabled) { background: var(--destructive-hover); }
-:is(.mentio-button-outline,.mentio-button-secondary,.mentio-button-ghost):is([data-preview-state=hover],[data-preview-state=pressed]):not(:disabled) { background: var(--accent); color: var(--accent-foreground); }
-.mentio-button-link:is([data-preview-state=hover],[data-preview-state=pressed]):not(:disabled) { text-decoration-line: underline; }
-:is(.mentio-input,.mentio-textarea)[data-preview-state=hover]:not(:disabled):not([aria-invalid=true]) { border-color: var(--ring); }
-.mentio-link:is([data-preview-state=hover],[data-preview-state=pressed]) { text-decoration-thickness: var(--focus-offset); }
-.primitive-demo { padding: var(--space-panel); color: var(--foreground); background: var(--background); max-inline-size: var(--content-max-width); }
-.primitive-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-between-groups); }
-/* WCAG 1.4.3: Canvas source controls sit outside the product specimen but inherit its theme. */
-.sbdocs-preview { background: var(--background) !important; border-color: var(--border) !important; }
-.sbdocs-preview-actions, .sbdocs-preview-actions :is(button,div,span) { background: var(--card) !important; color: var(--foreground) !important; }
-/* Stage 2 batch 2: frozen previews repeat the component declarations from globals.css. */
-:is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio,.mentio-badge)[data-preview-state=focus] { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
-:is(.mentio-select-trigger,.mentio-checkbox,.mentio-radio)[data-preview-state=hover]:not(:disabled):not([aria-invalid=true]) { border-color: var(--ring); }
-.mentio-select-item[data-preview-state=hover] { background: var(--accent); color: var(--accent-foreground); }
-a.mentio-badge-primary:is([data-preview-state=hover],[data-preview-state=pressed]) { background: var(--primary-hover); }
-a.mentio-badge-destructive:is([data-preview-state=hover],[data-preview-state=pressed]) { background: var(--destructive-hover); }
-a:is(.mentio-badge-secondary,.mentio-badge-outline,.mentio-badge-ghost):is([data-preview-state=hover],[data-preview-state=pressed]) { background: var(--accent); color: var(--accent-foreground); }
-a.mentio-badge-link:is([data-preview-state=hover],[data-preview-state=pressed]) { text-decoration-line: underline; }
-/* Stage 2 batch 3: a frozen highlighted menu row repeats the [data-highlighted] declarations. */
-.mentio-menu-item[data-preview-state=hover] { background: var(--accent); color: var(--accent-foreground); }
-.mentio-menu-item[data-variant=destructive][data-preview-state=hover] { background: var(--error-surface); color: var(--destructive); }
-/* Stage 3d: a frozen linked (:target) or focused message repeats the component's declarations. */
-[data-preview-state=target] > .mentio-message { background: var(--muted); }
-[data-preview-state=focus] > .mentio-message { outline: var(--focus-width) var(--focus-style) var(--ring); outline-offset: var(--focus-offset); }
-/* Stage 4 documentation helpers: the Components catalog. */
-.ds-catalog td { vertical-align: top; }
-/* Previews take the theme text colour; Unstyled resets docs styles but inherits the docs text colour. */
-.ds-catalog-preview { inline-size: calc(var(--spacing) * 80); color: var(--foreground); }
-/* Storybook docs restyle every nested table (text colour, striped rows), even under Unstyled; previews keep the theme. */
-.sbdocs-wrapper .ds-catalog-preview :is(table, thead, tbody, tr, th, td) { color: inherit !important; }
-.sbdocs-wrapper .ds-catalog-preview tr:not([data-state=selected]) { background: transparent !important; }
-/* Page-level thumbnails are cut to a fixed height; they stay real components, only smaller in view. */
-.ds-catalog-thumbnail { max-block-size: calc(var(--spacing) * 56); overflow: hidden; border: var(--divider-width) solid var(--border); border-radius: var(--radius-md); }
-/* Docs prose: ordered lists keep their numbers (steps and numbered rules); a docs reset removed them. */
-.sbdocs-wrapper ol:not(.sb-unstyled, .sb-unstyled *) { list-style-type: decimal; }
-/* Component names stay on one line in the reference tables. */
-.sbdocs-wrapper .ds-names td:first-child { white-space: nowrap; }
-/* Page-level thumbnails get the width their own layout needs; the frame clips the rest. */
-.ds-catalog-thumbnail > * { min-inline-size: calc(var(--spacing) * 160); }
-/* Below 48rem, reference tables stack like DataTable: each value under its column name (data-label). */
-@media (width < 48rem) {
-  .sbdocs-wrapper .ds-table :is(thead, tbody, tr, th, td) { display: block; }
-  .sbdocs-wrapper .ds-table thead { position: absolute; inline-size: var(--raw-line-1); block-size: var(--raw-line-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .sbdocs-wrapper .ds-table tr { padding-block: var(--space-within-group); }
-  .sbdocs-wrapper .ds-table td { border-inline: 0 !important; border-block-start: 0 !important; white-space: normal; }
-  .sbdocs-wrapper .ds-table td::before { content: attr(data-label); display: block; color: var(--muted-foreground); font-size: var(--text-metadata); line-height: var(--line-metadata); }
-  .sbdocs-wrapper .ds-names td:first-child { white-space: normal; }
+@import 'tailwindcss';
+@import '../src/tokens.css';
+@import './state-preview.css';
+@source '../src';
+@source './';
+@custom-variant dark (&:is(.dark *));
+@theme inline {
+  --font-sans: var(--dm-font-family);
+  --font-mono: var(--dm-font-mono);
 }
+
+.story-theme { color: var(--foreground); background: var(--background); font-family: var(--font-sans); }
+.story-surface { padding: 32px; min-height: 180px; background: var(--background); color: var(--foreground); }
+.story-theme.dark { color-scheme: dark; }
+.sbdocs-wrapper { font-family: var(--dm-font-family); }
+.sbdocs h1 { font-family: var(--dm-font-family); font-weight: 600; letter-spacing: -1px; }
+.ds-doc-lead { font-size: 18px; line-height: 1.6; max-width: 65ch; }
+.ds-doc-note { border: 1px solid #c0d5ff; border-radius: 10px; padding: 16px 20px; background: #ebf1ff; color: #2547d0; margin: 24px 0; }
+.ds-token-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+.ds-token { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.ds-token-swatch { height: 68px; border-bottom: 1px solid var(--border); }
+.ds-token-label { padding: 12px; font-size: 12px; overflow-wrap: anywhere; }
+.ds-token-label code { display: block; margin-bottom: 4px; }
+.ds-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .12em; color: #335cff; }
+.ds-matrix-scroll { overflow-x: auto; padding: 4px; }
+.ds-button-matrix { width: 100%; min-width: 590px; border-collapse: collapse; font: 400 14px/20px var(--dm-font-family); }
+.ds-button-matrix caption { text-align: left; color: var(--dm-text-sub-600); font-size: 12px; padding-bottom: 20px; }
+.ds-button-matrix th { text-align: left; text-transform: capitalize; font-size: 12px; font-weight: 500; color: var(--dm-text-sub-600); }
+.ds-button-matrix thead th { padding: 0 6px 16px; border-bottom: 1px solid var(--border); }
+.ds-button-matrix td, .ds-button-matrix tbody th { padding: 20px 6px; border-bottom: 1px solid var(--border); }
+.ds-button-matrix th span { display: block; font-weight: 400; color: var(--dm-text-soft-400); }
+.ds-size-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 32px; }
+.ds-size-row p { font-size: 12px; color: var(--dm-text-sub-600); margin-top: 12px; }
+.figma-glyph { display: inline-block; width: 20px; height: 20px; background: currentColor; mask: center / 20px 20px no-repeat; }
+.figma-chevron-left { mask-image: url('/align/chevron-left.svg'); }
+.figma-chevron-right { mask-image: url('/align/chevron-right.svg'); }
+@media (max-width: 600px) { .story-surface { padding: 20px; } }
+.dm-catalogue { max-width: 1280px; margin: 0 auto; }
+.dm-catalogue-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 32px; }
+.dm-catalogue-heading h2 { margin: 8px 0 12px; font-size: clamp(28px,3vw,40px); line-height: 1.2; letter-spacing: -.04em; font-weight: 550; }
+.dm-catalogue-heading p { font-size: 14px; line-height: 22px; color: var(--muted-foreground); }
+.dm-catalogue-count { white-space: nowrap; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; color: var(--muted-foreground); }
+.dm-catalogue-tools { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; margin-bottom: 28px; }
+.dm-catalogue-search { position: relative; width: min(100%,360px); }
+.dm-catalogue-search > svg { position: absolute; left: 12px; top: 11px; z-index: 1; color: var(--muted-foreground); }
+.dm-catalogue-search input { padding-left: 38px; }
+.dm-catalogue-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.dm-catalogue-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 20px; }
+.dm-catalogue-card { min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden; transition: box-shadow 180ms, border-color 180ms; }
+.dm-catalogue-card:has(a:hover), .dm-catalogue-card:focus-within { border-color: var(--dm-primary-base); box-shadow: var(--dm-shadow-xs); }
+.dm-catalogue-preview { display: flex; align-items: center; justify-content: center; height: 188px; padding: 24px; border-bottom: 1px solid var(--border); background: var(--dm-bg-weak-25); overflow: hidden; }
+.dm-catalogue-card-body { padding: 20px; }
+.dm-catalogue-card-body > span { display: block; margin-bottom: 8px; color: var(--muted-foreground); font-size: 11px; line-height: 16px; letter-spacing: .03em; text-transform: uppercase; }
+.dm-catalogue-card-body h3 { margin: 0 0 8px; font-size: 16px; font-weight: 500; }
+.dm-catalogue-card-body a { display: flex; justify-content: space-between; align-items: center; color: var(--foreground); text-decoration: none; }
+.dm-catalogue-card-body a:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 2px; }
+.dm-catalogue-card-body p { margin: 0; color: var(--muted-foreground); font-size: 13px; line-height: 20px; }
+.dm-catalogue-tab-sample { display: flex; gap: 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.dm-catalogue-tab-sample span { padding: 12px 0; }
+.dm-catalogue-tab-sample span:first-child { border-bottom: 2px solid var(--primary); color: var(--primary); }
+.dm-catalogue-footer { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 40px; padding: 24px; color: var(--muted-foreground); font-size: 12px; border-top: 1px solid var(--border); }
+@media(max-width:600px) { .dm-catalogue-heading { flex-direction: column; gap:12px; } }

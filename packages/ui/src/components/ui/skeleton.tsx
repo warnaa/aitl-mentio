@@ -1,13 +1,11 @@
-import { cn } from "cn"
+import { cn } from "../../lib/utils"
 
-// User decision: static placeholder shapes (no pulse). Decorative by default; the
-// surrounding region announces loading with aria-busy and a status text (WAI-ARIA).
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="skeleton"
       aria-hidden="true"
-      className={cn("mentio-skeleton", className)}
+      className={cn("dm-skeleton", className)}
       {...props}
     />
   )

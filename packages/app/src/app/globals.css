@@ -1,5 +1,20 @@
-/* Tailwind + shared shadcn/ui theme tokens from the ui package. */
-@import "@mentio/ui/styles.css";
+@import "tailwindcss";
 
-/* Scan the app's own sources for class names. */
-@source "../";
+/* shadcn-ui design tokens + Tailwind theme mapping for the admin surface. */
+@import "@devmentor/ui/tokens.css";
+
+/* Tailwind v4 scans source files for class names. This adds the shared UI package so
+   the classes used by its components are generated too. */
+@source "../../../ui/src";
+
+/* Enable class-based dark mode (`<html class="dark">`) used by the shadcn tokens. */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--dm-font-family);
+  --font-mono: var(--dm-font-mono);
+}
+
+body {
+  font-family: var(--font-sans);
+}

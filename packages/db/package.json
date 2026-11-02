@@ -1,26 +1,39 @@
 {
-  "name": "@mentio/db",
+  "name": "@devmentor/db",
   "version": "0.1.0",
   "private": true,
+  "description": "DevMentor — MikroORM configuration, entities and migrations",
   "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./entities": "./src/entities/index.ts"
+    "./entities": "./src/entities/index.ts",
+    "./config": "./src/config.ts"
   },
   "scripts": {
-    "mikro-orm": "mikro-orm",
     "migration:create": "mikro-orm migration:create",
-    "migrate": "mikro-orm migration:up",
-    "migrate:down": "mikro-orm migration:down"
+    "migration:up": "mikro-orm migration:up",
+    "migration:down": "mikro-orm migration:down",
+    "migration:list": "mikro-orm migration:list",
+    "schema:update": "mikro-orm schema:update --run",
+    "seed": "mikro-orm seeder:run"
   },
   "dependencies": {
-    "@mikro-orm/core": "^7.2.5",
-    "@mikro-orm/migrations": "^7.2.5",
-    "@mikro-orm/postgresql": "^7.2.5",
-    "zod": "^4.6.7"
+    "@mikro-orm/core": "^7.1.14",
+    "@mikro-orm/migrations": "^7.1.14",
+    "@mikro-orm/postgresql": "^7.1.14",
+    "@mikro-orm/seeder": "^7.1.14",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^7.2.5",
-    "tsx": "^4.23.15"
+    "@mikro-orm/cli": "^7.1.14",
+    "dotenv": "^17.4.2",
+    "tsx": "^4.23.13"
+  },
+  "mikro-orm": {
+    "configPaths": [
+      "./src/mikro-orm.config.ts"
+    ]
   }
 }

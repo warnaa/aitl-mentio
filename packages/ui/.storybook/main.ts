@@ -1,19 +1,14 @@
 import type { StorybookConfig } from '@storybook/react-vite';
 import tailwindcss from '@tailwindcss/vite';
+import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
-  stories: ['../storybook/**/*.mdx', '../storybook/**/*.stories.tsx'],
+  stories: ['./*.mdx', './*.stories.tsx', '../src/**/*.stories.@(ts|tsx)'],
+  addons: ['@storybook/addon-docs', '@storybook/addon-a11y', 'msw-storybook-addon'],
   framework: '@storybook/react-vite',
-  addons: ['@storybook/addon-docs', '@storybook/addon-a11y', '@storybook/addon-vitest', '@storybook/addon-themes'],
   staticDirs: ['./public'],
-  core: { disableTelemetry: true, disableWhatsNewNotifications: true },
-  features: { sidebarOnboardingChecklist: false, menuOnboardingChecklist: false },
-  viteFinal(config) {
-    // Tailwind resolves package sources itself; no Next app or server modules enter this build.
-    // Prebundle the API client's schema dependency before browser tests start.
-    config.optimizeDeps = { ...config.optimizeDeps, include: [...(config.optimizeDeps?.include ?? []), 'zod', 'storybook/internal/core-events'] };
-    config.plugins = [...(config.plugins ?? []), tailwindcss()];
-    return config;
-  },
+  core: { disableTelemetry: true },
+  viteFinal: (config) => mergeConfig(config, { plugins: [tailwindcss()] }),
 };
+
 export default config;

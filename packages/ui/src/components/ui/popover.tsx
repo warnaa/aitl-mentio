@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "cn"
+import { cn } from "../../lib/utils"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 function Popover({
@@ -28,7 +28,7 @@ function PopoverContent({
         data-slot="popover-content"
         align={align}
         sideOffset={sideOffset}
-        className={cn("mentio-popover", className)}
+        className={cn("dm-popover-content", className)}
         {...props}
       />
     </PopoverPrimitive.Portal>
@@ -45,7 +45,7 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="popover-header"
-      className={cn("mentio-popover-header", className)}
+      className={cn("dm-popover-header", className)}
       {...props}
     />
   )
@@ -53,9 +53,9 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
 
 function PopoverTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
-    <div
+    <h2
       data-slot="popover-title"
-      className={cn("mentio-popover-title", className)}
+      className={cn("dm-popover-title", className)}
       {...props}
     />
   )
@@ -68,7 +68,7 @@ function PopoverDescription({
   return (
     <p
       data-slot="popover-description"
-      className={cn("mentio-popover-description", className)}
+      className={cn("dm-popover-description", className)}
       {...props}
     />
   )

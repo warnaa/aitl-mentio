@@ -1,16 +1,26 @@
-import type { EntityManager, MikroORM } from "@mentio/db";
-import type { Logger } from "../logger";
-import type { UserService } from "../services/auth/user.service";
+import type { EntityManager, MikroORM } from '@devmentor/db';
+import type { AppEnv } from '../config/env';
+import type { Logger } from '../logger';
+import type { EventBus } from '../events/event-bus';
+import type { UserService } from '../services/auth/user.service';
 
-/** Everything resolvable from the container. Add one entry per registered dependency. */
+/**
+ * The typed shape of everything registered in the awilix container. Resolving any
+ * key off `container.cradle` (or an injected `{ ... }: Cradle` in a constructor) is
+ * type-checked against this interface end to end.
+ *
+ * Lifetimes:
+ * - `env`, `logger`, `orm`, `eventBus` — SINGLETON (shared for the process).
+ * - `em`, `userService` — SCOPED (created fresh per request scope).
+ *
+ * As services grow to ~9 concepts, each new one is a new explicit line here and in
+ * `container.ts` — never auto-discovered from a folder scan.
+ */
 export interface Cradle {
-  /** Process-wide ORM (singleton). Use `em` for queries, never `orm.em`. */
-  orm: MikroORM;
+  env: AppEnv;
   logger: Logger;
-  /**
-   * Request-scoped EntityManager fork with its own identity map. Registered only
-   * on request scopes, so resolving it (or anything using it) from the root fails.
-   */
+  orm: MikroORM;
+  eventBus: EventBus;
   em: EntityManager;
   userService: UserService;
 }

@@ -1,15 +1,18 @@
-import { loadEnvConfig } from "@next/env";
 import type { NextConfig } from "next";
 
-// Env files live at the monorepo root (shared with the MikroORM CLI), not in packages/app.
-loadEnvConfig(`${import.meta.dirname}/../..`);
-
 const nextConfig: NextConfig = {
-  // Workspace packages (@mentio/*) ship TypeScript source and are transpiled by
-  // Next automatically. The ORM stack stays external: it relies on Node APIs and
-  // dynamic driver loading that should not be bundled. (@mikro-orm/core is on
-  // Next's built-in list already.)
-  serverExternalPackages: ["@mikro-orm/postgresql", "@mikro-orm/sql", "@mikro-orm/migrations", "pg"],
+  allowedDevOrigins: ["*"],
+  // Workspace packages are shipped as TypeScript source; Next transpiles them.
+  transpilePackages: ["@devmentor/core", "@devmentor/db", "@devmentor/ui"],
+  // Keep the ORM and its driver out of the bundle — they are Node-only and rely on
+  // dynamic requires that must not be bundled.
+  serverExternalPackages: [
+    "@mikro-orm/core",
+    "@mikro-orm/postgresql",
+    "@mikro-orm/migrations",
+    "@mikro-orm/seeder",
+    "pino",
+  ],
 };
 
 export default nextConfig;

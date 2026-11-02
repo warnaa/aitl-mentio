@@ -1,31 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.cache/tsconfig.ui.tsbuildinfo",
     "paths": {
-      "@mentio/ui/components/*": [
-        "./src/components/ui/*"
-      ],
-      "@mentio/ui/components": [
-        "./src/components/ui"
-      ],
-      "@mentio/ui/lib/*": [
-        "./src/lib/*"
-      ],
-      "@mentio/ui/lib": [
-        "./src/lib"
-      ],
-      "@mentio/ui/hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@mentio/ui/hooks": [
-        "./src/hooks"
-      ]
+      "@devmentor/ui/components/*": ["./src/components/ui/*"],
+      "@devmentor/ui/*": ["./src/*"]
     }
   },
-  "include": [
-    "src",
-    "storybook",
-    ".storybook/**/*.ts",
-    "vitest.storybook.config.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
 }

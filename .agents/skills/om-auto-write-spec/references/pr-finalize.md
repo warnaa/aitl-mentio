@@ -29,44 +29,24 @@ Open the PR **ready for review** — the spec PR is the finished deliverable of 
 
 ## PR body
 
-Title: `docs(specs): ${TITLE}`. This body is the canonical explanation of the
-proposal. Aim for 150–300 words, less for a small spec; omit empty sections.
-Describe proposed behavior as proposed, and ground claims in the spec or code.
+Title: `docs(specs): ${TITLE}`. Use the spec-PR variant of the unified template:
 
 ```markdown
-Refs #{issueId}
+Refs #{issueId}            <!-- issue-driven runs only; never `Closes` —
+                                merging a spec must not close the FR -->
 Source doc: ${SPEC_PATH}
-Status: complete
+Status: complete           <!-- draft/gated runs state the ⚠ merge gate here -->
 
-## 🎯 What changes
-{Who would gain what capability, what happens today, and why the change is needed.
-State that this PR delivers the design; implementation follows separately.}
+## 🎯 Goal
+- {one-line feature summary from the brief/issue}
 
-## 📋 Scope
-{Where the proposal lands and how it affects shared systems or current consumers.
-Name dependencies on future work when they determine whether the design pays off.}
+## What Changed
+- Spec document at `${SPEC_PATH}`
+- Mockups: {list | skipped — {reason}}
 
-## ⚠️ Decision needed
-{Only if relevant: the direction call or assumption to confirm, the recommended
-choice and its tradeoff. Link the defaults comment for the full resolved table.
-Include every `⚠ NEEDS HUMAN CONFIRMATION` merge gate here.}
-
-## 💥 Compatibility
-{Only when proposed contracts, schema, defaults or dependencies will be costly
-to reverse: who would be affected and the migration/rollback limits.}
-
-## 🧪 Validation
-{Design checks actually completed and remaining uncertainties. Link current-app
-screenshots and proposed-UI mockups, clearly distinguished; if expected visuals
-could not be produced, state why. Do not imply mockups prove working behavior.}
+## 💥 Breaking Changes
+- None — design only
 ```
-
-Omit `Refs` when no issue exists; never use `Closes` on a spec PR. Preserve the
-`Source doc:` and `Status:` fields, and state any draft/merge gate in the body.
-Use a small Mermaid dependency/flow diagram only when it explains system reach;
-label existing/new/planned components and add one prose takeaway. Distinguish
-observed facts, inferences and behavior not checked. Cite a specific repository
-rule for any claimed violation; a direction preference is not a code defect.
 
 ## Label normalization
 
@@ -90,20 +70,23 @@ After the PR exists, publish the step-5 visuals via **attach-image-evidence**: `
 
 ## Summary comment
 
-Update the marker below via **update-comment** on a rerun; use **comment-pr**
-with a body file only when absent. Aim for 40–100 words: publication state,
-remaining decision and handoff, with a link to the canonical PR body. Never
-repeat its scope, visual inventory or label rationale; never include secrets.
+Every run ends with a single comprehensive summary comment the human reviewer can read top-to-bottom without clicking into the diff. Post it via the tracker operation **comment-pr** with a body file so multi-line formatting is preserved. Never claim a completion you did not reach, and never paste secrets into it. Structure:
 
 ```markdown
 ## 🤖 `om-auto-write-spec` — run summary
 
+**Spec:** ${SPEC_PATH}
+**Branch:** spec/${SLUG}
 **Final status:** {complete | draft — merge gated on ⚠ assumptions}
-{The spec is ready for review, or name the assumption that keeps it draft.}
-{Only when relevant: link to the resolved defaults or visual evidence needed for the decision.}
-[Proposal and scope]({PR URL})
-Implement with `om-auto-implement-spec ${SPEC_PATH}`; use
-`om-auto-continue-pr {prNumber}` for further design work on this PR.
+
+### 📝 Assumptions applied
+- {count of autonomous defaults + any ⚠ NEEDS HUMAN CONFIRMATION rows — or "spec had no Open Questions"}
+
+### 📸 Visual evidence
+- {mockup/screenshot inventory — or why visuals were skipped}
+
+### 🔁 Hand-off
+Implement with: `om-auto-implement-spec ${SPEC_PATH}` (or `om-auto-continue-pr {prNumber}` for spec-only continuation).
 ```
 
 ## Marker emission

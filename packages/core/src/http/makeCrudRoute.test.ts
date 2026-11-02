@@ -1,115 +1,294 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
+import type { Cradle } from '../container/cradle';
+import type { ApiRouteContext } from './apiHandler';
+import {
+  makeCrudRoute,
+  type CrudService,
+  type MakeCrudRouteOptions,
+} from './makeCrudRoute';
 
-const SECRET = "test-secret-that-is-at-least-32-bytes-long!!";
-const USER_ID = "4f6d4d5e-2b8c-4a43-9a3f-0b5d2c1e7a10";
-const RECORD_ID = "0e0c7b1e-6a8f-4d7b-9c55-3f1f2a9d8b44";
-
-vi.mock("../logger", () => ({ getLogger: () => ({ error: vi.fn() }) }));
-const fakeCradle = { marker: "cradle" };
-vi.mock("../container/container", () => ({
-  withScope: <T>(fn: (cradle: unknown) => Promise<T>) => fn(fakeCradle),
+const testState = vi.hoisted(() => ({
+  cradle: {} as unknown,
+  withScope: vi.fn(),
 }));
 
-const { makeCrudRoute } = await import("./makeCrudRoute");
-const { signSessionToken, SESSION_COOKIE_NAME } = await import("./auth");
-const { CSRF_HEADER, CSRF_HEADER_VALUE } = await import("./apiHandler");
+vi.mock('../container/container', () => ({
+  withScope: testState.withScope,
+}));
 
-const context = { params: Promise.resolve({}) };
+type Entity = { id: string; name: string };
+type Input = { name: string };
 
-type Envelope = { ok: boolean; data?: unknown; error?: { code: string; fieldErrors?: Record<string, string[]> } };
-const readBody = (response: Response) => response.json() as Promise<Envelope>;
-const noteSchema = z.object({ title: z.string().min(1) });
+const inputSchema = z.object({ name: z.string().min(1) });
 
-async function request(method: string, path: string, { body, isSignedIn = true }: { body?: unknown; isSignedIn?: boolean } = {}) {
-  const headers = new Headers({ [CSRF_HEADER]: CSRF_HEADER_VALUE, "content-type": "application/json" });
-  if (isSignedIn) {
-    headers.set("cookie", `${SESSION_COOKIE_NAME}=${await signSessionToken({ userId: USER_ID, role: "student" })}`);
-  }
-  return new Request(`http://localhost${path}`, {
+function context(params?: Record<string, string | string[]>): ApiRouteContext {
+  return params === undefined
+    ? (undefined as unknown as ApiRouteContext)
+    : { params: Promise.resolve(params) };
+}
+
+function request(method: string, body?: string): Request {
+  return new Request('http://devmentor.test/api/resources', {
     method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    ...(body === undefined
+      ? {}
+      : { body, headers: { 'content-type': 'application/json' } }),
   });
 }
 
-describe("makeCrudRoute", () => {
-  beforeEach(() => {
-    vi.stubEnv("JWT_SECRET", SECRET);
+async function body(response: Response) {
+  return response.json() as Promise<unknown>;
+}
+
+function service(overrides: Partial<CrudService<Entity, Input, Input>> = {}) {
+  return {
+    list: vi.fn(async () => [{ id: '1', name: 'Ada' }]),
+    get: vi.fn(async (id: string) => ({ id, name: 'Ada' })),
+    create: vi.fn(async (data: Input) => ({ id: 'created', ...data })),
+    update: vi.fn(async (id: string, data: Input) => ({ id, ...data })),
+    delete: vi.fn(async () => undefined),
+    ...overrides,
+  } satisfies CrudService<Entity, Input, Input>;
+}
+
+function route(
+  currentService: CrudService<Entity, Input, Input>,
+  overrides: Partial<MakeCrudRouteOptions<Entity, Input, Input>> = {},
+) {
+  return makeCrudRoute<Entity, Input, Input>({
+    resolve: () => currentService,
+    createSchema: inputSchema,
+    updateSchema: inputSchema,
+    ...overrides,
   });
+}
 
-  it("only exposes the configured methods", () => {
-    const routes = makeCrudRoute({ list: { query: z.object({}), run: async () => [] } });
+beforeEach(() => {
+  vi.clearAllMocks();
+  testState.withScope.mockImplementation(
+    async (callback: (cradle: Cradle) => Promise<unknown>) =>
+      callback(testState.cradle as Cradle),
+  );
+});
 
-    expect(Object.keys(routes)).toEqual(["GET"]);
-  });
+describe('makeCrudRoute GET', () => {
+  it('lists a collection with no route context and runs authorization', async () => {
+    const currentService = service();
+    const authorize = vi.fn();
+    const handlers = route(currentService, { authorize });
+    const req = request('GET');
 
-  it("requires a session by default and never calls the service without one", async () => {
-    const run = vi.fn(async () => []);
-    const { GET } = makeCrudRoute({ list: { query: z.object({}), run } });
-    const response = await GET(await request("GET", "/api/notes", { isSignedIn: false }), context);
-
-    expect(response.status).toBe(401);
-    expect(run).not.toHaveBeenCalled();
-  });
-
-  it("passes the parsed query, session and cradle to list", async () => {
-    const run = vi.fn(async () => ["note"]);
-    const { GET } = makeCrudRoute({
-      list: { query: z.object({ limit: z.coerce.number().default(10) }), run },
-    });
-    const response = await GET(await request("GET", "/api/notes?limit=5"), context);
-
-    expect(await readBody(response)).toEqual({ ok: true, data: ["note"] });
-    expect(run).toHaveBeenCalledWith(fakeCradle, {
-      query: { limit: 5 },
-      session: { userId: USER_ID, role: "student" },
-    });
-  });
-
-  it("allows deliberately public routes without a session", async () => {
-    const { GET } = makeCrudRoute({ access: "public", list: { query: z.object({}), run: async () => [] } });
-    const response = await GET(await request("GET", "/api/notes", { isSignedIn: false }), context);
+    const response = await handlers.GET(req, context());
 
     expect(response.status).toBe(200);
+    expect(await body(response)).toEqual({
+      ok: true,
+      data: [{ id: '1', name: 'Ada' }],
+    });
+    expect(authorize).toHaveBeenCalledWith(req, testState.cradle);
+    expect(currentService.list).toHaveBeenCalledOnce();
   });
 
-  it("creates with 201 and only the schema's fields (no mass assignment)", async () => {
-    const run = vi.fn(async (_cradle: unknown, { body }: { body: z.infer<typeof noteSchema> }) => body);
-    const { POST } = makeCrudRoute({ create: { body: noteSchema, run } });
-    const response = await POST(
-      await request("POST", "/api/notes", { body: { title: "Hi", id: RECORD_ID, ownerId: "someone-else" } }),
-      context,
+  it('lists when an empty params object is provided', async () => {
+    const currentService = service();
+    const response = await route(currentService).GET(request('GET'), context({}));
+
+    expect(response.status).toBe(200);
+    expect(currentService.list).toHaveBeenCalledOnce();
+  });
+
+  it('gets one entity using the default id parameter', async () => {
+    const currentService = service();
+    const response = await route(currentService).GET(
+      request('GET'),
+      context({ id: 'resource-1' }),
     );
 
-    expect(response.status).toBe(201);
-    expect(run.mock.calls[0][1].body).toEqual({ title: "Hi" });
+    expect(await body(response)).toEqual({
+      ok: true,
+      data: { id: 'resource-1', name: 'Ada' },
+    });
+    expect(currentService.get).toHaveBeenCalledWith('resource-1');
   });
 
-  it("rejects an invalid create body with field errors", async () => {
-    const run = vi.fn();
-    const { POST } = makeCrudRoute({ create: { body: noteSchema, run } });
-    const response = await POST(await request("POST", "/api/notes", { body: { title: "" } }), context);
+  it('uses the first array value from a custom id parameter', async () => {
+    const currentService = service();
+    const response = await route(currentService, { idParam: 'slug' }).GET(
+      request('GET'),
+      context({ slug: ['first', 'ignored'] }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(currentService.get).toHaveBeenCalledWith('first');
+  });
+
+  it('returns a bad request when item lookup is unsupported', async () => {
+    const currentService = service({ get: undefined });
+    const response = await route(currentService).GET(
+      request('GET'),
+      context({ id: 'resource-1' }),
+    );
 
     expect(response.status).toBe(400);
-    expect((await readBody(response)).error?.fieldErrors?.title).toBeDefined();
-    expect(run).not.toHaveBeenCalled();
+    expect(await body(response)).toEqual({
+      ok: false,
+      error: {
+        code: 'bad_request',
+        message: 'This operation is not supported',
+      },
+    });
+  });
+});
+
+describe('makeCrudRoute POST', () => {
+  it('parses and creates an entity', async () => {
+    const currentService = service();
+    const response = await route(currentService).POST(
+      request('POST', JSON.stringify({ name: 'Grace' })),
+      context(),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await body(response)).toEqual({
+      ok: true,
+      data: { id: 'created', name: 'Grace' },
+    });
+    expect(currentService.create).toHaveBeenCalledWith({ name: 'Grace' });
   });
 
-  it("update and remove take a UUID id from the query string", async () => {
-    const update = vi.fn<(cradle: unknown, args: { id: string; body: unknown }) => Promise<string>>(
-      async () => "updated",
+  it('rejects malformed JSON', async () => {
+    const response = await route(service()).POST(request('POST', '{'), context());
+
+    expect(response.status).toBe(400);
+    expect(await body(response)).toEqual({
+      ok: false,
+      error: {
+        code: 'bad_request',
+        message: 'Request body must be valid JSON',
+      },
+    });
+  });
+
+  it('flattens field, repeated, and root validation issues', async () => {
+    const schema = z
+      .object({
+        name: z.string().min(2, 'too short').regex(/^[A-Z]/, 'must start uppercase'),
+      })
+      .refine(() => false, 'root problem');
+    const response = await route(service(), { createSchema: schema }).POST(
+      request('POST', JSON.stringify({ name: '' })),
+      context(),
     );
-    const remove = vi.fn<(cradle: unknown, args: { id: string }) => Promise<void>>(async () => undefined);
-    const { PUT, DELETE } = makeCrudRoute({ update: { body: noteSchema, run: update }, remove: { run: remove } });
 
-    const updated = await PUT(await request("PUT", `/api/notes?id=${RECORD_ID}`, { body: { title: "New" } }), context);
-    const removed = await DELETE(await request("DELETE", `/api/notes?id=${RECORD_ID}`), context);
-    const invalid = await DELETE(await request("DELETE", "/api/notes?id=1"), context);
+    expect(response.status).toBe(422);
+    expect(await body(response)).toEqual({
+      ok: false,
+      error: {
+        code: 'validation_failed',
+        message: 'Validation failed',
+        fieldErrors: {
+          name: ['too short', 'must start uppercase'],
+          _root: ['root problem'],
+        },
+      },
+    });
+  });
 
-    expect(updated.status).toBe(200);
-    expect(update.mock.calls[0][1]).toMatchObject({ id: RECORD_ID, body: { title: "New" } });
-    expect(await readBody(removed)).toEqual({ ok: true, data: { id: RECORD_ID } });
-    expect(invalid.status).toBe(400);
+  it('rejects creation when the service method is absent', async () => {
+    const response = await route(service({ create: undefined })).POST(
+      request('POST', JSON.stringify({ name: 'Grace' })),
+      context(),
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it('rejects creation when the schema is absent', async () => {
+    const response = await route(service(), { createSchema: undefined }).POST(
+      request('POST', JSON.stringify({ name: 'Grace' })),
+      context(),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await body(response)).toMatchObject({
+      error: { message: 'This operation is not supported' },
+    });
+  });
+});
+
+describe('makeCrudRoute PUT', () => {
+  it('parses and updates an entity', async () => {
+    const currentService = service();
+    const response = await route(currentService).PUT(
+      request('PUT', JSON.stringify({ name: 'Katherine' })),
+      context({ id: 'resource-2' }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(currentService.update).toHaveBeenCalledWith('resource-2', {
+      name: 'Katherine',
+    });
+  });
+
+  it('requires an id', async () => {
+    const response = await route(service()).PUT(
+      request('PUT', JSON.stringify({ name: 'Katherine' })),
+      context(),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await body(response)).toMatchObject({ error: { message: 'Missing resource id' } });
+  });
+
+  it('rejects updates when the service method is absent', async () => {
+    const response = await route(service({ update: undefined })).PUT(
+      request('PUT', JSON.stringify({ name: 'Katherine' })),
+      context({ id: 'resource-2' }),
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it('rejects updates when the schema is absent', async () => {
+    const response = await route(service(), { updateSchema: undefined }).PUT(
+      request('PUT', JSON.stringify({ name: 'Katherine' })),
+      context({ id: 'resource-2' }),
+    );
+
+    expect(response.status).toBe(400);
+  });
+});
+
+describe('makeCrudRoute DELETE', () => {
+  it('deletes an entity and returns its id', async () => {
+    const currentService = service();
+    const response = await route(currentService).DELETE(
+      request('DELETE'),
+      context({ id: 'resource-3' }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await body(response)).toEqual({ ok: true, data: { id: 'resource-3' } });
+    expect(currentService.delete).toHaveBeenCalledWith('resource-3');
+  });
+
+  it('requires an id', async () => {
+    const response = await route(service()).DELETE(request('DELETE'), context());
+
+    expect(response.status).toBe(400);
+    expect(await body(response)).toMatchObject({ error: { message: 'Missing resource id' } });
+  });
+
+  it('rejects deletion when the service method is absent', async () => {
+    const response = await route(service({ delete: undefined })).DELETE(
+      request('DELETE'),
+      context({ id: 'resource-3' }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await body(response)).toMatchObject({
+      error: { message: 'This operation is not supported' },
+    });
   });
 });

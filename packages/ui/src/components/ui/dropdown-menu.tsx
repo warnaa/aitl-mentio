@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "cn"
+import { cn } from "../../lib/utils"
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
@@ -40,7 +40,7 @@ function DropdownMenuContent({
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
-        className={cn("mentio-menu-content", className)}
+        className={cn("dm-dropdown-menu-content", className)}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>
@@ -69,7 +69,7 @@ function DropdownMenuItem({
       data-slot="dropdown-menu-item"
       data-inset={inset}
       data-variant={variant}
-      className={cn("mentio-menu-item", className)}
+      className={cn("dm-dropdown-menu-item", className)}
       {...props}
     />
   )
@@ -84,13 +84,13 @@ function DropdownMenuCheckboxItem({
   return (
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
-      className={cn("mentio-menu-item mentio-menu-choice", className)}
+      className={cn("dm-dropdown-menu-checkbox-item", className)}
       checked={checked}
       {...props}
     >
-      <span className="mentio-menu-indicator">
+      <span className="dm-dropdown-menu-indicator" aria-hidden="true">
         <DropdownMenuPrimitive.ItemIndicator>
-          <CheckIcon aria-hidden="true" />
+          <CheckIcon />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -117,12 +117,12 @@ function DropdownMenuRadioItem({
   return (
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
-      className={cn("mentio-menu-item mentio-menu-choice", className)}
+      className={cn("dm-dropdown-menu-radio-item", className)}
       {...props}
     >
-      <span className="mentio-menu-indicator">
+      <span className="dm-dropdown-menu-indicator" aria-hidden="true">
         <DropdownMenuPrimitive.ItemIndicator>
-          <CircleIcon aria-hidden="true" className="mentio-menu-radio-dot" />
+          <CircleIcon className="dm-dropdown-menu-radio-dot" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -141,7 +141,7 @@ function DropdownMenuLabel({
     <DropdownMenuPrimitive.Label
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn("mentio-menu-label", className)}
+      className={cn("dm-dropdown-menu-label", className)}
       {...props}
     />
   )
@@ -154,7 +154,7 @@ function DropdownMenuSeparator({
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn("mentio-menu-separator", className)}
+      className={cn("dm-dropdown-menu-separator", className)}
       {...props}
     />
   )
@@ -167,7 +167,7 @@ function DropdownMenuShortcut({
   return (
     <span
       data-slot="dropdown-menu-shortcut"
-      className={cn("mentio-menu-shortcut", className)}
+      className={cn("dm-dropdown-menu-shortcut", className)}
       {...props}
     />
   )
@@ -191,11 +191,11 @@ function DropdownMenuSubTrigger({
     <DropdownMenuPrimitive.SubTrigger
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
-      className={cn("mentio-menu-item", className)}
+      className={cn("dm-dropdown-menu-sub-trigger", className)}
       {...props}
     >
       {children}
-      <ChevronRightIcon aria-hidden="true" className="mentio-menu-sub-chevron" />
+      <ChevronRightIcon className="dm-dropdown-menu-chevron" aria-hidden="true" />
     </DropdownMenuPrimitive.SubTrigger>
   )
 }
@@ -207,7 +207,7 @@ function DropdownMenuSubContent({
   return (
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
-      className={cn("mentio-menu-content mentio-menu-sub-content", className)}
+      className={cn("dm-dropdown-menu-sub-content", className)}
       {...props}
     />
   )

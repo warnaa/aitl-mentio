@@ -1,103 +1,132 @@
-import { z } from "zod";
-import { withScope } from "../container/container";
-import type { Cradle } from "../container/cradle";
-import { apiHandler, type RouteHandler } from "./apiHandler";
-import { requireSession, type Session } from "./auth";
-import { parseJsonBody, parseSearchParams } from "./request";
-
-type Access = "session" | "public";
-type SessionFor<A extends Access> = A extends "public" ? null : Session;
-
-const idQuerySchema = z.object({ id: z.uuid() });
-
-interface ListOperation<A extends Access, Q extends z.ZodType> {
-  /** Query-string schema; use `z.object({})` when the list takes no parameters. */
-  query: Q;
-  run: (cradle: Cradle, args: { query: z.output<Q>; session: SessionFor<A> }) => Promise<unknown>;
-}
-interface CreateOperation<A extends Access, B extends z.ZodType> {
-  body: B;
-  run: (cradle: Cradle, args: { body: z.output<B>; session: SessionFor<A> }) => Promise<unknown>;
-}
-interface UpdateOperation<A extends Access, B extends z.ZodType> {
-  body: B;
-  run: (cradle: Cradle, args: { id: string; body: z.output<B>; session: SessionFor<A> }) => Promise<unknown>;
-}
-interface RemoveOperation<A extends Access> {
-  run: (cradle: Cradle, args: { id: string; session: SessionFor<A> }) => Promise<unknown>;
-}
-
-export interface CrudRouteConfig<
-  A extends Access,
-  LQ extends z.ZodType,
-  CB extends z.ZodType,
-  UB extends z.ZodType,
-> {
-  /** Defaults to `"session"`. A `"public"` route must be a deliberate, reviewed choice. */
-  access?: A;
-  list?: ListOperation<A, LQ>;
-  create?: CreateOperation<A, CB>;
-  update?: UpdateOperation<A, UB>;
-  remove?: RemoveOperation<A>;
-}
-
-type CrudRoutes<C> = (C extends { list: object } ? { GET: RouteHandler } : unknown) &
-  (C extends { create: object } ? { POST: RouteHandler } : unknown) &
-  (C extends { update: object } ? { PUT: RouteHandler } : unknown) &
-  (C extends { remove: object } ? { DELETE: RouteHandler } : unknown);
+import { z } from 'zod';
+import { withScope } from '../container/container';
+import type { Cradle } from '../container/cradle';
+import { apiHandler, type ApiRouteContext } from './apiHandler';
+import { BadRequestError, type FieldErrors, ValidationError } from './errors';
 
 /**
- * Config-driven handlers for a plain CRUD resource: auth → validation → service
- * call (in a request scope) → JSON envelope. PUT/DELETE take the record id from
- * `?id=`. Workflow endpoints (booking, payment, reschedule) use `apiHandler` directly.
- *
- * @example export const { GET, POST } = makeCrudRoute({ list: {...}, create: {...} });
+ * The service shape a CRUD route drives. Every method is optional except `list` — a
+ * resource wires up only the verbs it supports; calling an unsupported verb yields a
+ * `400` rather than a crash.
  */
-export function makeCrudRoute<
-  C extends CrudRouteConfig<A, LQ, CB, UB>,
-  A extends Access = "session",
-  LQ extends z.ZodType = z.ZodType,
-  CB extends z.ZodType = z.ZodType,
-  UB extends z.ZodType = z.ZodType,
->(config: C & CrudRouteConfig<A, LQ, CB, UB>): CrudRoutes<C> {
-  const authenticate = async (req: Request) =>
-    (config.access === "public" ? null : await requireSession(req)) as SessionFor<A>;
-  const routes: Partial<Record<"GET" | "POST" | "PUT" | "DELETE", RouteHandler>> = {};
-  const { list, create, update, remove } = config;
+export interface CrudService<Entity, CreateInput, UpdateInput> {
+  list(): Promise<Entity[]>;
+  get?(id: string): Promise<Entity>;
+  create?(data: CreateInput): Promise<Entity>;
+  update?(id: string, data: UpdateInput): Promise<Entity>;
+  delete?(id: string): Promise<void>;
+}
 
-  if (list) {
-    routes.GET = apiHandler(async ({ req }) => {
-      const session = await authenticate(req);
-      const query = parseSearchParams(req, list.query);
-      return withScope((cradle) => list.run(cradle, { query, session }));
+export interface MakeCrudRouteOptions<Entity, CreateInput, UpdateInput> {
+  /** Resolve the concept's service from the request-scoped cradle. */
+  resolve: (cradle: Cradle) => CrudService<Entity, CreateInput, UpdateInput>;
+  /** Zod schema for `POST` bodies. Required to enable `create`. */
+  createSchema?: z.ZodType<CreateInput>;
+  /** Zod schema for `PUT` bodies. Required to enable `update`. */
+  updateSchema?: z.ZodType<UpdateInput>;
+  /** Route param carrying the resource id for item-level verbs. Defaults to `id`. */
+  idParam?: string;
+  /**
+   * Runs before any verb. Throw an `AppError` (e.g. from `requireSession`) to deny.
+   * Omit only for endpoints that are explicitly public.
+   */
+  authorize?: (req: Request, cradle: Cradle) => void | Promise<void>;
+}
+
+function flattenZodError(error: z.ZodError): FieldErrors {
+  const fieldErrors: FieldErrors = {};
+  for (const issue of error.issues) {
+    const key = issue.path.length ? issue.path.join('.') : '_root';
+    (fieldErrors[key] ??= []).push(issue.message);
+  }
+  return fieldErrors;
+}
+
+async function readJsonBody(req: Request): Promise<unknown> {
+  try {
+    return await req.json();
+  } catch {
+    throw new BadRequestError('Request body must be valid JSON');
+  }
+}
+
+function parseWith<T>(schema: z.ZodType<T> | undefined, data: unknown): T {
+  if (!schema) {
+    throw new BadRequestError('This operation is not supported');
+  }
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    throw new ValidationError('Validation failed', flattenZodError(result.error));
+  }
+  return result.data;
+}
+
+/**
+ * Build `{ GET, POST, PUT, DELETE }` route handlers from a service + Zod schemas, so
+ * a `route.ts` becomes configuration rather than logic. Collection routes re-export
+ * `{ GET, POST }`; an `[id]/route.ts` re-exports `{ GET, PUT, DELETE }` from the same
+ * config. Workflow endpoints that aren't plain CRUD use `apiHandler` directly instead.
+ */
+export function makeCrudRoute<Entity, CreateInput = never, UpdateInput = never>(
+  options: MakeCrudRouteOptions<Entity, CreateInput, UpdateInput>,
+) {
+  const idParam = options.idParam ?? 'id';
+
+  async function idFrom(ctx: ApiRouteContext): Promise<string | undefined> {
+    // Collection routes (e.g. `/api/users`) are non-dynamic, so Next provides no
+    // params at all — guard rather than assume `ctx.params` is present.
+    const params = ctx?.params ? await ctx.params : undefined;
+    const raw = params?.[idParam];
+    return Array.isArray(raw) ? raw[0] : raw;
+  }
+
+  function run<T>(req: Request, fn: (cradle: Cradle) => Promise<T>): Promise<T> {
+    return withScope(async (cradle) => {
+      await options.authorize?.(req, cradle);
+      return fn(cradle);
     });
   }
-  if (create) {
-    routes.POST = apiHandler(
-      async ({ req }) => {
-        const session = await authenticate(req);
-        const body = await parseJsonBody(req, create.body);
-        return withScope((cradle) => create.run(cradle, { body, session }));
-      },
-      { status: 201 },
-    );
-  }
-  if (update) {
-    routes.PUT = apiHandler(async ({ req }) => {
-      const session = await authenticate(req);
-      const { id } = parseSearchParams(req, idQuerySchema);
-      const body = await parseJsonBody(req, update.body);
-      return withScope((cradle) => update.run(cradle, { id, body, session }));
-    });
-  }
-  if (remove) {
-    routes.DELETE = apiHandler(async ({ req }) => {
-      const session = await authenticate(req);
-      const { id } = parseSearchParams(req, idQuerySchema);
-      await withScope((cradle) => remove.run(cradle, { id, session }));
+
+  const GET = apiHandler((req, ctx) =>
+    run(req, async (cradle) => {
+      const service = options.resolve(cradle);
+      const id = await idFrom(ctx);
+      if (id !== undefined) {
+        if (!service.get) throw new BadRequestError('This operation is not supported');
+        return service.get(id);
+      }
+      return service.list();
+    }),
+  );
+
+  const POST = apiHandler((req) =>
+    run(req, async (cradle) => {
+      const service = options.resolve(cradle);
+      if (!service.create) throw new BadRequestError('This operation is not supported');
+      return service.create(parseWith(options.createSchema, await readJsonBody(req)));
+    }),
+  );
+
+  const PUT = apiHandler((req, ctx) =>
+    run(req, async (cradle) => {
+      const service = options.resolve(cradle);
+      const id = await idFrom(ctx);
+      if (id === undefined) throw new BadRequestError('Missing resource id');
+      if (!service.update) throw new BadRequestError('This operation is not supported');
+      return service.update(id, parseWith(options.updateSchema, await readJsonBody(req)));
+    }),
+  );
+
+  const DELETE = apiHandler((req, ctx) =>
+    run(req, async (cradle) => {
+      const service = options.resolve(cradle);
+      const id = await idFrom(ctx);
+      if (id === undefined) throw new BadRequestError('Missing resource id');
+      if (!service.delete) throw new BadRequestError('This operation is not supported');
+      await service.delete(id);
       return { id };
-    });
-  }
+    }),
+  );
 
-  return routes as CrudRoutes<C>;
+  return { GET, POST, PUT, DELETE };
 }

@@ -22,14 +22,6 @@ the rest from the brief and the repo. The ones that matter:
 - **Isolation** — does it need an isolated worktree (any run that builds/tests/
   commits) or does it work in place?
 
-- **New skill or delta?** — when the brief only adds this repository's
-  specifics to a skill that already exists (commands, ports, checklist items),
-  it is an overlay, not a new skill: author `.ai/skills/<name>/SKILL.md` per
-  `references/overlay-contract.md`, run its overlay gate, and skip steps 2–5.
-- **Concrete requests** — two or three realistic requests the skill must
-  handle; they drive the triggers and show which scripts, references, or assets
-  to bundle (`references/authoring-patterns.md` §1).
-
 Confirm the derived name is kebab-case, `om-`-prefixed, verb-first (matching the
 repo's house style), and not already taken under `skills/`.
 
@@ -56,10 +48,7 @@ Start from `references/templates/skill-skeleton.md`. Fill:
 
 ## 3. Push detail down to references/
 
-Before writing a fragment, check it against `references/authoring-patterns.md`:
-write only what the agent lacks, pick the degree of freedom on purpose, and
-choose the resource type (reference, script, or asset). Then apply the up/down
-rule from `references/philosophy.md`. Anything that is an output
+Apply the up/down rule from `references/philosophy.md`. Anything that is an output
 template, a conditional branch, a big table, or a detailed sub-procedure starts in
 `references/` — not in the body. Reuse existing reference shapes across the repo
 (summary-comment, label-normalization, PR-body templates) rather than inventing
@@ -73,13 +62,9 @@ Write:
 - `skills/<name>/SKILL.md` (the router body).
 - `skills/<name>/references/*.md` (the terrain), each from
   `references/templates/reference-skeleton.md`.
-- Optionally `.ai/skills/<name>/SKILL.md` as a repo-local overlay from
+- Optionally `.ai/skills/<name>/SKILL.md` as a repo-local stub from
   `references/templates/repo-local-stub.md` when the skill clearly needs
-  per-repo specifics (exact commands, ports, seeded accounts). It follows
-  `references/overlay-contract.md` (no frontmatter, override banner, named
-  delta sections only, under 50% of the base).
-- Any bundled `scripts/` or `assets/` identified from the concrete requests;
-  run every added script once before handing back.
+  per-repo specifics (exact commands, ports, seeded accounts).
 
 ## 5. Optional — record a decision
 
@@ -89,7 +74,5 @@ user whether to add a one-line entry to `DECISIONS.md`. Do not do it unprompted.
 ## 6. Run the gate
 
 Run `references/gates.md` (lint + readability). Author mode has no split-
-completeness step, but the lint and readability checks are mandatory, and the
-overlay gate applies whenever an overlay was written. Fix and re-run until green
-before handing back. After the skill has run on real tasks, fold what you learn
-back in (`references/authoring-patterns.md` §10).
+completeness step, but the lint and readability checks are mandatory. Fix and
+re-run until green before handing back.

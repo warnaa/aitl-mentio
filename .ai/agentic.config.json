@@ -4,13 +4,7 @@
   "tracker": "github",
   "browser": { "provider": "agent-browser" },
   "validation": {
-    "commands": [
-      "npm run lint",
-      "npm run typecheck",
-      "npm run test:coverage",
-      "npm run build",
-      "npm run audit"
-    ]
+    "commands": ["npm run typecheck", "npm run lint", "npm run test", "npm run build"]
   },
   "labels": {
     "enabled": true,
@@ -27,15 +21,9 @@
     "runs": ".ai/runs",
     "analysis": ".ai/analysis",
     "specs": ".ai/specs",
-    "dataModel": ".ai/data-model",
-    "prototypes": ".ai/prototypes",
     "scripts": ".ai/scripts",
     "qa": ".ai/qa"
   },
   "reviewChecklist": null,
-  "closeKeywords": [],
-  "discovery": {
-    "enabled": true,
-    "roles": { "domainExpert": false, "designer": true }
-  }
+  "closeKeywords": []
 }

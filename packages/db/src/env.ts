@@ -1,25 +1,35 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-// Database settings only. `db` must not import `core`, so it validates its own slice
-// of the environment; app-level settings live in `@mentio/core/config`.
-/** `KEY=` in an env file means "not set", not "set to an empty string". */
-const unsetIfEmpty = <T extends z.ZodType>(schema: T) =>
-  z.preprocess((value) => (value === "" ? undefined : value), schema);
-
+/**
+ * Database environment schema. This is the *only* place in the `db` package that
+ * reads `process.env`. `core` re-exports a superset schema for the rest of the app;
+ * `db` keeps its own minimal copy so the MikroORM CLI can load config without pulling
+ * in `core`.
+ */
 const dbEnvSchema = z.object({
-  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
-  DB_POOL_MIN: unsetIfEmpty(z.coerce.number().int().min(0).default(0)),
-  DB_POOL_MAX: unsetIfEmpty(z.coerce.number().int().min(1).default(10)),
-  DB_POOL_IDLE_TIMEOUT_MS: unsetIfEmpty(z.coerce.number().int().min(0).default(30_000)),
-  DB_DEBUG: unsetIfEmpty(z.stringbool().default(false)),
+  DATABASE_URL: z.string().url().optional(),
+  DB_HOST: z.string().default('127.0.0.1'),
+  DB_PORT: z.coerce.number().int().positive().default(5432),
+  DB_NAME: z.string().default('devmentor'),
+  DB_USER: z.string().default('devmentor'),
+  DB_PASSWORD: z.string().default('devmentor'),
+  DB_POOL_MIN: z.coerce.number().int().nonnegative().default(2),
+  DB_POOL_MAX: z.coerce.number().int().positive().default(10),
+  DB_POOL_IDLE_MS: z.coerce.number().int().positive().default(30_000),
+  DB_DEBUG: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type DbEnv = z.infer<typeof dbEnvSchema>;
 
-export function readDbEnv(env: NodeJS.ProcessEnv = process.env): DbEnv {
-  const result = dbEnvSchema.safeParse(env);
-  if (!result.success) {
-    throw new Error(`Invalid database environment:\n${z.prettifyError(result.error)}`);
+let cached: DbEnv | undefined;
+
+/** Parse and cache the database-relevant environment. */
+export function getDbEnv(env: NodeJS.ProcessEnv = process.env): DbEnv {
+  if (!cached) {
+    cached = dbEnvSchema.parse(env);
   }
-  return result.data;
+  return cached;
 }

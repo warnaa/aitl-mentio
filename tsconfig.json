@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.root.tsbuildinfo",
+    "paths": {
+      "@/*": ["./packages/app/src/*"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/src/**/*.tsx",
+    "packages/db/migrations/**/*.ts",
+    "packages/app/next-env.d.ts",
+    "packages/app/next.config.ts",
+    "packages/app/.next/types/**/*.ts",
+    "tests/**/*.ts",
+    "vitest.config.mts",
+    "vitest.integration.config.mts",
+    "*.mjs"
+  ],
+  "exclude": ["node_modules", "**/node_modules", "**/.next", "**/dist"]
+}

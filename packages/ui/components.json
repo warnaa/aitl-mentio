@@ -5,16 +5,17 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/styles/globals.css",
+    "css": "src/tokens.css",
     "baseColor": "neutral",
-    "cssVariables": true
+    "cssVariables": true,
+    "prefix": ""
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@mentio/ui/components",
-    "utils": "@mentio/ui/lib/utils",
-    "hooks": "@mentio/ui/hooks",
-    "lib": "@mentio/ui/lib",
-    "ui": "@mentio/ui/components"
+    "components": "@devmentor/ui/components",
+    "ui": "@devmentor/ui/components",
+    "lib": "@devmentor/ui/lib",
+    "utils": "@devmentor/ui/lib/utils",
+    "hooks": "@devmentor/ui/hooks"
   }
 }

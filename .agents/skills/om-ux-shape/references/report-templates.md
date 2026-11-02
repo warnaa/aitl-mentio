@@ -1,12 +1,8 @@
 # Report templates
 
-Choose the smallest shape that supports the decision. Start with a short
-recommendation: what changes for whom, why, and the next decision or test.
-Keep the concrete screen states, copy, evidence, and acceptance criteria below
-that summary when engineering needs them; do not shorten away implementable
-behavior. Omit empty sections, repeated conclusions, and framework narration.
-A small request usually needs 3–6 lines, while an engineering handoff can be
-as long as its behavior requires. Use glossary emojis only for their meanings.
+Select the smallest shape that answers the user's decision and omit sections
+that would be empty. Structure headings with the glossary emojis; the result
+is a deliverable, not a log.
 
 ## Shape mode
 
@@ -41,7 +37,7 @@ trust (empty, loading, error, permission) with the actual message the user
 reads, and the recovery paths. Write the labels and copy, do not describe
 them.>
 
-### 📋 AI behavior
+### 🤖 AI contract
 
 <Only when AI is involved: what it does, the quality bar, the mistake it
 prefers and why, what the user can correct or undo, what remains possible
@@ -56,15 +52,16 @@ what each result would mean.>
 
 <Only questions that could still change the direction.>
 
-### 🧪 Evidence limits
+### 📋 Applied
 
-<Only material limits: what was actually inspected or tested, what remains
-unverified, and how that changes confidence in this decision. Do not list
-inapplicable framework checks.>
+<One line naming the checks that ran and the ones that did not apply, so the
+reader can see the coverage: AI necessity gate, human-AI checklist, value
+metrics, design contract, quality rubric. Example: "AI gate: not applicable
+(no AI in scope). Contract: loaded, 731 components. Rubric: passed.">
 ```
 
-For a small request, use recommendation, concrete flow, material assumptions,
-and next test. Keep the detailed checks internal unless their result changes the decision.
+For a small request, compress to recommendation, assumptions, flow, scope,
+and next test, and keep the Applied line.
 
 ## Review mode
 
@@ -97,11 +94,12 @@ fix costs, and how to tell it worked.>
 
 <What was not examined and why: missing data, no access, out of scope.>
 
-### 🧪 Evidence limits
+### 📋 Applied
 
-<Only material limits: what was actually inspected or tested, what remains
-unverified, and how that changes confidence in this decision. Do not list
-inapplicable framework checks.>
+<One line naming the checks that ran and the ones that did not apply, so the
+reader can see the coverage: AI necessity gate, human-AI checklist, value
+metrics, design contract, quality rubric. Example: "AI gate: not applicable
+(no AI in scope). Contract: loaded, 731 components. Rubric: passed.">
 ```
 
 ## Handoff mode
@@ -124,7 +122,7 @@ Implementation language, for the skill or person who builds it.
 |---|---|---|---|
 | <empty, loading, error, permission, success> | | | |
 
-### 📋 AI behavior
+### 🤖 AI contract
 
 <Only when AI is involved.>
 
@@ -141,9 +139,9 @@ engineering confirmation, marked as assumptions.>
 
 <With owners where known.>
 
-### 🧪 Evidence limits
+### 📋 Applied
 
-<Only unverified assumptions or coverage gaps the implementer must act on.>
+<One line naming the checks that ran and the ones that did not apply.>
 ```
 
 ## Writing rules
@@ -157,8 +155,8 @@ engineering confirmation, marked as assumptions.>
 - **Write for the reader who was not in the room.** Default to the person with
   the least context who has to act on this: they do not know the design
   system, the history, or the vocabulary. Name things in full the first time.
-- **Qualify the evidence.** Distinguish observed behavior, supplied claims,
-  and untested proposals. State a coverage limit when it affects the decision.
+- **Show your coverage.** The Applied line is not decoration: it lets the
+  reader tell a check that passed from a check that never ran.
 - Lead with the decision, not the framework.
 - The framework's vocabulary is for the author, never the reader: names like
   evidence ledger, value gaps, complexity hotspots, behavioral signal, or
@@ -167,8 +165,7 @@ engineering confirmation, marked as assumptions.>
 - The result obeys the same house copy rules it enforces: check it against the
   manual section of the design contract and any team rules the user stated.
 - Prefer one strong recommendation over several equally weighted ideas.
-- Use tables or a small Mermaid flow when they explain relationships or reach
-  more clearly than prose; distinguish current connections from proposed ones.
+- Use tables or diagrams only when they make relationships clearer.
 - Describe what the user sees and can do, not only what the system contains.
 - State exclusions explicitly when they protect focus.
 - Avoid generic personas, fictional quotes, inflated certainty, and

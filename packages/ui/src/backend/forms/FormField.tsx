@@ -1,35 +1,36 @@
 'use client';
 
-import { cloneElement, useId, type ComponentProps, type ReactElement } from 'react';
-import { Label } from '@mentio/ui/components/label';
-import { cn } from '@mentio/ui/lib/utils';
+import { useId, type ReactNode } from 'react';
+import { Label } from '../../components/ui/label';
 
-type ControlProps = Pick<ComponentProps<'input'>, 'id' | 'required' | 'disabled' | 'aria-describedby' | 'aria-invalid'>;
+export interface FormFieldControlProps {
+  id: string;
+  'aria-describedby'?: string;
+  'aria-invalid': boolean;
+  'aria-required': boolean;
+}
+
 export interface FormFieldProps {
-  id?: string;
   label: string;
+  id?: string;
   description?: string;
   error?: string;
   required?: boolean;
-  disabled?: boolean;
-  requirementLabel?: string;
-  className?: string;
-  children: ReactElement<ControlProps>;
+  children: (control: FormFieldControlProps) => ReactNode;
 }
 
-/** Shared label/hint/error anatomy. The caller owns value and validation. */
-export function FormField({ id, label, description, error, required, disabled, requirementLabel, className, children }: FormFieldProps) {
+/** Associates a field's visible label, supporting text and error with its control. */
+export function FormField({ label, id, description, error, required = false, children }: FormFieldProps) {
   const generatedId = useId();
-  const controlId = id ?? children.props.id ?? generatedId;
-  const isRequired = required ?? children.props.required ?? false;
-  const isDisabled = disabled ?? children.props.disabled ?? false;
-  const descriptionId = description ? `${controlId}-description` : undefined;
-  const errorId = error ? `${controlId}-error` : undefined;
-  const describedBy = [children.props['aria-describedby'], descriptionId, errorId].filter(Boolean).join(' ') || undefined;
-  return <div className={cn('mentio-field', className)}>
-    <Label htmlFor={controlId}>{label}<span className="mentio-field-requirement" aria-hidden="true">{requirementLabel ?? (isRequired ? 'Required' : 'Optional')}</span></Label>
-    {cloneElement(children, { id: controlId, required: isRequired, disabled: isDisabled, 'aria-describedby': describedBy, 'aria-invalid': error ? true : children.props['aria-invalid'] })}
-    {description && <p id={descriptionId} className="mentio-field-description">{description}</p>}
-    {error && <p id={errorId} className="mentio-field-error">{error}</p>}
+  const controlId = id ?? generatedId;
+  const descriptionId = `${controlId}-description`;
+  const errorId = `${controlId}-error`;
+  const describedBy = [description && descriptionId, error && errorId].filter(Boolean).join(' ') || undefined;
+
+  return <div className="dm-field">
+    <Label htmlFor={controlId}>{label}{required && <span className="dm-field-required" aria-hidden="true"> *</span>}</Label>
+    {children({ id: controlId, 'aria-describedby': describedBy, 'aria-invalid': Boolean(error), 'aria-required': required })}
+    {description && <p id={descriptionId} className="dm-field-description">{description}</p>}
+    {error && <p id={errorId} className="dm-field-error" role="alert">{error}</p>}
   </div>;
 }

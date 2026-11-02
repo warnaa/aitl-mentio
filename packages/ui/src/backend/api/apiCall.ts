@@ -1,101 +1,91 @@
-import { envelopeSchema, type ApiErrorBody, type ApiResult, type FieldErrors } from "./types";
-
-/** CSRF header required by `apiHandler` on state-changing requests. Keep in sync with `@mentio/core/http`. */
-export const CSRF_HEADER = "x-mentio-request";
-const CSRF_HEADER_VALUE = "1";
-
-/** Fixed, actionable text for network failures (F1; becomes Polish with the F1 sweep). */
-export const NETWORK_ERROR_MESSAGE = "Check your connection, then try again.";
-
-export type ApiPath = `/api/${string}`;
-
-export interface ApiCallOptions extends Omit<RequestInit, "body"> {
-  /** Serialized as JSON. */
-  body?: unknown;
-  /** Appended as query-string parameters; `undefined` values are skipped. */
-  query?: Record<string, string | number | boolean | undefined>;
-}
-
-export class ApiError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly fieldErrors?: FieldErrors;
-
-  constructor(status: number, { code, message, fieldErrors }: ApiErrorBody) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.code = code;
-    this.fieldErrors = fieldErrors;
-  }
-}
+import type { ApiResult, FieldErrors } from './types';
 
 /**
- * The only sanctioned `fetch()` to `/api/*`. Never throws: network failures and
- * responses that are not a valid envelope come back as `{ ok: false }`.
+ * The one sanctioned place a `fetch()` to `/api/*` happens. No component calls
+ * `fetch` directly. Parses the JSON envelope defensively and returns a typed
+ * `ApiResult<T>`; `apiCallOrThrow` is for call sites that prefer throwing over
+ * branching on `ok`.
  */
-export async function apiCall<T>(path: ApiPath, options: ApiCallOptions = {}): Promise<ApiResult<T>> {
-  const { body, query, headers, ...init } = options;
-  const requestHeaders = new Headers(headers);
-  requestHeaders.set("accept", "application/json");
-  requestHeaders.set(CSRF_HEADER, CSRF_HEADER_VALUE);
-  if (body !== undefined) requestHeaders.set("content-type", "application/json");
-
-  let response: Response;
-  let payload: unknown;
-  try {
-    response = await fetch(withQuery(path, query), {
-      credentials: "same-origin",
-      ...init,
-      headers: requestHeaders,
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    payload = await readJsonSafe(response);
-  } catch {
-    // F1: a network failure shows a fixed message, never the browser's `error.message`.
-    return failure(0, { code: "network_error", message: NETWORK_ERROR_MESSAGE });
-  }
-
-  const envelope = envelopeSchema.safeParse(payload);
-  if (!envelope.success) {
-    return failure(response.status, {
-      code: "invalid_response",
-      message: `Unexpected response from server (HTTP ${response.status})`,
-    });
-  }
-  return envelope.data.ok
-    ? { ok: true, data: envelope.data.data as T, status: response.status }
-    : failure(response.status, envelope.data.error);
+export interface ApiCallOptions extends Omit<RequestInit, 'body'> {
+  body?: unknown;
 }
 
-/** Like `apiCall`, but returns the data directly and throws `ApiError` on failure. */
-export async function apiCallOrThrow<T>(path: ApiPath, options?: ApiCallOptions): Promise<T> {
-  const result = await apiCall<T>(path, options);
-  if (!result.ok) throw new ApiError(result.status, result.error);
-  return result.data;
-}
+// CSRF: a custom header a plain HTML form post can't set. Combined with SameSite
+// cookies this is the minimum bar for state-changing routes.
+const CSRF_HEADER = 'x-devmentor-request';
 
-/** Parses a JSON body without throwing; an empty or non-JSON body yields `null`. */
-export async function readJsonSafe(response: Response): Promise<unknown> {
-  const text = await response.text();
-  if (!text) return null;
+async function readJsonSafe(res: Response): Promise<unknown> {
+  const text = await res.text();
+  if (!text) {
+    return undefined;
+  }
   try {
     return JSON.parse(text);
   } catch {
-    return null;
+    return undefined;
   }
 }
 
-function withQuery(path: ApiPath, query: ApiCallOptions["query"]): string {
-  if (!query) return path;
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined) params.set(key, String(value));
-  }
-  const search = params.toString();
-  return search ? `${path}?${search}` : path;
+function isEnvelope<T>(value: unknown): value is ApiResult<T> {
+  return typeof value === 'object' && value !== null && 'ok' in value;
 }
 
-function failure(status: number, error: ApiErrorBody): ApiResult<never> {
-  return { ok: false, error, status };
+export async function apiCall<T>(
+  path: string,
+  options: ApiCallOptions = {},
+): Promise<ApiResult<T>> {
+  const { body, headers, method, ...rest } = options;
+  const init: RequestInit = {
+    method: method ?? (body !== undefined ? 'POST' : 'GET'),
+    headers: {
+      'content-type': 'application/json',
+      [CSRF_HEADER]: '1',
+      ...headers,
+    },
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    ...rest,
+  };
+
+  let res: Response;
+  try {
+    res = await fetch(path, init);
+  } catch (error) {
+    return {
+      ok: false,
+      error: {
+        code: 'network_error',
+        message: error instanceof Error ? error.message : 'Network request failed',
+      },
+    };
+  }
+
+  const json = await readJsonSafe(res);
+  if (isEnvelope<T>(json)) {
+    return json;
+  }
+  return {
+    ok: false,
+    error: { code: 'invalid_response', message: `Unexpected response (HTTP ${res.status})` },
+  };
+}
+
+/** An error carrying the server's failure envelope, thrown by `apiCallOrThrow`. */
+export class ApiError extends Error {
+  readonly code: string;
+  readonly fieldErrors?: FieldErrors;
+
+  constructor(error: { code: string; message: string; fieldErrors?: FieldErrors }) {
+    super(error.message);
+    this.name = 'ApiError';
+    this.code = error.code;
+    this.fieldErrors = error.fieldErrors;
+  }
+}
+
+export async function apiCallOrThrow<T>(path: string, options?: ApiCallOptions): Promise<T> {
+  const result = await apiCall<T>(path, options);
+  if (!result.ok) {
+    throw new ApiError(result.error);
+  }
+  return result.data;
 }

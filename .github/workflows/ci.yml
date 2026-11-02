@@ -1,164 +1,105 @@
-name: CI
+name: Pull request checks
 
 on:
   pull_request:
-  push:
-    branches: [main]
 
 permissions:
   contents: read
 
-# Runner OS is pinned (not `ubuntu-latest`) so image migrations are deliberate: bump
-# every `runs-on` together and watch the integration job (Chrome path, Docker version).
-
 concurrency:
-  group: ci-${{ github.ref }}
+  group: pull-request-checks-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
 jobs:
-  # Docs-only changes (Markdown, .ai/, docs/) skip every other job. A job skipped through
-  # `if:` reports success, so required checks still pass; `paths-ignore` on the workflow
-  # would instead leave required checks pending forever on docs-only PRs.
-  changes:
-    runs-on: ubuntu-26.04
-    outputs:
-      code: ${{ steps.filter.outputs.code }}
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
-        with: { fetch-depth: 0 }
-      - id: filter
-        env:
-          # PRs: the whole PR (merge base → head), not just the latest push, so the head
-          # commit's checks always reflect every change in the PR.
-          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-        run: |
-          # Unknown base (new branch, force push): run everything.
-          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
-          fi
-          code_files=$(git diff --name-only "$BASE...$HEAD" | grep -v -E '(^|/)[^/]+\.md$|^\.ai/|^docs/' || true)
-          echo "Non-docs changes:"; echo "${code_files:-(none)}"
-          echo "code=$([ -n "$code_files" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --include=optional
+      # A production build must remain independent of a reachable database.
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run typecheck:storybook
+      - run: npm run typecheck:prototype
+      - run: npm run build-storybook
 
   lint:
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-26.04
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: npm }
-      - run: npm ci
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --include=optional
       - run: npm run lint
-      # Design system: the agent reference's component table must match the Storybook inventory.
-      - run: npm run check:agent-doc
-
-  typecheck:
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-26.04
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: npm }
-      - run: npm ci
-      - run: npm run typecheck
 
   unit:
-    name: unit (100% coverage)
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-26.04
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: npm }
-      - run: npm ci
-      - run: npm run test:coverage
-      - if: always()
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --include=optional
+      - run: npm run test:unit:coverage
+      - run: npm run test:prototype
+      - name: Upload unit coverage
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: coverage
-          path: coverage/
+          name: unit-coverage-${{ github.run_id }}
+          path: coverage/unit/
           if-no-files-found: ignore
-
-  build:
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-26.04
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: npm }
-      - run: npm ci
-      # Must succeed with no database reachable (AGENTS.md).
-      - run: npm run build
-
-  audit:
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-26.04
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: npm }
-      - run: npm ci
-      - run: npm run audit
+          retention-days: 7
 
   integration:
-    name: integration (testcontainers + agent-browser)
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-26.04
-    timeout-minutes: 20
-    env:
-      # The runner image ships Google Chrome and its libraries. `agent-browser install
-      # --with-deps` is not used here: its extra apt font packages stalled on the mirror.
-      AGENT_BROWSER_EXECUTABLE_PATH: /usr/bin/google-chrome
+    name: Integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: npm }
-      - run: npm ci
-      - run: google-chrome --version
-      - run: npm run build
-        timeout-minutes: 5
-      # Postgres comes from testcontainers (Docker is preinstalled on the runner image).
-      - run: npm run test:integration
-        timeout-minutes: 10
-      - if: failure()
-        uses: actions/upload-artifact@v7
         with:
-          name: integration-artifacts
-          path: tests/integration/.artifacts/
-          if-no-files-found: ignore
+          node-version: 24
+          cache: npm
+      - run: npm ci --include=optional
 
-  storybook:
-    name: storybook (light + dark)
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-26.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: npm }
-      - run: npm ci
-      # Browser for @vitest/browser-playwright, matching the installed Playwright version.
-      # No `--with-deps`: the runner image already has Chromium's system libraries, and
-      # apt font installs have stalled CI before (.ai/lessons.md, 2026-10-23).
-      - run: npx playwright install chromium
-        timeout-minutes: 5
-      # One run covers both themes: vitest.storybook.config.ts defines a
-      # storybook-light and a storybook-dark project.
-      - run: npm run test:storybook
-        timeout-minutes: 10
-      # Vitest browser mode screenshots failed tests into `__screenshots__/` next to
-      # each story file.
-      - if: failure()
+      - name: Cache agent-browser Chrome
+        uses: actions/cache@v5
+        with:
+          path: ~/.agent-browser
+          key: agent-browser-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            agent-browser-${{ runner.os }}-
+
+      - name: Install agent-browser Chrome and Linux dependencies
+        run: npm run test:browser:install:ci
+
+      # Testcontainers owns the ephemeral PostgreSQL instance. The integration
+      # global setup migrates/seeds it, builds and boots Next.js, waits for a
+      # database-ready health response, and cleans up every process/container.
+      - run: npm run test:integration
+
+      - name: Upload integration evidence
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: storybook-failure-screenshots
-          path: packages/ui/storybook/**/__screenshots__/
+          name: integration-evidence-${{ github.run_id }}
+          path: test-results/integration/
           if-no-files-found: ignore
+          retention-days: 7

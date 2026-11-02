@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "@mentio/ui/lib/utils"
+import { cn } from "../../lib/utils"
 import { Separator as SeparatorPrimitive } from "radix-ui"
 
 function Separator({
@@ -15,7 +15,7 @@ function Separator({
       data-slot="separator"
       decorative={decorative}
       orientation={orientation}
-      className={cn("mentio-separator", className)}
+      className={cn("dm-separator", className)}
       {...props}
     />
   )

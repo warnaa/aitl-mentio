@@ -1,10 +1,17 @@
-import { cn } from "@mentio/ui/lib/utils";
+import { cn } from '../../lib/utils';
 
-export function LoadingMessage({ label = "Loading…", className }: { label?: string; className?: string }) {
+/** The sanctioned loading renderer — pages compose this instead of a bespoke spinner. */
+export function LoadingMessage({
+  message = 'Loading…',
+  className,
+}: {
+  message?: string;
+  className?: string;
+}) {
   return (
-    <div role="status" aria-live="polite" className={cn("mentio-loading", className)}>
-      <span className="mentio-spinner" aria-hidden="true" />
-      {label}
-    </div>
+    <p role="status" className={cn('dm-loading-message', className)}>
+      <span className="dm-loading-indicator" aria-hidden="true" />
+      {message}
+    </p>
   );
 }

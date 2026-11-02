@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "cn"
-import { CircleIcon } from "lucide-react"
+import { cn } from "../../lib/utils"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
 
 function RadioGroup({
@@ -12,7 +11,7 @@ function RadioGroup({
   return (
     <RadioGroupPrimitive.Root
       data-slot="radio-group"
-      className={cn("mentio-radio-group", className)}
+      className={cn("dm-radio-group", className)}
       {...props}
     />
   )
@@ -25,15 +24,16 @@ function RadioGroupItem({
   return (
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
-      className={cn("mentio-radio", className)}
+      className={cn(
+        "dm-radio-control",
+        className
+      )}
       {...props}
     >
       <RadioGroupPrimitive.Indicator
         data-slot="radio-group-indicator"
-        className="mentio-radio-indicator"
-      >
-        <CircleIcon aria-hidden="true" />
-      </RadioGroupPrimitive.Indicator>
+        className="dm-radio-indicator"
+      />
     </RadioGroupPrimitive.Item>
   )
 }

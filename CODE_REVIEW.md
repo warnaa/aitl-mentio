@@ -1,93 +1,203 @@
 # Code review rules
 
-How changes to Mentio are reviewed. `om-code-review` (and therefore `om-auto-review-pr`) applies this file automatically; humans use it the same way. It complements the full checklist in `.ai/specs/implemented/2026-10-23-engineering-standards.md` ("Code Review Checklist") and the rules in `AGENTS.md` — when they disagree, `AGENTS.md` wins and this file should be fixed.
+How a pull request in this repository is reviewed. Humans apply these rules by hand;
+the `om-code-review` skill (and therefore `om-auto-review-pr`) applies them
+automatically because this file sits at the repo root. It complements `AGENTS.md`
+(how to work here) and `.ai/specs/2026-09-01-engineering-standards.md` (why the
+structure is the way it is). When the two disagree, the spec wins and this file gets a
+fix.
+
+The repository is an npm-workspaces monorepo: Next.js 16 App Router + React 19,
+TypeScript 5 strict, MikroORM v7 on PostgreSQL, awilix for dependency injection, zod
+for every input and env schema, pino for logs, Tailwind v4 on public pages and
+shadcn-ui in `@devmentor/ui` for `/admin/*`. Packages ship TypeScript source and are
+transpiled by Next.
 
 ## Review priorities
 
-In order — a finding higher up outranks any number of findings lower down:
+Read the diff in this order. A finding higher on the list outranks everything below it.
 
-1. **Correctness** — the change does what its spec/issue says, including the error, empty, and concurrent paths.
-2. **Security** — auth, ownership, input validation, secrets (see below).
-3. **Contracts** — nothing in `BACKWARD_COMPATIBILITY.md` breaks without its required path.
-4. **Architecture** — package boundaries, shared layers, DI lifetimes.
-5. **Tests** — 100% coverage of changed files, behavior asserted, integration test for new routes/pages.
-6. **Quality** — readability, naming, dead code, scope creep.
-
-## Gate
-
-Before review sign-off the gate is green, in order: `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run build`, `npm run audit`. CI additionally runs `npm run test:integration`. A red gate is a blocker finding, reported together with the code findings, never instead of them.
+1. **Correctness.** The change does what its ticket or spec says, and nothing else.
+   Every new or changed branch has a unit test; a bug fix ships a regression test that
+   fails on the pre-fix code. Services return DTOs (plain objects), never MikroORM
+   entities, across the API boundary. Anything touching the database is a dynamic
+   route or page (`export const dynamic = "force-dynamic"`) and degrades to a visible
+   "unavailable" state when the database is down: the app must build and boot with no
+   database reachable.
+2. **Security.** Auth is enforced server-side on every route that is not explicitly
+   public; hiding a button in the UI is not enforcement. Mutations check ownership of
+   the specific record, not just "is logged in". Security decisions fail closed: an
+   unexpected error inside an auth or ownership check denies. Write endpoints parse an
+   explicit zod schema and never spread the raw request body into `em.create()` or
+   `em.assign()`. No secret, token, password, or JWT reaches a log line, an error
+   response, or the client. No raw SQL with interpolated input. Money is recomputed
+   server-side; a client-supplied price is never persisted as-is.
+3. **Contracts.** The protected surfaces in `BACKWARD_COMPATIBILITY.md` (API
+   envelope and error codes, the `/api/health` payload, package exports, database
+   schema, environment variables, npm script and CI check names) change only through
+   the path that file names. Product decisions in `.ai/specs/product-brief.md`
+   (Non-goals, Business rules, Decisions) are protected the same way, per `SDLC.md`.
 
 ## Repo-specific checks
 
-### Package boundaries and layering
+### Package boundaries
 
-- Imports follow `app → core, ui`, `core → db`, `db`/`ui` → no workspace package. `app` never imports `@mentio/db` or `@mikro-orm/*`; `core` never imports `next`, `react` or `@mikro-orm/*`. Loosening `no-restricted-imports` in `eslint.config.mjs` is a **blocker** unless a spec approves it.
-- `@mentio/core` is imported through subpaths only (`@mentio/core/http`, `/container`, `/validators/<concept>/<file>`, …). Client code pulling in a service or the container (and with it the ORM) is a **major**.
-- Domain code follows the concept-folder convention (`entities/<concept>/`, `services/<concept>/`, `validators/<concept>/`, `api/<concept>/`). No `modules/` folders, no empty scaffolded concept folders.
-- Vendor SDKs (payments, notifications, video) are reached only through a port in `core/src/services/<concept>/<name>.port.ts` with an adapter under `adapters/`.
+- The dependency graph is `app -> core -> db`, with `ui` imported by `app` only.
+  ESLint (`eslint.config.mjs`, `no-restricted-imports`) fails the build on a violation;
+  a PR that loosens those rules is a blocker.
+- Only `packages/db` imports `@mikro-orm/*`. `core` never imports `next`, `react`, or
+  `@devmentor/ui`. `ui` never imports `core` or `db`.
+- The API envelope is declared twice on purpose (`packages/core/src/http/apiHandler.ts`
+  and `packages/ui/src/backend/api/types.ts`). A change to one without the other is a
+  blocker. A shared `packages/shared` package is an ask-first architecture change, not
+  something to add in passing.
 
-### Routes (`packages/app/src/app/api/**/route.ts`)
+### Domain concept convention
 
-- A route is HTTP wiring only: `makeCrudRoute(...)` or `apiHandler(...)` calling services through `withScope`. A hand-written `try/catch` + `Response.json`, or business logic in the route, is a **major** unless the PR states why.
-- Every non-public route calls `requireSession` first (`makeCrudRoute` defaults to it). `access: "public"` or a missing `requireSession` needs an explicit justification — otherwise **blocker**.
-- Mutations check ownership of the specific record (`assertOwner`). A missing ownership check is treated exactly like a missing auth check: **blocker**.
-- Input reaches services only through `parseJsonBody` / `parseSearchParams` / `parseWith` with a Zod schema from `@mentio/core/validators`. Spreading a raw body into `em.create()`/`em.assign()` is a **blocker** (mass assignment).
-- `csrf: false` on `apiHandler` is allowed only for signature-verified webhooks — **blocker** otherwise.
-- Anything that touches the database exports `dynamic = "force-dynamic"`; the app must build and boot with no database reachable.
+- A concept (`auth`, `mentors`, `bookings`, ...) is a same-named sub-folder under
+  `packages/db/src/entities/`, `packages/core/src/services/`,
+  `packages/core/src/validators/`, and `packages/app/src/app/api/`. An entity without a
+  service, or a service without its entity, is a finding.
+- No `modules/`, no per-concept `setup.ts` or `acl.ts`, no auto-discovery, no empty
+  scaffolded folders. A new service is one explicit line in
+  `packages/core/src/container/container.ts` (`asClass(...).scoped()`) and one in
+  `packages/core/src/container/cradle.ts`.
+- Domain events are entries in `packages/core/src/events/event-map.ts`, named
+  `concept.entity.action` in past tense, emitted from the service after a successful
+  mutation. In-process only: a PR introducing a queue or worker is out of scope.
 
-### Services and DI (`packages/core`)
+### HTTP layer (`packages/core/src/http/`, `packages/app/src/app/api/`)
 
-- One class per file, constructor-injected via `Pick<Cradle, ...>`, registered explicitly in `container/container.ts` and added to the `Cradle` interface. `loadModules` globbing is banned.
-- Anything that depends on `em` is registered `.scoped()` and resolved through `withScope`/`createRequestScope()`, never from the root container. A singleton depending on a scoped registration is a **blocker**.
-- Services throw only `AppError` subclasses from `@mentio/core/http` and never build HTTP responses.
-- Services return DTOs, never entities. Returning an entity (new columns could leak to clients) is a **major**.
-- Events use `concept.entity.action` IDs through the typed emitter in `core/src/events`, in process only. Adding a queue or worker is out of scope without a spec.
+- A `route.ts` is configuration, not logic: plain CRUD uses `makeCrudRoute`, a
+  workflow endpoint wraps its handler in `apiHandler`. A bare `try/catch` plus
+  `NextResponse.json` in a route is a finding; `/api/health` is the one pre-existing
+  exception and stays a plain probe.
+- Errors are thrown as `AppError` subclasses from `packages/core/src/http/errors.ts`
+  (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`,
+  `ConflictError`, `ValidationError`). A service never builds a `Response`.
+- Guarded routes call `requireSession`, `requireRole`, or `assertOwnership` from
+  `packages/core/src/http/auth.ts` before touching a service. `readSession` currently
+  returns `null` by design (fail closed until the `auth` concept lands); the PR that
+  wires real session verification is `risk-high` and needs a second reviewer.
+- Collection routes are non-dynamic, so Next passes no `params`; helpers guard
+  `ctx.params` before reading it (see `.ai/lessons.md`, 2026-09-02).
+- Request-scoped work goes through `withScope(fn)`; nothing resolves the root
+  container directly from a handler.
 
-### Persistence (`packages/db`)
+### Client layer (`packages/ui/src/backend/`, `packages/app/src/app/**/page.tsx`)
 
-- Entities use `defineEntity` + `p.*`, spread `baseProperties()`, and export the generated class (`export const X = XSchema.class`). Subclassing the generated class is a **blocker**: it breaks MikroORM metadata lookup in production bundles.
-- New entities are registered in the explicit `entities` array in `entities/index.ts`. Table names are plural snake_case.
-- Every schema change ships a generated migration plus the updated `.snapshot-mentio.json`, with a working `down()`. Editing an applied migration is a **blocker**.
-- No raw SQL built from user input. A check-then-write on shared state (slots, booking status) runs in a transaction backed by a unique constraint — **blocker** for bookings and payments.
+- `apiCall` / `apiCallOrThrow` are the only sanctioned `fetch()` call sites. A raw
+  `fetch` in a page or component is a finding.
+- Create and edit screens use `CrudForm` bound to the same zod schema the route
+  validates with (`packages/core/src/validators/<concept>/`). List screens use
+  `DataTable`. Loading, error, and empty states come from
+  `packages/ui/src/backend/feedback/`. A bespoke version of any of these needs a stated
+  reason in the PR description.
+- shadcn primitives land in `packages/ui/src/components/ui/` only via
+  `npx shadcn@latest add <component>` run inside `packages/ui`; hand-written primitives
+  are a finding. Concept-specific components go to `packages/ui/src/components/<concept>/`;
+  a component used by one page stays next to that `page.tsx`.
+- Public pages use Tailwind utilities; `/admin/*` uses `@devmentor/ui` components and
+  the tokens in `packages/ui/src/tokens.css`. No hardcoded colors where a token exists.
 
-### UI (`packages/ui`, admin pages)
+### Data layer (`packages/db/`)
 
-- `fetch()` happens only inside `@mentio/ui/backend/api` (`apiCall` / `apiCallOrThrow`). ESLint enforces it; do not disable the rule.
-- Forms use `CrudForm`, lists use `DataTable`, and loading/error/empty states use `backend/feedback`. A bespoke equivalent needs a stated reason in the PR.
-- New components go in their designated home: shadcn primitives in `ui/src/components/ui/` (added via the shadcn CLI, never hand-written), generic panel patterns in `ui/src/backend/<category>/`, concept-specific components in `ui/src/components/<concept>/`, single-use components next to their `page.tsx`.
-- `(marketing)/` pages use plain Tailwind and no `@mentio/ui`; `admin/` pages are built from `@mentio/ui`. Components are presentational: data and callbacks arrive as props.
-- The JSON envelope and the CSRF header name are declared in both `core/src/http` and `ui/src/backend/api`. A change to one without the other is a **blocker**.
+- Entities use `defineEntity` through `defineSingletonEntity` (globalThis registry),
+  spread `baseProperties` (uuid id, `createdAt`, `updatedAt`), and use a per-property
+  thunk for every cross-entity relation. Each new entity is registered in
+  `packages/db/src/entities/index.ts`.
+- Every schema change ships a migration generated with `npm run db:migration:create`
+  into `packages/db/migrations/`. An applied migration or the committed snapshot is
+  never edited by hand. Migrations run transactionally; a PR must state how the change
+  rolls back.
+- `em.persist(entity)` then `await em.flush()`; `persistAndFlush` does not exist in v7.
+- Any check-then-write on shared state (slot availability, booking status, payment
+  confirmation) runs inside a database transaction and, where the invariant allows it,
+  a unique constraint. A read-then-write with a race window is a blocker for
+  bookings and payments.
 
-### Security
+### Configuration
 
-- Sessions are HS256 JWTs signed with `JWT_SECRET` (≥ 32 bytes), valid 24h, stored in an `httpOnly`, `sameSite=lax` cookie that is `secure` in production. A token in `localStorage`, weakened cookie flags, or a longer lifetime are all **blockers**.
-- Passwords are hashed with bcrypt at cost ≥ 12. Login, register, and password reset have a brute-force control. Auth errors stay generic ("invalid credentials").
-- Errors inside an auth or ownership check fail closed (deny). Falling through to allow is a **blocker**.
-- No password, token, or full JWT appears in a log, error response, or client payload. New auth-related logging extends `REDACTED_PATHS` in `core/src/logger.ts`.
-- Prices and ownership fields are recomputed server-side. Client-supplied values are parsed but never trusted.
-- New production dependencies keep `npm run audit` green. Adding to `scripts/audit-allowlist.json` needs a reason in the file and in the PR.
-- Env vars are validated in `core/src/config/env.ts` (or `db/src/env.ts`) and documented in `.env.example`. `.env` is never committed.
+- `process.env` is read only by `packages/core/src/config/env.ts` and
+  `packages/db/src/env.ts`; both zod schemas describe the same database variables and
+  change together. A new variable appears in `.env.example` with a default or a clear
+  comment. There are two documented exceptions, both outside `packages/`:
+  `tests/integration/environment.ts` (ephemeral test configuration for child
+  processes) and `scripts/setup/effects.mjs` (the installer runs before `npm install`
+  and cannot import zod; it reads the environment behind the `SetupEffects` adapter and
+  mirrors the `DATABASE_URL`-over-`DB_*` precedence in `steps.mjs`). A *third*
+  reader is a finding — and any change to the precedence must land in all three
+  places at once.
+- Secrets never enter the repository; `.env` stays ignored.
 
-### Tests
+### Tests and coverage
 
-- Every changed file stays at 100% lines/branches/functions/statements. Lowering thresholds in `vitest.config.mts` is a **blocker**. Additions to the coverage-exclusion list or `/* v8 ignore */` need a same-line reason.
-- Unit tests sit next to the code, mock at the package boundary, and never touch a real database or network. They assert behavior, not just that code ran.
-- A new page or API route ships at least one test in `tests/integration/`: status codes and envelope (including the auth failure) for routes, a browser check via `support/browser.ts` for pages. Each test seeds its own uniquely named data.
-- A behavior change ships a test that fails without it. A bug fix ships a regression test. Concurrency-sensitive flows (booking, reschedule) get a test that simulates the concurrent case.
+- Unit tests sit next to their source as `*.test.ts` / `*.test.tsx` and run through
+  Vitest (`vitest.config.mts`). Every new or changed production file is added to
+  `coverage.include` there in the same PR, and `npm run test:unit:coverage` proves 100%
+  statements, branches, functions, and lines for it. Narrowing exclusions or dropping a
+  file from the coverage scope to pass the gate is a blocker.
+- Integration tests live under `tests/integration/`, own their infrastructure
+  (PostgreSQL Testcontainer on a random port, migrations, seeder, production Next build
+  on a random port), assert on the agent-browser accessibility snapshot (roles and
+  text, never guessed CSS selectors), capture screenshots at key assertions, and close
+  every browser session in `finally`. A test that depends on a fixed port, the
+  developer database, or shared data is a finding.
+- Integration coverage supplements unit coverage; it never replaces it.
 
-### Process
+### Code quality
 
-- Non-trivial work has a spec in `.ai/specs/` with a **Done means** list, moved to `implemented/` once complete. Autonomous runs leave a log in `.ai/runs/`. Non-obvious fixes add a `.ai/lessons.md` entry.
-- npm only — a `pnpm`/`yarn` lockfile is a **blocker**.
-- The diff traces entirely to its stated purpose: no drive-by renames, formatting passes, or speculative options.
+- No `any`; narrow `unknown` at runtime. Extensionless relative imports inside
+  packages (`./foo`, not `./foo.js`). No empty `catch`; log through the shared pino
+  logger with context, or rethrow. No `console.log`, dead code, or commented-out code
+  in the diff. Named constants instead of magic numbers, with the reason for the value
+  where it is not obvious.
+- The diff traces entirely to the PR's stated purpose: no drive-by renames or
+  formatting passes mixed into a behavioral change.
 
-## Severity
+### Spec-driven development artifacts
 
-| Severity | Meaning | Examples here |
-|---|---|---|
-| **blocker** | Must be fixed before merge. | Missing `requireSession`/`assertOwner`; mass assignment; secret in logs; subclassed entity; edited applied migration; boundary rule loosened; red gate; coverage below 100%. |
-| **major** | Should be fixed in this PR. Merging anyway needs a stated reason. | Route with hand-rolled `try/catch`; service returning an entity; missing integration test for a new route or page; bespoke form or table without a reason. |
-| **minor** | Worth fixing. May become a follow-up issue. | Naming that drifts from the convention table; unclear test names; a comment that restates the code. |
-| **nit** | Optional. | Wording or ordering preferences. |
+- Nontrivial work has a spec in `.ai/specs/` (`YYYY-MM-DD-slug.md`) that the PR links.
+  A spec moves to `.ai/specs/implemented/` only after the coverage proof above. A
+  correction that should persist is recorded in `.ai/lessons.md`; a standing rule
+  change also updates `AGENTS.md` in the same PR.
 
-Only blockers and majors hold an approval. When requesting changes, list each finding with its file, line, why it is a problem, and a fix.
+## Validation gate
+
+Every PR passes, in this order (the same list as `validation.commands` in
+`.ai/agentic.config.json`):
+
+1. `npm run typecheck`
+2. `npm run lint`
+3. `npm run test`
+4. `npm run build`
+
+CI (`.github/workflows/ci.yml`) additionally runs `npm run test:unit:coverage` as the
+"Unit tests" check and `npm run test:integration` as the "Integration tests" check. A
+PR that crosses the app, database, API, or browser boundary is expected to have run
+both locally (Docker plus `npm run test:browser:install`) before review.
+
+## Severity guidance
+
+- **Blocker** (the PR cannot merge as-is): any item under Security above; a
+  dependency-direction violation or a loosened ESLint boundary; a protected surface
+  changed without the path `BACKWARD_COMPATIBILITY.md` requires; a failing validation
+  gate; new or changed behavior without unit tests, or a production file missing from
+  `coverage.include`; an edited applied migration; a race window in a booking or
+  payment flow; a PR that builds what a product non-goal excludes without a
+  superseding decision.
+- **Major** (must be fixed before approval, one round expected): bespoke fetch, form,
+  table, or error handling without a stated reason; a bug fix without a regression
+  test; an ORM entity leaking through the API; a database-touching route or page that
+  is not `force-dynamic`; `process.env` read outside the two schemas; a spec or
+  `AGENTS.md` left out of date by the change; cookie or rate-limit protections
+  weakened on an auth path.
+- **Minor** (note it, do not block): naming, comment wording, formatting, small
+  duplication that does not branch, test readability.
+
+Verdict mapping: any blocker or major finding is `changes-requested`; only minors is an
+approval, and the pipeline label moves from `review` to `merge-queue`. Apply
+`needs-qa` to user-facing changes and `skip-qa` to docs-, CI-, or test-only changes,
+never both. Infer `risk-high` for auth, sessions, data scoping, money, schema
+migrations, and shared contract surfaces, and require the evidence `SDLC.md` lists for
+it.

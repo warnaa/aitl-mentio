@@ -1,6 +1,0 @@
-# D04 — A session that doesn't happen is settled by fault: the mentee is refunded the same day when the mentor declines or doesn't show; the mentor is paid when the mentee doesn't show
-- Date, owner: 2026-10-27, Damian (founder C), confirmed in the om-discover refresh; closes Q01
-- Context and the options weighed: the freelancer wants a refund "tego samego dnia a nie jakis ticket" (2026-09-02); the senior Python mentor wants to be paid on a mentee no-show, "po to jest przedpłata" (2026-09-03); two mentors want the question before accepting (2026-09-03 ×2). Options: (a) split by fault; (b) always refund the mentee; (c) leave open. Origin: the agent's recommendation, accepted.
-- Decision and why: (a). The mentor sees the question before accepting, so a decline costs the mentee nothing; the mentee bears the cost of their own no-show.
-- Consequences, and what would make us revisit it: refunds must be automatic and same-day for a decline or a mentor no-show. What counts as a no-show (how long to wait) is not decided. Revisit if refunds or no-shows become a support load.
-- Status: superseded by D16 (2026-10-28): fault-based settlement unchanged; time-dependent cases settle when either side next opens the booking (R09 replaces R07)

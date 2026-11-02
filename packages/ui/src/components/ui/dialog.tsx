@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "cn"
+import { cn } from "../../lib/utils"
 import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
-import { Button } from "@mentio/ui/components/button"
+import { Button } from "./button"
 
 function Dialog({
   ...props
@@ -38,7 +38,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
-      className={cn("mentio-overlay", className)}
+      className={cn("dm-dialog-overlay", className)}
       {...props}
     />
   )
@@ -57,17 +57,17 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
-        className={cn("mentio-dialog", className)}
+        className={cn("dm-dialog-content", className)}
         {...props}
       >
         {children}
         {showCloseButton && (
-          // WCAG 2.5.8: a 32px ghost icon Button instead of a bare 16px icon.
-          <DialogPrimitive.Close data-slot="dialog-close" asChild>
-            <Button variant="ghost" size="icon-sm" className="mentio-dialog-close">
-              <XIcon aria-hidden="true" />
-              <span className="sr-only">Close</span>
-            </Button>
+          <DialogPrimitive.Close
+            data-slot="dialog-close"
+            className="dm-dialog-dismiss"
+          >
+            <XIcon aria-hidden="true" />
+            <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
@@ -79,7 +79,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("mentio-dialog-header", className)}
+      className={cn("dm-dialog-header", className)}
       {...props}
     />
   )
@@ -96,7 +96,7 @@ function DialogFooter({
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("mentio-dialog-footer", className)}
+      className={cn("dm-dialog-footer", className)}
       {...props}
     >
       {children}
@@ -116,7 +116,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("mentio-dialog-title", className)}
+      className={cn("dm-dialog-title", className)}
       {...props}
     />
   )
@@ -129,7 +129,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("mentio-dialog-description", className)}
+      className={cn("dm-dialog-description", className)}
       {...props}
     />
   )

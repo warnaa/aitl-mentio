@@ -1,46 +1,70 @@
-import { asClass, asValue, createContainer, InjectionMode, type AwilixContainer } from "awilix";
-import { getOrm } from "@mentio/db";
-import { getLogger } from "../logger";
-import { UserService } from "../services/auth/user.service";
-import type { Cradle } from "./cradle";
+import {
+  asClass,
+  asFunction,
+  asValue,
+  createContainer,
+  InjectionMode,
+  type AwilixContainer,
+} from 'awilix';
+import { getOrm } from '@devmentor/db';
+import { getEnv } from '../config/env';
+import { createLogger } from '../logger';
+import { EventBus } from '../events/event-bus';
+import { UserService } from '../services/auth/user.service';
+import type { Cradle } from './cradle';
 
-export type AppContainer = AwilixContainer<Cradle>;
+/**
+ * The root container is cached on `globalThis` so Next.js HMR reuses a single
+ * container (and the single ORM/pool it holds) across dev reloads. Registrations are
+ * explicit — no `loadModules` globbing — so every binding is greppable.
+ */
+const globalForContainer = globalThis as unknown as {
+  __devmentorContainer?: Promise<AwilixContainer<Cradle>>;
+};
 
-// Composition root. Every binding is registered explicitly here (no `loadModules`
-// globbing) so each one is greppable. Cached per module instance so dev-mode reloads
-// pick up new registrations; the ORM itself (and its pool) is cached on globalThis.
-let rootContainer: Promise<AppContainer> | undefined;
+async function build(): Promise<AwilixContainer<Cradle>> {
+  // Resolve the ORM once up front so it can be registered as a shared singleton value.
+  const orm = await getOrm();
 
-async function buildContainer(): Promise<AppContainer> {
-  // PROXY: services destructure dependencies from the cradle. Strict: rejects
-  // singletons that depend on scoped registrations.
-  const container = createContainer<Cradle>({ injectionMode: InjectionMode.PROXY, strict: true });
+  const container = createContainer<Cradle>({
+    injectionMode: InjectionMode.PROXY,
+    strict: true,
+  });
+
   container.register({
-    orm: asValue(await getOrm()),
-    logger: asValue(getLogger()),
+    env: asValue(getEnv()),
+    logger: asFunction(createLogger).singleton(),
+    orm: asValue(orm),
+    eventBus: asClass(EventBus).singleton(),
+    // A forked EntityManager per scope gives each request its own identity map / UoW.
+    em: asFunction(({ orm }: Cradle) => orm.em.fork()).scoped(),
     userService: asClass(UserService).scoped(),
   });
+
+  // Default in-process subscribers. Concept side effects (send a message, invalidate
+  // a cache) register here; for now we just log so the event path is observable.
+  container.cradle.eventBus.on('auth.user.created', ({ userId }) => {
+    container.cradle.logger.info({ userId }, 'auth.user.created');
+  });
+
   return container;
 }
 
-export function getContainer(): Promise<AppContainer> {
-  rootContainer ??= buildContainer().catch((error: unknown) => {
-    rootContainer = undefined;
-    throw error;
-  });
-  return rootContainer;
+export function getContainer(): Promise<AwilixContainer<Cradle>> {
+  if (!globalForContainer.__devmentorContainer) {
+    globalForContainer.__devmentorContainer = build();
+  }
+  return globalForContainer.__devmentorContainer;
 }
 
-/** Creates a request scope with a fresh `em` fork. Prefer `withScope`. */
-export async function createRequestScope(): Promise<AppContainer> {
-  const scope = (await getContainer()).createScope();
-  scope.register({ em: asValue(scope.cradle.orm.em.fork()) });
-  return scope;
-}
-
-/** Runs `fn` against a fresh request scope and disposes the scope afterwards. */
-export async function withScope<T>(fn: (cradle: Cradle) => Promise<T>): Promise<T> {
-  const scope = await createRequestScope();
+/**
+ * Run `fn` inside a fresh awilix scope. The scope owns a forked EntityManager and any
+ * other SCOPED services; it is disposed (releasing scoped state) when `fn` settles.
+ * This is the entry point request handlers should use to touch the domain.
+ */
+export async function withScope<T>(fn: (cradle: Cradle) => Promise<T> | T): Promise<T> {
+  const container = await getContainer();
+  const scope = container.createScope<Cradle>();
   try {
     return await fn(scope.cradle);
   } finally {

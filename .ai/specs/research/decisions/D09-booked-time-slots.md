@@ -1,6 +1,0 @@
-# D09 — A session is booked into a time slot from the mentor's published availability and starts at that time
-- Date, owner: 2026-10-27, Damian (founder C), confirmed in the om-discover refresh
-- Context and the options weighed: mentees asked for help within 20 minutes (2026-09-01), within the hour (2026-08-20), or the same day (2026-09-02); mentors answer "między spotkaniami" (2026-09-03) or "jak mam humor" (2026-09-03). The engineering standards plan availability, slots and a slot picker. Options: start on the mentor's acceptance (the agent's recommendation, not taken); a booked slot; both. Damian chose the booked slot.
-- Decision and why: the mentee picks a slot the mentor has published; the session starts at the slot time.
-- Consequences, and what would make us revisit it: the first build serves help the same day or later, not within the hour; it can serve the urgent case only when a mentor has published a slot soon enough. The minimum lead time between booking and a slot's start is not decided. D07's payment-to-first-reply now measures mostly how far ahead mentees book, not how fast mentors answer. Revisit when the mentor conversations show what availability mentors would publish, or when bookings show how far ahead mentees book.
-- Status: active

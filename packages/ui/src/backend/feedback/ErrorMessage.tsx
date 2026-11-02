@@ -1,26 +1,20 @@
-import { Button } from "@mentio/ui/components/button";
-import { cn } from "@mentio/ui/lib/utils";
+import { cn } from '../../lib/utils';
+import type { ReactNode } from 'react';
 
+/** The sanctioned error renderer — pages compose this instead of bespoke error text. */
 export function ErrorMessage({
-  title = "Something went wrong",
   message,
-  onRetry,
   className,
+  action,
 }: {
-  title?: string;
   message: string;
-  onRetry?: () => void;
   className?: string;
+  action?: ReactNode;
 }) {
   return (
-    <div role="alert" className={cn("mentio-error-message", className)}>
-      <p className="mentio-error-message-title">{title}</p>
-      <p className="mentio-error-message-text">{message}</p>
-      {onRetry && (
-        <Button variant="outline" size="sm" className="mentio-feedback-action" onClick={onRetry}>
-          Try again
-        </Button>
-      )}
+    <div role="alert" className={cn('dm-error-message', className)}>
+      <p>{message}</p>
+      {action}
     </div>
   );
 }

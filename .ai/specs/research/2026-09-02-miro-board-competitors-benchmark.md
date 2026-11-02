@@ -1,6 +1,6 @@
 # Discovery board (Miro) — Competitors and benchmark. Exported 2026-09-02 by founder A (Oliwia)
 
-Document type: the founders' own notes on competitors. No link and no date of checking were recorded on the board, so every line below is the founders' recollection until a benchmark-check note with a link and a date replaces it.
+Document type: the founders' own notes on competitors. No link and no date of checking were recorded on the board, so every line below is the founders' recollection until a benchmark-check note with a link and a date replaces it (E00-T01).
 
 ## Competitors (strengths and weaknesses, as noted by the founders)
 - Codementor. Strengths: instant help by the minute, fast matching, large dev pool. Weaknesses: transactional, no continuity, knowledge lost after the call, $8–30 per 15 min feels expensive for small questions.
@@ -23,4 +23,4 @@ Five tables exist on the board: product-model comparison (Codementor, MentorCrui
 | Topmate | monetising one expert's knowledge | single consultation | fixed price per service | usually the expert's own link | medium |
 | Preply | learning with a chosen tutor | single and recurring lessons | per lesson / subscription | large marketplace | high as a benchmark |
 
-The other four tables (main-experience benchmark, UX scored against DevMentor's needs, benchmark summary, comparison based on opinions) were re-exported readable on 2026-09-04 and are transcribed in `2026-09-04-miro-board-benchmark-tables.md`.
+The other four tables must be re-exported at readable resolution or transcribed before they can be cited.

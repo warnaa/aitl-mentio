@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "cn"
+import { cn } from "../../lib/utils"
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
 
-import { Button } from "@mentio/ui/components/button"
+import { Button } from "./button"
 
 function AlertDialog({
   ...props
@@ -35,23 +35,26 @@ function AlertDialogOverlay({
   return (
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
-      className={cn("mentio-overlay", className)}
+      className={cn("dm-alert-dialog-overlay", className)}
       {...props}
     />
   )
 }
 
-// Approved: one default size; the generated `size="sm"` option was removed.
 function AlertDialogContent({
   className,
+  size = "default",
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
+  size?: "default" | "sm"
+}) {
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
-        className={cn("mentio-dialog", className)}
+        data-size={size}
+        className={cn("dm-alert-dialog-content", className)}
         {...props}
       />
     </AlertDialogPortal>
@@ -65,7 +68,7 @@ function AlertDialogHeader({
   return (
     <div
       data-slot="alert-dialog-header"
-      className={cn("mentio-dialog-header", className)}
+      className={cn("dm-alert-dialog-header", className)}
       {...props}
     />
   )
@@ -78,7 +81,7 @@ function AlertDialogFooter({
   return (
     <div
       data-slot="alert-dialog-footer"
-      className={cn("mentio-dialog-footer", className)}
+      className={cn("dm-alert-dialog-footer", className)}
       {...props}
     />
   )
@@ -91,7 +94,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn("mentio-dialog-title", className)}
+      className={cn("dm-alert-dialog-title", className)}
       {...props}
     />
   )
@@ -104,7 +107,7 @@ function AlertDialogDescription({
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
-      className={cn("mentio-dialog-description", className)}
+      className={cn("dm-alert-dialog-description", className)}
       {...props}
     />
   )
@@ -117,7 +120,7 @@ function AlertDialogMedia({
   return (
     <div
       data-slot="alert-dialog-media"
-      className={cn("mentio-alert-dialog-media", className)}
+      className={cn("dm-alert-dialog-media", className)}
       {...props}
     />
   )

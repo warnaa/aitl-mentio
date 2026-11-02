@@ -1,216 +1,220 @@
-# Mentio
+# DevMentor
 
-Mentio is a Next.js application organised as an npm-workspaces monorepo.
+A platform connecting developers with experienced mentors. Built as an
+npm-workspaces monorepo on Next.js 16 + React 19 + TypeScript, with PostgreSQL via
+MikroORM v7, awilix for dependency injection, Tailwind CSS for public pages, and
+shadcn-ui for the admin surface.
 
-## Stack
-
-| Concern              | Choice                                                        |
-| -------------------- | ------------------------------------------------------------- |
-| Framework            | [Next.js](https://nextjs.org) 16 (App Router, Turbopack)      |
-| UI runtime           | React 19                                                      |
-| Language             | TypeScript (strict)                                           |
-| Database             | PostgreSQL                                                    |
-| ORM / migrations     | [MikroORM](https://mikro-orm.io) 7 (`@mikro-orm/postgresql`)  |
-| Dependency injection | [Awilix](https://github.com/jeffijoe/awilix)                  |
-| Styling              | [Tailwind CSS](https://tailwindcss.com) v4                    |
-| Admin UI components  | [shadcn/ui](https://ui.shadcn.com) (Radix + Tailwind)         |
-| Package management   | npm workspaces                                                |
+> Working in this repo as a human or an AI agent? Read **[AGENTS.md](./AGENTS.md)**
+> first — it documents the stack, conventions, and gotchas in depth.
 
 ## Getting started
 
-Requirements: Node.js ≥ 22.17 (MikroORM 7) and a running PostgreSQL server with an empty
-database (the default `DATABASE_URL` expects one named `mentio`, e.g. `createdb mentio`).
-
-```bash
-npm run setup                 # install, configure .env, migrate — safe to re-run
-npm run dev                   # http://localhost:3000
-```
-
-`npm run setup` runs the manual steps below and skips every step that is already done, so
-you can run it again after pulling changes or fixing a problem; it stops at the first
-failure and says what to fix:
-
-1. checks the Node.js version;
-2. runs `npm install` (skipped while `node_modules` is newer than `package-lock.json`);
-3. creates `.env` from `.env.example` if it is missing and generates `JWT_SECRET` if it is
-   empty — values you already set are never overwritten;
-4. applies pending migrations (skipped when there are none), printing which database it
-   used — `host:port/db`, never credentials. A `DATABASE_URL` exported in your shell wins
-   over `.env`, and the output says so; `unset DATABASE_URL` to use `.env`.
-
-It does not install or start PostgreSQL or the dev server.
-
-### Manual steps (alternative)
+Requires **Node ≥ 24**. Docker is optional — see
+[Bring your own PostgreSQL](#bring-your-own-postgresql).
 
 ```bash
 npm install
-cp .env.example .env          # then set DATABASE_URL (and JWT_SECRET)
-npm run db:migrate            # create the schema
-npm run dev                   # http://localhost:3000
+npm run setup
+npm run dev
 ```
 
-- `/` — public marketing pages (Tailwind)
-- `/admin` — admin panel (shadcn/ui); `/admin/users` lists users via `/api/users`, which
-  requires a session (sign-in arrives with the auth concept — until then it shows
-  "Sign in to view users")
-- `/api/health` — liveness and database reachability
+`npm run setup` does everything the manual steps below do: installs workspace
+dependencies, creates `.env` from `.env.example`, makes sure a PostgreSQL is running,
+applies migrations, and seeds a sample mentor.
 
-## Scripts (run from the repo root)
+It is **idempotent** — run it as often as you like. Every step checks whether it is
+already done and reports itself as `ran` or `skipped`, so a second run only does the
+work that is actually outstanding:
 
-| Script                         | What it does                                          |
-| ------------------------------ | ----------------------------------------------------- |
-| `npm run setup`                | One-command local setup (idempotent): install, `.env`, migrate |
-| `npm run dev`                  | Next.js dev server                                    |
-| `npm run build` / `start`      | Production build / server                             |
-| `npm run lint`                 | ESLint across all packages (incl. layer boundaries)   |
-| `npm run typecheck`            | `tsc` for every package                               |
-| `npm test` / `test:watch`      | Vitest unit tests (`*.test.ts(x)` next to the code)   |
-| `npm run test:coverage`        | Unit tests + 100% coverage gate (report in `coverage/`) |
-| `npm run test:integration`     | Postgres (testcontainers) + production server + agent-browser; run `npm run build` first |
-| `npm run audit`                | Audit of production deps (high/critical, allowlisted) |
-| `npm run db:migration:create`  | Generate a migration from entity changes              |
-| `npm run db:migrate`           | Apply pending migrations                              |
-| `npm run db:migrate:down`      | Revert the last migration                             |
+```text
+✔ Preflight (ran) — Node v24.10.0
+↷ Install dependencies (skipped) — node_modules is up to date with package-lock.json
+↷ Configure .env (skipped) — .env already exists and sets every documented variable
+✔ Start PostgreSQL (ran) — docker compose up -d postgres
+✔ Wait for PostgreSQL (ran) — container reports healthy
+✔ Apply migrations (ran) — npm run db:migrate
+✔ Seed sample data (ran) — npm run db:seed
+```
 
-The **validation gate** before any change is done: `lint`, `typecheck`, `test`,
-`build`, `audit`.
+Your existing `.env` is never overwritten. If it is missing a variable that
+`.env.example` documents, setup leaves the file alone and warns you which key to add.
+Setting `DATABASE_URL` counts as setting the discrete `DB_HOST`, `DB_PORT`, `DB_NAME`,
+`DB_USER`, and `DB_PASSWORD` variables it replaces, so the URL style is never reported
+as incomplete.
+Setup deliberately stops short of starting the app — `npm run dev` never exits — and
+prints it as the next command instead.
 
-## Environment
+### Bring your own PostgreSQL
 
-Env files live at the **repo root** and are loaded by both the Next.js app and the
-MikroORM CLI. Real environment variables take precedence over `.env`; an empty value
-(`KEY=`) counts as unset. See [`.env.example`](.env.example):
+**Docker is only a fallback.** Setup first checks whether anything is already
+listening at the address the app is configured to use, and reuses it if so — a
+container you started yourself, a native PostgreSQL install, or a managed remote
+database. Docker Compose is consulted only when nothing answers, and only then does
+its absence become an error.
 
-| Variable                  | Default | Purpose                                              |
-| ------------------------- | ------- | ---------------------------------------------------- |
-| `DATABASE_URL`            | —       | PostgreSQL connection string                         |
-| `DB_POOL_MIN`             | `0`     | Minimum pooled connections (per process)             |
-| `DB_POOL_MAX`             | `10`    | Maximum pooled connections (per process)             |
-| `DB_POOL_IDLE_TIMEOUT_MS` | `30000` | Close idle connections after this                    |
-| `DB_DEBUG`                | `false` | Log SQL queries                                      |
-| `JWT_SECRET`              | —       | HS256 session key, ≥ 32 bytes (`openssl rand -base64 32`); session-protected routes fail closed without it |
-| `LOG_LEVEL`               | `info`  | pino log level                                       |
-| `TEST_DATABASE_URL`       | —       | Integration tests only, read from the shell (not `.env`): use this empty database instead of a testcontainers Postgres (no Docker) |
+To point setup at an existing database, set `DATABASE_URL` (or the discrete `DB_*`
+variables) in your environment or in `.env`:
+
+```bash
+DATABASE_URL=postgres://user:password@db.example.com:5432/devmentor npm run setup
+```
+
+```text
+↷ Provision PostgreSQL (skipped) — something is accepting connections on
+  db.example.com:5432 (per DATABASE_URL from the environment) — reusing it as the
+  DevMentor database; Docker not needed
+```
+
+The check is a TCP probe, so it can tell that *something* is listening but not that it
+speaks PostgreSQL. If the listener turns out not to be your DevMentor database, the
+`Apply migrations` step below it reports the real connection error.
+
+Resolution order matches the Zod config modules: `DATABASE_URL` wins over
+`DB_HOST`/`DB_PORT`, and the real environment wins over `.env`. With no database
+reachable *and* no Docker, setup stops and names both remedies rather than failing
+with a stack trace.
+
+### Manual setup (alternative)
+
+The individual steps, if you would rather run them yourself or need to deviate:
+
+```bash
+# 1. Install (links all workspaces)
+npm install
+
+# 2. Configure — copy the example and adjust if needed
+cp .env.example .env
+
+# 3. Start Postgres (defaults match .env)
+npm run db:up
+
+# 4. Create the schema and seed a sample mentor
+npm run db:migrate
+npm run db:seed
+
+# 5. Run the app
+npm run dev
+```
+
+Note that step 4 races the container's startup on a cold `db:up`; wait for
+`docker compose ps` to report `healthy` before migrating. `npm run setup` handles that
+wait for you.
+
+Then open:
+
+- <http://localhost:3000> — public landing page (Tailwind).
+- <http://localhost:3000/admin> — admin dashboard (shadcn-ui).
+- <http://localhost:3000/admin/users> — users list, read through the DI container.
+- <http://localhost:3000/api/health> — app + database health JSON.
+
+The app **builds and boots even with no database running**; DB-backed pages degrade
+to a visible "unavailable" state instead of crashing.
+
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run setup` | One-command install, configure, database up, migrate, and seed (idempotent; reuses an existing PostgreSQL, Docker only as fallback) |
+| `npm run dev` | Start the Next.js dev server |
+| `npm run build` / `npm run start` | Production build / serve |
+| `npm run typecheck` | `tsc --noEmit` across all packages |
+| `npm run lint` | ESLint, including dependency-direction rules |
+| `npm run test:unit` | Run TypeScript unit tests with Vitest |
+| `npm run test:unit:coverage` | Run unit tests with per-file 100% coverage gates |
+| `npm run test:browser:install` | Install agent-browser's Chrome runtime locally |
+| `npm run test:integration` | Test an ephemeral PostgreSQL + production app with agent-browser |
+| `npm run db:up` / `npm run db:down` | Start / stop local Postgres (Docker) |
+| `npm run db:migration:create -- --name <x>` | Generate a migration from entity diff |
+| `npm run db:migrate` / `npm run db:migrate:down` | Apply / revert migrations |
+| `npm run db:seed` | Run the default seeder |
+
+## Testing and pull-request checks
+
+Every pull request runs four independent GitHub checks: **Build**, **Lint**, **Unit
+tests**, and **Integration tests**. Configure those exact names as required checks in
+the GitHub branch ruleset if merges must be blocked until they pass.
+
+The unit suite uses Vitest and V8 coverage:
+
+```bash
+npm run test:unit
+npm run test:unit:coverage
+```
+
+Coverage is enforced at 100% for statements, branches, functions, and lines on every
+file listed in `vitest.config.mts`. New features must add their production files to
+that explicit list and add adjacent unit tests in the same change.
+
+The integration suite requires Docker and agent-browser's Chrome runtime. Install the
+browser once, then run the suite:
+
+```bash
+npm run test:browser:install
+npm run test:integration
+```
+
+The suite creates a fresh PostgreSQL 17 Testcontainer on a random port, applies
+migrations, seeds prerequisites, builds and starts Next.js on another random port,
+waits for database readiness, then tests the home page and admin panel through the
+pinned `agent-browser` CLI. Screenshots and app logs go to `test-results/integration/`;
+the browser, app process, and container are stopped in teardown. POSIX and native
+PowerShell launchers are also available at `tests/integration/run.sh` and
+`tests/integration/run.ps1`.
 
 ## Architecture
 
-```
-.
-├── package.json            # workspace root; scripts forward to packages
-├── tsconfig.base.json      # shared compiler options
-├── eslint.config.mjs       # one ESLint config, incl. package boundary rules
-├── vitest.config.mts       # one test runner for all packages
-├── .env.example
-└── packages/
-    ├── app/   @mentio/app   # Next.js: pages + API routes (HTTP wiring only)
-    ├── core/  @mentio/core  # business layer: services, DI, validators, http layer
-    ├── db/    @mentio/db    # persistence: MikroORM config, entities, migrations
-    └── ui/    @mentio/ui    # presentation: shadcn/ui + reusable panel building blocks
-```
+### Monorepo packages
 
-### Package dependency graph
+The repo is an npm-workspaces monorepo under `packages/*` with a strictly one-way
+dependency graph (enforced by ESLint — a cycle fails `npm run lint`):
 
 ```
-@mentio/app ──┬──► @mentio/core ──► @mentio/db ──► MikroORM ──► PostgreSQL
-              └──► @mentio/ui
+app ──> core ──> db
+ └────> ui
 ```
 
-Layers never import upward, and the boundaries are enforced by ESLint
-(`no-restricted-imports`): `app` reaches data only through `core`, `core` never imports
-`next`/`react` or MikroORM directly, `db` imports no workspace package and is the only
-package that imports MikroORM, and `ui` is standalone. Internal packages ship
-TypeScript source (their `exports` point at `src/`) and are transpiled by Next.js, so
-there is no per-package build step.
+| Package | Name | Responsibility |
+| --- | --- | --- |
+| `packages/app` | `@devmentor/app` | Next.js host and **composition root** — the only package allowed to import all others. Contains routes, layouts, and API handlers. |
+| `packages/core` | `@devmentor/core` | Config (zod), logging (pino), the **awilix DI container**, and domain services. Depends on `db`; never touches React/Next/UI. |
+| `packages/db` | `@devmentor/db` | MikroORM configuration, entities, migrations, seeders. The **leaf** — the only package that imports `@mikro-orm/*`. |
+| `packages/ui` | `@devmentor/ui` | shadcn-ui components and Tailwind design tokens. Presentational only. |
 
-### Domain concepts
+Packages are consumed as **TypeScript source** (no per-package build) and transpiled
+by Next.js via `transpilePackages`.
 
-Domain code is organized by **concept** (`auth`, `mentors`, `bookings`, …): the same
-folder name repeats in each layer that needs it, created only when its first file is
-added. The `auth` concept's `User` is the reference implementation:
+### Dependency injection
 
-```
-packages/db/src/entities/auth/user.entity.ts          # schema only
-packages/core/src/services/auth/user.service.ts       # business rules, returns DTOs
-packages/core/src/validators/auth/user-list.schema.ts # shared Zod schema (route + form)
-packages/app/src/app/api/users/route.ts               # makeCrudRoute — config, no logic
-packages/app/src/app/admin/users/                     # apiCall + DataTable
-```
+`@devmentor/core` builds a single awilix container (`PROXY` injection mode, a typed
+`Cradle` interface). Lifetimes:
 
-The full conventions (naming table, recipe for a new concept, security baseline,
-review checklist) are in
-[`.ai/specs/implemented/2026-10-23-engineering-standards.md`](.ai/specs/implemented/2026-10-23-engineering-standards.md).
+- **Singleton** — `env`, `logger`, `orm` (cached on `globalThis` to survive HMR).
+- **Scoped** — a forked `EntityManager` and the domain services that use it.
 
-### `@mentio/app` — pages and HTTP wiring
+Request handlers call `withScope(fn)`, which opens a scope with its own forked
+`EntityManager`, runs the callback, and disposes the scope. The admin users page is a
+worked example: `withScope((c) => c.userService.list())` → forked EM → repository →
+entity with a populated 1:1 relation.
 
-```
-packages/app/src/app/
-├── layout.tsx            # root layout, imports globals.css
-├── globals.css           # imports @mentio/ui/styles.css (Tailwind + theme)
-├── (marketing)/          # public pages — plain Tailwind
-├── admin/                # backend panel at /admin — @mentio/ui components
-│   └── users/            # reference list screen
-└── api/
-    ├── health/route.ts   # public liveness + database up/down
-    └── users/route.ts    # reference CRUD route (session required)
-```
+### Database
 
-### `@mentio/core` — business layer
+- MikroORM v7 with the PostgreSQL driver, explicit connection pooling, and migrations
+  under `packages/db/migrations`.
+- Entities are defined with `defineEntity` (MikroORM v7 dropped decorators) and
+  registered as `globalThis` singletons so the same schema object is shared across
+  Next's RSC/SSR/route module graphs.
+- The domain model ships a placeholder `User` 1:1 `MentorProfile` to exercise
+  relations, repositories, and migrations end to end.
 
-Imported through subpaths so client code never pulls in the ORM:
+### Frontend / backend split
 
-| Import                                 | Contents                                                        |
-| -------------------------------------- | --------------------------------------------------------------- |
-| `@mentio/core/http`                    | `AppError` hierarchy, `apiHandler`, `makeCrudRoute`, `requireSession` / `requireRole` / `assertOwner`, request parsing |
-| `@mentio/core/container`               | Awilix composition root, `Cradle`, `withScope`, `checkDatabase` |
-| `@mentio/core/validators/<concept>/…`  | Shared Zod schemas (also used by `CrudForm` on the client)      |
-| `@mentio/core/services/<concept>/…`    | Service classes and their DTO types                             |
-| `@mentio/core/config`, `/logger`       | Zod-validated env; pino logger with secret redaction            |
+- **Public / marketing pages** (`/`) use plain Tailwind CSS v4 utilities.
+- **Admin pages** (`/admin/*`) use shadcn-ui components from `@devmentor/ui`. The
+  design tokens live in `packages/ui/src/tokens.css`; add components with
+  `npx shadcn@latest add <component>` run inside `packages/ui`.
 
-### `@mentio/db` — persistence
+### Spec-driven development
 
-- **Entities** use MikroORM's `defineEntity` (no decorators) with shared
-  `baseProperties()` (UUID id, timestamps), one file per entity under
-  `src/entities/<concept>/`, registered explicitly in `src/entities/index.ts`.
-- **Configuration**: `createOrmConfig()` builds the runtime config from Zod-validated
-  env (`src/env.ts`); `src/mikro-orm.config.ts` adds the `Migrator` extension for the CLI.
-- **Connection pooling**: `getOrm()` lazily initialises one `MikroORM` instance per
-  process and caches it on `globalThis`. Pool size is set by `DB_POOL_*`.
-- **Migrations** live in `src/migrations/` with the schema snapshot. All schema changes
-  go through generated, reviewed, committed migrations.
-
-### `@mentio/ui` — presentation
-
-- shadcn/ui primitives in `src/components/ui/` (`@mentio/ui/components/<name>`), added
-  with `cd packages/ui && npx shadcn@latest add <component>`.
-- Reusable panel building blocks in `src/backend/`: `api` (`apiCall`, the only
-  sanctioned `fetch`), `forms` (`CrudForm`), `tables` (`DataTable`), `feedback`
-  (`LoadingMessage`, `ErrorMessage`, `EmptyState`).
-- `src/styles/globals.css` is the single Tailwind entry point plus shadcn theme tokens.
-
-### Request flow
-
-```
-Browser ── apiCall("/api/users") ── (CSRF header, JSON envelope parsing)
-   │
-   ▼
-api/users/route.ts ── makeCrudRoute → apiHandler
-   │   requireSession (JWT cookie)  →  parse query (Zod)  →  withScope
-   ▼
-Awilix request scope ── em = orm.em.fork()          (fresh identity map)
-   │
-   ▼
-userService.list() ──► em ──► MikroORM ──► pg pool ──► PostgreSQL
-   │
-   ▼
-{ ok: true, data } | { ok: false, error: { code, message, fieldErrors? } }
-```
-
-Errors thrown anywhere below the route are `AppError`s mapped to a status code and
-the error envelope; anything unexpected is logged server-side and returned as a
-generic 500.
-
-## Working on this repo
-
-Coding agents and contributors follow [`AGENTS.md`](AGENTS.md): stack rules, package
-boundaries, and the spec-driven workflow under [`.ai/`](.ai) (specs, run logs,
-lessons).
+Nontrivial work is specified before it's built. Specs, autonomous-run logs, and
+lessons live under `.ai/` — see [AGENTS.md](./AGENTS.md) for the full workflow.

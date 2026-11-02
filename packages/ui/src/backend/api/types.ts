@@ -1,36 +1,11 @@
-import { z } from "zod";
-
-// The JSON envelope is a shape convention shared with `@mentio/core/http`
-// (`ui` must not import `core`), so it is declared — and validated — here too.
-
+/**
+ * Client-side view of the API response envelope. This is a *shape convention* shared
+ * with the server (`@devmentor/core/http`), declared separately here because `ui` must
+ * not import `core`. If the duplication ever becomes painful, that's an Ask-First
+ * `packages/shared` change — not something to add while there are only two consumers.
+ */
 export type FieldErrors = Record<string, string[]>;
 
-export interface ApiErrorBody {
-  code: string;
-  message: string;
-  fieldErrors?: FieldErrors;
-}
-
 export type ApiResult<T> =
-  | { ok: true; data: T; status: number }
-  | { ok: false; error: ApiErrorBody; status: number };
-
-/** Shape every paginated list endpoint returns. */
-export interface Page<T> {
-  items: T[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export const envelopeSchema = z.discriminatedUnion("ok", [
-  z.object({ ok: z.literal(true), data: z.unknown() }),
-  z.object({
-    ok: z.literal(false),
-    error: z.object({
-      code: z.string(),
-      message: z.string(),
-      fieldErrors: z.record(z.string(), z.array(z.string())).optional(),
-    }),
-  }),
-]);
+  | { ok: true; data: T }
+  | { ok: false; error: { code: string; message: string; fieldErrors?: FieldErrors } };

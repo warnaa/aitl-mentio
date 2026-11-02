@@ -1,17 +1,22 @@
-import { randomUUID } from "node:crypto";
-import { p } from "@mikro-orm/postgresql";
+import { defineEntity } from '@mikro-orm/core';
+
+const p = defineEntity.properties;
 
 /**
- * Columns every entity carries: a UUID primary key (no sequential IDs to enumerate)
- * and timestamps. A function, so each entity gets its own property builders.
+ * Shared columns for every entity: a uuid v7 primary key (time-sortable) plus
+ * created/updated timestamps maintained by the ORM. Concrete entities spread
+ * `baseProperties` into their own `properties` map.
  */
-export function baseProperties() {
-  return {
-    id: p.uuid().primary().onCreate(() => randomUUID()),
-    createdAt: p.datetime().onCreate(() => new Date()),
-    updatedAt: p
-      .datetime()
-      .onCreate(() => new Date())
-      .onUpdate(() => new Date()),
-  };
-}
+export const baseProperties = {
+  id: p
+    .uuid()
+    .onCreate(() => crypto.randomUUID())
+    .primary(),
+  createdAt: p
+    .datetime()
+    .onCreate(() => new Date()),
+  updatedAt: p
+    .datetime()
+    .onCreate(() => new Date())
+    .onUpdate(() => new Date()),
+};

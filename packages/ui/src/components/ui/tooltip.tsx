@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "cn"
+import { cn } from "../../lib/utils"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 
 function TooltipProvider({
@@ -40,11 +40,11 @@ function TooltipContent({
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
-        className={cn("mentio-tooltip", className)}
+        className={cn("dm-tooltip-content", className)}
         {...props}
       >
         {children}
-        <TooltipPrimitive.Arrow className="mentio-tooltip-arrow" />
+        <TooltipPrimitive.Arrow width={12} height={6} className="dm-tooltip-arrow" />
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   )

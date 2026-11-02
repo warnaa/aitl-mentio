@@ -1,21 +1,23 @@
 {
-  "name": "@mentio/core",
+  "name": "@devmentor/core",
   "version": "0.1.0",
   "private": true,
+  "description": "DevMentor — configuration, logging, DI container and domain services",
   "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
-    "./config": "./src/config/env.ts",
-    "./logger": "./src/logger.ts",
-    "./http": "./src/http/index.ts",
+    ".": "./src/index.ts",
     "./container": "./src/container/index.ts",
-    "./services/*": "./src/services/*.ts",
+    "./services": "./src/services/index.ts",
+    "./http": "./src/http/index.ts",
+    "./events": "./src/events/index.ts",
     "./validators/*": "./src/validators/*.ts"
   },
   "dependencies": {
-    "@mentio/db": "*",
+    "@devmentor/db": "*",
     "awilix": "^13.0.5",
-    "jose": "^6.2.13",
-    "pino": "^10.4.0",
-    "zod": "^4.6.7"
+    "pino": "^10.3.1",
+    "zod": "^4.5.4"
   }
 }

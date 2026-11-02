@@ -1,7 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-node_modules
+/node_modules
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,13 +13,19 @@ node_modules
 
 # testing
 /coverage
+/test-results
 
 # next.js
-.next/
-out/
+/.next/
+**/.next/
+/out/
+**/out/
 
 # production
-build
+/build
+**/dist/
+**/storybook-static/
+**/debug-storybook.log
 
 # misc
 .DS_Store
@@ -32,24 +39,27 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# IDE
+.idea
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
-!.env.example
 
-# integration test artifacts (server log, failure screenshots)
-/tests/integration/.artifacts
+# agent pipeline (om-setup-agent-pipeline): per-run QA state, never source
+.ai/qa/artifacts_*/
+.ai/qa/test-env.json
+.ai/qa/test-env.env
 
-# agent QA run state (generated per run; .ai/scripts launchers stay committed)
-/.ai/qa/artifacts_*/
-/.ai/qa/test-env.json
-/.ai/qa/test-env.env
+# skills installer staging copy (unrendered upstream download of .agents/skills)
+/agent/
 
-# Local Storybook output
-/packages/ui/storybook-static/
-/packages/ui/coverage/
-/packages/ui/.storybook/public/prototypes/
+# per-developer Claude Code settings
+.claude/settings.local.json
+
+# generated local Storybook prototype
+packages/ui/.storybook/public/prototypes/

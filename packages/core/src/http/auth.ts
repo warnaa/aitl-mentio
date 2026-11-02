@@ -1,87 +1,59 @@
-import { jwtVerify, SignJWT } from "jose";
-import { z } from "zod";
-import { getEnv, getJwtSecret } from "../config/env";
-import { ConfigError, ForbiddenError, UnauthorizedError } from "./errors";
-
-export const SESSION_COOKIE_NAME = "mentio_session";
+import { ForbiddenError, UnauthorizedError } from './errors';
 
 /**
- * 24h session. There is no refresh-token flow in MVP scope — users sign in again
- * after expiry (known limitation; do not lengthen the TTL to compensate).
+ * Session/authorization helpers. Every route that isn't explicitly public calls one
+ * of these first, before touching a service.
+ *
+ * Auth (JWT signing/verification, login) is a separate concept that is not yet
+ * implemented. Until the `auth` concept lands, `readSession` returns `null`, so every
+ * guarded route denies — this is deliberate: fail closed, never open. Wire the real
+ * signed-cookie verification into `readSession` when auth ships; the assertion
+ * helpers below already express the authorization rules and need no change.
  */
-export const SESSION_TTL_SECONDS = 24 * 60 * 60;
-
-const JWT_ALGORITHM = "HS256";
-
-export const SESSION_ROLES = ["student", "mentor"] as const;
-export type SessionRole = (typeof SESSION_ROLES)[number];
+export type Role = 'student' | 'mentor';
 
 export interface Session {
   userId: string;
-  role: SessionRole;
+  role: Role;
 }
 
-const sessionClaimsSchema = z.object({
-  sub: z.uuid(),
-  role: z.enum(SESSION_ROLES),
-});
+const SESSION_COOKIE = 'devmentor_session';
 
-/** Flags for the session cookie. Preserve these whenever auth-cookie code changes. */
-export function sessionCookieOptions() {
-  return {
-    httpOnly: true,
-    secure: getEnv().NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_TTL_SECONDS,
-  } as const;
+export function readSession(req: Request): Promise<Session | null> {
+  const cookieHeader = req.headers.get('cookie');
+  if (!cookieHeader || !cookieHeader.includes(`${SESSION_COOKIE}=`)) {
+    return Promise.resolve(null);
+  }
+  // A session cookie may be present, but without signature verification (added by the
+  // auth concept) it cannot be trusted, so we deny rather than parse an unverified
+  // identity. Replace this with real verification when auth is implemented.
+  return Promise.resolve(null);
 }
 
-export function signSessionToken(session: Session): Promise<string> {
-  return new SignJWT({ role: session.role })
-    .setProtectedHeader({ alg: JWT_ALGORITHM })
-    .setSubject(session.userId)
-    .setIssuedAt()
-    .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
-    .sign(getJwtSecret());
+/** Require an authenticated session or throw `UnauthorizedError` (401). */
+export async function requireSession(req: Request): Promise<Session> {
+  const session = await readSession(req);
+  if (!session) {
+    throw new UnauthorizedError();
+  }
+  return session;
+}
+
+/** Require the session to have a specific role or throw `ForbiddenError` (403). */
+export function requireRole(session: Session, role: Role): Session {
+  if (session.role !== role) {
+    throw new ForbiddenError();
+  }
+  return session;
 }
 
 /**
- * Returns the verified session from the request cookie or throws
- * `UnauthorizedError`. Fails closed: any verification problem denies access.
+ * Assert the session owns the resource identified by `ownerId`, else throw
+ * `ForbiddenError` (403). Use for every mutation — a student may only act on their
+ * own bookings, a mentor only on their own profile/availability.
  */
-export async function requireSession(req: Request): Promise<Session> {
-  const token = readCookie(req, SESSION_COOKIE_NAME);
-  if (!token) throw new UnauthorizedError();
-
-  try {
-    const { payload } = await jwtVerify(token, getJwtSecret(), { algorithms: [JWT_ALGORITHM] });
-    const claims = sessionClaimsSchema.parse(payload);
-    return { userId: claims.sub, role: claims.role };
-  } catch (error) {
-    // Misconfiguration is a server error (500) — still a denial, but not the user's fault.
-    if (error instanceof ConfigError) throw error;
-    throw new UnauthorizedError("Invalid or expired session", { cause: error });
+export function assertOwnership(session: Session, ownerId: string): void {
+  if (session.userId !== ownerId) {
+    throw new ForbiddenError();
   }
-}
-
-export function requireRole(session: Session, role: SessionRole): void {
-  if (session.role !== role) throw new ForbiddenError();
-}
-
-/** Ownership check for a specific record. A missing owner is a denial, never an allow. */
-export function assertOwner(session: Session, ownerId: string | null | undefined): void {
-  if (!ownerId || ownerId !== session.userId) throw new ForbiddenError();
-}
-
-function readCookie(req: Request, name: string): string | undefined {
-  const header = req.headers.get("cookie");
-  if (!header) return undefined;
-
-  for (const part of header.split(";")) {
-    const separator = part.indexOf("=");
-    if (separator === -1) continue;
-    if (part.slice(0, separator).trim() === name) return part.slice(separator + 1).trim();
-  }
-  return undefined;
 }

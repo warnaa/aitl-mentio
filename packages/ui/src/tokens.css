@@ -1,0 +1,65 @@
+@import '@fontsource-variable/inter';
+@import './align-tokens.css';
+@import './align-components.css';
+@import './form-components.css';
+@import './supporting-components.css';
+@import './layout-components.css';
+@import './product-patterns.css';
+@import './session-transcript.css';
+@import './mentor-reviews.css';
+@import './components/mentors/mentor-search.css';
+@import './components/mentors/mentor-onboarding.css';
+@import './components/auth/auth.css';
+@import './overlays.css';
+@import './foundations.css';
+
+/* Compatibility aliases for current consumers. Source: Align UI Blue/Gray. */
+:root, .dark, [data-align-accent] {
+  --radius: var(--dm-radius-10);
+  --background: var(--dm-bg-white-0);
+  --foreground: var(--dm-text-strong-950);
+  --card: var(--dm-bg-white-0);
+  --card-foreground: var(--dm-text-strong-950);
+  --popover: var(--dm-bg-white-0);
+  --popover-foreground: var(--dm-text-strong-950);
+  --primary: var(--dm-primary-base);
+  --primary-foreground: var(--dm-static-static-white);
+  --secondary: var(--dm-bg-weak-50);
+  --secondary-foreground: var(--dm-text-sub-600);
+  --muted: var(--dm-bg-weak-50);
+  --muted-foreground: var(--dm-text-sub-600);
+  --accent: var(--dm-bg-weak-50);
+  --accent-foreground: var(--dm-text-strong-950);
+  --destructive: var(--dm-state-error-base);
+  --destructive-foreground: var(--dm-static-static-white);
+  --border: var(--dm-stroke-soft-200);
+  --input: var(--dm-stroke-soft-200);
+  --ring: var(--dm-primary-base);
+}
+
+@theme inline {
+  --font-sans: var(--dm-font-family);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}

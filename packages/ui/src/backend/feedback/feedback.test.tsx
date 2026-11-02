@@ -1,79 +1,37 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { EmptyState } from "./EmptyState";
-import { ErrorMessage } from "./ErrorMessage";
-import { LoadingMessage } from "./LoadingMessage";
-import { StatusBadge } from "./StatusBadge";
-
+import { afterEach, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
+import { EmptyState } from './EmptyState';
+import { LoadingMessage } from './LoadingMessage';
+import { ErrorMessage } from './ErrorMessage';
 afterEach(cleanup);
-
-describe("EmptyState", () => {
-  it("renders only the title by default", () => {
-    const { container } = render(<EmptyState title="No users yet" />);
-
-    expect(screen.getByText("No users yet")).toBeTruthy();
-    expect(container.querySelectorAll("p")).toHaveLength(1);
-  });
-
-  it("renders the description and action when given", () => {
-    render(<EmptyState title="No users yet" description="Invite someone" action={<button>Invite</button>} />);
-
-    expect(screen.getByText("Invite someone")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Invite" })).toBeTruthy();
-  });
+it('announces default and custom loading copy, with a decorative indicator', () => {
+  const { rerender } = render(<LoadingMessage />);
+  expect(screen.getByRole('status').textContent).toBe('Loading…');
+  expect(screen.getByRole('status').firstElementChild?.getAttribute('aria-hidden')).toBe('true');
+  rerender(<LoadingMessage message="Loading sessions…" className="custom" />);
+  expect(screen.getByRole('status').textContent).toBe('Loading sessions…');
+  expect(screen.getByRole('status').classList.contains('custom')).toBe(true);
 });
-
-describe("ErrorMessage", () => {
-  it("shows a default title and no retry button without onRetry", () => {
-    render(<ErrorMessage message="Boom" />);
-
-    expect(screen.getByRole("alert").textContent).toContain("Something went wrong");
-    expect(screen.queryByRole("button")).toBeNull();
-  });
-
-  it("uses a custom title and calls onRetry", () => {
-    const onRetry = vi.fn();
-    render(<ErrorMessage title="Database unavailable" message="Boom" onRetry={onRetry} />);
-
-    expect(screen.getByRole("alert").textContent).toContain("Database unavailable");
-    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-    expect(onRetry).toHaveBeenCalledOnce();
-  });
+it('announces errors and supports an optional recovery action', () => {
+  const retry = vi.fn();
+  const { rerender } = render(<ErrorMessage message="Not available" />);
+  expect(screen.getByRole('alert').textContent).toBe('Not available');
+  rerender(<ErrorMessage message="Try later" className="custom" action={<button onClick={retry}>Retry</button>} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+  expect(retry).toHaveBeenCalledOnce();
+  expect(screen.getByRole('alert').classList.contains('custom')).toBe(true);
 });
-
-describe("LoadingMessage", () => {
-  it("announces a default or custom label", () => {
-    render(<LoadingMessage />);
-    expect(screen.getByRole("status").textContent).toBe("Loading…");
-    cleanup();
-
-    render(<LoadingMessage label="Fetching users" />);
-    expect(screen.getByRole("status").textContent).toBe("Fetching users");
-  });
+it('supports minimal empty states and explanatory tone/icon/action compositions', () => {
+  const { rerender } = render(<EmptyState title="No sessions" />);
+  expect(screen.getByText('No sessions').parentElement?.getAttribute('data-tone')).toBe('neutral');
+  expect(screen.queryByRole('button')).toBeNull();
+  for (const tone of ['neutral','info','success','warning','error'] as const) {
+    rerender(<EmptyState title="No sessions" description="Choose a time to begin." tone={tone} className="custom" icon={<span>Calendar</span>} action={<button>Find a time</button>} />);
+    expect(screen.getByText('No sessions').parentElement?.getAttribute('data-tone')).toBe(tone);
+    expect(screen.getByText('Calendar').parentElement?.getAttribute('aria-hidden')).toBe('true');
+    expect(screen.getByText('Choose a time to begin.')).toBeTruthy();
+    expect(screen.getByRole('button').textContent).toBe('Find a time');
+  }
 });
-
-describe("token classes", () => {
-  it("renders the approved error surface, centred empty state and spinner classes", () => {
-    const { container } = render(<><ErrorMessage message="Check your connection." onRetry={() => {}} /><EmptyState title="You have no bookings yet" action={<button>Find a mentor</button>} /><LoadingMessage /></>);
-
-    expect(screen.getByRole("alert").className).toBe("mentio-error-message");
-    expect(screen.getByRole("button", { name: "Try again" }).className).toContain("mentio-feedback-action");
-    expect(container.querySelector(".mentio-empty-state")).not.toBeNull();
-    expect(screen.getByRole("status").querySelector(".mentio-spinner")!.getAttribute("aria-hidden")).toBe("true");
-  });
-});
-
-describe("StatusBadge", () => {
-  it("maps each tone to its approved badge weight and keeps the label as text", () => {
-    const tones = { neutral: "secondary", waiting: "outline", success: "default", danger: "destructive" } as const;
-    for (const [tone, variant] of Object.entries(tones)) {
-      render(<StatusBadge tone={tone as keyof typeof tones} label={`Label ${tone}`} className="extra" />);
-      const badge = screen.getByText(`Label ${tone}`);
-      expect(badge.getAttribute("data-variant")).toBe(variant);
-      expect(badge.getAttribute("data-tone")).toBe(tone);
-      expect(badge.className).toContain("extra");
-    }
-  });
-});
-

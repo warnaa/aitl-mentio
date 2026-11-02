@@ -1,21 +1,15 @@
-// Config picked up by the MikroORM CLI (`npm run db:*` scripts).
-import { Migrator } from "@mikro-orm/migrations";
-import { existsSync } from "node:fs";
-import { createOrmConfig } from "./config";
+/**
+ * Entry point the MikroORM CLI loads (see the `mikro-orm.configPaths` field in this
+ * package's package.json). Loads `.env` from the repo root so CLI runs pick up local
+ * credentials, then hands back the shared config.
+ */
+import { config as loadEnv } from 'dotenv';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
-// Env files live at the monorepo root, shared with the Next.js app.
-const rootEnvFile = `${import.meta.dirname}/../../../.env`;
-if (existsSync(rootEnvFile)) process.loadEnvFile(rootEnvFile);
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+loadEnv({ path: resolve(repoRoot, '.env') });
 
-const migrationsPath = `${import.meta.dirname}/migrations`;
+const { createOrmConfig } = await import('./config');
 
-export default createOrmConfig({
-  extensions: [Migrator],
-  migrations: {
-    path: migrationsPath,
-    pathTs: migrationsPath,
-    emit: "ts",
-    // Fixed name — the default (`.snapshot-<dbName>`) would create one file per database.
-    snapshotName: ".snapshot-mentio",
-  },
-});
+export default createOrmConfig();

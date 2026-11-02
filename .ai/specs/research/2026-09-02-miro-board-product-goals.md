@@ -1,6 +1,6 @@
 # Discovery board (Miro) — Product, Business Goals. Exported 2026-09-02 by founder A (Oliwia)
 
-Document type: the founders' own discovery board; positions, not evidence.
+Document type: the founders' own discovery board; positions, not evidence. Where a note conflicts with a later decision record, the decision record wins (D05 moves the vault to later).
 
 ## Product (what it is, what stands out, feasibility)
 - Product: marketplace to find, book and pay senior engineers for 25/50-min sessions.
