@@ -69,8 +69,11 @@ API between packages. `npm run typecheck` is the consumer check.
 
 - `@devmentor/core` (`.`, `./container`, `./services`, `./http`, `./events`,
   `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`, the
-  `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`, `em`, `userService`),
-  `Clock` and `systemClock`, `UserService` and `UserDto`, the `AppError` family
+  `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`, `sessionService`,
+  `tokenService`, `em`, `userService`), `Clock` and `systemClock`, `UserService` and
+  `UserDto`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`,
+  `SESSION_COOKIE_NAME` and `SESSION_TTL_SECONDS`, `TokenService` with
+  `PurposeTokenInput`, the `AppError` family
   (with its optional `headers`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`,
   `jsonOk`, `jsonError`, `makeCrudRoute` with `CrudService` and
   `MakeCrudRouteOptions`, `readSession`, `requireSession`, `requireRole`,

@@ -22,6 +22,8 @@ const { getContainer, withScope } = await import('./container');
 const { systemClock } = await import('../time/clock');
 const { UserService } = await import('../services/auth/user.service');
 const { EventBus } = await import('../events/event-bus');
+const { SessionService } = await import('../services/auth/session.service');
+const { TokenService } = await import('../services/auth/token.service');
 
 const globalForContainer = globalThis as { __devmentorContainer?: unknown };
 
@@ -43,6 +45,28 @@ describe('getContainer', () => {
     expect(container.cradle.logger).toBe(state.logger);
     expect(container.cradle.clock).toBe(systemClock);
     expect(container.cradle.eventBus).toBeInstanceOf(EventBus);
+  });
+
+  it('registers the session and token services as process-wide singletons', async () => {
+    const container = await getContainer();
+    const scoped = await withScope((cradle) => ({
+      sessionService: cradle.sessionService,
+      tokenService: cradle.tokenService,
+    }));
+
+    expect(container.cradle.sessionService).toBeInstanceOf(SessionService);
+    expect(container.cradle.tokenService).toBeInstanceOf(TokenService);
+    expect(scoped.sessionService).toBe(container.cradle.sessionService);
+    expect(scoped.tokenService).toBe(container.cradle.tokenService);
+  });
+
+  it('builds without SESSION_SECRET; the services fail closed only when used', async () => {
+    const container = await getContainer();
+
+    expect(container.cradle.sessionService.clear()).toMatch(/^devmentor_session=;/);
+    await expect(container.cradle.sessionService.issue({ id: 'u1', sessionVersion: 0 })).rejects.toMatchObject({
+      status: 503,
+    });
   });
 
   it('builds once and caches the container on globalThis', async () => {

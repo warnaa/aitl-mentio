@@ -10,6 +10,8 @@ import { getOrm } from '@devmentor/db';
 import { getEnv, type AppEnv } from '../config/env';
 import { createLogger } from '../logger';
 import { EventBus } from '../events/event-bus';
+import { SessionService } from '../services/auth/session.service';
+import { TokenService } from '../services/auth/token.service';
 import { UserService } from '../services/auth/user.service';
 import { systemClock } from '../time/clock';
 import type { Cradle } from './cradle';
@@ -55,6 +57,9 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     clock: asValue(systemClock),
     orm: asValue(orm),
     eventBus: asClass(EventBus).singleton(),
+    // Stateless signers over `env` + `clock`; a missing secret surfaces per call as a 503.
+    sessionService: asClass(SessionService).singleton(),
+    tokenService: asClass(TokenService).singleton(),
     // A forked EntityManager per scope gives each request its own identity map / UoW.
     em: asFunction(({ orm }: Cradle) => orm.em.fork()).scoped(),
     userService: asClass(UserService).scoped(),
