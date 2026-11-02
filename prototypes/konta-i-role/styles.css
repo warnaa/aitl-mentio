@@ -4,10 +4,16 @@
 @source "./*.tsx";
 
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: var(--text-body); line-height: var(--line-body); }
-.doc-toolbar { display: flex; flex-direction: column; gap: var(--space-within-group); padding: var(--space-between-groups) var(--space-panel); background: var(--card); border-bottom: var(--divider-width) solid var(--border); }
+.doc-toolbar { display: flex; flex-flow: row wrap; align-items: flex-end; gap: var(--space-within-group); padding: var(--space-between-groups) var(--space-panel); background: var(--card); border-bottom: var(--divider-width) solid var(--border); }
 .prototype-review-heading, .prototype-tools, .proto-toolbar, .segmented { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-within-group); }
 .prototype-tools [data-slot="select-trigger"] { width: auto; max-width: 100%; }
-.prototype-map summary { cursor: pointer; font-size: var(--text-label); }
+/* Every bar entry gets its own full row, except the engine tools and the theme toggle, which share one. */
+.doc-toolbar > * { flex: 0 0 100%; }
+.doc-toolbar > .proto-toolbar, .doc-toolbar > #theme-toggle { flex: 0 1 auto; }
+/* One role for every disclosure in the review bar: the DS label role, same as the control labels. */
+.doc-toolbar summary { cursor: pointer; font-size: var(--text-label); line-height: var(--line-label); font-weight: var(--font-weight-medium); }
+/* Buttons sit on the same line as the select triggers, not centred on label + trigger. */
+.prototype-tools { align-items: flex-end; column-gap: var(--space-between-groups); }
 .screen-nav { display: flex; flex-wrap: wrap; gap: var(--space-between-groups); padding-block: var(--space-between-groups); }
 .screen-meta, .notes { padding: var(--space-panel); }
 .screen-meta h2 { font-size: var(--text-section); line-height: var(--line-section); font-weight: 600; }
@@ -22,12 +28,12 @@ body { margin: 0; background: var(--background); color: var(--foreground); font-
    until focused; otherwise they leak upward into the review toolbar. */
 .prototype-product .mentio-skip-link:not(:focus-visible) { clip-path: inset(100%); }
 .doc-toolbar button, .doc-toolbar a { white-space: normal; }
-/* Review bar at 320 px: same wrapping geometry DS uses for .mentio-action > .mentio-button-sm. */
-.doc-toolbar .mentio-button-sm { flex-shrink: 1; max-inline-size: 100%; block-size: auto; min-block-size: var(--control-height-small); padding-block: var(--spacing); text-align: start; }
-.doc-toolbar #theme-toggle { align-self: flex-start; }
+/* One control height in the review bar: --control-height (36px), the DS size of buttons and select triggers.
+   Labels may wrap at 320 px, so the height is a minimum; a single line stays exactly 36px. */
+.doc-toolbar .mentio-button { flex-shrink: 1; max-inline-size: 100%; block-size: auto; min-block-size: var(--control-height); padding-block: var(--spacing); text-align: start; }
 /* The supplied review UI has its own markup. Reuse existing button geometry/tokens. */
 .proto-toolbar button, .anno-panel button, .proto-back, .proto-toast {
-  min-height: var(--control-height); padding: var(--space-within-group) var(--space-between-groups);
+  min-height: var(--control-height); padding: var(--spacing) var(--space-between-groups);
   border: var(--divider-width) solid var(--border); border-radius: var(--radius-md);
   font-size: var(--text-label); line-height: var(--line-label); font-weight: 500;
   background: var(--background); color: var(--foreground); cursor: pointer;
@@ -50,8 +56,9 @@ body.anno-open .doc-toolbar { padding-right: var(--space-panel); }
 .anno-panel textarea, .anno-panel input { font-family: var(--font-sans); }
 .anno-composer-hint { background: var(--muted); }
 .prototype-scenario-content { display: flex; flex-direction: column; gap: var(--space-between-groups); padding-block: var(--space-between-groups); max-width: var(--content-max-width); }
-.prototype-review-control { display: flex; flex-direction: column; gap: var(--space-within-group); min-width: 0; max-width: 100%; }
-.prototype-review-control [data-slot="select-trigger"] { max-width: 100%; white-space: normal; height: auto; min-height: var(--control-height); }
+.prototype-review-control { display: flex; flex-direction: column; gap: var(--space-within-group); flex: none; max-width: 100%; }
+.prototype-return { max-width: var(--prose-max-width); }
+.prototype-review-control [data-slot="select-trigger"] { max-width: 100%; white-space: normal; block-size: auto; min-block-size: var(--control-height); padding-block: var(--spacing); }
 .prototype-review-control [data-slot="select-value"] { overflow-wrap: anywhere; }
 .prototype-skeleton { width: 100%; height: var(--control-height); }
 /* Keep per-screen limitations visible in presentation, outside the product frame. */

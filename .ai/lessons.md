@@ -608,3 +608,14 @@ copied engine, and let the visible header text be the accessible name (WCAG 2.5.
 Finally, `pkill -f "<pattern>"` also matches the shell running it, and Node shows up as
 `MainThread` (so `ps -C node` misses it): find audit processes by full args, target exact PIDs,
 and never start a second run against the same agent-browser session or log file.
+
+## 2026-11-02 - Review engine anchors its toolbar on a direct-child #theme-toggle
+
+The supplied prototype engine (`prototype.js`) inserts its Clickable/Comment/... group
+with `bar.insertBefore(group, document.getElementById('theme-toggle'))`, where `bar` is
+`.doc-toolbar`. Moving the React-rendered theme toggle into a nested row made that call
+throw inside `__PROTOTYPE_START__`, which runs in a React effect, so React unmounted the
+whole prototype (blank page, `insertBefore ... not a child of this node`). Keep
+`#theme-toggle` a direct child of `.doc-toolbar` and change the layout with CSS only.
+Also: `page.goto` to a URL that differs only by `#hash` does not reload, so a probe can
+measure a stale DOM; give every probe navigation a unique query string.

@@ -107,7 +107,7 @@ function App() {
     if (recipe.submit) requestAnimationFrame(() => requestAnimationFrame(() => {
       const screen = sim.getSnapshot().active;
       if (recipe.submit === 'login' || recipe.submit === 'register') document.querySelector<HTMLFormElement>(`#${screen} form`)?.requestSubmit();
-      else document.querySelector<HTMLButtonElement>(`#${screen} ${recipe.submit === 'enroll' ? '.mentio-auth .mentio-action button' : '.mentio-site-header .mentio-action button'}`)?.click();
+      else document.querySelector<HTMLButtonElement>(`#${screen} ${recipe.submit === 'enroll' ? '.prototype-public .mentio-action button' : '.mentio-site-header .mentio-action button'}`)?.click();
     }));
   }
   function logout() { return <ActionButton key={`logout-${s.formEpoch}`} label="Wyloguj się" pendingLabel="Wylogowywanie…" variant="ghost" run={() => sim.logout()} />; }
@@ -140,11 +140,13 @@ function App() {
         fields={[{name:'name',label:'Imię i nazwisko',autoComplete:'off'}, {name:'email',label:'Adres e-mail',type:'email',autoComplete:'off'}, {name:'password',label:'Hasło demo',type:'password',autoComplete:'off',description:'Co najmniej 10 znaków, maksymalnie 72 bajty UTF-8. Polskie litery mogą zajmować 2 bajty, inne znaki więcej. Nie wpisuj prawdziwego hasła. W symulacji użyj MentioDemo!.'}]}
         onSubmit={values => sim.register(values)} />
     </AuthPanel>);
-    if (id === 's03') return publicPage(<AuthPanel title="Zostań mentorem" description="Dodaj rolę mentora do swojego konta. Zachowasz też rolę mentee.">
+    // Same public composition and width as s04/s08/s12 (user decision 2026-11-02; the map listed AuthPanel).
+    if (id === 's03') return publicPage(<main className="prototype-public"><h1 className="mentio-public-title">Zostań mentorem</h1>
+      <p>Dodaj rolę mentora do swojego konta. Zachowasz też rolę mentee.</p>
       <p className="mentio-field-description">Symulacja. Bez zaproszenia, zgody operatora i tworzenia drugiego konta.</p>
       {user && <ActionButton key={`enroll-${s.formEpoch}`} label="Zostań mentorem" pendingLabel="Dołączanie…" run={() => sim.enroll()} />}
       <Link href="#s04">Przejdź do strony głównej</Link>
-    </AuthPanel>);
+    </main>);
     if (id === 's06') {
       if (!user?.roles.includes('mentor')) return <p className="p-panel">Zaloguj się na konto z rolą mentor, aby otworzyć ten obszar. Nawigacja sprawdzi dostęp.</p>;
       const read = s.mentorRead;
@@ -182,32 +184,33 @@ function App() {
       <div className="prototype-tools">
         {control('Ekran',s.active,SCREENS.map(screen => ({value:screen.id,label:`${screen.id} · ${screen.title}`})),value => { if (isScreen(value)) navigate(value); })}
         {control('Dane do logowania',demoEmail,[{value:'guest',label:'Gość'},...s.accounts.map(account => ({value:account.email,label:account.name})),...(!s.accounts.some(account => account.email === 'nowa@example.test') ? [{value:'nowa@example.test',label:'Nowa osoba · rejestracja'}] : [])],setDemoEmail)}
-        <Button variant="outline" size="sm" disabled={s.active !== 's01' && s.active !== 's02'} onClick={() => fillDemo()}>Wstaw dane demo</Button>
-        <Button variant="ghost" size="sm" onClick={reset}>Reset demo</Button>
+        <Button variant="outline" disabled={s.active !== 's01' && s.active !== 's02'} onClick={() => fillDemo()}>Wstaw dane demo</Button>
+        <Button variant="ghost" onClick={reset}>Reset demo</Button>
       </div>
       <p className="mentio-field-description">Wstawianie danych działa na s01/s02. „Back” po przejściu między ekranami. Sesja demo: {sim.currentAccount()?.name ?? 'brak ważnej sesji'} · {s.slot}; cookie: {s.cookie}.</p>
-      <details className="prototype-map"><summary>Mapa ekranów i wariant rejestracji</summary><nav className="screen-nav" aria-label="Mapa ekranów">{SCREENS.map(screen => <Link key={screen.id} href={`#${screen.id}`}>{screen.id} · {screen.title}</Link>)}</nav><Button variant="outline" size="sm" disabled={s.pending === 'register'} onClick={() => { sim.setMentorRegistration(!s.mentorRegistration); if (s.active === 's02') navigate('s02'); }}>Rejestracja: {s.mentorRegistration ? 'mentor' : 'mentee'}</Button><p className="mentio-field-description">Wariant zmieniasz przed wysłaniem formularza. Podczas rejestracji przełącznik jest nieaktywny.</p></details>
+      <details className="prototype-map"><summary>Mapa ekranów i wariant rejestracji</summary><nav className="screen-nav" aria-label="Mapa ekranów">{SCREENS.map(screen => <Link key={screen.id} href={`#${screen.id}`}>{screen.id} · {screen.title}</Link>)}</nav><Button variant="outline" disabled={s.pending === 'register'} onClick={() => { sim.setMentorRegistration(!s.mentorRegistration); if (s.active === 's02') navigate('s02'); }}>Rejestracja: {s.mentorRegistration ? 'mentor' : 'mentee'}</Button><p className="mentio-field-description">Wariant zmieniasz przed wysłaniem formularza. Podczas rejestracji przełącznik jest nieaktywny.</p></details>
       <details className="prototype-scenarios"><summary>Scenariusze · konta, sesje i błędy</summary><div className="prototype-scenario-content">
         <p className="mentio-field-description">Kontrolki przeglądu symulują warunki, nie są nawigacją produktu. „Uruchom stan” odtwarza fixtures i formularz; błędy ustawiane poniżej zachowują wpisane dane.</p>
-        <div className="prototype-tools"><Button variant="outline" size="sm" onClick={() => { sim.selectAccount(demoEmail === 'guest' ? null : demoEmail); setFill(0); const current = sim.getSnapshot().active; navigate(sim.route(current,true)); }}>Przełącz konto</Button>
+        <div className="prototype-tools"><Button variant="outline" onClick={() => { sim.selectAccount(demoEmail === 'guest' ? null : demoEmail); setFill(0); const current = sim.getSnapshot().active; navigate(sim.route(current,true)); }}>Przełącz konto</Button>
           {control('Niezależna sesja',s.slot,[{value:'A',label:'A'},{value:'B',label:'B'}],value => { sim.selectSlot(value as 'A'|'B'); setFill(0); navigate(sim.route(sim.getSnapshot().active,true)); })}
           {control('Warunek cookie',s.cookie,['none','valid','expired','forged','legacy','orphan'].map(value => ({value,label:({none:'Bez cookie',valid:'Prawidłowe',expired:'Wygasłe',forged:'Sfałszowane',legacy:'Stary format',orphan:'Bez sesji'} as Record<string,string>)[value]})),value => { sim.setCookie(value as Cookie); if (['s03','s06','s07'].includes(s.active)) navigate(sim.route(s.active,true)); else navigate(s.active); })}
         </div>
         <div className="prototype-tools">{control('Następne żądanie',s.next,[{value:'success',label:'Sukces'},{value:'offline',label:'Brak sieci'},{value:'server',label:'Błąd usługi 500'},{value:'credentials',label:'Logowanie · błędne dane'},{value:'conflict',label:'Rejestracja · zajęty adres'},{value:'lost-response',label:'Rejestracja · utracona odpowiedź po zapisie'},{value:'limit',label:'Limit prób 429'},{value:'expire-before',label:'Dołączenie · wygaśnięcie przed zapisem'},{value:'expire-after',label:'Dołączenie · wygaśnięcie po zapisie'},{value:'uncertain',label:'Niepewny wynik operacji'}],value => sim.setOutcome(value as Outcome))}
-          <Button variant="outline" size="sm" aria-pressed={s.hold} onClick={() => sim.setHold(!s.hold)}>Wstrzymaj następne żądanie: {s.hold ? 'tak' : 'nie'}</Button><Button variant="outline" size="sm" disabled={!s.pending} onClick={() => sim.finishRequest()}>Dokończ żądanie</Button>
+          <Button variant="outline" aria-pressed={s.hold} onClick={() => sim.setHold(!s.hold)}>Wstrzymaj następne żądanie: {s.hold ? 'tak' : 'nie'}</Button><Button variant="outline" disabled={!s.pending} onClick={() => sim.finishRequest()}>Dokończ żądanie</Button>
         </div><p className="mentio-field-description">„Dokończ żądanie” działa tylko podczas wysyłania. Wynik jest zużywany przez najbliższą akcję; wybieraj wariant opisany dla tej akcji.</p>
-        <Label htmlFor={`${uid}-return`}>Cel powrotu (returnTo)</Label><Input id={`${uid}-return`} value={s.returnInput} placeholder="Brak celu — start według ról" onChange={event => sim.setReturnTo(event.target.value || null)} /><p className="mentio-field-description">{s.rejectedTarget ? 'Ten adres został odrzucony. Po logowaniu wrócisz do /.' : 'Pusty adres wybiera start według ról. Bezpieczny cel nie nadaje dostępu.'}</p>
-        <div className="prototype-tools"><Button variant="outline" size="sm" onClick={() => { sim.setInfrastructure(!s.infrastructure); navigate(sim.route(s.active,true)); }}>Awaria weryfikacji sesji: {s.infrastructure ? 'tak' : 'nie'}</Button><Button variant="outline" size="sm" onClick={() => navigate(sim.route(s.active,true))}>Sprawdź dostęp ponownie</Button>
-          <Button variant="outline" size="sm" onClick={() => sim.operator('grant')}>Nadaj mentor poza sesją</Button><Button variant="outline" size="sm" onClick={() => { sim.operator('remove'); if (['s03','s06','s07'].includes(s.active)) navigate(sim.route(s.active,true)); }}>Odbierz mentor</Button><Button variant="outline" size="sm" onClick={() => { sim.operator('reset'); if (['s03','s06','s07'].includes(s.active)) navigate(sim.route(s.active,true)); }}>Reset operatora</Button>
+        <div className="prototype-review-control prototype-return"><Label htmlFor={`${uid}-return`}>Cel powrotu (returnTo)</Label><Input id={`${uid}-return`} value={s.returnInput} placeholder="Brak celu — start według ról" onChange={event => sim.setReturnTo(event.target.value || null)} /><p className="mentio-field-description">{s.rejectedTarget ? 'Ten adres został odrzucony. Po logowaniu wrócisz do /.' : 'Pusty adres wybiera start według ról. Bezpieczny cel nie nadaje dostępu.'}</p></div>
+        <div className="prototype-tools"><Button variant="outline" onClick={() => { sim.setInfrastructure(!s.infrastructure); navigate(sim.route(s.active,true)); }}>Awaria weryfikacji sesji: {s.infrastructure ? 'tak' : 'nie'}</Button><Button variant="outline" onClick={() => navigate(sim.route(s.active,true))}>Sprawdź dostęp ponownie</Button>
+          <Button variant="outline" onClick={() => sim.operator('grant')}>Nadaj mentor poza sesją</Button><Button variant="outline" onClick={() => { sim.operator('remove'); if (['s03','s06','s07'].includes(s.active)) navigate(sim.route(s.active,true)); }}>Odbierz mentor</Button><Button variant="outline" onClick={() => { sim.operator('reset'); if (['s03','s06','s07'].includes(s.active)) navigate(sim.route(s.active,true)); }}>Reset operatora</Button>
         </div>
         <div className="prototype-tools">{control('Odczyt mentora',s.mentorRead,[{value:'data',label:'Dane konta'},{value:'empty',label:'Brak strony'},{value:'draft',label:'Szkic'},{value:'published',label:'Opublikowana'},{value:'loading',label:'Ładowanie'},{value:'error',label:'Błąd odczytu'}],value => sim.setRead('s06',value as ReadState))}
           {control('Odczyt operatora',s.adminRead,[{value:'data',label:'Dane'},{value:'empty',label:'Zero użytkowników'},{value:'loading',label:'Ładowanie'},{value:'error',label:'Błąd danych'}],value => sim.setRead('s07',value as ReadState))}
-          <Button variant="outline" size="sm" onClick={() => sim.lock('login',demoEmail)}>Limit logowania</Button><Button variant="outline" size="sm" onClick={() => sim.lock('register',demoEmail)}>Limit rejestracji</Button><Button variant="outline" size="sm" onClick={() => sim.clearLimits()}>Wyzeruj limity demo</Button>
+          <Button variant="outline" onClick={() => sim.lock('login',demoEmail)}>Limit logowania</Button><Button variant="outline" onClick={() => sim.lock('register',demoEmail)}>Limit rejestracji</Button><Button variant="outline" onClick={() => sim.clearLimits()}>Wyzeruj limity demo</Button>
         </div>
         <p className="mentio-field-description">Limity dla wybranych danych do logowania: {s.attempts[demoEmail]?.login ?? 0}/5, rejestracja {s.attempts[demoEmail]?.register ?? 0}/3. Sesja wygasa: {sim.currentSession()?.expires ?? 'brak'}. Role sesji: {sim.currentAccount()?.roles.join(', ') ?? 'brak'}; role konta: {s.accounts.find(account => account.email === s.email)?.roles.join(', ') ?? 'brak'}.</p>
-        <div className="prototype-tools">{control('Stan z mapy',chosenState,STATES.map(state => ({value:state.id,label:`${state.id} · ${state.label}`})),value => setChosenState(value as StateId))}<Button variant="outline" size="sm" onClick={runState}>Uruchom stan</Button></div>
+        <div className="prototype-tools">{control('Stan z mapy',chosenState,STATES.map(state => ({value:state.id,label:`${state.id} · ${state.label}`})),value => setChosenState(value as StateId))}<Button variant="outline" onClick={runState}>Uruchom stan</Button></div>
       </div></details>
-      <Button id="theme-toggle" variant="outline" size="sm" aria-pressed={dark} onClick={() => setDark(value => !value)}>Motyw: {dark ? 'ciemny' : 'jasny'}</Button>
+      {/* Engine contract: #theme-toggle stays a direct child of .doc-toolbar; the engine inserts its tools right before it. */}
+      <Button id="theme-toggle" variant="outline" aria-pressed={dark} onClick={() => setDark(value => !value)}>Motyw: {dark ? 'ciemny' : 'jasny'}</Button>
       <p className="mentio-field-description" role="status">{s.notice}</p><p className="mentio-field-description">{s.state[s.active]} · {labelForState(s.state[s.active])}</p>
       <p className="mentio-field-description">W trybie Comment: Alt+Enter przypina uwagę do elementu z focusem. Escape zamyka panel komentarzy.</p>
       <details><summary>Ostatnie przejścia stanów</summary><ol data-state-trace>{s.trace.slice(-12).map((state,index) => <li key={`${state}-${index}`}>{state} · {labelForState(state)}</li>)}</ol></details>

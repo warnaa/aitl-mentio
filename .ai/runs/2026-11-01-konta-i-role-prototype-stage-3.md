@@ -29,4 +29,4 @@ Pełny raport: `prototypes/konta-i-role/POSTEP.md`.
 
 ## Needs from you
 
-Przegląd prototypu i odpowiedzi na 5 pytań do specyfikacji (POSTEP.md). Akceptacja jest odrębna od wyników testów.
+Przegląd prototypu. Pytania do specyfikacji: brak otwartych (5 kandydatów rozstrzyga spec, patrz POSTEP.md). Akceptacja jest odrębna od wyników testów.

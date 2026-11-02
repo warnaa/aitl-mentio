@@ -172,6 +172,9 @@ Zachowano zatwierdzony systemowy font stack, także znany nietypowy wygląd cyfr
   puste komentarze są zablokowane z podpowiedzią. Silnik JS pozostaje kopią 1:1.
 - Font systemowy tego hosta renderuje cyfry i odstępy nietypowo (widać na zrzutach).
   To cecha środowiska podglądu, nie decyzja typograficzna; DS nie dostarcza własnego fontu.
+- Komunikat konsoli o zablokowanym skrypcie inline (CSP `script-src 'self'`) przy otwieraniu przez
+  zewnętrzny podgląd sandboxa nie pochodzi z prototypu: build i serwer na localhost nie zawierają
+  skryptów inline. Prototyp działa mimo tego komunikatu; CSP celowo zostaje restrykcyjne.
 - Audyt dostępności to axe (WCAG 2.1 A/AA) i testy klawiatury w Chromium.
   Nie testowano czytnikiem ekranu, innymi przeglądarkami ani na urządzeniu dotykowym.
 

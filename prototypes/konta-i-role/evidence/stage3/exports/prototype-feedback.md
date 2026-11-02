@@ -39,8 +39,16 @@
   - Recenzent demo (2026-11-02 00:18 UTC): Etap 3 — uwaga do adresu e-mail (mvyifr82).
   - Recenzent demo (2026-11-02 00:18 UTC): Odpowiedź testowa.
 
+- **Hasło demo**
+  - Recenzent demo (2026-11-02 00:58 UTC): Etap 3 — uwaga do adresu e-mail (mvyjw3cq).
+  - Recenzent demo (2026-11-02 00:58 UTC): Odpowiedź testowa.
+
+- **Hasło demo**
+  - Recenzent demo (2026-11-02 01:03 UTC): Etap 3 — uwaga do adresu e-mail (mvyk218d).
+  - Recenzent demo (2026-11-02 01:03 UTC): Odpowiedź testowa.
+
 - **Zaloguj się**
-  - Recenzent demo (2026-11-02 00:18 UTC): Etap 3 — uwaga do przycisku logowania (mvyifr82).
+  - Recenzent demo (2026-11-02 01:03 UTC): Etap 3 — uwaga do przycisku logowania (mvyk218d).
 
 ## s04 · Punkt powrotu
 

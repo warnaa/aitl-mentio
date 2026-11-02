@@ -559,13 +559,13 @@
       "check": "state-s06.04",
       "variant": "1440-dark",
       "result": "passed",
-      "screen": "s04"
+      "screen": "s06"
     },
     {
       "check": "state-s07.01",
       "variant": "1440-dark",
       "result": "passed",
-      "screen": "s01",
+      "screen": "s07",
       "screenshot": "1440-dark-s07.01.png"
     },
     {
@@ -1238,23 +1238,11 @@
       "method": "GET"
     },
     {
-      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-DF0xBe8x.js",
+      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-D1Vo3nSU.js",
       "method": "GET"
     },
     {
-      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-Ba9JoD92.css",
-      "method": "GET"
-    },
-    {
-      "url": "http://localhost:3000/prototypes/konta-i-role/index.html?qa=stage3-matrix",
-      "method": "GET"
-    },
-    {
-      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-DF0xBe8x.js",
-      "method": "GET"
-    },
-    {
-      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-Ba9JoD92.css",
+      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-B7RwnlFN.css",
       "method": "GET"
     }
   ]

@@ -578,6 +578,174 @@ window.__OM_PROTOTYPE_COMMENTS__ = {
       "threadId": "thread-7a67326c-9f2c-42a2-a625-41a2c767e71b",
       "at": "2026-11-02T00:18:02.625Z",
       "payload": {}
+    },
+    {
+      "id": "op-cadb18a3-2c03-443d-ad17-78dc68f1c996",
+      "type": "create",
+      "threadId": "thread-18b8c600-2501-4067-83f4-d1474f3242ef",
+      "at": "2026-11-02T00:58:43.365Z",
+      "payload": {
+        "screen": "s01",
+        "anchor": "div:2>div:1>main>form>div:1>input",
+        "label": "Adres e-mail",
+        "message": {
+          "id": "message-900ed7be-433f-4573-bc9a-10c8dead70a7",
+          "author": "Recenzent demo",
+          "text": "Etap 3 — uwaga do adresu e-mail (mvyjw3cq).",
+          "at": "2026-11-02 00:58 UTC"
+        }
+      }
+    },
+    {
+      "id": "op-b2fb3385-784b-4f52-b234-c68503f0deb2",
+      "type": "reply",
+      "threadId": "thread-18b8c600-2501-4067-83f4-d1474f3242ef",
+      "at": "2026-11-02T00:58:43.425Z",
+      "payload": {
+        "message": {
+          "id": "message-ffe34ee4-05f2-4e52-9ed0-60c9d88b0fd4",
+          "author": "Recenzent demo",
+          "text": "Odpowiedź testowa.",
+          "at": "2026-11-02 00:58 UTC"
+        }
+      }
+    },
+    {
+      "id": "op-0327f05a-3d9a-42cb-898b-97cb37b96cad",
+      "type": "set-resolved",
+      "threadId": "thread-18b8c600-2501-4067-83f4-d1474f3242ef",
+      "at": "2026-11-02T00:58:43.459Z",
+      "payload": {
+        "resolved": true
+      }
+    },
+    {
+      "id": "op-89a655f2-415e-412e-9c7f-a99e036c3862",
+      "type": "set-resolved",
+      "threadId": "thread-18b8c600-2501-4067-83f4-d1474f3242ef",
+      "at": "2026-11-02T00:58:43.508Z",
+      "payload": {
+        "resolved": false
+      }
+    },
+    {
+      "id": "op-a8837f8b-0f10-45b9-80e3-4415ca019719",
+      "type": "reanchor",
+      "threadId": "thread-18b8c600-2501-4067-83f4-d1474f3242ef",
+      "at": "2026-11-02T00:58:43.716Z",
+      "payload": {
+        "screen": "s01",
+        "anchor": "div:2>div:1>main>form>div:2>input",
+        "label": "Hasło demo"
+      }
+    },
+    {
+      "id": "op-5268188a-d214-428a-b8d2-deda7eb6c002",
+      "type": "create",
+      "threadId": "thread-3f89ae04-c2ea-4ec3-bf54-ef591f552e9f",
+      "at": "2026-11-02T00:58:44.158Z",
+      "payload": {
+        "screen": "s01",
+        "anchor": "div:2>div:1>main>form>div:3>button",
+        "label": "Zaloguj się",
+        "message": {
+          "id": "message-5a672d50-5993-4fe8-b4fe-918cf5760903",
+          "author": "Recenzent demo",
+          "text": "Etap 3 — uwaga do przycisku logowania (mvyjw3cq).",
+          "at": "2026-11-02 00:58 UTC"
+        }
+      }
+    },
+    {
+      "id": "op-6802cffc-dbc4-436b-a4b3-67f646835f5b",
+      "type": "delete",
+      "threadId": "thread-3f89ae04-c2ea-4ec3-bf54-ef591f552e9f",
+      "at": "2026-11-02T00:58:44.410Z",
+      "payload": {}
+    },
+    {
+      "id": "op-79773207-d70d-4e9d-b263-df8700ec4dfd",
+      "type": "create",
+      "threadId": "thread-637f0b1b-9ecc-4881-b67b-fbfef578bcea",
+      "at": "2026-11-02T01:03:20.595Z",
+      "payload": {
+        "screen": "s01",
+        "anchor": "div:2>div:1>main>form>div:1>input",
+        "label": "Adres e-mail",
+        "message": {
+          "id": "message-d9489918-a3ba-466a-b692-fcdd8b0d8a1b",
+          "author": "Recenzent demo",
+          "text": "Etap 3 — uwaga do adresu e-mail (mvyk218d).",
+          "at": "2026-11-02 01:03 UTC"
+        }
+      }
+    },
+    {
+      "id": "op-7b3489c7-3547-4a67-8a55-1d0cdbf2cef2",
+      "type": "reply",
+      "threadId": "thread-637f0b1b-9ecc-4881-b67b-fbfef578bcea",
+      "at": "2026-11-02T01:03:20.665Z",
+      "payload": {
+        "message": {
+          "id": "message-c5cb0a3b-f166-4474-9907-9be7ef7d1a8d",
+          "author": "Recenzent demo",
+          "text": "Odpowiedź testowa.",
+          "at": "2026-11-02 01:03 UTC"
+        }
+      }
+    },
+    {
+      "id": "op-b01e1319-b147-4843-a4ff-83ade0d8719d",
+      "type": "set-resolved",
+      "threadId": "thread-637f0b1b-9ecc-4881-b67b-fbfef578bcea",
+      "at": "2026-11-02T01:03:20.714Z",
+      "payload": {
+        "resolved": true
+      }
+    },
+    {
+      "id": "op-f111eb7e-0186-4424-93e4-c6388cf0ce5e",
+      "type": "set-resolved",
+      "threadId": "thread-637f0b1b-9ecc-4881-b67b-fbfef578bcea",
+      "at": "2026-11-02T01:03:20.764Z",
+      "payload": {
+        "resolved": false
+      }
+    },
+    {
+      "id": "op-81de5289-dc90-4619-b16f-6f04eec2d817",
+      "type": "reanchor",
+      "threadId": "thread-637f0b1b-9ecc-4881-b67b-fbfef578bcea",
+      "at": "2026-11-02T01:03:21.005Z",
+      "payload": {
+        "screen": "s01",
+        "anchor": "div:2>div:1>main>form>div:2>input",
+        "label": "Hasło demo"
+      }
+    },
+    {
+      "id": "op-474c034d-2cd4-4930-b669-d5342e4597dc",
+      "type": "create",
+      "threadId": "thread-41131c11-7d31-4879-9208-f72fc12c628f",
+      "at": "2026-11-02T01:03:21.447Z",
+      "payload": {
+        "screen": "s01",
+        "anchor": "div:2>div:1>main>form>div:3>button",
+        "label": "Zaloguj się",
+        "message": {
+          "id": "message-d9c65d38-6fb7-4873-9e62-c96974cae982",
+          "author": "Recenzent demo",
+          "text": "Etap 3 — uwaga do przycisku logowania (mvyk218d).",
+          "at": "2026-11-02 01:03 UTC"
+        }
+      }
+    },
+    {
+      "id": "op-77299df8-a53d-455d-8f51-0cc8a314e1fd",
+      "type": "delete",
+      "threadId": "thread-41131c11-7d31-4879-9208-f72fc12c628f",
+      "at": "2026-11-02T01:03:21.698Z",
+      "payload": {}
     }
   ]
 };

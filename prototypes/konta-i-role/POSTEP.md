@@ -477,6 +477,23 @@ W przeglądarce przy 320 px: komunikat w `aria-describedby`, axe bez naruszeń, 
 Pełnej macierzy i audytu kontrolek nie powtarzano — zmiana dotyczy tylko treści błędów hasła.
 Obserwacja DS (nie nowa luka): CrudForm nie potrafi pokazać jednocześnie opisu i błędu pola.
 
+### Poprawka paska przeglądu — 2026-11-02
+
+Uwaga użytkownika: kontrolki nierówno, `<summary>` w różnych rozmiarach (14 i 16 px).
+Wszystkie `<summary>` mają rolę etykiety DS (`--text-label`, `--line-label`, `--font-weight-medium`),
+jak etykiety pól. Przyciski stoją na linii pól wyboru (`align-items: flex-end`), kontrolki nie ściskają
+się poniżej etykiety, odstęp między nimi `--space-between-groups`. Narzędzia silnika i „Motyw” dzielą
+jeden wiersz (CSS). `#theme-toggle` musi zostać bezpośrednim dzieckiem `.doc-toolbar` — silnik wstawia
+przed nim swoje narzędzia; pierwsza próba przeniesienia go wywracała aplikację (lekcja w `.ai/lessons.md`).
+Wszystkie kontrolki paska (przyciski DS, listy, narzędzia silnika) mają jedną wysokość `--control-height`
+(36 px): przyciski w rozmiarze domyślnym zamiast `sm`, lokalne zawijanie z `padding-block: var(--spacing)`.
+Zmierzono: przy 1440 px 30/30 kontrolek = 36 px; przy 320 px dwie zawinięte do dwóch linii stoją we własnych wierszach.
+**s03 — decyzja użytkownika:** zamiast AuthPanel (448 px, jak w mapie) ta sama publiczna kompozycja i szerokość
+co s04/s08/s12 (`prototype-public`, typografia publiczna, ActionButton, Link). s01/s02 nadal w AuthPanel (formularze).
+Pole `returnTo` ograniczone do `--prose-max-width` (65ch; na tym hoście ok. 1150 px przez szerokie cyfry
+fontu systemowego, normalnie ok. 600 px). Po zmianach (pasek, wysokości, s03): macierz 197/197, komentarze 13/13, testy lokalne 31/31;
+audyt kontrolek (`controls`) w toku w chwili commitu — wynik w następnym wpisie.
+
 ### Czego nie sprawdzono
 
 - `npm run test:integration` — nie uruchamiano ponownie; w etapach 1–2 runner nie startował
@@ -501,16 +518,14 @@ i przy 320 px panel zakrywa pasek — warto poprawić w samym silniku przeglądu
 
 ### Pytania do specyfikacji, które wyszły przy budowie
 
-1. **Odmowa roli vs 404:** produkt pokazuje tę samą 404 (L09). Czy po zalogowaniu bez roli
-   (np. mentee → `/admin` jako cel powrotu) też ma być 404 bez wyjaśnienia, czy komunikat na s01?
-2. **Nadanie roli poza sesją:** stara sesja nie widzi nowej roli do ponownego logowania.
-   Czy spec akceptuje to opóźnienie, czy oczekuje odświeżenia claims przy następnym żądaniu?
-3. **Hasło przy rejestracji:** spec liczy 10 punktów Unicode i 72 bajty; komunikat w prototypie
-   ostrzega o bajtach polskich liter. Czy treść podpowiedzi jest zatwierdzona, czy tylko reguła?
-4. **Licznik prób po sukcesie:** Dm08 mówi „brak resetu po sukcesie” — czy udane logowanie
-   ma w ogóle zużywać próbę (prototyp: tak, zgodnie z mapą), skoro może blokować częste logowania?
-5. **Wylogowanie przy wadliwym cookie:** nagłówek pokazuje „Wyloguj się” obok formularza logowania
-   (zgodnie z s04.03). Czy to akceptowalne wizualnie, czy nagłówek ma ukryć przycisk na s01?
+Brak otwartych. Pięć kandydatów z pierwszej wersji raportu po sprawdzeniu okazało się
+rozstrzygniętych w `.ai/specs/2026-10-30-accounts-and-sign-in.md` i mapie; prototyp jest z nimi zgodny:
+
+1. Brak roli po zalogowaniu z celem → 404: spec l. 304–307, mapa L09 i P01.
+2. Nadanie roli widoczne przy następnym logowaniu/dołączeniu: spec l. 33.
+3. Tekst pomocy hasła (10 znaków / 72 bajty): spec l. 157; dopisek o haśle demo jest tylko symulacją.
+4. Każda dopuszczona próba, także udana, liczy się do limitu: spec l. 215, mapa Dm08.
+5. „Wyloguj się” przy wadliwym cookie obok formularza: spec l. 166 („harmless”, ścieżka odzyskania).
 
 Design: prototypes/konta-i-role/index.html
 Source: .ai/specs/2026-10-30-accounts-and-sign-in.md
