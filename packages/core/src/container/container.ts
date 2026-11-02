@@ -5,11 +5,15 @@ import {
   createContainer,
   InjectionMode,
   type AwilixContainer,
+  type Resolver,
 } from 'awilix';
 import { getOrm } from '@devmentor/db';
 import { getEnv, type AppEnv } from '../config/env';
 import { loadSession } from '../http/auth';
 import { createLogger } from '../logger';
+import { GithubIdentityAdapter } from '../services/auth/adapters/github-identity';
+import { MockGithubIdentityAdapter } from '../services/auth/adapters/mock-github-identity';
+import type { GithubIdentityPort } from '../services/auth/github-identity.port';
 import { EventBus } from '../events/event-bus';
 import { readSessionCookie, SessionService } from '../services/auth/session.service';
 import { TokenService } from '../services/auth/token.service';
@@ -40,6 +44,18 @@ function assertProductionConfig(env: AppEnv): void {
   }
 }
 
+/**
+ * The GitHub identity adapter. The mock is chosen only from two flags that are both
+ * *present* — never from credentials that are absent (primitives spec B14). The env
+ * schema already refuses the switch without the run flag; requiring both here as well
+ * means no other path to this function can select the mock alone.
+ */
+function identityAdapter(env: AppEnv): Resolver<GithubIdentityPort> {
+  return env.AUTH_IDENTITY_ADAPTER === 'mock' && env.INTEGRATION_TEST_RUN
+    ? asClass(MockGithubIdentityAdapter).singleton()
+    : asClass(GithubIdentityAdapter).singleton();
+}
+
 async function build(): Promise<AwilixContainer<Cradle>> {
   const env = getEnv();
   assertProductionConfig(env);
@@ -61,6 +77,8 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     // Stateless signers over `env` + `clock`; a missing secret surfaces per call as a 503.
     sessionService: asClass(SessionService).singleton(),
     tokenService: asClass(TokenService).singleton(),
+    // Real GitHub by default; missing credentials surface per call as a 503.
+    identity: identityAdapter(env),
     // A forked EntityManager per scope gives each request its own identity map / UoW.
     em: asFunction(({ orm }: Cradle) => orm.em.fork()).scoped(),
     userService: asClass(UserService).scoped(),

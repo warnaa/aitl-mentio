@@ -18,6 +18,14 @@ export {
   type SessionClaims,
 } from './services/auth/session.service';
 export { TokenService, type PurposeTokenInput } from './services/auth/token.service';
+export {
+  GithubEmailUnverifiedError,
+  GITHUB_CALLBACK_PATH,
+  githubCallbackUrl,
+  type AuthorizeUrlInput,
+  type GithubIdentity,
+  type GithubIdentityPort,
+} from './services/auth/github-identity.port';
 export { EventBus, type EventHandler, type EventId, type EventMap } from './events/index';
 export { userCreateSchema, type UserCreateInput } from './validators/auth/user-create.schema';
 

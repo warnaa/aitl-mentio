@@ -3,6 +3,7 @@ import type { AppEnv } from '../config/env';
 import type { Logger } from '../logger';
 import type { EventBus } from '../events/event-bus';
 import type { Session } from '../http/auth';
+import type { GithubIdentityPort } from '../services/auth/github-identity.port';
 import type { SessionService } from '../services/auth/session.service';
 import type { TokenService } from '../services/auth/token.service';
 import type { UserService } from '../services/auth/user.service';
@@ -14,8 +15,9 @@ import type { Clock } from '../time/clock';
  * type-checked against this interface end to end.
  *
  * Lifetimes:
- * - `env`, `logger`, `clock`, `orm`, `eventBus`, `sessionService`, `tokenService` —
- *   SINGLETON (shared for the process).
+ * - `env`, `logger`, `clock`, `orm`, `eventBus`, `sessionService`, `tokenService`,
+ *   `identity` — SINGLETON (shared for the process). `identity` is the real GitHub
+ *   adapter unless `AUTH_IDENTITY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`.
  * - `em`, `userService` — SCOPED (created fresh per request scope).
  * - `session` — SCOPED and lazy, registered only by `withRequestScope` /
  *   `withSessionCookieScope`: the caller's live `Session`, or `null` when signed out.
@@ -33,6 +35,7 @@ export interface Cradle {
   eventBus: EventBus;
   sessionService: SessionService;
   tokenService: TokenService;
+  identity: GithubIdentityPort;
   em: EntityManager;
   userService: UserService;
   session: Promise<Session | null>;

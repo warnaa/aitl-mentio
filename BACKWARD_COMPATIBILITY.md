@@ -34,7 +34,10 @@ The shape is declared twice on purpose, in `packages/core/src/http/apiHandler.ts
 409 `conflict`, 422 `validation_failed` (with `fieldErrors`, keyed by dotted path or
 `_root`), 500 `internal_error`, 503 `service_unavailable` (`ServiceUnavailableError`:
 a required integration or credential is missing, or an upstream timed out, failed or
-answered non-2xx; see `fetchJson` in `outbound.ts`). An `AppError` may carry optional
+answered non-2xx; see `fetchJson` in `outbound.ts`), and the concept-owned 403
+`github_email_unverified` (`GithubEmailUnverifiedError` in
+`services/auth/github-identity.port.ts`: the GitHub account has no verified primary
+email). An `AppError` may carry optional
 `headers`, which `apiHandler` copies onto the response. The client adds
 `network_error` and `invalid_response` in `apiCall.ts`.
 
@@ -71,8 +74,12 @@ API between packages. `npm run typecheck` is the consumer check.
   `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`,
   `withRequestScope`, `withSessionCookieScope` (reserved for the app's page session
   helper), the `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`,
-  `sessionService`, `tokenService`, `em`, `userService`, and the request-scoped
-  `session: Promise<Session | null>`), `Clock` and `systemClock`, `UserService` and
+  `sessionService`, `tokenService`, `identity: GithubIdentityPort`, `em`,
+  `userService`, and the request-scoped `session: Promise<Session | null>`), the
+  GitHub identity port (`GithubIdentityPort` with `authorizeUrl({ state, login? })`,
+  `exchangeCode`, `fetchIdentity`; `GithubIdentity`, `AuthorizeUrlInput`,
+  `GithubEmailUnverifiedError`, `GITHUB_CALLBACK_PATH`, `githubCallbackUrl`),
+  `Clock` and `systemClock`, `UserService` and
   `UserDto`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`,
   `SESSION_COOKIE_NAME` and `SESSION_TTL_SECONDS`, `TokenService` with
   `PurposeTokenInput`, the `AppError` family

@@ -10,7 +10,14 @@ const state = vi.hoisted(() => {
     logger,
     fork,
     findOne,
-    env: {} as { NODE_ENV: string; SESSION_SECRET?: string; OPERATOR_EMAILS?: readonly string[] },
+    env: {} as {
+      NODE_ENV: string;
+      SESSION_SECRET?: string;
+      OPERATOR_EMAILS?: readonly string[];
+      APP_URL?: string;
+      AUTH_IDENTITY_ADAPTER?: 'github' | 'mock';
+      INTEGRATION_TEST_RUN?: boolean;
+    },
     getOrm: vi.fn(async () => ({ em: { fork } })),
   };
 });
@@ -27,6 +34,8 @@ const { UserService } = await import('../services/auth/user.service');
 const { EventBus } = await import('../events/event-bus');
 const { SessionService } = await import('../services/auth/session.service');
 const { TokenService } = await import('../services/auth/token.service');
+const { GithubIdentityAdapter } = await import('../services/auth/adapters/github-identity');
+const { MockGithubIdentityAdapter } = await import('../services/auth/adapters/mock-github-identity');
 
 const globalForContainer = globalThis as { __devmentorContainer?: unknown };
 
@@ -124,6 +133,48 @@ describe('getContainer', () => {
     } as never);
 
     expect(state.logger.info).toHaveBeenCalledWith({ userId: 'u1' }, 'auth.user.created');
+  });
+});
+
+describe('identity adapter selection', () => {
+  const appUrl = 'http://127.0.0.1:41234';
+
+  it('registers the real GitHub adapter by default, as a singleton', async () => {
+    state.env = { NODE_ENV: 'test', APP_URL: appUrl, AUTH_IDENTITY_ADAPTER: 'github', INTEGRATION_TEST_RUN: false };
+    const container = await getContainer();
+    const scoped = await withScope((cradle) => cradle.identity);
+
+    expect(container.cradle.identity).toBeInstanceOf(GithubIdentityAdapter);
+    expect(scoped).toBe(container.cradle.identity);
+  });
+
+  it('builds the real adapter without GitHub credentials; it fails closed only when used', async () => {
+    state.env = { NODE_ENV: 'test', APP_URL: appUrl };
+    const container = await getContainer();
+
+    expect(() => container.cradle.identity.authorizeUrl({ state: 's' })).toThrow(
+      'GitHub sign-in is not configured.',
+    );
+  });
+
+  it('registers the mock only when AUTH_IDENTITY_ADAPTER=mock and INTEGRATION_TEST_RUN are both set', async () => {
+    state.env = { NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32), APP_URL: appUrl, AUTH_IDENTITY_ADAPTER: 'mock', INTEGRATION_TEST_RUN: true };
+    const container = await getContainer();
+
+    expect(container.cradle.identity).toBeInstanceOf(MockGithubIdentityAdapter);
+    expect(container.cradle.identity.authorizeUrl({ state: 's', login: 'mock-mentor' })).toBe(
+      `${appUrl}/api/auth/github/callback?code=mock-code.mock-mentor&state=s`,
+    );
+  });
+
+  it.each([
+    ['the run flag alone', { AUTH_IDENTITY_ADAPTER: 'github', INTEGRATION_TEST_RUN: true }],
+    ['the adapter switch alone', { AUTH_IDENTITY_ADAPTER: 'mock', INTEGRATION_TEST_RUN: false }],
+  ] as const)('keeps the real adapter for %s', async (_name, flags) => {
+    state.env = { NODE_ENV: 'test', APP_URL: appUrl, ...flags };
+    const container = await getContainer();
+
+    expect(container.cradle.identity).toBeInstanceOf(GithubIdentityAdapter);
   });
 });
 
