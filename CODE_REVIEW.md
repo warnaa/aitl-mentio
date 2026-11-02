@@ -75,13 +75,16 @@ Read the diff in this order. A finding higher on the list outranks everything be
 - Errors are thrown as `AppError` subclasses from `packages/core/src/http/errors.ts`
   (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`,
   `ConflictError`, `ValidationError`). A service never builds a `Response`.
-- Guarded routes call `requireSession`, `requireRole`, or `assertOwnership` from
-  `packages/core/src/http/auth.ts` before touching a service. `readSession` currently
-  returns `null` by design (fail closed until the `auth` concept lands); the PR that
-  wires real session verification is `risk-high` and needs a second reviewer.
+- Guarded routes call `requireSession(req, cradle)` (inside `withRequestScope`), then
+  `requireRole` or `assertOwnership`, from `packages/core/src/http/auth.ts` before
+  touching a service. No route calls `requireCsrfHeader` itself — `apiHandler` enforces
+  it on every non-GET/HEAD/OPTIONS method; a `{ csrf: false }` outside the payment
+  webhook route is a finding. Changes to session verification are `risk-high` and need
+  a second reviewer.
 - Collection routes are non-dynamic, so Next passes no `params`; helpers guard
   `ctx.params` before reading it (see `.ai/lessons.md`, 2026-09-02).
-- Request-scoped work goes through `withScope(fn)`; nothing resolves the root
+- Request-scoped work goes through `withRequestScope(req, fn)` (or `withScope(fn)` for
+  unauthenticated/system work, which has no `session`); nothing resolves the root
   container directly from a handler.
 
 ### Client layer (`packages/ui/src/backend/`, `packages/app/src/app/**/page.tsx`)

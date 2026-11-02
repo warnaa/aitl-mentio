@@ -68,16 +68,20 @@ The `exports` maps in each `package.json` and the named exports behind them are 
 API between packages. `npm run typecheck` is the consumer check.
 
 - `@devmentor/core` (`.`, `./container`, `./services`, `./http`, `./events`,
-  `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`, the
-  `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`, `sessionService`,
-  `tokenService`, `em`, `userService`), `Clock` and `systemClock`, `UserService` and
+  `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`,
+  `withRequestScope`, `withSessionCookieScope` (reserved for the app's page session
+  helper), the `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`,
+  `sessionService`, `tokenService`, `em`, `userService`, and the request-scoped
+  `session: Promise<Session | null>`), `Clock` and `systemClock`, `UserService` and
   `UserDto`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`,
   `SESSION_COOKIE_NAME` and `SESSION_TTL_SECONDS`, `TokenService` with
   `PurposeTokenInput`, the `AppError` family
-  (with its optional `headers`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`,
-  `jsonOk`, `jsonError`, `makeCrudRoute` with `CrudService` and
-  `MakeCrudRouteOptions`, `readSession`, `requireSession`, `requireRole`,
-  `assertOwnership`, `Session`, `Role` (`'student' | 'mentor'`), `EventBus`,
+  (with its optional `headers`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`
+  (with `ApiHandlerOptions`), `jsonOk`, `jsonError`, `makeCrudRoute` with `CrudService` and
+  `MakeCrudRouteOptions`, `requireSession(req, cradle)`, `requireRole`,
+  `requireCsrfHeader`, `assertOwnership`, `resolveRoles` with `RoleSource`, `ROLES`,
+  `CSRF_HEADER_NAME`, `CSRF_HEADER_VALUE`, `Session` (`{ userId, roles }`, `roles` a
+  non-empty `readonly [Role, ...Role[]]`), `Role` (`'mentee' | 'mentor' | 'operator'`), `EventBus`,
   `EventMap`, `userCreateSchema`, and the re-exported `checkDbConnection`.
 - `@devmentor/db` (`.`, `./entities`, `./config`): `User`, `MentorProfile`, `IUser`,
   `IMentorProfile`, `baseProperties`, `entities`, `createOrmConfig`, `getOrm`,
@@ -176,14 +180,21 @@ PR; adding a payload field is additive.
 
 ### 7. Session and CSRF conventions
 
-The session cookie name `devmentor_session` and the `Role` union live in
-`packages/core/src/http/auth.ts`; the CSRF header `x-devmentor-request` is set by
-`apiCall` in `packages/ui/src/backend/api/apiCall.ts`. Real session verification and
-the server-side header check are not implemented yet; every guarded route currently
-denies.
+The session cookie name `devmentor_session` lives in
+`packages/core/src/services/auth/session.service.ts`; the `Role` union
+(`'mentee' | 'mentor' | 'operator'`), the `Session` shape (`{ userId, roles }`) and the
+CSRF header name and value live in `packages/core/src/http/auth.ts`. `apiCall` in
+`packages/ui/src/backend/api/apiCall.ts` sends `x-devmentor-request: 1` on every
+request, and `apiHandler` **enforces** it on every method other than GET, HEAD and
+OPTIONS — so every mutating route, including `makeCrudRoute`'s `POST`/`PUT`/`DELETE`,
+answers `403 forbidden` without it. The only opt-out, `apiHandler(logic, { csrf: false })`,
+is reserved for the payment-webhook route. `requireSession(req, cradle)` verifies the
+cookie, reloads the user, rejects a bumped `session_version`, and returns the stored
+`mentee`/`mentor` roles with `operator` derived live from `OPERATOR_EMAILS`.
 
-**Breaking:** once auth ships, renaming the cookie or the header, or changing the
-`Role` values.
+**Breaking:** renaming the cookie or the header, changing the header's value, changing
+the `Role` values or the `Session` shape, or adding a CSRF opt-out other than the
+webhook route.
 
 **Required path:** change `core/src/http/auth.ts` and `ui/src/backend/api/apiCall.ts`
 together, with an integration scenario covering the denied path.

@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
  *
  * NOTE: this endpoint is intentionally public for now — it is the migration
  * regression check until real concepts replace it. The `auth` concept will add
- * `authorize: (req) => requireSession(req)` here.
+ * `authorize: async (req, cradle) => { requireRole(await requireSession(req, cradle), 'operator'); }`
+ * here.
  */
 export const { GET, POST } = makeCrudRoute({
   resolve: (cradle) => cradle.userService,

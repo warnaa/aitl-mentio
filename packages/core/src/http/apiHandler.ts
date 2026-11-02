@@ -1,4 +1,5 @@
 import { createLogger, type Logger } from '../logger';
+import { requireCsrfHeader } from './auth';
 import { type ErrorHeaders, type FieldErrors, isAppError } from './errors';
 
 /**
@@ -21,6 +22,17 @@ export type ApiRouteHandler = (req: Request, ctx: ApiRouteContext) => Promise<Re
 
 /** Route logic: return the payload to wrap, or a `Response` to pass through as-is. */
 export type RouteLogic = (req: Request, ctx: ApiRouteContext) => Promise<unknown> | unknown;
+
+export interface ApiHandlerOptions {
+  /**
+   * Require the CSRF header on state-changing methods. Defaults to `true`; `false` is
+   * reserved for the payment-webhook route, which authenticates by signature instead.
+   */
+  csrf?: boolean;
+}
+
+/** Methods that must not change state, so they need no CSRF header. */
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 let cachedLogger: Logger | undefined;
 function logger(): Logger {
@@ -63,11 +75,19 @@ export function jsonError(
  * response. Unexpected errors are logged via the shared logger and returned as a
  * generic 500 — a raw stack trace never reaches the client.
  *
+ * Every method other than GET, HEAD and OPTIONS must carry the CSRF header `apiCall`
+ * sends (`requireCsrfHeader`), checked before `logic` runs, so no route can forget it;
+ * without it the answer is `403 forbidden`. Opt out only with `{ csrf: false }`.
+ *
  * Every route handler goes through this — no route writes its own `try/catch`.
  */
-export function apiHandler(logic: RouteLogic): ApiRouteHandler {
+export function apiHandler(logic: RouteLogic, options: ApiHandlerOptions = {}): ApiRouteHandler {
+  const csrf = options.csrf ?? true;
   return async (req, ctx) => {
     try {
+      if (csrf && !SAFE_METHODS.has(req.method)) {
+        requireCsrfHeader(req);
+      }
       const result = await logic(req, ctx);
       return result instanceof Response ? result : jsonOk(result);
     } catch (error) {

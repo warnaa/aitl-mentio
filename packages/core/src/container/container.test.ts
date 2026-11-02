@@ -4,11 +4,13 @@ import type { Clock } from '../time/clock';
 
 const state = vi.hoisted(() => {
   const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
-  const fork = vi.fn(() => ({ forked: true }));
+  const findOne = vi.fn();
+  const fork = vi.fn(() => ({ forked: true, findOne }));
   return {
     logger,
     fork,
-    env: {} as { NODE_ENV: string; SESSION_SECRET?: string },
+    findOne,
+    env: {} as { NODE_ENV: string; SESSION_SECRET?: string; OPERATOR_EMAILS?: readonly string[] },
     getOrm: vi.fn(async () => ({ em: { fork } })),
   };
 });
@@ -18,7 +20,8 @@ vi.mock('@devmentor/db', () => ({ getOrm: state.getOrm, User: class User {} }));
 vi.mock('../config/env', () => ({ getEnv: () => state.env }));
 vi.mock('../logger', () => ({ createLogger: () => state.logger }));
 
-const { getContainer, withScope } = await import('./container');
+const { getContainer, withRequestScope, withScope, withSessionCookieScope } = await import('./container');
+const { requireSession } = await import('../http/auth');
 const { systemClock } = await import('../time/clock');
 const { UserService } = await import('../services/auth/user.service');
 const { EventBus } = await import('../events/event-bus');
@@ -77,6 +80,41 @@ describe('getContainer', () => {
     expect(state.getOrm).toHaveBeenCalledTimes(1);
   });
 
+  it('shares one in-flight build between concurrent callers', async () => {
+    const [first, second] = await Promise.all([getContainer(), getContainer()]);
+
+    expect(second).toBe(first);
+    expect(state.getOrm).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not cache a failed build: a database down at first request recovers', async () => {
+    state.getOrm.mockRejectedValueOnce(new Error('connect ECONNREFUSED'));
+
+    await expect(getContainer()).rejects.toThrow('connect ECONNREFUSED');
+    const recovered = await getContainer();
+
+    expect(recovered.cradle.env).toBe(state.env);
+    expect(state.getOrm).toHaveBeenCalledTimes(2);
+    await expect(getContainer()).resolves.toBe(recovered);
+  });
+
+  it('leaves a newer cached build alone when an older failed build settles', async () => {
+    let fail!: (error: Error) => void;
+    state.getOrm.mockImplementationOnce(
+      () => new Promise((_resolve, reject) => (fail = reject)) as never,
+    );
+    const failing = getContainer();
+    await vi.waitFor(() => expect(state.getOrm).toHaveBeenCalledTimes(1));
+    delete globalForContainer.__devmentorContainer;
+    const replacement = getContainer();
+
+    fail(new Error('connect ECONNREFUSED'));
+
+    await expect(failing).rejects.toThrow('connect ECONNREFUSED');
+    expect(globalForContainer.__devmentorContainer).toBe(replacement);
+    await expect(replacement).resolves.toBeDefined();
+  });
+
   it('logs auth.user.created through the default subscriber', async () => {
     const container = await getContainer();
 
@@ -97,6 +135,14 @@ describe('production configuration check', () => {
 
     await expect(getContainer()).rejects.toThrow(/SESSION_SECRET is required when NODE_ENV=production/);
     expect(state.getOrm).not.toHaveBeenCalled();
+  });
+
+  it('keeps failing loudly on every request while the secret is missing', async () => {
+    state.env = { NODE_ENV: 'production' };
+
+    await expect(getContainer()).rejects.toThrow(/SESSION_SECRET is required/);
+    await expect(getContainer()).rejects.toThrow(/SESSION_SECRET is required/);
+    await expect(withScope(() => 'served')).rejects.toThrow(/SESSION_SECRET is required/);
   });
 
   it('builds in production once SESSION_SECRET is set', async () => {
@@ -125,7 +171,7 @@ describe('withScope', () => {
       clock: cradle.clock,
     }));
 
-    expect(result.em).toEqual({ forked: true });
+    expect(result.em).toMatchObject({ forked: true });
     expect(result.userService).toBeInstanceOf(UserService);
     expect(result.clock).toBe(systemClock);
     expect(state.fork).toHaveBeenCalledTimes(1);
@@ -162,5 +208,123 @@ describe('withScope', () => {
       }),
     ).rejects.toThrow('boom');
     expect(dispose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('request scopes and the scoped session', () => {
+  const secret = 'x'.repeat(32);
+  const user = {
+    id: 'user-1',
+    email: 'grace@devmentor.test',
+    emailVerifiedAt: new Date('2026-10-01T00:00:00.000Z'),
+    roles: ['mentee'],
+    sessionVersion: 0,
+  };
+
+  beforeEach(() => {
+    state.env = { NODE_ENV: 'test', SESSION_SECRET: secret, OPERATOR_EMAILS: [] };
+    state.findOne.mockResolvedValue(user);
+  });
+
+  async function cookieToken(): Promise<string> {
+    const container = await getContainer();
+    const { cookie } = await container.cradle.sessionService.issue(user);
+    return cookie.split(';')[0]!.slice('devmentor_session='.length);
+  }
+
+  function requestWith(cookie?: string): Request {
+    return new Request('http://devmentor.test/api/things', cookie ? { headers: { cookie } } : {});
+  }
+
+  it('resolves the session once per scope, shared by requireSession and other resolvers', async () => {
+    const token = await cookieToken();
+    const req = requestWith(`theme=dark; devmentor_session=${token}`);
+
+    const result = await withRequestScope(req, async (cradle) => {
+      const guarded = await requireSession(req, cradle);
+      const again = await cradle.session;
+      return { guarded, again };
+    });
+
+    expect(result.guarded).toEqual({ userId: 'user-1', roles: ['mentee'] });
+    expect(result.again).toBe(result.guarded);
+    expect(state.findOne).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves afresh in each new scope', async () => {
+    const token = await cookieToken();
+    const req = requestWith(`devmentor_session=${token}`);
+
+    await withRequestScope(req, (cradle) => cradle.session);
+    await withRequestScope(req, (cradle) => cradle.session);
+
+    expect(state.findOne).toHaveBeenCalledTimes(2);
+  });
+
+  it('is lazy: a scope that never asks for the session never looks the user up', async () => {
+    const token = await cookieToken();
+
+    await withRequestScope(requestWith(`devmentor_session=${token}`), () => 'public');
+
+    expect(state.findOne).not.toHaveBeenCalled();
+  });
+
+  it('gives a public route null for a signed-out request, never a throw', async () => {
+    const session = await withRequestScope(requestWith(), (cradle) => cradle.session);
+
+    expect(session).toBeNull();
+    expect(state.findOne).not.toHaveBeenCalled();
+  });
+
+  it('answers 401 through requireSession when the request carries only other cookies', async () => {
+    const req = requestWith('theme=dark');
+
+    await expect(withRequestScope(req, (cradle) => requireSession(req, cradle))).rejects.toMatchObject({
+      status: 401,
+    });
+  });
+
+  it('resolves the session from a cookie value for the page helper', async () => {
+    const token = await cookieToken();
+
+    const session = await withSessionCookieScope(token, (cradle) => cradle.session);
+
+    expect(session).toEqual({ userId: 'user-1', roles: ['mentee'] });
+  });
+
+  it('resolves null from an absent cookie value', async () => {
+    await expect(withSessionCookieScope(undefined, (cradle) => cradle.session)).resolves.toBeNull();
+  });
+
+  it('does not leak an unhandled rejection when a resolved session is never awaited', async () => {
+    const token = await cookieToken();
+    state.findOne.mockResolvedValue({ ...user, roles: [] });
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+
+    try {
+      await withSessionCookieScope(token, (cradle) => {
+        void cradle.session;
+        return 'rendered';
+      });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    } finally {
+      process.off('unhandledRejection', unhandled);
+    }
+
+    expect(unhandled).not.toHaveBeenCalled();
+  });
+
+  it('still rejects for a caller that awaits a corrupt session', async () => {
+    const token = await cookieToken();
+    state.findOne.mockResolvedValue({ ...user, roles: [] });
+
+    await expect(withSessionCookieScope(token, (cradle) => cradle.session)).rejects.toThrow(
+      /has no effective role/,
+    );
+  });
+
+  it('registers no session in a plain withScope', async () => {
+    await expect(withScope((cradle) => cradle.session)).rejects.toThrow(/session/);
   });
 });

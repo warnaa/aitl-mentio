@@ -8,13 +8,15 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock('../logger', () => ({ createLogger: state.createLogger }));
+// `auth` imports the `User` entity; keep the ORM graph out of this test.
+vi.mock('@devmentor/db', () => ({ User: class User {} }));
 
 const { apiHandler, jsonError, jsonOk } = await import('./apiHandler');
 
 const ctx = { params: Promise.resolve({}) } as ApiRouteContext;
 
-function request(): Request {
-  return new Request('http://devmentor.test/api/things');
+function request(method = 'GET', headers: Record<string, string> = {}): Request {
+  return new Request('http://devmentor.test/api/things', { method, headers });
 }
 
 beforeEach(() => {
@@ -129,5 +131,61 @@ describe('apiHandler', () => {
     );
     // The logger is created lazily on the first failure and then reused.
     expect(state.createLogger).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('apiHandler CSRF enforcement', () => {
+  const csrf = { 'x-devmentor-request': '1' };
+
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE'])(
+    'answers 403 forbidden to a %s without the header, before the logic runs',
+    async (method) => {
+      const logic = vi.fn(() => 'changed');
+
+      const response = await apiHandler(logic)(request(method), ctx);
+
+      expect(response.status).toBe(403);
+      await expect(response.json()).resolves.toEqual({
+        ok: false,
+        error: { code: 'forbidden', message: 'Missing or invalid request header' },
+      });
+      expect(logic).not.toHaveBeenCalled();
+      expect(state.logger.error).not.toHaveBeenCalled();
+    },
+  );
+
+  it('refuses a POST whose header carries the wrong value', async () => {
+    const response = await apiHandler(() => 'changed')(
+      request('POST', { 'x-devmentor-request': 'yes' }),
+      ctx,
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it('runs a POST that carries the header', async () => {
+    const response = await apiHandler(() => 'changed')(request('POST', csrf), ctx);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ ok: true, data: 'changed' });
+  });
+
+  it.each(['GET', 'HEAD', 'OPTIONS'])('passes a %s without the header', async (method) => {
+    const response = await apiHandler(() => null)(request(method), ctx);
+
+    expect(response.status).toBe(200);
+  });
+
+  it('honours { csrf: false } for a POST without the header', async () => {
+    const response = await apiHandler(() => 'webhook', { csrf: false })(request('POST'), ctx);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ ok: true, data: 'webhook' });
+  });
+
+  it('keeps enforcing with an explicit { csrf: true }', async () => {
+    const response = await apiHandler(() => 'changed', { csrf: true })(request('POST'), ctx);
+
+    expect(response.status).toBe(403);
   });
 });

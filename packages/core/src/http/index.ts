@@ -21,6 +21,7 @@ export {
   type ApiResponseBody,
   type ApiRouteContext,
   type ApiRouteHandler,
+  type ApiHandlerOptions,
   type RouteLogic,
 } from './apiHandler';
 export {
@@ -29,10 +30,15 @@ export {
   type MakeCrudRouteOptions,
 } from './makeCrudRoute';
 export {
-  readSession,
+  ROLES,
+  CSRF_HEADER_NAME,
+  CSRF_HEADER_VALUE,
+  resolveRoles,
   requireSession,
   requireRole,
+  requireCsrfHeader,
   assertOwnership,
+  type RoleSource,
   type Session,
   type Role,
 } from './auth';

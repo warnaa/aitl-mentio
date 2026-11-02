@@ -1,6 +1,12 @@
 export { getEnv, type AppEnv } from './config/env';
 export { createLogger, type Logger } from './logger';
-export { getContainer, withScope, type Cradle } from './container/index';
+export {
+  getContainer,
+  withScope,
+  withRequestScope,
+  withSessionCookieScope,
+  type Cradle,
+} from './container/index';
 export { systemClock, type Clock } from './time/clock';
 export { UserService, type UserDto } from './services/auth/user.service';
 export {

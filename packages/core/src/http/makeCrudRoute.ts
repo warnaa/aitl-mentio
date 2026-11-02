@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { withScope } from '../container/container';
+import { withRequestScope } from '../container/container';
 import type { Cradle } from '../container/cradle';
 import { apiHandler, type ApiRouteContext } from './apiHandler';
 import { BadRequestError, type FieldErrors, ValidationError } from './errors';
@@ -27,7 +27,8 @@ export interface MakeCrudRouteOptions<Entity, CreateInput, UpdateInput> {
   /** Route param carrying the resource id for item-level verbs. Defaults to `id`. */
   idParam?: string;
   /**
-   * Runs before any verb. Throw an `AppError` (e.g. from `requireSession`) to deny.
+   * Runs before any verb, inside the request scope. Throw an `AppError` to deny, e.g.
+   * `authorize: async (req, cradle) => { requireRole(await requireSession(req, cradle), 'operator'); }`.
    * Omit only for endpoints that are explicitly public.
    */
   authorize?: (req: Request, cradle: Cradle) => void | Promise<void>;
@@ -80,8 +81,10 @@ export function makeCrudRoute<Entity, CreateInput = never, UpdateInput = never>(
     return Array.isArray(raw) ? raw[0] : raw;
   }
 
+  // A request scope, so `authorize` can call `requireSession(req, cradle)` and the
+  // service shares the same lazily-resolved `session`.
   function run<T>(req: Request, fn: (cradle: Cradle) => Promise<T>): Promise<T> {
-    return withScope(async (cradle) => {
+    return withRequestScope(req, async (cradle) => {
       await options.authorize?.(req, cradle);
       return fn(cradle);
     });
