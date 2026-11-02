@@ -100,7 +100,9 @@ the change spans several concepts; note it in the PR body.
 ### 3. Database schema, migrations, and seed data (`packages/db/`)
 
 - Tables: `users` (`id` uuid, `created_at`, `updated_at`, `email` unique,
-  `display_name`) and `mentor_profiles` (`id`, timestamps, `user_id` unique with a
+  `display_name`, `roles` `text[]` default `{mentee}` under the `users_roles_check`
+  constraint, `github_id` unique, `github_login`, `avatar_url`, `email_verified_at`,
+  `session_version` default 0) and `mentor_profiles` (`id`, timestamps, `user_id` unique with a
   cascading foreign key to `users`, `headline`, `bio` nullable,
   `years_of_experience` default 0). Column names are snake_case mappings of the
   camelCase entity properties.
@@ -109,10 +111,14 @@ the change spans several concepts; note it in the PR body.
   generated with `npm run db:migration:create -- --name <x>`. The integration harness
   pins `MIKRO_ORM_MIGRATIONS_SNAPSHOT_NAME=.snapshot-devmentor` so a test run never
   creates a second snapshot.
-- The seeder `packages/db/src/seeders/database.seeder.ts` creates one user
-  (`ada@devmentor.dev`, `Ada Lovelace`) with a mentor profile
-  (`Systems & algorithms mentor`). `tests/integration/admin.integration.test.ts`
-  asserts on those exact cells.
+- The seeder `packages/db/src/seeders/database.seeder.ts` creates the mentor
+  (`mock-mentor@devmentor.test`, `Ada Lovelace`, roles `mentor`) with a mentor profile
+  (`Systems & algorithms mentor`), a mentee (`mock-mentee@devmentor.test`) and an
+  operator who also holds `mentor` (`mock-operator@devmentor.test`), all with a verified
+  email. Addresses follow `<login>@devmentor.test` so the mock GitHub adapter links to
+  them; a database seeded with Ada's pre-E01 `ada@devmentor.dev` row has that row
+  adopted rather than duplicated. `tests/integration/admin.integration.test.ts`
+  asserts on Ada's exact cells.
 
 **Breaking:** dropping or renaming a table or column; tightening a constraint that
 existing rows may violate; editing an already applied migration or the snapshot by

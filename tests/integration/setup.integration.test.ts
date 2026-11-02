@@ -26,7 +26,7 @@ describe('TC-SETUP-001 setup is idempotent', () => {
     expect(response.ok).toBe(true);
     expect(payload.ok).toBe(true);
 
-    const seeded = (payload.data ?? []).filter((user) => user.email === 'ada@devmentor.dev');
+    const seeded = (payload.data ?? []).filter((user) => user.email === 'mock-mentor@devmentor.test');
 
     expect(seeded).toHaveLength(1);
     expect(seeded[0]?.displayName).toBe('Ada Lovelace');
@@ -42,7 +42,7 @@ describe('TC-SETUP-001 setup is idempotent', () => {
       const snapshot = await runAgentBrowser(session, 'snapshot');
 
       expect(snapshot).toContain('cell "Ada Lovelace"');
-      expect(snapshot.match(/cell "ada@devmentor\.dev"/g) ?? []).toHaveLength(1);
+      expect(snapshot.match(/cell "mock-mentor@devmentor\.test"/g) ?? []).toHaveLength(1);
 
       await runAgentBrowser(
         session,

@@ -172,6 +172,23 @@
       "name": "users",
       "schema": "public",
       "columns": {
+        "avatar_url": {
+          "name": "avatar_url",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamptz(6)",
@@ -223,6 +240,57 @@
           "enumItems": [],
           "mappedType": "string"
         },
+        "email_verified_at": {
+          "name": "email_verified_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "github_id": {
+          "name": "github_id",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "github_login": {
+          "name": "github_login",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
         "id": {
           "name": "id",
           "type": "uuid",
@@ -239,6 +307,40 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "roles": {
+          "name": "roles",
+          "type": "text[]",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'{mentee}'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "array"
+        },
+        "session_version": {
+          "name": "session_version",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
         },
         "updated_at": {
           "name": "updated_at",
@@ -271,6 +373,16 @@
         },
         {
           "columnNames": [
+            "github_id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "users_github_id_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -280,7 +392,14 @@
           "unique": true
         }
       ],
-      "checks": [],
+      "checks": [
+        {
+          "name": "users_roles_check",
+          "expression": "(cardinality(roles) > 0) AND (array_ndims(roles) = 1) AND (array_position(roles, NULL::text) IS NULL) AND (roles <@ ARRAY['mentee'::text, 'mentor'::text, 'operator'::text])",
+          "definition": "CHECK (((cardinality(roles) > 0) AND (array_ndims(roles) = 1) AND (array_position(roles, NULL::text) IS NULL) AND (roles <@ ARRAY['mentee'::text, 'mentor'::text, 'operator'::text])))",
+          "columnName": "roles"
+        }
+      ],
       "triggers": [],
       "foreignKeys": {},
       "comment": null

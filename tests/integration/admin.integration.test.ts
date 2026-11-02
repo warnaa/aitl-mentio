@@ -34,7 +34,7 @@ describe('TC-ADMIN-001 admin panel basics', () => {
 
       expect(users).toContain('heading "Users"');
       expect(users).toContain('cell "Ada Lovelace"');
-      expect(users).toContain('cell "ada@devmentor.dev"');
+      expect(users).toContain('cell "mock-mentor@devmentor.test"');
       expect(users).toContain('cell "Systems & algorithms mentor"');
 
       await runAgentBrowser(

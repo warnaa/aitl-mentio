@@ -85,4 +85,11 @@ describe('createOrmConfig', () => {
 
     expect(config.seeder?.glob).toBe('!(*.d|*.test).{js,ts}');
   });
+
+  it('excludes colocated unit tests from the migrations glob', () => {
+    // A migration's colocated `*.test.ts` must never be loaded as a migration.
+    const config = ormConfig();
+
+    expect(config.migrations?.glob).toBe('!(*.d|*.test).{js,ts,cjs}');
+  });
 });

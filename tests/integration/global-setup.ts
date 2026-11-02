@@ -11,20 +11,10 @@ import {
   integrationArtifactsDirectory,
 } from './agent-browser';
 import { integrationChildEnvironment } from './environment';
+import { integrationRoot, isWindows, npmInvocation, runNpm } from './npm';
 
 const execFileAsync = promisify(execFile);
-const root = process.cwd();
-const isWindows = process.platform === 'win32';
-
-/**
- * Command and arguments for an npm invocation. Node refuses to spawn `npm.cmd` without
- * a shell (EINVAL, CVE-2024-27980) and deprecates passing an argument array alongside
- * `shell` (DEP0190), so on Windows the call becomes one shell command string. Every
- * npm argument here is a fixed literal, so the shell has nothing to interpret.
- */
-function npmInvocation(args: string[]): [string, string[]] {
-  return isWindows ? [`npm.cmd ${args.join(' ')}`, []] : ['npm', args];
-}
+const root = integrationRoot;
 
 let postgres: StartedPostgreSqlContainer | undefined;
 let app: ChildProcess | undefined;
@@ -37,16 +27,6 @@ declare module 'vitest' {
     homeBrowserSession: string;
     adminBrowserSession: string;
   }
-}
-
-async function runNpm(args: string[], environment: NodeJS.ProcessEnv): Promise<void> {
-  await execFileAsync(...npmInvocation(args), {
-    cwd: root,
-    env: environment,
-    shell: isWindows,
-    maxBuffer: 20 * 1024 * 1024,
-    timeout: 180_000,
-  });
 }
 
 async function availablePort(): Promise<number> {

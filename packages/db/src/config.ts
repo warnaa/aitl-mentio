@@ -46,6 +46,9 @@ export function createOrmConfig() {
       snapshotName: 'devmentor',
       transactional: true,
       emit: 'ts',
+      // Same trap as the seeder glob below: the default (`!(*.d).{js,ts,cjs}`) would
+      // load a colocated migration `*.test.ts` as a migration. Exclude test files.
+      glob: '!(*.d|*.test).{js,ts,cjs}',
     },
     seeder: {
       path: resolve(packageRoot, 'src', 'seeders'),

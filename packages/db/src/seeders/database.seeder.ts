@@ -3,29 +3,71 @@ import { Seeder } from '@mikro-orm/seeder';
 import { User } from '../entities/auth/user.entity';
 import { MentorProfile } from '../entities/mentors/mentor-profile.entity';
 
-/** Email of the sample mentor. `User.email` is unique, so it identifies the seed row. */
-export const SEED_MENTOR_EMAIL = 'ada@devmentor.dev';
+/**
+ * Seeded addresses follow `<login>@devmentor.test`, the address the mock GitHub
+ * identity adapter derives from a `login` hint. A mock sign-in as `mock-mentor`,
+ * `mock-mentee` or `mock-operator` therefore links to the seeded row (matched by
+ * verified email) instead of creating a second account. `User.email` is unique, so each
+ * address also identifies its seed row.
+ */
+export const SEED_MENTOR_EMAIL = 'mock-mentor@devmentor.test';
+export const SEED_MENTEE_EMAIL = 'mock-mentee@devmentor.test';
+export const SEED_OPERATOR_EMAIL = 'mock-operator@devmentor.test';
+
+/** Ada's address before E01. A database seeded back then still holds her under it. */
+export const LEGACY_SEED_MENTOR_EMAIL = 'ada@devmentor.dev';
+
+/** Accounts without a mentor profile. The operator also holds `mentor`, proving combined roles coexist. */
+const SEED_ACCOUNTS = [
+  { email: SEED_MENTEE_EMAIL, displayName: 'Grace Hopper', roles: ['mentee'] },
+  { email: SEED_OPERATOR_EMAIL, displayName: 'Margaret Hamilton', roles: ['mentor', 'operator'] },
+] as const;
 
 /**
- * Default seeder — creates one mentor so a fresh database has something to render on
- * the admin users page. Run with `npm run db:seed`.
+ * Default seeder — a mentor (Ada Lovelace, with a profile), a mentee and an operator, all
+ * with a verified email, so a fresh database has one account per role. Run with
+ * `npm run db:seed`.
  *
  * Seeding is **idempotent**: `User.email` carries a unique constraint, so blindly
- * inserting the sample mentor a second time fails with a unique violation. Because
- * `npm run setup` re-runs this seeder on every invocation, the run must be a no-op
- * once the sample mentor is already present.
+ * inserting a fixture a second time fails with a unique violation. Because
+ * `npm run setup` re-runs this seeder on every invocation, each fixture is created only
+ * when its address is absent.
  */
 export class DatabaseSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    const existing = await em.findOne(User, { email: SEED_MENTOR_EMAIL });
+    const verifiedAt = new Date();
 
-    if (existing) {
+    await this.seedMentor(em, verifiedAt);
+
+    for (const account of SEED_ACCOUNTS) {
+      const existing = await em.findOne(User, { email: account.email });
+      if (!existing) {
+        em.create(User, { ...account, roles: [...account.roles], emailVerifiedAt: verifiedAt });
+      }
+    }
+  }
+
+  private async seedMentor(em: EntityManager, verifiedAt: Date): Promise<void> {
+    if (await em.findOne(User, { email: SEED_MENTOR_EMAIL })) {
+      return;
+    }
+
+    // A database seeded before E01 already has Ada under her old address. Adopt that row
+    // — keeping its id and mentor profile — rather than adding a second Ada. This is the
+    // only place a `users.email` is ever rewritten, and only for this seed fixture.
+    const legacy = await em.findOne(User, { email: LEGACY_SEED_MENTOR_EMAIL });
+    if (legacy) {
+      legacy.email = SEED_MENTOR_EMAIL;
+      legacy.roles = ['mentor'];
+      legacy.emailVerifiedAt ??= verifiedAt;
       return;
     }
 
     const user = em.create(User, {
       email: SEED_MENTOR_EMAIL,
       displayName: 'Ada Lovelace',
+      roles: ['mentor'],
+      emailVerifiedAt: verifiedAt,
     });
 
     em.create(MentorProfile, {
