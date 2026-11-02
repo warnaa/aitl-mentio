@@ -55,7 +55,7 @@ export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
  * The GitHub email matches an existing account whose own address is not verified yet
  * (E01 edge case 4). Linking would let whoever created that row take over a GitHub
  * user's account, so nothing is linked or created. The callback maps this to the
- * sign-in screen's `verification` reason.
+ * sign-in screen's `unverified` reason.
  */
 export class UnverifiedAccountLinkError extends AppError {
   constructor(
@@ -256,6 +256,31 @@ export class UserService {
    */
   async revokeRole(userId: string, role: AssignableRole): Promise<number> {
     return this.changeRoles(userId, role, (roles) => roles.filter((held) => held !== role));
+  }
+
+  /**
+   * Sign the user out everywhere by bumping `sessionVersion`, so every session cookie
+   * issued so far — including a copied one — fails its next live-session check (E01
+   * edge case 11). Called by sign-out for a caller whose session is live; an unknown
+   * user is a no-op.
+   *
+   * The bump is conditional on the version just read. If it matches nothing, a
+   * concurrent sign-out or role change already bumped it, which has invalidated the
+   * same cookies; there is nothing left to do.
+   */
+  async endAllSessions(userId: string): Promise<void> {
+    const user = await this.em.findOne(User, { id: userId });
+    if (!user) {
+      return;
+    }
+    const updated = await this.em.nativeUpdate(
+      User,
+      { id: user.id, sessionVersion: user.sessionVersion },
+      { sessionVersion: user.sessionVersion + 1, updatedAt: this.clock.now() },
+    );
+    if (updated > 0) {
+      this.logger.info({ userId: user.id }, 'ended all sessions');
+    }
   }
 
   private async matchOrCreate(

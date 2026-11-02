@@ -8,6 +8,18 @@ export function githubCallbackUrl(appUrl: string): string {
   return `${appUrl}${GITHUB_CALLBACK_PATH}`;
 }
 
+/**
+ * GitHub's login alphabet: 1 to 39 letters, digits or hyphens. The start route forwards
+ * a `?login` hint only when it matches, and the mock adapter derives personas under the
+ * same rule.
+ */
+export const GITHUB_LOGIN_PATTERN = /^[A-Za-z0-9-]{1,39}$/;
+
+/** `value` when it is a well-formed GitHub login, else `undefined` (the hint is dropped). */
+export function githubLoginHint(value: string | null | undefined): string | undefined {
+  return value != null && GITHUB_LOGIN_PATTERN.test(value) ? value : undefined;
+}
+
 /** What the sign-in flow learns about a GitHub account. */
 export interface GithubIdentity {
   /** GitHub's numeric account id, as a decimal string. The stable identity. */

@@ -34,8 +34,8 @@ export class TokenService {
   }
 
   /**
-   * Sign a token for `purpose`. Throws `ServiceUnavailableError` when
-   * `SESSION_SECRET` is not configured.
+   * Sign a token for `purpose`, carrying a random `jti` so no two tokens are equal.
+   * Throws `ServiceUnavailableError` when `SESSION_SECRET` is not configured.
    */
   async signPurposeToken({ purpose, subject, ttlSeconds }: PurposeTokenInput): Promise<string> {
     assertPurpose(purpose);
@@ -50,6 +50,11 @@ export class TokenService {
         subject,
         issuedAt: new Date(issuedAtSeconds * 1000),
         expiresAt: new Date((issuedAtSeconds + ttlSeconds) * 1000),
+        // A random id makes every token unique. Without it, two tokens for the same
+        // purpose and subject minted in the same second are identical — and an OAuth
+        // attacker could mint the very `state` a victim's cookie holds, defeating the
+        // cookie comparison that stops login CSRF.
+        payload: { jti: crypto.randomUUID() },
       },
       current,
     );

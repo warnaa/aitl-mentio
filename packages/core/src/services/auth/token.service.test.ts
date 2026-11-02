@@ -45,7 +45,18 @@ describe('TokenService.signPurposeToken', () => {
       sub: 'user-1',
       iat: Math.floor(NOW.getTime() / 1000),
       exp: Math.floor(NOW.getTime() / 1000) + 3600,
+      jti: expect.stringMatching(/^[0-9a-f-]{36}$/),
     });
+  });
+
+  it('never mints the same token twice, even for identical input at the same instant', async () => {
+    // The OAuth state cookie comparison relies on this: an attacker must not be able to
+    // mint the state a victim's cookie holds.
+    const service = tokens({ SESSION_SECRET: SECRET });
+    const [first, second] = await Promise.all([service.signPurposeToken(input), service.signPurposeToken(input)]);
+
+    expect(first).not.toBe(second);
+    expect(decode(first).jti).not.toBe(decode(second).jti);
   });
 
   it('fails closed with a 503 when SESSION_SECRET is unset', async () => {

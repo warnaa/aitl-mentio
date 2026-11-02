@@ -1,4 +1,5 @@
 import type { AppEnv } from '../../config/env';
+import { readCookie, serializeCookie } from '../../http/cookies';
 import type { Clock } from '../../time/clock';
 import { signingKeys, signJwt, verifyJwt, type SigningEnv } from './jwt';
 
@@ -33,18 +34,29 @@ export interface IssuedSession {
  * the value is untrusted until `SessionService.verify` accepts it.
  */
 export function readSessionCookie(cookieHeader: string | null | undefined): string | null {
-  if (!cookieHeader) {
-    return null;
-  }
-  for (const pair of cookieHeader.split(';')) {
-    const separator = pair.indexOf('=');
-    if (separator === -1 || pair.slice(0, separator).trim() !== SESSION_COOKIE_NAME) {
-      continue;
-    }
-    const value = pair.slice(separator + 1).trim();
-    return value === '' ? null : value;
-  }
-  return null;
+  return readCookie(cookieHeader, SESSION_COOKIE_NAME);
+}
+
+function serializeSessionCookie(
+  value: string,
+  { maxAgeSeconds, expiresAt }: { maxAgeSeconds: number; expiresAt: Date },
+  env: Pick<AppEnv, 'NODE_ENV'>,
+): string {
+  return serializeCookie(SESSION_COOKIE_NAME, value, {
+    path: '/',
+    expiresAt,
+    maxAgeSeconds,
+    // Plain-HTTP `npm run dev` on localhost could not store a Secure cookie.
+    secure: env.NODE_ENV === 'production',
+  });
+}
+
+/**
+ * The `Set-Cookie` value that removes the session cookie. Needs no secret and no
+ * container, so sign-out can expire the cookie even when nothing else works.
+ */
+export function clearSessionCookie(env: Pick<AppEnv, 'NODE_ENV'>): string {
+  return serializeSessionCookie('', { maxAgeSeconds: 0, expiresAt: new Date(0) }, env);
 }
 
 /**
@@ -143,25 +155,13 @@ export class SessionService {
 
   /** The `Set-Cookie` value that removes the session cookie. Needs no secret. */
   clear(): string {
-    return this.serialize('', { maxAgeSeconds: 0, expiresAt: new Date(0) });
+    return clearSessionCookie(this.env);
   }
 
   private serialize(
     value: string,
     { maxAgeSeconds, expiresAt }: { maxAgeSeconds: number; expiresAt: Date },
   ): string {
-    const attributes = [
-      `${SESSION_COOKIE_NAME}=${value}`,
-      'Path=/',
-      `Expires=${expiresAt.toUTCString()}`,
-      `Max-Age=${maxAgeSeconds}`,
-      'HttpOnly',
-      'SameSite=Lax',
-    ];
-    // Plain-HTTP `npm run dev` on localhost could not store a Secure cookie.
-    if (this.env.NODE_ENV === 'production') {
-      attributes.push('Secure');
-    }
-    return attributes.join('; ');
+    return serializeSessionCookie(value, { maxAgeSeconds, expiresAt }, this.env);
   }
 }

@@ -66,6 +66,22 @@ a different GitHub account). An `AppError` may carry optional
   under the operator page guard) and `tests/integration/setup.integration.test.ts`
   (fetches the route anonymously and must sign in as an operator first); the `POST` had
   no caller.
+- `GET /api/auth/github` (`?returnTo&login`) and `GET /api/auth/github/callback`
+  (`?code&state` / `?error`) are **browser-navigated**: they never answer JSON, only a
+  302. The start route sets the `devmentor_oauth_state` cookie (HttpOnly, `SameSite=Lax`,
+  `Secure` in production, `Path=/api/auth/github/callback`, 10 minutes) and redirects to
+  GitHub; the callback always clears that cookie and, on success, sets
+  `devmentor_session` and redirects to the sanitised `returnTo` or the role home
+  (`homeFor`: `/admin`, `/mentor`, `/home`). Failures redirect to `/sign-in?cancelled=1`
+  (the user cancelled on GitHub) or `/sign-in?error=` with one of the reasons
+  `unavailable`, `state`, `email`, `unverified`, `conflict`
+  (`packages/app/src/lib/sign-in.ts`, `SIGN_IN_ERRORS`) — the sign-in page renders
+  them, so renaming or removing one is breaking. Own-site `Location`s are relative.
+- `POST /api/auth/logout` (CSRF header required, no session required) answers
+  `{ ok: true, data: null }` with the expiring `devmentor_session` cookie, and bumps
+  `session_version` only when the request carries a live session. Past the CSRF check
+  it never fails: if the session cannot be resolved (secret unset, database down) the
+  failure is logged, the bump skipped, and the cookie still expired.
 - `makeCrudRoute` behavior asserted by `packages/core/src/http/makeCrudRoute.test.ts`:
   the default id parameter `id`, and the messages "This operation is not supported",
   "Missing resource id", and "Request body must be valid JSON".
@@ -93,12 +109,18 @@ API between packages. `npm run typecheck` is the consumer check.
   `userService`, and the request-scoped `session: Promise<Session | null>`), the
   GitHub identity port (`GithubIdentityPort` with `authorizeUrl({ state, login? })`,
   `exchangeCode`, `fetchIdentity`; `GithubIdentity`, `AuthorizeUrlInput`,
-  `GithubEmailUnverifiedError`, `GITHUB_CALLBACK_PATH`, `githubCallbackUrl`),
+  `GithubEmailUnverifiedError`, `GITHUB_CALLBACK_PATH`, `githubCallbackUrl`,
+  `GITHUB_LOGIN_PATTERN`, `githubLoginHint`), the OAuth state cookie helpers
+  (`OAUTH_STATE_COOKIE_NAME`, `OAUTH_STATE_COOKIE_PATH`, `OAUTH_STATE_PURPOSE`,
+  `OAUTH_STATE_TTL_SECONDS`, `oauthStateCookie`, `clearOAuthStateCookie`,
+  `readOAuthStateCookie`), `homeFor(RoleSet)` and `ROLE_HOMES`, `readCookie`,
+  `serializeCookie` and `CookieAttributes`,
   `Clock` and `systemClock`, `UserService` (`list`, `findByEmail`,
   `create(CreateUserInput)`, `findOrCreateFromGithub(GithubIdentity) → GithubSignIn`,
-  `grantRole`/`revokeRole(userId, AssignableRole) → sessionVersion`) with `UserDto`,
+  `grantRole`/`revokeRole(userId, AssignableRole) → sessionVersion`,
+  `endAllSessions(userId)`) with `UserDto`,
   `CreateUserInput`, `GithubSignIn`, `UserServiceDeps`, `AssignableRole`,
-  `ASSIGNABLE_ROLES`, `UnverifiedAccountLinkError` and `GithubAccountConflictError`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`,
+  `ASSIGNABLE_ROLES`, `UnverifiedAccountLinkError` and `GithubAccountConflictError`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`, `clearSessionCookie`,
   `SESSION_COOKIE_NAME` and `SESSION_TTL_SECONDS`, `TokenService` with
   `PurposeTokenInput`, the `AppError` family
   (with its optional `headers`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`

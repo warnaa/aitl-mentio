@@ -4,6 +4,7 @@ import type { AppEnv } from '../../config/env';
 import { ServiceUnavailableError } from '../../http/errors';
 import type { Clock } from '../../time/clock';
 import {
+  clearSessionCookie,
   readSessionCookie,
   SESSION_COOKIE_NAME,
   SESSION_TTL_SECONDS,
@@ -205,6 +206,14 @@ describe('SessionService.clear', () => {
 
   it('adds Secure in production and needs no secret', () => {
     expect(sessions({ NODE_ENV: 'production' }).clear()).toMatch(/; Max-Age=0; HttpOnly; SameSite=Lax; Secure$/);
+  });
+});
+
+describe('clearSessionCookie', () => {
+  it('builds the same expiring cookie as SessionService.clear, without a service or secret', () => {
+    expect(clearSessionCookie({ NODE_ENV: 'development' })).toBe(sessions().clear());
+    expect(clearSessionCookie({ NODE_ENV: 'production' })).toBe(sessions({ NODE_ENV: 'production' }).clear());
+    expect(clearSessionCookie({ NODE_ENV: 'production' })).toMatch(/; Secure$/);
   });
 });
 

@@ -1,6 +1,7 @@
 import type { AppEnv } from '../../../config/env';
 import { ServiceUnavailableError } from '../../../http/errors';
 import {
+  GITHUB_LOGIN_PATTERN,
   githubCallbackUrl,
   type AuthorizeUrlInput,
   type GithubIdentity,
@@ -16,9 +17,6 @@ export const MOCK_EMAIL_DOMAIN = 'devmentor.test';
 export const MOCK_CODE_PREFIX = 'mock-code.';
 export const MOCK_TOKEN_PREFIX = 'mock-token.';
 
-/** GitHub's login alphabet; the same rule the start route applies to `?login`. */
-const LOGIN = /^[A-Za-z0-9-]{1,39}$/;
-
 /** FNV-1a (32-bit): a small, dependency-free, deterministic hash for a stable id. */
 function fnv1a(text: string): number {
   let hash = 0x811c9dc5;
@@ -31,7 +29,7 @@ function fnv1a(text: string): number {
 
 function loginFrom(value: string, prefix: string): string {
   const login = value.startsWith(prefix) ? value.slice(prefix.length) : '';
-  if (!LOGIN.test(login)) {
+  if (!GITHUB_LOGIN_PATTERN.test(login)) {
     throw new ServiceUnavailableError('The mock GitHub sign-in did not recognise this request.');
   }
   return login.toLowerCase();

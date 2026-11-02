@@ -44,6 +44,7 @@ export {
   type Role,
 } from './auth';
 export { safeReturnTo } from './return-to';
+export { readCookie, serializeCookie, type CookieAttributes } from './cookies';
 export {
   fetchJson,
   DEFAULT_OUTBOUND_TIMEOUT_MS,

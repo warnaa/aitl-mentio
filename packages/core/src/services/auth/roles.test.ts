@@ -7,6 +7,8 @@ const {
   BASELINE_ROLE,
   diffRoles,
   effectiveRoles,
+  homeFor,
+  ROLE_HOMES,
   normalizeRoles,
   reconcileOperatorRole,
   resolveRoles,
@@ -40,6 +42,23 @@ describe('ROLES and BASELINE_ROLE', () => {
   it('lists every role in the fixed union, with mentee as the baseline', () => {
     expect(ROLES).toEqual(['mentee', 'mentor', 'operator']);
     expect(BASELINE_ROLE).toBe('mentee');
+  });
+});
+
+describe('homeFor', () => {
+  it.each([
+    [['mentee'], '/home'],
+    [['mentor'], '/mentor'],
+    [['mentee', 'mentor'], '/mentor'],
+    [['operator'], '/admin'],
+    [['mentor', 'operator'], '/admin'],
+    [['mentee', 'mentor', 'operator'], '/admin'],
+  ] as const)('%j lands on %s (operator, then mentor, then mentee)', (roles, home) => {
+    expect(homeFor(roles)).toBe(home);
+  });
+
+  it('names one home per role', () => {
+    expect(ROLE_HOMES).toEqual({ operator: '/admin', mentor: '/mentor', mentee: '/home' });
   });
 });
 

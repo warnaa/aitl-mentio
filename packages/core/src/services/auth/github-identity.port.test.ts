@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { AppError } from '../../http/errors';
 import {
   GITHUB_CALLBACK_PATH,
+  GITHUB_LOGIN_PATTERN,
+  githubLoginHint,
   githubCallbackUrl,
   GithubEmailUnverifiedError,
 } from './github-identity.port';
@@ -28,5 +30,24 @@ describe('GithubEmailUnverifiedError', () => {
 
   it('accepts a custom message', () => {
     expect(new GithubEmailUnverifiedError('custom').message).toBe('custom');
+  });
+});
+
+describe('githubLoginHint', () => {
+  it.each(['octocat', 'mock-mentee', 'A1-b2', 'a', 'x'.repeat(39)])('keeps the well-formed login %s', (login) => {
+    expect(githubLoginHint(login)).toBe(login);
+    expect(GITHUB_LOGIN_PATTERN.test(login)).toBe(true);
+  });
+
+  it.each(['', 'x'.repeat(40), 'octo cat', 'octo_cat', 'octo/../cat', 'octo%20cat', 'evil.example', 'é'])(
+    'drops the malformed login %j',
+    (login) => {
+      expect(githubLoginHint(login)).toBeUndefined();
+    },
+  );
+
+  it('drops an absent login', () => {
+    expect(githubLoginHint(null)).toBeUndefined();
+    expect(githubLoginHint(undefined)).toBeUndefined();
   });
 });

@@ -623,3 +623,38 @@ describe('UserService.grantRole / revokeRole', () => {
     expect(eventBus.emit).not.toHaveBeenCalled();
   });
 });
+
+describe('UserService.endAllSessions', () => {
+  it('bumps sessionVersion conditionally on the version it read', async () => {
+    const user = row({ sessionVersion: 3 });
+    const em = fakeEm([user]);
+
+    await expect(service(em).endAllSessions(user.id)).resolves.toBeUndefined();
+
+    expect(em.nativeUpdate).toHaveBeenCalledWith(
+      db.User,
+      { id: user.id, sessionVersion: 3 },
+      { sessionVersion: 4, updatedAt: NOW },
+    );
+    expect(user.sessionVersion).toBe(4);
+    expect(logger.info).toHaveBeenCalledWith({ userId: user.id }, 'ended all sessions');
+  });
+
+  it('is a no-op for an unknown user', async () => {
+    const em = fakeEm([]);
+
+    await service(em).endAllSessions('missing');
+
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+  });
+
+  it('accepts a concurrent bump as already done', async () => {
+    const user = row({ sessionVersion: 3 });
+    const em = fakeEm([user]);
+    em.nativeUpdate.mockResolvedValueOnce(0);
+    logger.info.mockClear();
+
+    await expect(service(em).endAllSessions(user.id)).resolves.toBeUndefined();
+    expect(logger.info).not.toHaveBeenCalled();
+  });
+});

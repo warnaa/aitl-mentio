@@ -23,6 +23,26 @@ export type RoleSet = readonly [Role, ...Role[]];
  */
 export const BASELINE_ROLE = 'mentee' satisfies Role;
 
+/** Each role's default landing page. */
+export const ROLE_HOMES = {
+  operator: '/admin',
+  mentor: '/mentor',
+  mentee: '/home',
+} as const satisfies Record<Role, string>;
+
+/**
+ * The single place the default landing for a signed-in user is decided: `operator` →
+ * `/admin`, else `mentor` → `/mentor`, else `/home`. A combined mentor/operator lands on
+ * `/admin`; navigation still exposes every surface the role set permits. Pure, and free
+ * of `next`, so route handlers and pages share it.
+ */
+export function homeFor(roles: RoleSet): string {
+  if (roles.includes('operator')) {
+    return ROLE_HOMES.operator;
+  }
+  return roles.includes('mentor') ? ROLE_HOMES.mentor : ROLE_HOMES.mentee;
+}
+
 /** The row fields role resolution reads. */
 export interface RoleSource {
   email: string;
