@@ -445,8 +445,9 @@ w skrypcie, nie w produkcie. Lekcja w `.ai/lessons.md`.
   jasny/ciemny: axe WCAG 2.1 A/AA bez naruszeń, brak poziomego przewijania i elementów poza ekranem,
   widoczna notatka; rozwinięte kontrolki przy każdej szerokości; 0 błędów runtime;
   wyłącznie żądania GET do localhost. 52 zrzuty 13 kluczowych stanów × 4 warianty (`evidence/stage3/<wariant>-<stan>.png`; `screenshot-probe*` to sondy poprzedniej sesji).
-- **Kontrolki: 109/109 PASS** — 64 w 4 wariantach (`evidence/stage3/controls-viewports-results.json`)
-  i 45 opcji scenariuszy (`options-results.json`) — w 4 wariantach:
+- **Kontrolki: 85/85 PASS** (`evidence/stage3/controls-results.json`, pełny przebieg na aktualnym buildzie) —
+  40 kroków w 4 wariantach (po 10) i 45 opcji scenariuszy. Wcześniej podane „109 (64 + 45)” liczyło 24 opcje
+  dwa razy (częściowy przebieg + osobny tryb `options`); poprawione 2026-11-02. W wariantach:
   s01 → s12 → s01 i natywne Back/Forward, Tab/Shift+Tab, walidacja z klawiatury z fokusem na
   pierwszym błędzie, logowanie Ctrl+Enter z fokusem na nagłówku celu, dołączenie Enterem,
   skip-link PanelShell, kopiowanie adresu i nieaktywny edytor, ponowienie odczytu s06/s07,
@@ -492,7 +493,7 @@ Zmierzono: przy 1440 px 30/30 kontrolek = 36 px; przy 320 px dwie zawinięte do 
 co s04/s08/s12 (`prototype-public`, typografia publiczna, ActionButton, Link). s01/s02 nadal w AuthPanel (formularze).
 Pole `returnTo` ograniczone do `--prose-max-width` (65ch; na tym hoście ok. 1150 px przez szerokie cyfry
 fontu systemowego, normalnie ok. 600 px). Po zmianach (pasek, wysokości, s03): macierz 197/197, komentarze 13/13, testy lokalne 31/31;
-audyt kontrolek (`controls`) w toku w chwili commitu — wynik w następnym wpisie.
+audyt kontrolek po tych zmianach: 85/85 PASS.
 
 ### Czego nie sprawdzono
 

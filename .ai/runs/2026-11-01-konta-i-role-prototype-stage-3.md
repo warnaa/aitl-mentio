@@ -21,7 +21,7 @@ build w ignorowanym public Storybooka. Podgląd z poprzednich etapów na porcie 
 
 ## Wynik
 
-Testy lokalne 29/29; macierz 197/197; kontrolki 109/109 (64 + 45); komentarze 13/13; bramka repo PASS.
+Testy lokalne 29/29; macierz 197/197; kontrolki 85/85 (40 w 4 wariantach + 45 opcji; wcześniejsze „109” liczyło 24 opcje podwójnie); komentarze 13/13; bramka repo PASS.
 Naprawiono: przepełnienie paska przy 320 px, obsługę klawiatury listy wątków komentarzy.
 Incydent: Storybook na 3000 przestał działać w trakcie (przyczyna nieustalona), przywrócony komendą z README.
 Commity: `5c159f2` (etapy 0–2 + etap 3 w toku) i commit zamykający etap 3 na gałęzi `prototype/konta-i-role`.
