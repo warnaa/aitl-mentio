@@ -1,0 +1,9 @@
+{
+  "sourceFilesCompared": 528,
+  "sourceChanges": [],
+  "generatedOutputsChanged": [
+    "packages/app/next-env.d.ts"
+  ],
+  "missing": [],
+  "engineUnchanged": true
+}

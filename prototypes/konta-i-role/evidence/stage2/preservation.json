@@ -1,0 +1,9 @@
+{
+  "sourceFilesCompared": 526,
+  "sourceChanges": [],
+  "generatedOutputsChanged": [
+    "packages/app/next-env.d.ts"
+  ],
+  "engineUnchanged": true,
+  "commentsSourceUnchangedFromStage1": true
+}

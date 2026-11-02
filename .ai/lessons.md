@@ -565,3 +565,46 @@ Related, same day: a `disabled` button that has focus drops focus to `<body>` in
 paging now uses `aria-disabled`. And a column utility such as `text-right` outranks `@layer components`, so
 the stacked-row reset needs `!important`. Ledger: `.ai/runs/2026-11-01-admin-users-stories.md`. Also: in
 this Storybook (10.6) the preview's `currentRender.phase` reads `finished` when play is done.
+
+## 2026-11-01 - Prototype frames change the containing block of DS skip links
+
+The supplied review engine positions `.frame` relatively. PanelShell's skip link,
+hidden by translating it above its normal page, then appeared over the review toolbar
+instead of outside the viewport. A prototype-local `clip-path` while the link is not
+`:focus-visible` preserves keyboard access and hides that leak; verify a real Shift+Tab
+and Enter, since programmatic focus after a pointer click may not be focus-visible.
+The build-only adapter also uses `useId` for PanelShell's fixed `panel-main` when several
+screens coexist. DS source is unchanged. See `prototypes/konta-i-role/README.md`.
+
+The sandbox's Next preview is supervised as PM2 `workspace-preview`; terminating its
+Next child merely restarts it, and Storybook may silently choose another port. For an
+explicitly authorized preview switch, stop that named process and use Storybook's
+`--exact-port`. Keep the original preview configuration and record how to restore it.
+
+## 2026-11-01 - Separate fixture deadlines and submitted request data in prototypes
+
+The accounts prototype has fixed now at 11:00 UTC while preexisting A/B fixtures were
+authenticated at 10:00 UTC. Reusing their expiry for fresh login silently shortened a
+new session to 23 hours; fresh credentials need now + 24h, while enrollment preserves
+the existing session ID and deadline. Also capture the mentor-registration variant
+before awaiting a simulated request. Reading a mutable review toggle after the await
+can grant a role that was never submitted. Disable that toggle during pending and
+cover it with a held-request regression. These are local prototype fixes, not changes
+to the accounts spec or production authentication. See `prototypes/konta-i-role/simulation.test.mts`.
+
+## 2026-11-02 - Browser audits of the review prototype: settle first, unique data, no self-matching pkill
+
+Three false failures in the `konta-i-role` stage-3 audit came from the harness, not the
+product: axe sampled a badge while a Radix Select was closing (blended colours), a
+"wait for no running animations" gate never released on the infinite Skeleton pulse,
+and focus was sampled one frame before Radix/engine restored it. Settle on
+`no listbox + no finite running animation`, and poll for focus instead of sampling.
+Comment tests must use per-run unique text: the engine keeps threads in the test
+profile's localStorage, so a second run finds duplicates. A real defect also surfaced
+only with many threads: the supplied engine selects threads by mouse-only div clicks,
+so at 320 px the scrolling thread list was unreachable by keyboard. Fix it in the local
+`review-integration.ts` (role=button, tabindex, Enter/Space → click), never in the
+copied engine, and let the visible header text be the accessible name (WCAG 2.5.3).
+Finally, `pkill -f "<pattern>"` also matches the shell running it, and Node shows up as
+`MainThread` (so `ps -C node` misses it): find audit processes by full args, target exact PIDs,
+and never start a second run against the same agent-browser session or log file.

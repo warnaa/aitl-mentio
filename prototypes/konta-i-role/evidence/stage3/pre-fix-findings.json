@@ -1,0 +1,14 @@
+{
+  "emptyCommentButtonEnabled": true,
+  "geometry": {
+    "before": {
+      "button": 781,
+      "pin": 771
+    },
+    "after": {
+      "button": 781,
+      "pin": 771
+    }
+  },
+  "commentModeKeyboardScreen": "s04"
+}

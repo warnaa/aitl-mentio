@@ -1,0 +1,23 @@
+/* Bridge only: values come from Mentio; no replacement palette or spacing scale. */
+:root, .dark {
+  --font-geist-sans: var(--font-sans);
+  --font-geist-mono: var(--font-code);
+  --font-size-overline: var(--text-metadata);
+  --accent-indigo: var(--primary);
+  --accent-indigo-foreground: var(--primary-foreground);
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-xl: none;
+  --shadow-focus: 0 0 0 var(--focus-width) var(--ring);
+  --status-success-icon: var(--primary);
+  --status-warning-icon: var(--destructive);
+  --status-warning-border: var(--border);
+  --status-warning-bg: var(--muted);
+  --status-warning-text: var(--foreground);
+  /* Layer ordering inherited from the supplied review engine, not product styling. */
+  --z-index-sticky: 100; --z-index-dropdown: 200; --z-index-overlay: 300;
+  --z-index-modal: 400; --z-index-toast: 500; --z-index-top: 600;
+  --z-index-product-overlay: calc(var(--z-index-top) + 100);
+  --z-index-product-modal: calc(var(--z-index-product-overlay) + 1);
+}
