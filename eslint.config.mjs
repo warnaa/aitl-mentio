@@ -96,6 +96,9 @@ const eslintConfig = defineConfig([
     "**/storybook-static/**",
     // MSW-generated browser worker, regenerated via `msw init`.
     "packages/ui/.storybook/public/mockServiceWorker.js",
+    // Local prototype copies and lesson materials are not product code.
+    "packages/ui/.storybook/public/prototypes/**",
+    "lekcja-07/**",
     "**/next-env.d.ts",
     // Vendored agent skills (Open Mercato), updated from upstream and not project code. User decision 2026-11-01.
     ".agents/**",

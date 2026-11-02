@@ -52,3 +52,4 @@ next-env.d.ts
 # Local Storybook output
 /packages/ui/storybook-static/
 /packages/ui/coverage/
+/packages/ui/.storybook/public/prototypes/
