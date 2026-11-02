@@ -4,6 +4,20 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { createNodeEffects, runChild } from './effects.mjs';
 
+// `spawn` stays real; the wrapper only records each child so a test can signal it.
+const spawnedChildren = vi.hoisted(() => []);
+vi.mock('node:child_process', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    spawn: (...args) => {
+      const child = actual.spawn(...args);
+      spawnedChildren.push(child);
+      return child;
+    },
+  };
+});
+
 function fakeChild() {
   const child = new EventEmitter();
   child.kill = vi.fn();
@@ -106,9 +120,12 @@ describe('createNodeEffects', () => {
   });
 
   it('maps a signal-only child exit to a failure code', async () => {
-    await expect(
-      effects.run(process.execPath, ['-e', 'process.kill(process.pid)'], process.cwd()),
-    ).resolves.toBe(143);
+    // The parent sends the signal: a self-inflicted `process.kill` exits with code 1 on
+    // Windows, whereas a parent-sent SIGTERM is reported as a signal on every platform.
+    const result = effects.run(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], process.cwd());
+    spawnedChildren.at(-1).kill('SIGTERM');
+
+    await expect(result).resolves.toBe(143);
   });
 
   it('rejects when a child process cannot be launched', async () => {

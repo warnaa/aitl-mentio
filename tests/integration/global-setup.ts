@@ -14,7 +14,17 @@ import { integrationChildEnvironment } from './environment';
 
 const execFileAsync = promisify(execFile);
 const root = process.cwd();
-const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const isWindows = process.platform === 'win32';
+
+/**
+ * Command and arguments for an npm invocation. Node refuses to spawn `npm.cmd` without
+ * a shell (EINVAL, CVE-2024-27980) and deprecates passing an argument array alongside
+ * `shell` (DEP0190), so on Windows the call becomes one shell command string. Every
+ * npm argument here is a fixed literal, so the shell has nothing to interpret.
+ */
+function npmInvocation(args: string[]): [string, string[]] {
+  return isWindows ? [`npm.cmd ${args.join(' ')}`, []] : ['npm', args];
+}
 
 let postgres: StartedPostgreSqlContainer | undefined;
 let app: ChildProcess | undefined;
@@ -30,9 +40,10 @@ declare module 'vitest' {
 }
 
 async function runNpm(args: string[], environment: NodeJS.ProcessEnv): Promise<void> {
-  await execFileAsync(npmExecutable, args, {
+  await execFileAsync(...npmInvocation(args), {
     cwd: root,
     env: environment,
+    shell: isWindows,
     maxBuffer: 20 * 1024 * 1024,
     timeout: 180_000,
   });
@@ -100,15 +111,7 @@ async function stopApp(): Promise<void> {
   }
 
   const exited = new Promise<void>((resolveExit) => app?.once('exit', () => resolveExit()));
-  if (process.platform === 'win32') {
-    app.kill('SIGTERM');
-  } else {
-    try {
-      process.kill(-app.pid, 'SIGTERM');
-    } catch {
-      app.kill('SIGTERM');
-    }
-  }
+  await killAppTree(app, app.pid, 'SIGTERM');
 
   await Promise.race([
     exited,
@@ -116,18 +119,27 @@ async function stopApp(): Promise<void> {
   ]);
 
   if (app.exitCode === null && app.signalCode === null) {
-    if (process.platform === 'win32') {
-      app.kill('SIGKILL');
-    } else {
-      try {
-        process.kill(-app.pid, 'SIGKILL');
-      } catch {
-        app.kill('SIGKILL');
-      }
-    }
+    await killAppTree(app, app.pid, 'SIGKILL');
     await exited;
   }
   appLog?.end();
+}
+
+async function killAppTree(child: ChildProcess, pid: number, signal: NodeJS.Signals): Promise<void> {
+  if (isWindows) {
+    // Windows has no process groups, and killing the npm shell alone would orphan the
+    // Next.js server on its port, so end the whole tree. taskkill cannot deliver a
+    // graceful signal to a console app, hence /F for both escalation steps.
+    await execFileAsync('taskkill', ['/PID', String(pid), '/T', '/F']).catch(
+      () => child.kill(signal),
+    );
+    return;
+  }
+  try {
+    process.kill(-pid, signal);
+  } catch {
+    child.kill(signal);
+  }
 }
 
 async function cleanup(homeSession: string, adminSession: string): Promise<void> {
@@ -171,8 +183,7 @@ export default async function setup(project: TestProject) {
       flags: 'w',
     });
     app = spawn(
-      npmExecutable,
-      [
+      ...npmInvocation([
         'run',
         'start',
         '--workspace',
@@ -182,11 +193,12 @@ export default async function setup(project: TestProject) {
         '127.0.0.1',
         '--port',
         String(port),
-      ],
+      ]),
       {
         cwd: root,
         env: environment,
-        detached: process.platform !== 'win32',
+        shell: isWindows,
+        detached: !isWindows,
         stdio: ['ignore', 'pipe', 'pipe'],
       },
     );

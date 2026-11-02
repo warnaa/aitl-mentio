@@ -5,8 +5,8 @@
   "description": "DevMentor — Next.js host and composition root",
   "scripts": {
     "dev": "next dev",
-    "build": "NODE_ENV=production next build",
-    "start": "NODE_ENV=production next start"
+    "build": "cross-env NODE_ENV=production next build",
+    "start": "cross-env NODE_ENV=production next start"
   },
   "dependencies": {
     "@devmentor/core": "*",
@@ -20,6 +20,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "tailwindcss": "^4"
   }
 }

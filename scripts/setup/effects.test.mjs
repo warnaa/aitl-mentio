@@ -5,6 +5,20 @@ import { createServer } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { SPAWN_FAILED, createNodeEffects } from './effects.mjs';
 
+// `spawn` stays real; the wrapper only records each child so a test can signal it.
+const spawnedChildren = vi.hoisted(() => []);
+vi.mock('node:child_process', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    spawn: (...args) => {
+      const child = actual.spawn(...args);
+      spawnedChildren.push(child);
+      return child;
+    },
+  };
+});
+
 /**
  * Listen on an ephemeral port and hand back the port plus a closer.
  *
@@ -66,9 +80,12 @@ describe('createNodeEffects', () => {
   });
 
   it('reports code 0 when a process is killed without an exit code', async () => {
-    const result = await effects.run(process.execPath, ['-e', 'process.kill(process.pid)']);
+    // The parent sends the signal: a self-inflicted `process.kill` exits with code 1 on
+    // Windows, whereas a parent-sent SIGTERM reports a null code on every platform.
+    const result = effects.run(process.execPath, ['-e', 'setInterval(() => {}, 1000)']);
+    spawnedChildren.at(-1).kill('SIGTERM');
 
-    expect(result.code).toBe(0);
+    expect((await result).code).toBe(0);
   });
 
   it('reports a launch failure as a failed exit instead of throwing', async () => {
