@@ -35,7 +35,7 @@ const meta = {
   render: args => <ProfileExample {...args} />,
   parameters: {
     msw: { handlers }, controls: { exclude: ['initialValues', 'endpoint'] },
-    docs: { description: { component: 'E02 #16 profile editor. All four fields are required to save. The description allows up to 2,000 characters, the work link must use HTTP or HTTPS, and technologies allow multiple selections with labelled decorative icons. CrudForm owns validation, pending requests, server errors and focus. The host saves the values and handles publication separately. Examples use local mock responses.' } },
+    docs: { description: { component: 'E02 #35 profile editor. All four fields are required to save. The description allows up to 2,000 characters, the work link must use HTTP or HTTPS, and technologies allow multiple selections with labelled decorative icons. CrudForm owns validation, pending requests, server errors and focus. The host saves the values and handles publication separately. Examples use local mock responses.' } },
   },
 } satisfies Meta<typeof MentorProfileEditor>;
 export default meta;

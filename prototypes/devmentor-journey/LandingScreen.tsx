@@ -12,7 +12,7 @@ export function LandingScreen({ reviews, onMeetMentor = () => navigate('s1') }: 
   const accountScreen = auth?.user ? homeFor(auth.user.roles) : 's12';
   const accountLabel = auth?.user ? 'My workspace' : 'Sign in';
   const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
-  return <Screen id="s17" title="Home" description="See how text mentoring works, find a mentor and choose a session." refs={['#16', '#18', '#27', 'M01', 'M04']}
+  return <Screen id="s17" title="Home" description="See how text mentoring works, find a mentor and choose a session." refs={['#35', '#37', '#46', 'M01', 'M04']}
     note="Local homepage with an original generated illustration. All mentors and reviews are fictional. The catalogue supports local search and profile previews; Alex Laurent has the complete booking flow. Freelance hiring and public mentor registration are outside this prototype.">
     <PublicPage className="proto-landing-page" navigation={<>
       <Button className="home-section-nav" intent="neutral" appearance="ghost" onClick={() => scrollToSection('landing-how-title')}>How it works</Button>

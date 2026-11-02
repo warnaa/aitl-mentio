@@ -31,7 +31,7 @@ const meta = {
   title: 'Product/Mentor workspace', tags: ['autodocs'],
   parameters: {
     msw: { handlers: [http.all('/storybook-api/mentor-workspace/:form', () => HttpResponse.json({ ok: true, data: { id: 'local-example' } }))] },
-    docs: { description: { component: 'E02 #16/#17/#18 profile, price and availability examples, plus private-note drafting for #28. Profile editing uses MentorProfileEditor; other forms and lists reuse CrudForm and DataTable. Prices are PLN 90 to 600 for 25 minutes and PLN 180 to 1,200 for 50 minutes. Availability stores one UTC start time; the mentee selects the session length. Booked times cannot be removed here. Local mock requests illustrate saved states; the application must enforce ownership, future times, conflicts and confirmed booking price snapshots.' } },
+    docs: { description: { component: 'E02 #35/#36/#37 profile, price and availability examples, plus private-note drafting for #47. Profile editing uses MentorProfileEditor; other forms and lists reuse CrudForm and DataTable. Prices are PLN 90 to 600 for 25 minutes and PLN 180 to 1,200 for 50 minutes. Availability stores one UTC start time; the mentee selects the session length. Booked times cannot be removed here. Local mock requests illustrate saved states; the application must enforce ownership, future times, conflicts and confirmed booking price snapshots.' } },
   },
 } satisfies Meta;
 export default meta;

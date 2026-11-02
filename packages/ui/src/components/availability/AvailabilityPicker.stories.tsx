@@ -14,7 +14,7 @@ function PickerExample(args: AvailabilityPickerProps) {
 const meta = {
   title: 'Product/Availability', component: AvailabilityPicker, tags: ['autodocs'], render: args => <PickerExample {...args} />,
   args: { days, timeZone: 'Europe/Warsaw', selectedSlotId: null, onSlotChange: fn() },
-  parameters: { docs: { description: { component: 'Available time and 25/50-minute price choices for #17, #18 and #21. The application evaluates lead time, booked slots and configured price bounds; these components display supplied reasons. A blocked slot has a disabled button and a linked explanation. Timezone and formatted prices are always explicit.' } } },
+  parameters: { docs: { description: { component: 'Available time and 25/50-minute price choices for #36, #37 and #40. The application evaluates lead time, booked slots and configured price bounds; these components display supplied reasons. A blocked slot has a disabled button and a linked explanation. Timezone and formatted prices are always explicit.' } } },
 } satisfies Meta<typeof AvailabilityPicker>;
 export default meta;
 type Story = StoryObj<typeof meta>;

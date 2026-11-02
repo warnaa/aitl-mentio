@@ -2,8 +2,8 @@
 
 Date: 2026-09-08
 Status: blocked — platform currency and initial bounds require founder approval
-Issue: [#18](https://github.com/open-mercato/ai_techleaders_project/issues/18) (epic #8)
-Depends on: E02-S01 (#15), E02-S02 (#16), E02-S03 (#17); E01 Slices 1, 2 and 4
+Issue: [#37](https://github.com/warnaa/aitl-mentio/issues/37) (epic #27)
+Depends on: E02-S01 (#34), E02-S02 (#35), E02-S03 (#36); E01 Slices 1, 2 and 4
 Design authority for architecture, data model and money rules:
 `.ai/specs/2026-09-08-mentors-become-bookable.md` (Slice 4). The primitive catalogue in
 `.ai/specs/2026-09-08-platform-primitives-ii.md` (B12′, B16′, F5′) is an index, not a second authority.
@@ -20,9 +20,9 @@ implemented.
 ## 📝 Problem Statement
 
 D09/R08 give each mentor control over price within operator-set bounds. The repository has no price
-field and no notion of bounds, so nothing can be booked at a known amount. E05-S02 (#31) gives the
+field and no notion of bounds, so nothing can be booked at a known amount. E05-S02 (#50) gives the
 operator a screen for the bounds; until then the founders set them by hand (R18) — which is why every
-consumer reads them through one service now, so #31 changes the storage and not one caller.
+consumer reads them through one service now, so #50 changes the storage and not one caller.
 
 ## 📝 Scope
 
@@ -31,8 +31,8 @@ service; exact decimal-to-cents parsing; the refusal that names the breached bou
 `mentorOfferReady` gate the public page and E03-S02 both read.
 
 **Out:** choosing the platform currency or initial values (founder decisions required before
-implementation); the operator settings screen (#31); the platform fee, fee split and payouts (#25);
-the booking's own price snapshot (#21, #22).
+implementation); the operator settings screen (#50); the platform fee, fee split and payouts (#44);
+the booking's own price snapshot (#40, #41).
 
 ## 📝 UI/UX
 

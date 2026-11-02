@@ -68,7 +68,7 @@ selection. Signing in during booking returns to the selected booking summary.
 ## Accounts and roles: E01
 
 The connected account flow covers the UI in the Accounts and Roles specification
-dated 4 September 2026, stories #12, #13 and #14. Start at sign-in (`s12`). GitHub
+dated 4 September 2026, stories #31, #32 and #33. Start at sign-in (`s12`). GitHub
 opens a labelled provider-response demo (`s23`); email registration (`s20`) leads
 to check-inbox (`s21`) and verification (`s22`). Registration alone does not sign
 the person in.
@@ -153,14 +153,14 @@ Screen IDs remain stable so that review comments and links keep their meaning.
 
 | Story or area | Screens | Source |
 | --- | --- | --- |
-| E01 #12 GitHub sign-in | s12 sign-in, s23 GitHub response | [AuthScreens.tsx](AuthScreens.tsx), [auth-model.ts](auth-model.ts), [auth-runtime.ts](auth-runtime.ts) |
-| E01 #13 Email/password | s20 registration, s21 inbox, s22 verification, s12 sign-in | [AuthScreens.tsx](AuthScreens.tsx), [auth-context.tsx](auth-context.tsx) |
-| E01 #14 Role access | s6 mentee home, s11 mentor home, s24 operator home, s25 users, s16 no access | [Frame.tsx](Frame.tsx), [AuthScreens.tsx](AuthScreens.tsx), [auth-context.tsx](auth-context.tsx) |
-| E02 #15 Invitation | s26 invitation, E01 sign-in/verification, s11 first mentor home | [MentorScreens.tsx](MentorScreens.tsx), [mentor-model.ts](mentor-model.ts), [mentor-runtime.ts](mentor-runtime.ts), [auth-context.tsx](auth-context.tsx) |
-| E02 #16 Profile | s27 edit/publish/share, s11 workspace, s1 public profile | [MentorScreens.tsx](MentorScreens.tsx), [MentorProfileScreen.tsx](MentorProfileScreen.tsx) |
-| E02 #17 Availability | s11 manage times, s3 public selection, s2 no available times | [MentorScreens.tsx](MentorScreens.tsx), [BookingScreens.tsx](BookingScreens.tsx), [mentor-model.ts](mentor-model.ts) |
-| E02 #18 Prices | s11 prices, s1 public profile, s3 selection, s4 booking summary | [MentorScreens.tsx](MentorScreens.tsx), [BookingScreens.tsx](BookingScreens.tsx), [main.tsx](main.tsx) |
-| E02 #19 Connect | s28 mentor payout settings, s29 Stripe response preview, s25 read-only operator status | [MentorScreens.tsx](MentorScreens.tsx), [AuthScreens.tsx](AuthScreens.tsx), [mentor-model.ts](mentor-model.ts) |
+| E01 #31 GitHub sign-in | s12 sign-in, s23 GitHub response | [AuthScreens.tsx](AuthScreens.tsx), [auth-model.ts](auth-model.ts), [auth-runtime.ts](auth-runtime.ts) |
+| E01 #32 Email/password | s20 registration, s21 inbox, s22 verification, s12 sign-in | [AuthScreens.tsx](AuthScreens.tsx), [auth-context.tsx](auth-context.tsx) |
+| E01 #33 Role access | s6 mentee home, s11 mentor home, s24 operator home, s25 users, s16 no access | [Frame.tsx](Frame.tsx), [AuthScreens.tsx](AuthScreens.tsx), [auth-context.tsx](auth-context.tsx) |
+| E02 #34 Invitation | s26 invitation, E01 sign-in/verification, s11 first mentor home | [MentorScreens.tsx](MentorScreens.tsx), [mentor-model.ts](mentor-model.ts), [mentor-runtime.ts](mentor-runtime.ts), [auth-context.tsx](auth-context.tsx) |
+| E02 #35 Profile | s27 edit/publish/share, s11 workspace, s1 public profile | [MentorScreens.tsx](MentorScreens.tsx), [MentorProfileScreen.tsx](MentorProfileScreen.tsx) |
+| E02 #36 Availability | s11 manage times, s3 public selection, s2 no available times | [MentorScreens.tsx](MentorScreens.tsx), [BookingScreens.tsx](BookingScreens.tsx), [mentor-model.ts](mentor-model.ts) |
+| E02 #37 Prices | s11 prices, s1 public profile, s3 selection, s4 booking summary | [MentorScreens.tsx](MentorScreens.tsx), [BookingScreens.tsx](BookingScreens.tsx), [main.tsx](main.tsx) |
+| E02 #38 Connect | s28 mentor payout settings, s29 Stripe response preview, s25 read-only operator status | [MentorScreens.tsx](MentorScreens.tsx), [AuthScreens.tsx](AuthScreens.tsx), [mentor-model.ts](mentor-model.ts) |
 | Discovery | s17 homepage, s19 mentor catalogue | [LandingScreen.tsx](LandingScreen.tsx), [MentorCatalogueScreen.tsx](MentorCatalogueScreen.tsx), [mentors.ts](mentors.ts) |
 | Booking results | s14 demo checkout, s5 payment recovery, s13 conflict/expiry | [BookingScreens.tsx](BookingScreens.tsx), [flow.ts](flow.ts) |
 | Sessions and feedback | s7 text session, s8 answer, s9 note review, s10 request changes, s15 approved note, s18 mentor review | [SessionScreens.tsx](SessionScreens.tsx), [reviews.ts](reviews.ts) |

@@ -2,7 +2,7 @@
 
 Date: 2026-09-03
 Status: active
-Issue: #37
+Issue: #55
 
 ## Problem / Goal
 

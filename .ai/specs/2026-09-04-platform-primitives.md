@@ -4,7 +4,7 @@ Date: 2026-09-04
 Revised: 2026-09-08 — grilling review; see "What the 2026-09-08 revision changed" at the end
 Status: active — moves to `implemented/` when its E01 `SHIP` entries land
 Design authority: `.ai/specs/product-brief.md`, `.ai/specs/2026-09-01-engineering-standards.md`
-First consumer: `.ai/specs/2026-09-04-accounts-and-roles.md` (issue #7)
+First consumer: `.ai/specs/2026-09-04-accounts-and-roles.md` (issue #26)
 
 ## 📝 TLDR
 
@@ -34,21 +34,21 @@ context without creating a permanently mutable design authority.
 
 ## 📝 Problem Statement
 
-**The evidence that this is needed is the backlog itself.** A survey of issues #12–#34 found
+**The evidence that this is needed is the backlog itself.** A survey of issues #31–#53 found
 the same infrastructure described independently in issue after issue, each time as if it were
 local to that story:
 
 | Shape | Issues that independently describe it |
 |---|---|
-| Guarded status transition | #21, #22, #24, #25, #28, #29, #30, #32 |
-| `now` threaded into a service method | #20, #21, #22, #24, #25, #26, #30, #32 |
-| Amount in integer cents, recomputed server-side | #18, #20, #21, #22, #24, #25, #31 |
-| "X sees only their own Y" | #23, #26, #27, #28, #29, #32 |
-| Exactly-once application of an external event | #22, #24, #33, #34 |
-| Notify both parties of a booking | #22, #23, #24, #27, #28, #29, #32 |
-| Check-then-act under a transaction + unique constraint | #21, #22, #24, #25, #28, #30, #32 |
-| A button that transitions state after confirming | #22, #24, #25, #28, #29, #30, #32 |
-| Env-seeded value that later moves to a DB row | #18 → #31, #25 |
+| Guarded status transition | #40, #41, #43, #44, #47, #48, #49, #51 |
+| `now` threaded into a service method | #39, #40, #41, #43, #44, #45, #49, #51 |
+| Amount in integer cents, recomputed server-side | #37, #39, #40, #41, #43, #44, #50 |
+| "X sees only their own Y" | #42, #45, #46, #47, #48, #51 |
+| Exactly-once application of an external event | #41, #43, #52, #53 |
+| Notify both parties of a booking | #41, #42, #43, #46, #47, #48, #51 |
+| Check-then-act under a transaction + unique constraint | #40, #41, #43, #44, #47, #49, #51 |
+| A button that transitions state after confirming | #41, #43, #44, #47, #48, #49, #51 |
+| Env-seeded value that later moves to a DB row | #37 → #50, #44 |
 
 The engineering-standards spec already predicted the failure mode this creates: *"The single
 biggest risk of adding ~9 concepts one at a time is that every route and every page re-invents
@@ -60,11 +60,11 @@ otherwise be re-derived.
 The cost is not only duplication. Three of these shapes are security- or money-critical, and
 each backlog issue restates their rules in slightly different words:
 
-- `#23`: *"never a `userId` parameter from the client"* — stated once, needed on every list.
-- `#25`: fee snapshot *"so a later fee change never touches earlier bookings"* — stated once,
+- `#42`: *"never a `userId` parameter from the client"* — stated once, needed on every list.
+- `#44`: fee snapshot *"so a later fee change never touches earlier bookings"* — stated once,
   needed wherever money is recorded.
-- `#22`: *"insert the event id first (a duplicate is a no-op)"* — stated once, needed by three
-  webhook branches across #22, #24 and #33.
+- `#41`: *"insert the event id first (a duplicate is a no-op)"* — stated once, needed by three
+  webhook branches across #41, #43 and #52.
 
 A rule restated per-story is a rule that will eventually be restated wrong.
 
@@ -101,7 +101,7 @@ the backlog actually needs it (every "more than one role may do this" case in th
 
 - **Build the whole layer up front.** Rejected: contradicts `AGENTS.md`, and at least three
   primitives are still underdetermined — e.g. `Booking` carries *two orthogonal status fields*
-  (`status` and `refundStatus`, #21 + #24), which an entity-scoped transition helper would get
+  (`status` and `refundStatus`, #40 + #43), which an entity-scoped transition helper would get
   wrong.
 - **Design nothing; let each story invent what it needs.** Rejected: that is the status quo the
   evidence above indicts.
@@ -119,7 +119,7 @@ packages/core/src/
   http/            errors.ts  apiHandler.ts  makeCrudRoute.ts  auth.ts        (exists)
                  + rate-limit.ts  return-to.ts  outbound.ts
   time/          + clock.ts                                     (new; siblings of http/, not a concept)
-  persistence/   + transaction.ts                               (DEFER #22; NOT named `db/` — see below)
+  persistence/   + transaction.ts                               (DEFER #41; NOT named `db/` — see below)
   services/<concept>/…                                          (concept-scoped, unchanged)
   services/<concept>/<name>.port.ts + adapters/                 (ports, per the standards naming table)
 
@@ -194,16 +194,16 @@ their own issues.
 **Why a primitive and not a parameter.** Every service signature named in the backlog *already*
 threads `now`: `expirePending(now)`, `runDue(now)`, `window(booking, now)`, `report(batchId,
 now)`, `cancelByMentee(session, id, now)`, `listPublished(tag?, now)`. The issues demand
-boundary tests at *exactly* 24 hours (#24), the two-week mark (#30), and the session window
-edges (#26). Formalising the clock costs one line and makes those tests deterministic instead
+boundary tests at *exactly* 24 hours (#43), the two-week mark (#49), and the session window
+edges (#45). Formalising the clock costs one line and makes those tests deterministic instead
 of sleep-based.
 
 **Timezone rule, decided here because every deferred time rule needs it.** All instants are
 stored `timestamptz` and reasoned about in UTC; `Clock.now()` returns a UTC-based `Date` and no
 service ever constructs a local-time date. Wall-clock presentation — a slot at "14:00" — is the
 *browser's* job, in the viewer's own zone. The mentor publishes an instant, not a local time.
-This matters because slot publication (#17), the two-hour lead (#21), the 24-hour cancellation
-window (#24) and the two-week publish window (#30) each involve two parties who may be in
+This matters because slot publication (#36), the two-hour lead (#40), the 24-hour cancellation
+window (#43) and the two-week publish window (#49) each involve two parties who may be in
 different zones, and none of those issues says whose clock governs. It is UTC, and the answer
 is here rather than re-derived four times.
 
@@ -266,13 +266,13 @@ serves plain HTTP on localhost. Revisit if a staging environment on a real hostn
 | Export | Status | Evidence |
 |---|---|---|
 | `requireSession(req)` | exists | — |
-| `requireRole(session, role)` | exists | #21, #25, #30, #31, #32 |
-| `assertOwnership(session, ownerId)` | exists | #22, #24, #27 |
+| `requireRole(session, role)` | exists | #40, #44, #49, #50, #51 |
+| `assertOwnership(session, ownerId)` | exists | #41, #43, #46 |
 | `requireSession(req, cradle)` | **SHIP (breaking replacement)** | canonical route path: verify JWT, check `sv`, return stored roles |
-| `requireCsrfHeader(req)` | **SHIP** | #14, #21, #24, #29, #31; `apiCall` already sends `x-devmentor-request`, nothing checks it |
-| `assertParty(session, party: { userIds: string[] })` | DEFER #26 | #26: the check is two-sided — the mentee's id **or** the mentor's user id |
-| `operatorReadException(session, reason: string)` | DEFER #32 | #32 calls the operator reading session text *"a scoping exception that must be explicit"*; #29 needs the same |
-| ~~`requireAnyRole`~~ | **dropped** | No issue needs it. Every "either of two roles" case in the backlog (#26, #27, #32) is a *party* check, which `assertParty` covers |
+| `requireCsrfHeader(req)` | **SHIP** | #33, #40, #43, #48, #50; `apiCall` already sends `x-devmentor-request`, nothing checks it |
+| `assertParty(session, party: { userIds: string[] })` | DEFER #45 | #45: the check is two-sided — the mentee's id **or** the mentor's user id |
+| `operatorReadException(session, reason: string)` | DEFER #51 | #51 calls the operator reading session text *"a scoping exception that must be explicit"*; #48 needs the same |
+| ~~`requireAnyRole`~~ | **dropped** | No issue needs it. Every "either of two roles" case in the backlog (#45, #46, #51) is a *party* check, which `assertParty` covers |
 
 `requireSession` is the only authorization entry point and makes `sv` real:
 
@@ -326,10 +326,10 @@ does not, except be **greppable and separately testable**. Two paths in the back
 operator read data the party-scoping rules otherwise forbid. A named marker means an auditor
 finds every such path with one search, and a test can assert the set has not grown.
 
-#### B4 · Scoped list authorization — concept-owned methods · **DEFER #23**
+#### B4 · Scoped list authorization — concept-owned methods · **DEFER #42**
 
-The most repeated authorization requirement in the backlog is *"X sees only their own Y"* (#23,
-#26, #27, #28, #29, #32), and #23 states the rule that makes it safe: the scope comes from the
+The most repeated authorization requirement in the backlog is *"X sees only their own Y"* (#42,
+#45, #46, #47, #48, #51), and #42 states the rule that makes it safe: the scope comes from the
 session, **"never a `userId` parameter from the client"**.
 
 There is deliberately no role-dispatch helper. A user may hold multiple roles, so selecting one
@@ -341,7 +341,7 @@ call. The service never accepts an owner id supplied by the request body or quer
 
 **Why it is deferred despite E01 touching a list.** `/api/users` has one operator-only meaning,
 so its existing `makeCrudRoute.authorize(req, cradle)` hook can call the canonical live
-`requireSession(req, cradle)` and then `requireRole(session, 'operator')`. #23 is the first
+`requireSession(req, cradle)` and then `requireRole(session, 'operator')`. #42 is the first
 consumer needing two differently scoped list operations and owns their explicit route design.
 
 No `makeCrudRoute` contract change is required for E01.
@@ -353,7 +353,7 @@ No `makeCrudRoute` contract change is required for E01.
 signPurposeToken({ purpose, subject, ttlSeconds }): string
 verifyPurposeToken(token: string, purpose: string): { subject: string }   // throws on bad/expired
 
-// Stored — a hash in the database, so it can be single-use and revocable. DEFER #15
+// Stored — a hash in the database, so it can be single-use and revocable. DEFER #34
 mintOpaqueToken(): { token: string; tokenHash: string }
 hashToken(token: string): string
 ```
@@ -366,7 +366,7 @@ rejected: both are HS256 at the same trust level, and one secret means one rotat
 
 Purpose-binding is the point: a verification token must not be replayable as an invitation
 token, and audience separation (B2) is what makes that structural. E01 uses the stateless pair
-for the OAuth `state` (#12) and email verification (#13). The opaque pair is deferred to #15,
+for the OAuth `state` (#31) and email verification (#32). The opaque pair is deferred to #34,
 its first real consumer — invitation links with `tokenHash` unique and *"constant-time hash
 compare"*.
 
@@ -378,7 +378,7 @@ stops login CSRF (an attacker completing a flow and handing the victim the callb
 verification is bearer-authenticated by construction and that is acceptable there; it is not
 acceptable for `state`.
 
-**Correction to the first draft:** it listed the mentor share link (#16) as an opaque-token
+**Correction to the first draft:** it listed the mentor share link (#35) as an opaque-token
 consumer. It is not — a share link is a public, re-visitable URL, i.e. a **slug**, not a
 single-use secret. See B21.
 
@@ -413,7 +413,7 @@ The rule the 503 enforces has three tiers, refined from the first draft's single
 > replaced by the real adapter. See B14.
 
 This extends `AGENTS.md`'s existing "the app must build and boot with no database reachable"
-discipline to every integration. #12 asks for it by name; #22 and #34 restate it for Stripe
+discipline to every integration. #31 asks for it by name; #41 and #53 restate it for Stripe
 (*"optional with fail-closed routes"*). Per the navigated-vs-fetched rule above, a
 browser-navigated route renders the 503 as a redirect to a page that explains it, not as a JSON
 envelope.
@@ -431,8 +431,8 @@ route, and `returnTo=/api/users` would render a JSON envelope as a page — the 
 navigated-vs-fetched rule forbids.
 
 Three flows round-trip through sign-in and must come back where they started: the invitation
-link (#15, `/sign-in?returnTo=/invitation/<token>`), the email-password fallback (#13), and the
-slot picker (#21, *"back to the same slot after sign-in"*). One validator, three call sites.
+link (#34, `/sign-in?returnTo=/invitation/<token>`), the email-password fallback (#32), and the
+slot picker (#40, *"back to the same slot after sign-in"*). One validator, three call sites.
 
 #### B8 · Rate limiting — `core/src/http/rate-limit.ts` + `AuthRateLimit` entity · **SHIP**
 
@@ -506,8 +506,8 @@ named by the standards spec is unaffected.
 
 #### B10 · Transaction discipline — concept-owned in E01 · **SHIP (no shared helper)**
 
-Eight check-then-act sites are named in the backlog (#21 slot booking, #22 webhook confirm, #24
-cancel, #25 payout, #28 note version, #30 batch cap, #32 one-open-dispute), and #21 quotes the
+Eight check-then-act sites are named in the backlog (#40 slot booking, #41 webhook confirm, #43
+cancel, #44 payout, #47 note version, #49 batch cap, #51 one-open-dispute), and #40 quotes the
 house rule verbatim: *"never split a check-then-write across two round-trips without a
 transaction"*.
 
@@ -519,10 +519,10 @@ re-read row is linked only when its own `email_verified_at` is set. Other unique
 rethrown rather than hidden as business conflicts. A shared helper is extracted only after a
 second domain use proves identical recovery semantics.
 
-`afterCommit(fn)` — for #24's *"after commit, `paymentGateway.refund(...)`"* and post-commit
-event emission — is **DEFER #22**. E01 has no external call to sequence after a commit.
+`afterCommit(fn)` — for #43's *"after commit, `paymentGateway.refund(...)`"* and post-commit
+event emission — is **DEFER #41**. E01 has no external call to sequence after a commit.
 
-#### B11 · Guarded state transition — `core/src/domain/transition.ts` · **DEFER #21**
+#### B11 · Guarded state transition — `core/src/domain/transition.ts` · **DEFER #40**
 
 ```ts
 defineTransitions<S extends string>(map: Record<S, readonly S[]>): TransitionTable<S>
@@ -534,23 +534,23 @@ Five stored machines are already fully specified in the backlog:
 
 | Entity | Field | States | Issues |
 |---|---|---|---|
-| Booking | `status` | `pending → confirmed \| expired`, `confirmed → cancelled` | #21, #22, #24 |
-| Booking | `refundStatus` | `none → pending → refunded \| failed` | #24 |
-| Payout | `status` | `held \| transferred \| failed` (retryable) | #25 |
-| SessionNote | `status` | `draft → awaiting_approval → approved \| declined`, versioned | #28, #29 |
-| Dispute | `status` | `open → resolved` + outcome enum | #32 |
+| Booking | `status` | `pending → confirmed \| expired`, `confirmed → cancelled` | #40, #41, #43 |
+| Booking | `refundStatus` | `none → pending → refunded \| failed` | #43 |
+| Payout | `status` | `held \| transferred \| failed` (retryable) | #44 |
+| SessionNote | `status` | `draft → awaiting_approval → approved \| declined`, versioned | #47, #48 |
+| Dispute | `status` | `open → resolved` + outcome enum | #51 |
 
 Two constraints recorded now so the eventual implementation does not get them wrong:
 
 1. **Field-scoped, not entity-scoped.** `Booking` carries two orthogonal status fields; a helper
    keyed on the entity would conflate them.
-2. **An idempotent variant is mandatory, not a convenience.** #24's refund transition is driven
+2. **An idempotent variant is mandatory, not a convenience.** #43's refund transition is driven
    by *both* a synchronous gateway call and an async `charge.refunded` webhook. Whichever
    arrives second must be a no-op, not a `ConflictError`.
 
 E01 has no entity with a status field, so nothing is built here yet.
 
-#### B12 · Money — `core/src/money/money.ts` · **DEFER #18**
+#### B12 · Money — `core/src/money/money.ts` · **DEFER #37**
 
 ```ts
 type Cents = number  // integer minor units; the codebase has no other money representation
@@ -559,22 +559,22 @@ withinBounds(amountCents: Cents, min: Cents, max: Cents): boolean
 ```
 
 The split assigns the rounding remainder to the mentor (`mentorShareCents = amountCents -
-platformFeeCents`, #25) — the platform absorbs the rounding, and #25 makes rounding an explicit
+platformFeeCents`, #44) — the platform absorbs the rounding, and #44 makes rounding an explicit
 test target. Two rules travel with this primitive, restated in five issues and fixed here:
 
-- **Never trust a client amount.** #21: *"The client never supplies a price."* #22 verifies
+- **Never trust a client amount.** #40: *"The client never supplies a price."* #41 verifies
   `amount_total === booking.priceCents` and refuses on mismatch.
-- **Snapshot at the transition.** #25: `feePercentApplied` is written at confirmation *"so a
+- **Snapshot at the transition.** #44: `feePercentApplied` is written at confirmation *"so a
   later fee change never touches earlier bookings"*.
 
-#### B13 · Webhook inbox — `core/src/http/webhook.ts` + `ProcessedWebhookEvent` · **DEFER #22**
+#### B13 · Webhook inbox — `core/src/http/webhook.ts` + `ProcessedWebhookEvent` · **DEFER #41**
 
 A raw-body route wrapper (signature verification needs the unparsed body) plus
 insert-event-id-first dispatch inside a transaction, so a redelivery is a no-op. Three branches
-across #22 (`checkout.session.completed`), #24 (`charge.refunded`) and #33 (`account.updated`)
+across #41 (`checkout.session.completed`), #43 (`charge.refunded`) and #52 (`account.updated`)
 share it.
 
-**This primitive carries a compatibility amendment.** #22 states that the webhook route must
+**This primitive carries a compatibility amendment.** #41 states that the webhook route must
 answer Stripe with *"a plain 2xx/4xx rather than the envelope"* — the one documented exception
 to §1. Whoever builds it writes that exception into §1 in the same PR. It is also the only
 permitted consumer of `apiHandler`'s `{ csrf: false }` (B3): Stripe cannot send the custom
@@ -620,7 +620,7 @@ real adapter passes it to GitHub as a hint and nothing else changes; the mock de
 identity from it — a stable id, that login, and `<login>@devmentor.test` as the verified email.
 Harness fixtures follow the same address rule (`OPERATOR_EMAILS=mock-operator@devmentor.test`
 in CI; the seeded mentor's address matches her login), and a `signInAs(login)` helper beside
-`adminBrowserSession` navigates to `/api/auth/github?login=<login>`. #15's second real identity
+`adminBrowserSession` navigates to `/api/auth/github?login=<login>`. #34's second real identity
 needs nothing new.
 
 **Mailer — SHIP.**
@@ -629,7 +629,7 @@ core/src/services/notifications/mailer.port.ts              interface Mailer { s
 core/src/services/notifications/adapters/resend-mailer.ts   production delivery over Resend's HTTP API via fetchJson
 core/src/services/notifications/adapters/log-mailer.ts      development default; harness via MAILER_ADAPTER=log + INTEGRATION_TEST_RUN=1
 ```
-#13 needs email verification; #15, #23, #27 and #30 queue up behind it.
+#32 needs email verification; #34, #42, #46 and #49 queue up behind it.
 
 **Transport is an HTTP API, not SMTP.** Raw SMTP needs `nodemailer`; a transactional provider's
 HTTP API is one `fetchJson` call that reuses B20's timeout and redaction and adds no dependency.
@@ -651,49 +651,49 @@ file and returns the message, so the registration scenario follows the real link
 No second capture adapter, and no test that signs its own token to skip the mail — that would
 bypass exactly the fail-closed behaviour above.
 
-**Payment gateway — DEFER #22.** Its full surface is already determined by four issues and is
+**Payment gateway — DEFER #41.** Its full surface is already determined by four issues and is
 recorded here so it is designed once rather than grown ad hoc: `createCheckoutSession`,
-`parseWebhookEvent`, `refund` (#22), `transfer` (#25), `createConnectAccount` /
-`createAccountLink` / `getAccountStatus` (#33). Both adapters are first-class deliverables —
-#34 requires the mock to expose `simulateCheckoutCompleted(...)` — and the mock is selected by
+`parseWebhookEvent`, `refund` (#41), `transfer` (#44), `createConnectAccount` /
+`createAccountLink` / `getAccountStatus` (#52). Both adapters are first-class deliverables —
+#53 requires the mock to expose `simulateCheckoutCompleted(...)` — and the mock is selected by
 the same env-pair rule.
 
-#### B15 · Notification fan-out — `core/src/services/notifications/notification.service.ts` · **DEFER #23**
+#### B15 · Notification fan-out — `core/src/services/notifications/notification.service.ts` · **DEFER #42**
 
 `notify(users[], kind, payload)` → one durable `Notification` row per user **plus** one
-best-effort email per user. The recurring shape is *notify both parties of a booking*: #22
-confirmed, #24 cancelled, #27 answer posted, #28 note sent, #29 approved/declined, #32 dispute
-resolved. #23 fixes the durability rule: the event bus is in-process and swallows handler
+best-effort email per user. The recurring shape is *notify both parties of a booking*: #41
+confirmed, #43 cancelled, #46 answer posted, #47 note sent, #48 approved/declined, #51 dispute
+resolved. #42 fixes the durability rule: the event bus is in-process and swallows handler
 failures, so *"the email is best-effort and the in-product record is the durable one"*.
 
-#### B16 · Settings with an env seed — `core/src/services/operator/platform-settings.service.ts` · **DEFER #18**
+#### B16 · Settings with an env seed — `core/src/services/operator/platform-settings.service.ts` · **DEFER #37**
 
 One `get()` that every consumer routes through, backed by env vars now and by a single-row
-table after #31 — *"so only the storage changes"*. The reusable shape is **"config value with
+table after #50 — *"so only the storage changes"*. The reusable shape is **"config value with
 an env seed and a DB override, read through one service"**, and it is why the fee snapshot in
-#25 can be cheap. #31 already specifies the migration: seed the row from the env defaults so
+#44 can be cheap. #50 already specifies the migration: seed the row from the env defaults so
 behaviour does not change on deploy, then retire the vars in a later PR.
 
-#### B17 · On-demand sweeps — `core/src/domain/sweep.ts` · **DEFER #22**
+#### B17 · On-demand sweeps — `core/src/domain/sweep.ts` · **DEFER #41**
 
-`AGENTS.md` has no queue and no worker, and #25 says so outright: *"There is no scheduler or
+`AGENTS.md` has no queue and no worker, and #44 says so outright: *"There is no scheduler or
 worker: completion is detected on demand."* Three sweeps are pull-based — `expirePending(now)`
-(#22), `runDue(now)` (#25), `report(batchId, now)` (#30) — each triggered by a request, an
+(#41), `runDue(now)` (#44), `report(batchId, now)` (#49) — each triggered by a request, an
 operator button, or a `tsx` script. The primitive is mostly a convention plus a shared
 operator-only route shape; recording it stops the third one from inventing a cron.
 
-#### B18 · List query & enum params — `core/src/http/list-query.ts` · **DEFER #20**
+#### B18 · List query & enum params — `core/src/http/list-query.ts` · **DEFER #39**
 
-Zod-validated query params (#20: an unknown `?tag=` must be **422**, not an empty list), an
+Zod-validated query params (#39: an unknown `?tag=` must be **422**, not an empty list), an
 `orderBy` whitelist, and a scope injected from the session. **No issue in the backlog asks for
 pagination**, so pagination is not built — but `DataTable` already takes fully-controlled
 `pagination` props, so the seam exists on both sides when a list finally needs it.
 
-#### B19 · Outcome record — `db/src/entities/base.entity.ts` (`outcomeProperties`) · **DEFER #28**
+#### B19 · Outcome record — `db/src/entities/base.entity.ts` (`outcomeProperties`) · **DEFER #47**
 
 `{ decidedBy, decidedAt, outcome, outcomeNote }` as a spreadable property group beside
-`baseProperties`. Reused by dispute resolution (#32), note approve/decline (#29), payout hold
-(#25) and settings update (#31). Everything in this group exists so a human can read back
+`baseProperties`. Reused by dispute resolution (#51), note approve/decline (#48), payout hold
+(#44) and settings update (#50). Everything in this group exists so a human can read back
 *why* — R18's shared operator note, made structural.
 
 #### B20 · Outbound HTTP policy — `core/src/http/outbound.ts` · **SHIP**
@@ -706,7 +706,7 @@ fetchJson<T>(url: string, init: RequestInit & { timeoutMs?: number }): Promise<T
 
 Node's `fetch` has **no default timeout**. E01's OAuth callback makes three upstream calls
 (`/login/oauth/access_token`, `/user`, `/user/emails`); a hung GitHub would hang a route
-handler indefinitely. Every future integration has the same need — Stripe (#22, #33, #34) and
+handler indefinitely. Every future integration has the same need — Stripe (#41, #52, #53) and
 the Resend mailer — and each would otherwise re-derive its own timeout and its own redaction
 rules. Small, but it is the difference between "GitHub is down" degrading and hanging.
 
@@ -715,10 +715,10 @@ caller can act differently on 502 versus 503, "the integration is unavailable" i
 cases, and browser-navigated routes redirect to `?error=unavailable` either way. The §1 table
 stays one code smaller.
 
-#### B21 · Public slug — `core/src/services/mentors/slug.ts` · **DEFER #16**
+#### B21 · Public slug — `core/src/services/mentors/slug.ts` · **DEFER #35**
 
-Deterministic, collision-checked, URL-safe slug generation for `/m/<slug>` (#16) and the
-`/mentors` list (#20). Recorded because the first draft of this spec wrongly filed the share
+Deterministic, collision-checked, URL-safe slug generation for `/m/<slug>` (#35) and the
+`/mentors` list (#39). Recorded because the first draft of this spec wrongly filed the share
 link under opaque tokens (B5) and thereby hid a genuine gap: a share link is public and
 re-visitable, so it needs uniqueness and stability, not secrecy and expiry.
 
@@ -776,7 +776,7 @@ homeFor(roles: readonly [Role, ...Role[]]): string       // deterministic defaul
 
 Lives in `app`, not `core`, because `next/headers` and `redirect` are Next APIs that `core`
 must not import. Used by the `(mentee)`, `(mentor)` and `admin` layouts — *"nothing of the
-user's is rendered first"* (#12).
+user's is rendered first"* (#31).
 
 `homeFor` takes a non-empty tuple, so the zero-roles case is unrepresentable at the type rather
 than handled by an invented fallback; `requireSession` (B3) produces that type from the stored
@@ -791,17 +791,17 @@ current stored roles.
 
 ```tsx
 <WorkflowAction endpoint="/api/…" method="POST" body={…} label="…"
-                onSuccess={…} confirm={/* DEFER #24 */} />
+                onSuccess={…} confirm={/* DEFER #43 */} />
 ```
 Button + pending state + error surfacing, posting through `apiCall` (so the CSRF header always
 rides along). This is the shape `CrudForm` and `DataTable` do **not** cover, and the backlog has
-roughly a dozen: Pay (#22), Cancel (#24), Run payouts (#25), Send for approval (#28), Approve /
-Decline (#29), Open batch (#30), Raise / Resolve dispute (#32).
+roughly a dozen: Pay (#41), Cancel (#43), Run payouts (#44), Send for approval (#47), Approve /
+Decline (#48), Open batch (#49), Raise / Resolve dispute (#51).
 
 E01's consumer is **sign out** — a POST that clears the cookie, after which `onSuccess` performs
 a **hard** navigation (`window.location.assign('/')`), not a client-side push: the
 server-rendered tree still holds the signed-in user, and a soft push can render stale chrome
-until the next server round-trip. The `confirm` prop is deferred to #24, the first story that
+until the next server round-trip. The `confirm` prop is deferred to #43, the first story that
 requires it and states its contract precisely: a confirmation that *"states the rule and the
 outcome … before the mentee confirms"*. It also needs shadcn `dialog`, which is not installed.
 
@@ -811,16 +811,16 @@ outcome … before the mentee confirms"*. It also needs shadcn `dialog`, which i
 are installed from shadcn. For the `app` surface to be a shadcn surface, the fields must be too.
 
 - **SHIP**: `npx shadcn@latest add input label` in `packages/ui`; back the existing renderers
-  with them; add the `password` field type (#13 needs it).
+  with them; add the `password` field type (#32 needs it).
 - **DEFER**: `select` / `textarea` / `checkbox` / `badge` / `table` / `dialog`, and the
-  `multiselect` (#16 stack tags) and `datetime` (#17 slots) field types — each with the story
+  `multiselect` (#35 stack tags) and `datetime` (#36 slots) field types — each with the story
   that needs it.
 
-#### F6 · Status panel — extend `ui/src/backend/feedback/EmptyState.tsx` · **DEFER #25**
+#### F6 · Status panel — extend `ui/src/backend/feedback/EmptyState.tsx` · **DEFER #44**
 
-Six screens need "here is why you cannot do this yet" copy: held payout reason (#25), answer
-still owed (#27), awaiting approval (#28), private-note notice (#29), the D18 stop banner (#30),
-out-of-bounds prices (#31). This is `EmptyState` with a `tone` prop, **not** a new component —
+Six screens need "here is why you cannot do this yet" copy: held payout reason (#44), answer
+still owed (#46), awaiting approval (#47), private-note notice (#48), the D18 stop banner (#49),
+out-of-bounds prices (#50). This is `EmptyState` with a `tone` prop, **not** a new component —
 the DRY answer is to widen the existing one when the second consumer appears.
 
 #### F7 · Negative-assertion test helper — `tests/integration/assertions.ts` · **SHIP**
@@ -829,7 +829,7 @@ the DRY answer is to widen the existing one when the second consumer appears.
 expectAbsent(snapshot, { role?: string; text?: string | RegExp }): void
 ```
 A recurring and easily-forgotten test shape: the accessibility snapshot must *not* contain
-something. #20 asserts no `searchbox` role, #26 no audio or video control, #28 no textbox for
+something. #39 asserts no `searchbox` role, #45 no audio or video control, #47 no textbox for
 the mentee, and **E01-S03 asserts there is no "become a mentor" path anywhere** (R07). A shared
 helper makes the prohibition legible instead of buried in a `.not.toMatch`. Its consumer is the
 harness, which is what the gate admits.
@@ -847,8 +847,8 @@ This spec fixes three shapes and owns one small table:
   `up` and `down` in E01 Slice 4. The one entity that does **not** spread `baseProperties`, for
   the reason given in B8.
 - `outcomeProperties` (B19) — a spreadable property group in `base.entity.ts` beside
-  `baseProperties`, added when #28 needs it.
-- `ProcessedWebhookEvent` (B13) — `eventId` unique, `type`, `receivedAt`; added when #22 needs it.
+  `baseProperties`, added when #47 needs it.
+- `ProcessedWebhookEvent` (B13) — `eventId` unique, `type`, `receivedAt`; added when #41 needs it.
 
 Every other entity keeps `baseProperties`, must be wrapped in `defineSingletonEntity`, and must
 be added by hand to the `entities` array in `packages/db/src/entities/index.ts`. Note for
@@ -869,11 +869,11 @@ discovered late:
    `apiCall` is the only sanctioned fetch site and already sends it; §7 records the header as a
    breaking surface.
 3. **The webhook route will be the sole non-enveloped, non-CSRF `/api/*` route** (B13). §1 must
-   record that exception when #22 lands, not retroactively.
+   record that exception when #41 lands, not retroactively.
 
 And one contract change explicitly *deferred* rather than smuggled in: threading a `Session`
 into `makeCrudRoute`'s `resolve` (B4) is a §2 change to `MakeCrudRouteOptions` / `CrudService`.
-It is designed by #23, not by E01.
+It is designed by #42, not by E01.
 
 The envelope itself (`{ ok, data }` / `{ ok, error }`) is unchanged and stays declared twice —
 once in `core/src/http/apiHandler.ts`, once in `ui/src/backend/api/types.ts` — because `ui`
@@ -933,7 +933,7 @@ exists (`CrudForm`, `DataTable`, `feedback/*`) or is a widening of it.
 to build 28 primitives. The ship gate is the mitigation, and review already caught it leaking
 once — three entries marked SHIP would have landed with tests and no caller. The gate now reads
 "a real call site in E01's delivered code", and a PR that creates `core/src/money/` before
-issue #18 is in scope should be sent back on `AGENTS.md`'s YAGNI rule alone.
+issue #37 is in scope should be sent back on `AGENTS.md`'s YAGNI rule alone.
 
 **Rollback is per slice, not per primitive.** The first draft claimed every SHIP item was
 "additive and independently revertable"; B8 adds a migration, F5 changes how every existing
@@ -957,7 +957,7 @@ E01 rejects Auth.js / NextAuth. The reasons are structural, not line-count:
 - Auth.js owns `/api/auth/[...nextauth]` as a catch-all, which would break the `{ ok, data }`
   envelope convention §1 protects.
 - Its `SessionProvider` / `useSession` model is a client-side session fetch, which directly
-  contradicts #12's *"nothing of the user's is rendered first"*.
+  contradicts #31's *"nothing of the user's is rendered first"*.
 - Its database adapter puts a vendor between `core` and `db` — the dependency-inversion rule
   the standards spec applies to every other integration.
 
@@ -985,25 +985,25 @@ no fifth; the first is test tooling only.
 
 | Delivered in | Primitives |
 |---|---|
-| E01 Slice 2 — GitHub sign-in (#12) | B1 Clock · B2 Session · B3 canonical live session, CSRF in `apiHandler`, Cradle registrations · B5 stateless tokens · B6 config gate (503 + production-secret check) · B7 return-to · B10 concept-owned identity transaction · B14 GitHub identity port, mock via `login` hint, the env-pair rule · B20 Outbound policy · F3 page guards · F4 minimal sign-out action · ESLint third-party patterns · harness `signInAs` |
-| E01 Slice 3 — signed-in shell (#12, #14) | F1 Surfaces · F2 AppShell and combined-role navigation · F7 `expectAbsent` |
-| E01 Slice 4 — email and password (#13) | B8 rate limiter, `AuthRateLimit` entity + migration, 429, `TRUSTED_PROXY_HOPS` · B9 scrypt · B14 Resend + log mailer, `waitForMail` · F5 shadcn input/label + `password` field |
+| E01 Slice 2 — GitHub sign-in (#31) | B1 Clock · B2 Session · B3 canonical live session, CSRF in `apiHandler`, Cradle registrations · B5 stateless tokens · B6 config gate (503 + production-secret check) · B7 return-to · B10 concept-owned identity transaction · B14 GitHub identity port, mock via `login` hint, the env-pair rule · B20 Outbound policy · F3 page guards · F4 minimal sign-out action · ESLint third-party patterns · harness `signInAs` |
+| E01 Slice 3 — signed-in shell (#31, #33) | F1 Surfaces · F2 AppShell and combined-role navigation · F7 `expectAbsent` |
+| E01 Slice 4 — email and password (#32) | B8 rate limiter, `AuthRateLimit` entity + migration, 429, `TRUSTED_PROXY_HOPS` · B9 scrypt · B14 Resend + log mailer, `waitForMail` · F5 shadcn input/label + `password` field |
 
 Deferred entries are delivered by the issue named in their catalogue row:
 
 ```
-#15 invitations          B5 opaque tokens
-#16 mentor page          B21 Public slug
-#18 mentor prices        B12 Money        B16 Settings
-#20 mentor list          B18 List query
-#21 booking              B11 Transitions
-#22 Stripe Checkout      B13 Webhook inbox (+ apiHandler csrf:false)  B14 payment port  B17 Sweeps  B10 afterCommit
-#23 booking notified     B4 explicit scoped list routes  B15 Notifications
-#24 cancellation         F4 confirm variant
-#25 fee split            F6 Status panel
-#26 text session         B3 assertParty
-#28 session note         B19 Outcome record
-#32 dispute              B3 operatorReadException
+#34 invitations          B5 opaque tokens
+#35 mentor page          B21 Public slug
+#37 mentor prices        B12 Money        B16 Settings
+#39 mentor list          B18 List query
+#40 booking              B11 Transitions
+#41 Stripe Checkout      B13 Webhook inbox (+ apiHandler csrf:false)  B14 payment port  B17 Sweeps  B10 afterCommit
+#42 booking notified     B4 explicit scoped list routes  B15 Notifications
+#43 cancellation         F4 confirm variant
+#44 fee split            F6 Status panel
+#45 text session         B3 assertParty
+#47 session note         B19 Outcome record
+#51 dispute              B3 operatorReadException
 ```
 
 ## 📋 Implementation Plan
@@ -1029,14 +1029,14 @@ Three documentation steps do belong here and are owed by whichever PR first ship
 
 Not open questions blocking this design — items deliberately left to the story that owns them:
 
-- **Q18** (#26) — whether the text exchange lives in DevMentor at all. Blocking before #26 is
+- **Q18** (#45) — whether the text exchange lives in DevMentor at all. Blocking before #45 is
   implemented. Nothing in this catalogue assumes an in-product transcript is permanent.
-- **Q19** (#25) — how mentors are paid in the first iteration. Blocking before the first payout.
-- **Q20** (#20) — whether mentor-page visits are recorded. Blocking before 2026-11-28.
-- **Stripe topology** (#25) — separate transfers vs destination charges. #25 says that story's
+- **Q19** (#44) — how mentors are paid in the first iteration. Blocking before the first payout.
+- **Q20** (#39) — whether mentor-page visits are recorded. Blocking before 2026-11-28.
+- **Stripe topology** (#44) — separate transfers vs destination charges. #44 says that story's
   spec must choose; the port surface in B14 supports either.
-- **The `makeCrudRoute` session seam** (#23) — how a `Session` reaches `resolve` without
-  breaking `CrudService`. Designed by #23; see B4.
+- **The `makeCrudRoute` session seam** (#42) — how a `Session` reaches `resolve` without
+  breaking `CrudService`. Designed by #42; see B4.
 - **Per-request session memoisation** — React `cache()` around the page-side resolver, when the
   duplicate lookups accepted in B3 show up in a profile.
 

@@ -134,7 +134,7 @@ export function SessionScreens({ hasBooking = true, mentorName: mentor = 'Alex L
   }
 
   return <>
-    <Screen id="s6" title="My sessions" description="New accounts start with an empty workspace; confirmed sessions appear here." refs={['#22', '#23']}>
+    <Screen id="s6" title="My sessions" description="New accounts start with an empty workspace; confirmed sessions appear here." refs={['#41', '#42']}>
       <Workspace>
         {!hasBooking ? <div className="dm-product-stack"><h1 className="dm-product-heading">My sessions</h1><EmptyState title="No sessions yet" description="Find a mentor and choose a time for your first session." action={<Button onClick={() => navigate('s19')}>Find a mentor</Button>}/></div> : <>
         <div className="dm-product-stack">
@@ -146,7 +146,7 @@ export function SessionScreens({ hasBooking = true, mentorName: mentor = 'Alex L
       </Workspace>
     </Screen>
 
-    <Screen id="s7" title="Text session" description={`Talk through the code with ${counterpart.split(' ')[0]}. Session details stay available while you read and reply.`} refs={['#26', 'Q18']} note="This is a local text-session prototype. Q18 still determines the production session channel. Messages save only in this demo; the preview control below advances to a completed session without changing the real clock.">
+    <Screen id="s7" title="Text session" description={`Talk through the code with ${counterpart.split(' ')[0]}. Session details stay available while you read and reply.`} refs={['#45', 'Q18']} note="This is a local text-session prototype. Q18 still determines the production session channel. Messages save only in this demo; the preview control below advances to a completed session without changing the real clock.">
       <PublicPage className="proto-session-page" navigation={<Button intent="neutral" appearance="stroke" onClick={() => navigate('s6')}><ArrowLeft aria-hidden="true" />My sessions</Button>} footer={<><span>Signed in as {sender}</span><Button intent="neutral" appearance="ghost" onClick={onViewMentor}>Mentor profile</Button></>}>
         <div className="proto-session-room" ref={conversationRef}>
           <header className="proto-session-heading">
@@ -171,7 +171,7 @@ export function SessionScreens({ hasBooking = true, mentorName: mentor = 'Alex L
       </PublicPage>
     </Screen>
 
-    <Screen id="s8" title="8. Keep the written answer" description="The written answer is separate from the conversation." refs={['#27']}>
+    <Screen id="s8" title="8. Keep the written answer" description="The written answer is separate from the conversation." refs={['#46']}>
       <Workspace>
         <div className="dm-product-stack">
           <header><span className="dm-product-eyebrow">After your text session</span><h1 className="dm-product-heading">A result callers can narrow</h1></header>
@@ -181,7 +181,7 @@ export function SessionScreens({ hasBooking = true, mentorName: mentor = 'Alex L
       </Workspace>
     </Screen>
 
-    <Screen id="s9" title="9. Review the private note" description="Approve the entire version or tell the mentor what should change." refs={['#28', '#29']}>
+    <Screen id="s9" title="9. Review the private note" description="Approve the entire version or tell the mentor what should change." refs={['#47', '#48']}>
       <Workspace>
         <div className="dm-product-stack">
           <NoteReview title={noteTitle} version={noteVersion} state={reviewState} body={<p>{noteBody}</p>} author={mentor} updatedLabel="Drafted after your text session" actions={reviewState === 'approved' ? <Button onClick={() => navigate('s15')}>Open your approved note</Button> : reviewState === 'declined' ? <Button intent="neutral" appearance="stroke" onClick={() => navigate('s10')}>View requested changes</Button> : showDeclineForm ? <CrudForm schema={declineSchema} fields={[{ name: 'comment', label: `What should ${mentorFirst} change?`, type: 'textarea', required: true, placeholder: 'Describe the missing context or correction.' }]} endpoint={endpoint} submitLabel="Send requested changes" onCancel={() => setShowDeclineForm(false)} onSuccess={requestChanges} /> : <><Button intent="neutral" appearance="stroke" onClick={() => setShowDeclineForm(true)}>Request changes</Button><Button onClick={approveNote}>Approve the full note</Button></>} />
@@ -191,7 +191,7 @@ export function SessionScreens({ hasBooking = true, mentorName: mentor = 'Alex L
       </Workspace>
     </Screen>
 
-    <Screen id="s10" title="10. Revise the note after feedback" description="The mentor edits the draft and sends the new version to the mentee for review." refs={['#29']}>
+    <Screen id="s10" title="10. Revise the note after feedback" description="The mentor edits the draft and sends the new version to the mentee for review." refs={['#48']}>
       <Workspace mentor>
         <div className="dm-product-stack">
           <NoteReview title={noteTitle} version={noteVersion} state="declined" body={<p>{noteBody}</p>} author={mentor} updatedLabel="Awaiting a revised version" declineComment={declineComment || 'Please include the error case and the migration constraint for existing consumers.'} />
@@ -201,7 +201,7 @@ export function SessionScreens({ hasBooking = true, mentorName: mentor = 'Alex L
       </Workspace>
     </Screen>
 
-    <Screen id="s15" title="15. Your approved private note" description="You can return to the approved note and written answer after your session. The note stays private." refs={['#29']}>
+    <Screen id="s15" title="15. Your approved private note" description="You can return to the approved note and written answer after your session. The note stays private." refs={['#48']}>
       <Workspace>
         <div className="dm-product-stack"><NoteReview title={noteTitle} version={noteVersion} state="approved" body={<p>{noteBody}</p>} author={mentor} updatedLabel={`Approved by ${mentee}`} actions={<><Button onClick={() => navigate('s6')}>Back to your sessions</Button><Button intent="neutral" appearance="stroke" onClick={() => navigate('s8')}>Read the written answer</Button></>} /><VersionHistory versions={versions} /></div>
       </Workspace>
@@ -215,7 +215,7 @@ export function SessionScreens({ hasBooking = true, mentorName: mentor = 'Alex L
       </div></Workspace>
     </Screen>
 
-    <Screen id="s16" title="16. Recover from restricted access" description="The page explains why access is restricted and links to the public mentor profile." refs={['#14']}>
+    <Screen id="s16" title="16. Recover from restricted access" description="The page explains why access is restricted and links to the public mentor profile." refs={['#33']}>
       <Workspace><AccessStatus state="forbidden" actions={<Button onClick={onViewMentor}>Go to the public mentor profile</Button>} /></Workspace>
     </Screen>
   </>;

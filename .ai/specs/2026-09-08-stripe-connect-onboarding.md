@@ -2,9 +2,9 @@
 
 Date: 2026-09-08
 Status: blocked — **the Stripe topology and connected-account configuration must be approved first**
-Issue: [#19](https://github.com/open-mercato/ai_techleaders_project/issues/19) (epic #8), task
-[#33](https://github.com/open-mercato/ai_techleaders_project/issues/33)
-Depends on: E02-S01 (#15); the webhook inbox from E03-S03-T01 (#34) for event delivery
+Issue: [#38](https://github.com/warnaa/aitl-mentio/issues/38) (epic #27), task
+[#52](https://github.com/warnaa/aitl-mentio/issues/52)
+Depends on: E02-S01 (#34); the webhook inbox from E03-S03-T01 (#53) for event delivery
 Design authority: this standalone 1.1 story. The B14′ entry in
 `.ai/specs/2026-09-08-platform-primitives-ii.md` is a non-normative catalogue pointer.
 
@@ -22,7 +22,7 @@ does not implement Checkout, transfers, fees or the downstream payout guard.
 R05 makes Stripe Connect the only payout channel and requires onboarding before the first payout. D13
 leaves it out of the first iteration. That conflicts with a payable first iteration: Q19 is therefore
 a **production-launch blocker**, not an implied manual-payout design. This 1.1 story closes Connect
-onboarding only. Settlement and its payout-readiness guard remain owned by #25.
+onboarding only. Settlement and its payout-readiness guard remain owned by #44.
 
 ## 📝 Scope
 
@@ -31,7 +31,7 @@ per mentor using a stable idempotency key and mentor metadata; a freshly minted 
 attempt; cached status reads; explicit provider refresh; webhook-triggered reconciliation; the
 operator's read-only view.
 
-**Out:** Stripe Checkout (#34); platform fees, transfers, payouts and the payout-readiness guard (#25);
+**Out:** Stripe Checkout (#53); platform fees, transfers, payouts and the payout-readiness guard (#44);
 manual payouts or any other interim workaround (Q19 requires an explicit superseding decision).
 
 ## 📝 UI/UX
@@ -150,7 +150,7 @@ The start response is `Cache-Control: no-store`, and the Account Link URL is red
 logs and errors. Only the authenticated owning mentor can request or receive it.
 
 The existing operator users projection additively gains normalized Connect status. The public mentor
-projection never gains it. `account.updated` is consumed through #34's durable webhook inbox; its
+projection never gains it. `account.updated` is consumed through #53's durable webhook inbox; its
 handler retrieves the current Account and applies the same reconciliation function as the explicit
 refresh, so duplicate and out-of-order event payloads cannot regress state.
 
@@ -168,7 +168,7 @@ Provider constraints were checked against Stripe's official
 ## 📝 Risks
 
 `risk-high` (money, data scoping), `needs-qa`, second reviewer. Compatibility: additive columns (§3);
-prerequisite #34 solely owns the shared optional `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
+prerequisite #53 solely owns the shared optional `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
 configuration; this story consumes them and adds no duplicate environment key. Both have fail-closed
 consumers (§4). The narrow `ConnectGateway` is an additive package export (§2). Production account
 creation must remain
@@ -190,7 +190,7 @@ D04/R05, D13 (this is 1.1), D19/R18.
 - **Q19 — how a payable first iteration exists before Connect ships** (owner: founder A with founder
   B). Blocking production launch until D13 or the payable-first-iteration requirement is explicitly
   superseded. This spec does not invent a manual payout path.
-- **Stripe topology and account configuration** (owner: founders with the #25 author). Separate
+- **Stripe topology and account configuration** (owner: founders with the #44 author). Separate
   transfers versus destination charges, controller properties, capabilities and responsibility for
   negative balances must be selected before production account provisioning. Blocking for production
   implementation of this story. No implementation PR starts before this gate is resolved.

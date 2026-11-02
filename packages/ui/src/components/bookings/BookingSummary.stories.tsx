@@ -4,7 +4,7 @@ import { BookingSummary, CancellationSummary } from './BookingSummary';
 const meta = {
   title: 'Product/Booking', component: BookingSummary, tags: ['autodocs'],
   args: { mentorName: 'Alex Laurent', startsAt: '2026-09-09T12:00:00Z', dateLabel: 'Wednesday, 9 September 2026', timeLabel: '14:00–14:25', timeZone: 'Europe/Warsaw', duration: 25, total: 'EUR 45.00', actions: <><Button intent="neutral" appearance="ghost">Change time</Button><Button>Continue to secure checkout</Button></> },
-  parameters: { docs: { description: { component: 'Booking summary for #21/#22/#34. Prices, timezone and reservation state are input data. Stripe Checkout collects payment information; this component never collects card details. CancellationSummary supports later #24 and takes the server-calculated financial consequence without implementing policy.' } } },
+  parameters: { docs: { description: { component: 'Booking summary for #40/#41/#53. Prices, timezone and reservation state are input data. Stripe Checkout collects payment information; this component never collects card details. CancellationSummary supports later #43 and takes the server-calculated financial consequence without implementing policy.' } } },
 } satisfies Meta<typeof BookingSummary>;
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -38,27 +38,27 @@ edited.
 
 ### The evidence: twelve feature archetypes, ten of them first used in E02
 
-Primitives I surveyed issues #12–#34 for infrastructure shapes. Re-surveying those 23 issues for
+Primitives I surveyed issues #31–#53 for infrastructure shapes. Re-surveying those 23 issues for
 **feature archetypes** — the recurring shape of a route and the screen in front of it — produces a
 second, non-overlapping list:
 
 | # | Archetype | Backlog issues | First consumer |
 |---|---|---|---|
-| A1 | Owner-scoped singleton (`/api/<concept>/me`) | #16, #18, #19, #31 | **E02-S02** |
-| A2 | Owner-scoped collection | #17, #23, #26, #27, #28, #29, #32 | **E02-S03** |
-| A3 | Public read model | #16, #20, #21 | **E02-S02** |
-| A4 | Guarded state transition | #17, #21, #22, #24, #25, #28, #29, #30, #32 | **E02-S03** |
-| A5 | Money path | #18, #21, #22, #25, #31 | **E02-S04** |
-| A6 | External integration (port + adapters) | #19, #22, #33, #34 (+#12, #13) | E01; payments: **#34**, then standalone **#19** |
-| A7 | Single-use token grant | #13, #15 | **E02-S01** |
-| A8 | Deadline / time-bounded obligation | #15, #21, #22, #24, #30 | **E02-S01** |
-| A9 | Operator action, by hand under R18 | #15, #30, #31, #32 | **E02-S01** |
-| A10 | Notification fan-out | #23, #24, #27, #28, #29, #32 | E03-S04 |
-| A11 | Controlled vocabulary | #16, #18, #20, #21, #28, #32 | **E02-S02** |
-| A12 | Completeness / readiness gate | #16, #18, #19, #28, #29, #32 | **E02-S02** |
+| A1 | Owner-scoped singleton (`/api/<concept>/me`) | #35, #37, #38, #50 | **E02-S02** |
+| A2 | Owner-scoped collection | #36, #42, #45, #46, #47, #48, #51 | **E02-S03** |
+| A3 | Public read model | #35, #39, #40 | **E02-S02** |
+| A4 | Guarded state transition | #36, #40, #41, #43, #44, #47, #48, #49, #51 | **E02-S03** |
+| A5 | Money path | #37, #40, #41, #44, #50 | **E02-S04** |
+| A6 | External integration (port + adapters) | #38, #41, #52, #53 (+#31, #32) | E01; payments: **#53**, then standalone **#38** |
+| A7 | Single-use token grant | #32, #34 | **E02-S01** |
+| A8 | Deadline / time-bounded obligation | #34, #40, #41, #43, #49 | **E02-S01** |
+| A9 | Operator action, by hand under R18 | #34, #49, #50, #51 | **E02-S01** |
+| A10 | Notification fan-out | #42, #43, #46, #47, #48, #51 | E03-S04 |
+| A11 | Controlled vocabulary | #35, #37, #39, #40, #47, #51 | **E02-S02** |
+| A12 | Completeness / readiness gate | #35, #37, #38, #47, #48, #51 | **E02-S02** |
 
-Ten of the twelve have their first consumer inside E02; A6's payment consumers start at #34 and then
-the standalone #19 story. That is the argument for indexing them now rather than after E03: by the time E03 uses these
+Ten of the twelve have their first consumer inside E02; A6's payment consumers start at #53 and then
+the standalone #38 story. That is the argument for indexing them now rather than after E03: by the time E03 uses these
 archetypes again, each should have one discoverable owner instead of being rediscovered.
 
 ### Three archetypes are already described in three different vocabularies
@@ -66,19 +66,19 @@ archetypes again, each should have one discoverable owner instead of being redis
 Not a hypothetical. The filed issues do this today:
 
 - **A12** — the drift is in the *filed issues*, each quoted from its "How to implement" section:
-  [#16](https://github.com/open-mercato/ai_techleaders_project/issues/16) *"`publish(session)` (throws
+  [#35](https://github.com/warnaa/aitl-mentio/issues/35) *"`publish(session)` (throws
   `ValidationError` naming `publicWorkUrl` when it is missing, R04)"*;
-  [#18](https://github.com/open-mercato/ai_techleaders_project/issues/18) *"`isBookable(profile)` =
-  published and both prices set"*; [#19](https://github.com/open-mercato/ai_techleaders_project/issues/19)
+  [#37](https://github.com/warnaa/aitl-mentio/issues/37) *"`isBookable(profile)` =
+  published and both prices set"*; [#38](https://github.com/warnaa/aitl-mentio/issues/38)
   *"the mentor's page says what is missing"*. One computation, one UI, three names. The E02 story specs
   written against this catalogue already use one name — which is the point, not a counter-example.
-- **A3** — [#19](https://github.com/open-mercato/ai_techleaders_project/issues/19): `payoutsEnabled`
+- **A3** — [#38](https://github.com/warnaa/aitl-mentio/issues/38): `payoutsEnabled`
   *"is shown to them and to no one else"*, and *"the public mentor DTO in `mentor-profile.service.ts`
   never includes it"*. This is a security rule enforced by a developer remembering it. A DTO built
   by spreading an entity satisfies today's test and leaks the next field somebody adds.
-- **A11** — the same idea, four encodings: `STACK_TAGS = [...] as const` (#16),
-  `z.union([z.literal(25), z.literal(50)])` (#21), a `text[]` CHECK constraint (E01 `roles`), and a
-  query-param enum that must 422 on an unknown value (#20).
+- **A11** — the same idea, four encodings: `STACK_TAGS = [...] as const` (#35),
+  `z.union([z.literal(25), z.literal(50)])` (#40), a `text[]` CHECK constraint (E01 `roles`), and a
+  query-param enum that must 422 on an unknown value (#39).
 
 ### Two things the current code makes impossible
 
@@ -89,7 +89,7 @@ Verified in the tree, not assumed:
    (`packages/core/src/http/makeCrudRoute.ts:13-34`). `list()` and `create(data)` take no id, so the
    problem is not the id — it is that **no `Session` reaches the service**, and A1 additionally has no
    `[id]` segment to key on. Both interfaces are `BACKWARD_COMPATIBILITY.md` §2 exports, so widening
-   them is a breaking change, which is why Primitives I's **B4** deferred the seam to #23. This
+   them is a breaking change, which is why Primitives I's **B4** deferred the seam to #42. This
    catalogue's B23 is the promised A1/A2 answer, reached additively instead.
 2. **`CrudForm` has no field type for anything E02 collects.** `CrudFieldType` is
    `'text' | 'email' | 'number' | 'textarea' | 'checkbox' | 'select'`, and only `button` and `card`
@@ -129,8 +129,8 @@ A5 and A8 are the same rule wearing different clothes, and the backlog restates 
 
 > **Policy is read at the transition and snapshotted; it is never re-derived at read time.**
 
-The price on a booking (#21), the fee percentage applied (#25), and the publish-by deadline on an
-accepted invitation (#15, R17) are all values captured at the moment an event happened. Changing a
+The price on a booking (#40), the fee percentage applied (#44), and the publish-by deadline on an
+accepted invitation (#34, R17) are all values captured at the moment an event happened. Changing a
 price bound, the platform fee, or the two-week policy must never move an obligation that already
 exists. Concretely, in E02: `Invitation.publishDueAt` is a stored `timestamptz` written at
 acceptance, not `acceptedAt + INTERVAL '14 days'` computed in a query.
@@ -144,7 +144,7 @@ acceptance, not `acceptedAt + INTERVAL '14 days'` computed in a query.
   E01's ship gate, and mixing E02's gate into the same document makes "what is owed by which epic"
   unreadable — which is the one thing that document does well.
 - **Widen `makeCrudRoute` to carry a `Session`.** Rejected here as it was in Primitives I: it is a
-  §2 breaking change to two protected interfaces, and issue #23 owns that design. B23 below reaches
+  §2 breaking change to two protected interfaces, and issue #42 owns that design. B23 below reaches
   the same outcome additively, with zero blast radius, by adding a sibling factory instead.
 - **Reach the session through `makeCrudRoute`'s existing `authorize(req, cradle)` hook.** E01 already
   puts a scoped `session` on the `Cradle`, so `authorize` could resolve it and `resolve(cradle)` could
@@ -153,7 +153,7 @@ acceptance, not `acceptedAt + INTERVAL '14 days'` computed in a query.
   (c) => c.mentorProfileService` looks identical whether or not the service scopes by caller), and it
   makes "this service reads the ambient session" a property discoverable only by reading the service.
   B23 instead keeps the route guard visible while the concept service independently authorizes through
-  E01's injected request-scoped `Session`. #23 may still choose the existing CRUD helper for unscoped
+  E01's injected request-scoped `Session`. #42 may still choose the existing CRUD helper for unscoped
   lists; nothing here forecloses it.
 - **A generic repository/query-builder layer.** Rejected: MikroORM's `EntityManager` already is one,
   and the standards spec's dependency rule keeps `@mikro-orm/*` inside `db`. Services take an `em`.
@@ -173,11 +173,11 @@ and F7. B23 is the promised re-design of that document's **B4**, and says so in 
 #### B5′ · Opaque single-use tokens — `core/src/services/auth/token.service.ts` (extended) · **SHIP**
 
 Primitives I shipped the stateless purpose-bound pair for OAuth `state` and email verification, and
-deferred the stored pair to #15. The E02 epic owns the exact token helpers and tests.
+deferred the stored pair to #34. The E02 epic owns the exact token helpers and tests.
 
 The raw token exists only inside the invitation link; the database stores the hash, unique-indexed.
 
-**A correction to how [#15](https://github.com/open-mercato/ai_techleaders_project/issues/15) states
+**A correction to how [#34](https://github.com/warnaa/aitl-mentio/issues/34) states
 the lookup.** It asks for a *"constant-time hash compare"*. Looking a token up **by** its hash —
 `findOne(Invitation, { tokenHash: hashToken(token) })` — has no timing oracle to defend: an attacker
 cannot steer a SHA-256 digest, so the index probe leaks nothing about the 256-bit secret. A
@@ -200,7 +200,7 @@ stays pure; persistence and transaction retries remain service responsibilities.
 1. **A slug is generated atomically on first publication and immutable afterward.** It stays nullable
    on drafts, so invitation acceptance can keep creating empty profiles. The E02 epic owns the bounded,
    fresh-transaction collision retry and concurrent publish/unpublish behavior.
-2. **A slug is not a secret.** It is enumerable by design (#20 lists them). Nothing that is not
+2. **A slug is not a secret.** It is enumerable by design (#39 lists them). Nothing that is not
    already public may be reachable by knowing one — which is what B24 enforces.
 
 #### B12′ · Money — `core/src/money/money.ts` · **SHIP**
@@ -209,11 +209,11 @@ One platform currency in 1.0. The brief does not choose its value, so founder A 
 proposed `USD` default before the pricing story starts. Currency is displayed and snapshotted by later
 bookings but is not stored per mentor. The E02 epic owns the exact cents, bounds and parser contracts.
 
-**Fee calculation is deferred to #25.** E02 sets prices and never divides one, so no fee helper or fee
+**Fee calculation is deferred to #44.** E02 sets prices and never divides one, so no fee helper or fee
 configuration lands here. D11/R10 remains binding on the later settlement story.
 
 The two rules Primitives I attached to this entry are unchanged and still binding: **never trust a
-client amount** (#21: *"the client never supplies a price"*), and **snapshot at the transition** (#25:
+client amount** (#40: *"the client never supplies a price"*), and **snapshot at the transition** (#44:
 `feePercentApplied`).
 
 `parseMajorAmount` accepts a decimal string with at most two fractional digits and converts it by
@@ -223,12 +223,12 @@ is a later arithmetic and migration decision, not a config flip.
 
 #### B16′ · Platform settings with an env seed — `core/src/services/operator/platform-settings.service.ts` · **SHIP**
 
-Backed by `config/env.ts` now; backed by a single-row table after #31 behind the same method. The
+Backed by `config/env.ts` now; backed by a single-row table after #50 behind the same method. The
 confirmed currency and the 25-/50-minute bounds are validated together. The E02 epic owns the exact
 environment names, shape and service operations.
 
 Both carry founder-approved defaults before implementation, so §4 stays satisfied. Placeholder money
-policy must never become a production default. `PLATFORM_FEE_PERCENT` remains owned by #25/#31.
+policy must never become a production default. `PLATFORM_FEE_PERCENT` remains owned by #44/#50.
 Configuration validation also requires integer cents, positive values and `minCents <= maxCents` for
 each duration.
 
@@ -242,24 +242,24 @@ Two E02 gates, defined once each and never re-expressed:
 
 | Gate | Requirements | Enforced by | Rendered by |
 |---|---|---|---|
-| `mentorPagePublishable` | public-work link, bio, ≥1 stack tag | `publish()` (#16) | profile page |
-| `mentorOfferReady` | page published, 25- and 50-minute price set | public offer rendering (#18) | public page, mentor home |
+| `mentorPagePublishable` | public-work link, bio, ≥1 stack tag | `publish()` (#35) | profile page |
+| `mentorOfferReady` | page published, 25- and 50-minute price set | public offer rendering (#37) | public page, mentor home |
 
 Both E02 gates are declared together in `core/src/services/mentors/readiness.ts`. Connect status and
 settlement readiness are owned by their 1.1 stories because provider capability and payout policy are
 not the same gate.
 
 `assert` throwing a `ValidationError` whose `fieldErrors` are keyed by requirement key is what makes
-#16's acceptance criterion — *"it is not published and the missing link is named"* — fall out of the
+#35's acceptance criterion — *"it is not published and the missing link is named"* — fall out of the
 primitive rather than be hand-written per gate: `CrudForm` already renders `fieldErrors` next to the
 matching field, and the keys are chosen to match the form field names.
 
 `evaluate` returns plain data, so it serializes into a route payload and reaches `ReadinessChecklist`
 (F9) without `ui` importing `core`.
 
-**Why not just a boolean.** `isBookable(profile)` was #18's proposal. A boolean cannot answer *why
+**Why not just a boolean.** `isBookable(profile)` was #37's proposal. A boolean cannot answer *why
 not*, so every screen that needs the reason re-derives it — which is precisely how the same rule
-came to be written three ways across #16, #18 and #19.
+came to be written three ways across #35, #37 and #38.
 
 #### B23 · Owner-scoped route factories — `core/src/http/owned-route.ts` · **SHIP (new)**
 
@@ -285,7 +285,7 @@ Three properties of the owner contract matter, each found in review:
   hold `mentor`; a mandatory `role` would 403 the very request that grants the role.
 - **`makeOwnedCollectionRoute` exists.** A2 — "X sees only their own Y", seven backlog consumers — is
   the second-largest justification in this catalogue, and without a collection factory that claim was
-  unbacked. Its E02 caller is `/api/availability/slots` (#17).
+  unbacked. Its E02 caller is `/api/availability/slots` (#36).
 
 Every omitted operation behaves like `makeCrudRoute`'s missing method. Both factories run inside
 `withRequestScope` and call the live `requireSession` then `requireRole` for visible defence in depth.
@@ -295,13 +295,13 @@ uses the same scoped session from its constructor and independently enforces rol
 **This is additive and breaks nothing.** `makeCrudRoute`, `CrudService` and `MakeCrudRouteOptions`
 are untouched §2 exports; these are sibling callback factories. This is the
 promised re-design of Primitives I's **B4**, reached without the breaking change B4 was waiting for.
-#23 remains free to design its own scoped list, or to simply use `makeOwnedCollectionRoute`.
+#42 remains free to design its own scoped list, or to simply use `makeOwnedCollectionRoute`.
 
-E02 call sites — `makeOwnedResourceRoute`: `GET/PUT /api/mentors/me` (#16) and
-`PUT /api/mentors/me/prices` (#18).
-`makeOwnedCollectionRoute`: `GET/POST /api/availability/slots`, `DELETE …/[id]` (#17).
-`ownedAction`: `POST /api/mentors/me/{publish,unpublish}` (#16) and
-`POST /api/invitations/[token]/accept` (#15, no `role`).
+E02 call sites — `makeOwnedResourceRoute`: `GET/PUT /api/mentors/me` (#35) and
+`PUT /api/mentors/me/prices` (#37).
+`makeOwnedCollectionRoute`: `GET/POST /api/availability/slots`, `DELETE …/[id]` (#36).
+`ownedAction`: `POST /api/mentors/me/{publish,unpublish}` (#35) and
+`POST /api/invitations/[token]/accept` (#34, no `role`).
 
 #### B24 · Audience-scoped projection — a rule plus a test helper · **SHIP (new)**
 
@@ -323,8 +323,8 @@ E02's two audiences for one entity, spelled out because this is where a leak wou
 
 | Projection | Includes | Never includes |
 |---|---|---|
-| `toPublicDto` (#16, `/m/<slug>`) | slug, displayName, avatarUrl, publicWorkUrl, bio, stackTags, prices, future slots | email, invitation, `initialPublishDueAt` |
-| `toOwnerDto` (#16, #18) | public fields + drafts, prices with bounds, readiness, `initialPublishDueAt` | invitation history |
+| `toPublicDto` (#35, `/m/<slug>`) | slug, displayName, avatarUrl, publicWorkUrl, bio, stackTags, prices, future slots | email, invitation, `initialPublishDueAt` |
+| `toOwnerDto` (#35, #37) | public fields + drafts, prices with bounds, readiness, `initialPublishDueAt` | invitation history |
 
 #### B25 · Vocabulary — `core/src/domain/vocabulary.ts` · **SHIP (new)**
 
@@ -352,17 +352,17 @@ slots stored on the mentor (`MentorProfile.lastPublishedAvailabilityAt`).
 > A denormalised key is written in the **same transaction** as the fact it derives from, and is
 > never recomputed by a join at read time.
 
-Two E02 owner-spec decisions are indexed here because #20 depends on both:
+Two E02 owner-spec decisions are indexed here because #39 depends on both:
 
 - **Removing a slot does not lower it.** The column records *"when this mentor last published
   availability"*, not *"whether they have any"*. Lowering it on removal would need a `MAX()`
   subquery — precisely the join the rule forbids — and would reorder the list on a delete.
-- **It is not an eligibility test.** #20's list must *additionally* require an offer-ready mentor and
+- **It is not an eligibility test.** #39's list must *additionally* require an offer-ready mentor and
   at least one future, non-removed slot. Once E03 exists, that predicate also excludes slots with no
   viable length under active occupancy. Ordering key and eligibility stay separate; conflating them
   is how a mentor with no remaining availability ends up at the top of the list.
 
-#### B14′ · Connect gateway port · **OWNED BY #19 (standalone 1.1)**
+#### B14′ · Connect gateway port · **OWNED BY #38 (standalone 1.1)**
 
 The Connect story owns a narrow `ConnectGateway`; this catalogue deliberately declares no signature.
 It must include durable provisioning state, a stable mentor-scoped provider idempotency key, mentor
@@ -373,8 +373,8 @@ configuration and capabilities.
 
 #### B27 · Operator command harness — `core/src/operator/` · **DEFER (second R18 command)**
 
-R18 guarantees more of these: invitations by hand until #30, price bounds until #31, payouts until
-#25, disputes until #32. E02 has exactly **one** (`scripts/invite.ts`, #15), so a harness would ship
+R18 guarantees more of these: invitations by hand until #49, price bounds until #50, payouts until
+#44, disputes until #51. E02 has exactly **one** (`scripts/invite.ts`, #34), so a harness would ship
 with a single caller — the artefact the ship gate exists to prevent.
 
 Recorded so the second one does not invent a different shape: an R18 command is a `tsx` script under
@@ -391,9 +391,9 @@ field types its forms actually collect, and the shadcn primitives behind them:
 
 | Type | Renders | shadcn needed | Story |
 |---|---|---|---|
-| `multiselect` | a checkbox group over `options`, value `string[]` | `checkbox`, `badge` | #16 stack tags |
-| `datetime` | `<input type="datetime-local">`, **value converted local → UTC ISO on change** | `input` (E01) | #17 slot start |
-| `money` | major-unit decimal string with currency suffix; preserves the string for exact server parsing | `input` (E01) | #18 prices |
+| `multiselect` | a checkbox group over `options`, value `string[]` | `checkbox`, `badge` | #35 stack tags |
+| `datetime` | `<input type="datetime-local">`, **value converted local → UTC ISO on change** | `input` (E01) | #36 slot start |
+| `money` | major-unit decimal string with currency suffix; preserves the string for exact server parsing | `input` (E01) | #37 prices |
 
 `multiselect` is a checkbox group rather than a combobox on purpose: there are exactly four options
 (R16), and a combobox needs `command` + `popover` + `dialog`, three components installed to render
@@ -422,8 +422,8 @@ frame of UTC before the swap, which is the right trade against a wrong time rend
 It lives in `ui/src/time/`, **not** `ui/src/backend/`: `backend/` is the app-and-admin panel toolkit,
 and `/m/<slug>` is a public Tailwind page that needs this component too.
 
-E02 consumers: the publish-by date on the mentor home (#15), every slot in the mentor's table and on
-the public page (#17). Backlog: #21–#29 all render instants.
+E02 consumers: the publish-by date on the mentor home (#34), every slot in the mentor's table and on
+the public page (#36). Backlog: #40–#48 all render instants.
 
 #### F9 · ReadinessChecklist — `ui/src/backend/feedback/ReadinessChecklist.tsx` · **SHIP (new)**
 
@@ -432,12 +432,12 @@ Renders B22's `evaluate()` output as an ordered list with an accessible state pe
 core DTO. Because it takes plain data it needs nothing from `core`.
 
 This is the component that makes the server rule and the on-screen explanation the same thing. Its
-two E02 consumers are the mentor home ("publish at least one bookable session by <date>", #15) and the
-profile page ("you cannot publish yet because…", #16). The standalone Connect story may reuse it for
-normalized onboarding guidance. Six more screens in the backlog need it (#25, #27, #28, #29, #30,
-#31), which is the widening
+two E02 consumers are the mentor home ("publish at least one bookable session by <date>", #34) and the
+profile page ("you cannot publish yet because…", #35). The standalone Connect story may reuse it for
+normalized onboarding guidance. Six more screens in the backlog need it (#44, #46, #47, #48, #49,
+#50), which is the widening
 Primitives I's F6 predicted — F6's `EmptyState` `tone` prop covers the *one-line* case and this
-covers the *itemised* case; F6 stays deferred to #25.
+covers the *itemised* case; F6 stays deferred to #44.
 
 #### F10 · Resource fetching — `ui/src/backend/api/useApiResource.ts` + `panels/ResourcePanel.tsx` · **SHIP (new)**
 
@@ -475,10 +475,10 @@ E02 consumers — `ResourcePanel`: `/mentor` home, `/mentor/profile`, `/mentor/p
 story may reuse `ResourcePanel` for `/mentor/payouts` without making that page part of E02. The admin
 users table can adopt the hook in a later refactor.
 
-#### F11 · Copy-to-clipboard share link · **DEFER #20**
+#### F11 · Copy-to-clipboard share link · **DEFER #39**
 
-#16 needs one copy button. Placement rule 4 in `AGENTS.md` says colocate a component used by exactly
-one page; promote it to `ui/src/backend/actions/` when #20's list gives each row one.
+#35 needs one copy button. Placement rule 4 in `AGENTS.md` says colocate a component used by exactly
+one page; promote it to `ui/src/backend/actions/` when #39's list gives each row one.
 
 ### Testing
 
@@ -508,7 +508,7 @@ once. E02-S01 drives invitation acceptance in the browser; E03's booking tests s
 This document introduces no entity. It fixes one shape E02 uses and later work inherits:
 
 - **`MentorProfile.lastPublishedAvailabilityAt`** (`timestamptz` null) — B26's denormalised ordering
-  key, added and maintained by E02-S03, read by #20.
+  key, added and maintained by E02-S03, read by #39.
 
 Everything else lives in the E02 spec's data model, which owns `MentorProfile`'s widening, `Slot` and
 `Invitation`.
@@ -585,14 +585,14 @@ an E02 slice against a real consumer:
 
 | Delivered in | Entries |
 |---|---|
-| E02-S01 invitations (#15) | B5′ opaque tokens · B23 `ownedAction` role-less callback · F8 `LocalTime` · T1 `seedPendingInvitation` |
-| E02-S02 mentor page (#16) | B21′ slug · B22 readiness · B23 resource/action callbacks · B24 projection rule + test helper · B25 vocabulary · F5′ `multiselect` · F9 checklist · F10 resource panel · T1 `seedPublishedMentorProfile` |
-| E02-S03 slots (#17) | B23 collection callbacks · F5′ `datetime` · B26 ordering key · T1 `seedMentorWithSlots` |
-| E02-S04 prices (#18) | B12′ exact money parsing/bounds · B16′ settings · F5′ `money` · T1 `seedOfferReadyMentor` |
-| Standalone Connect (#19, 1.1) | B14′ ownership note only; the story owns its exact `ConnectGateway` contract |
+| E02-S01 invitations (#34) | B5′ opaque tokens · B23 `ownedAction` role-less callback · F8 `LocalTime` · T1 `seedPendingInvitation` |
+| E02-S02 mentor page (#35) | B21′ slug · B22 readiness · B23 resource/action callbacks · B24 projection rule + test helper · B25 vocabulary · F5′ `multiselect` · F9 checklist · F10 resource panel · T1 `seedPublishedMentorProfile` |
+| E02-S03 slots (#36) | B23 collection callbacks · F5′ `datetime` · B26 ordering key · T1 `seedMentorWithSlots` |
+| E02-S04 prices (#37) | B12′ exact money parsing/bounds · B16′ settings · F5′ `money` · T1 `seedOfferReadyMentor` |
+| Standalone Connect (#38, 1.1) | B14′ ownership note only; the story owns its exact `ConnectGateway` contract |
 
 Deferred entries are delivered by the issue named in their row: B5′'s claim helper and B27 by their
-second consumer, F11 by #20, and fee calculation by #25.
+second consumer, F11 by #39, and fee calculation by #44.
 
 ## 📋 Implementation Plan
 
@@ -614,8 +614,8 @@ Three documentation steps are owed by whichever PR first ships a primitive from 
 
 ## 📝 Open items for a future spec
 
-- **The `makeCrudRoute` list seam** (#23) — B23 resolves A1 and single-verb A2 operations
-  additively, but a *scoped list* through `makeCrudRoute` is still #23's design. It may adopt
+- **The `makeCrudRoute` list seam** (#42) — B23 resolves A1 and single-verb A2 operations
+  additively, but a *scoped list* through `makeCrudRoute` is still #42's design. It may adopt
   the callback factory shape.
 - **The transactional single-use claim** (B5′) — extract at the second stored-token flow.
 - **The operator command harness** (B27) — extract at the second R18 script.

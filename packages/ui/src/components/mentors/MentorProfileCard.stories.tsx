@@ -15,7 +15,7 @@ const demoReviews: MentorReview[] = [
 const meta = {
   title: 'Product/Mentors', component: MentorProfileCard, tags: ['autodocs'],
   args: { name: 'Alex Laurent', headline: 'Staff engineer: developer tooling', initials: 'AL', introduction: 'I help developers design TypeScript APIs, decide what to test and keep their architecture maintainable. Bring a specific question and the context behind it.', stacks: ['TypeScript', 'React', 'Node.js'], publicWork: [{ label: 'Open source contributions', href: 'https://example.com/alex/work' }, { label: 'Technical writing', href: 'https://example.com/alex/writing' }], availability: 'Next available Wednesday, 9 September', status: 'published', actions: <Button>Choose a time</Button> },
-  parameters: { layout: 'padded', docs: { description: { component: 'Mentor identity, technology icons, ratings and written reviews. All people and reviews shown here are fictional. The single-stack directory is planned for #20; it does not add ranking or search. The host checks whether a completed session is eligible for a review and saves submissions.' } } },
+  parameters: { layout: 'padded', docs: { description: { component: 'Mentor identity, technology icons, ratings and written reviews. All people and reviews shown here are fictional. The single-stack directory is planned for #39; it does not add ranking or search. The host checks whether a completed session is eligible for a review and saves submissions.' } } },
 } satisfies Meta<typeof MentorProfileCard>;
 export default meta;
 type Story = StoryObj<typeof meta>;

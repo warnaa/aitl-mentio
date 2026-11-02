@@ -4,7 +4,7 @@ import { AccessStatus } from './AccessStatus';
 const meta = {
   title: 'Product/Account access', component: AccessStatus, tags: ['autodocs'],
   args: { state: 'check-inbox', detail: 'Verification sent to jamie@example.com.', actions: <Button intent="neutral" appearance="stroke">Resend verification email</Button> },
-  parameters: { docs: { description: { component: 'Recovery and invitation states for #12 to #15. This composition displays server state and authorized actions; it performs no authentication, access checks or invitation acceptance. Deadlines are supplied by the caller.' } } },
+  parameters: { docs: { description: { component: 'Recovery and invitation states for #31 to #34. This composition displays server state and authorized actions; it performs no authentication, access checks or invitation acceptance. Deadlines are supplied by the caller.' } } },
 } satisfies Meta<typeof AccessStatus>;
 export default meta;
 type Story = StoryObj<typeof meta>;

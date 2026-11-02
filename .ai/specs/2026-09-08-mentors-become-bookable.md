@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 Status: active — moves to `implemented/` when its four first-iteration slices land
-Issue: [#8](https://github.com/open-mercato/ai_techleaders_project/issues/8) — stories #15, #16, #17, #18
+Issue: [#27](https://github.com/warnaa/aitl-mentio/issues/27) — stories #34, #35, #36, #37
 Design authority: `.ai/specs/product-brief.md`, `.ai/specs/2026-09-01-engineering-standards.md`
 Builds on: `.ai/specs/2026-09-04-accounts-and-roles.md` (E01), `.ai/specs/2026-09-04-platform-primitives.md`
 Uses the non-normative pattern catalogue: `.ai/specs/2026-09-08-platform-primitives-ii.md`
@@ -57,7 +57,7 @@ experiment cannot run at all, and D16's ship date of 2026-10-31 has nothing to s
 
 ### The framework problem
 
-Primitives I surveyed issues #12–#34 for *infrastructure* shapes and headed off nine of them. It did
+Primitives I surveyed issues #31–#53 for *infrastructure* shapes and headed off nine of them. It did
 not survey the backlog for **feature archetypes** — the recurring shape of a route and the screen in
 front of it. Twelve appear; ten have their first consumer in E02. The full survey with per-issue
 evidence — including which later issues reuse each archetype — is in Platform Primitives II, which is
@@ -66,15 +66,15 @@ touch:
 
 | First used by | Archetype |
 |---|---|
-| **E02-S01** (#15) | Single-use token grant · deadline obligation · R18 operator action |
-| **E02-S02** (#16) | Owner-scoped singleton · public read model · controlled vocabulary · readiness gate |
-| **E02-S03** (#17) | Owner-scoped collection · guarded state transition |
-| **E02-S04** (#18) | Money path |
-| **1.1 Connect** (#19) | External integration; specified and delivered independently of E02 |
+| **E02-S01** (#34) | Single-use token grant · deadline obligation · R18 operator action |
+| **E02-S02** (#35) | Owner-scoped singleton · public read model · controlled vocabulary · readiness gate |
+| **E02-S03** (#36) | Owner-scoped collection · guarded state transition |
+| **E02-S04** (#37) | Money path |
+| **1.1 Connect** (#38) | External integration; specified and delivered independently of E02 |
 
 Three of these are already written three different ways in the filed issues — the "you cannot
 publish / cannot be booked / cannot be paid until X" rule appears as a thrown `ValidationError` in
-#16, a boolean `isBookable()` in #18, and prose in #19. Same computation, same screen, three
+#35, a boolean `isBookable()` in #37, and prose in #38. Same computation, same screen, three
 implementations. That is the concrete waste this spec removes.
 
 ### What E02 cannot defer
@@ -89,13 +89,13 @@ Four slices, each one PR, each leaving the app working, ordered so each unblocks
 first-iteration E02 work in D13. Stripe Connect is a separate 1.1 capability and does not control this
 epic's lifecycle.
 
-1. **Invitation and role grant (#15)** — `Invitation`, the accept transaction that adds `mentor`
+1. **Invitation and role grant (#34)** — `Invitation`, the accept transaction that adds `mentor`
    without removing a role, the by-hand `invite` script (R18), the mentor home with its publish-by
    date. *Unblocks every other slice: nothing else has a mentor to act as.*
-2. **Mentor page and share link (#16)** — the real `MentorProfile` fields, the stack-tag vocabulary,
+2. **Mentor page and share link (#35)** — the real `MentorProfile` fields, the stack-tag vocabulary,
    the publish readiness gate, `/m/<slug>` for signed-out visitors.
-3. **Slots (#17)** — `Slot`, publish and remove, and the public page's booking-agnostic slot list.
-4. **Prices and offer readiness (#18)** — two prices in one platform currency inside operator bounds,
+3. **Slots (#36)** — `Slot`, publish and remove, and the public page's booking-agnostic slot list.
+4. **Prices and offer readiness (#37)** — two prices in one platform currency inside operator bounds,
    the settings service, and the readiness gate the public page and E03-S02 both read.
 Platform Primitives II is an index of the patterns these stories establish, not a separately shippable
 framework and not another implementation authority. A primitive lands only in the story that first
@@ -120,7 +120,7 @@ when the invitation is created and accepted, never `INTERVAL` arithmetic in a qu
   I's ship gate. Every entry lands inside the slice that calls it.
 - **Recurring availability** (a weekly schedule rather than individual start times). Rejected for
   1.0: D22 says *"mentors publish slots"* and nothing more, recurrence needs an expansion engine and
-  a DST policy, and #17 already tags single start times as the plain reading. Revisit if mentors
+  a DST policy, and #36 already tags single start times as the plain reading. Revisit if mentors
   complain about publishing effort — which is exactly the signal D18's batch report surfaces.
 - **A generic RBAC/permission layer** now that a second role-granting flow exists. Rejected: E01
   fixed the role set deliberately, and invitation acceptance is `grantRole(user, 'mentor')` — one
@@ -138,13 +138,13 @@ Superpeer), and Stripe's own Connect guidance.
   this spec (F8, F5′). Skipping the second one is how a mentor in Warsaw publishes a slot that
   appears two hours off to a mentee in London.
 - **Every mentor marketplace has a profile-completeness meter**, and it is always the same list the
-  server uses to decide whether the profile is listable. That is B22 + F9, and it is why #16's
+  server uses to decide whether the profile is listable. That is B22 + F9, and it is why #35's
   "publish is refused and the missing link is named" is a primitive here rather than an `if`.
 - **Stripe Connect account links expire in minutes.** The standalone 1.1 Connect spec therefore never
   stores them and mints a fresh link per start. That story owns provider reconciliation and user-facing
   status; E02 does not partially implement either.
 - **Invitations everywhere (GitHub, Slack, Linear) are single-use, expiring, revocable and
-  re-sendable.** #15 specifies the first two; revoke and resend are added here as service methods,
+  re-sendable.** #34 specifies the first two; revoke and resend are added here as service methods,
   because the operator sending 20 by hand (R18) will get an address wrong within the first batch.
 
 **Deliberately skipped, with the reason:**
@@ -274,7 +274,7 @@ and is added by hand to the `entities` array in `packages/db/src/entities/index.
 | `accepted_by_id` | `uuid` null, FK `users` | **not unique** — see below |
 | `publish_due_at` | `timestamptz` null | `acceptedAt + MENTOR_PUBLISH_WINDOW_DAYS` (14, R17), snapshotted |
 | `revoked_at` | `timestamptz` null | the operator's undo for a wrong address |
-| `batch` | `varchar(64)` null | free text until #30 gives batches a table |
+| `batch` | `varchar(64)` null | free text until #49 gives batches a table |
 
 `token_hash` is unique so a duplicate mint is a constraint violation rather than two live links. The
 partial state (`accepted_at` set with `accepted_by_id` null, or the reverse) is impossible because both
@@ -316,7 +316,7 @@ obligation.
 | `bio` | existing `text` null | 2 | reused as R04's plain description; 1–2000 chars, no duplicate `description` column |
 | `stack_tags` | `text[]` not null default `'{}'` | 2 | `CHECK` with the same hand-written literal (R16, D21) |
 | `published_at` | `timestamptz` null | 2 | non-null ⇒ the page is public |
-| `last_published_availability_at` | `timestamptz` null | 3 | B26; introduced and maintained with slots, read by #20 (R13) |
+| `last_published_availability_at` | `timestamptz` null | 3 | B26; introduced and maintained with slots, read by #39 (R13) |
 | `price_25_cents` | `integer` null | 4 | minor units; `CHECK > 0` |
 | `price_50_cents` | `integer` null | 4 | minor units; `CHECK > 0` |
 
@@ -337,7 +337,7 @@ profile state.
 field rather than adding a parallel column. `BACKWARD_COMPATIBILITY.md` lists them under
 "what is not protected", but `database.seeder.ts` and `tests/integration/admin.integration.test.ts`
 both assert `Systems & algorithms mentor`; retiring them is a separate expand-then-contract PR with
-no product value in E02 (#16's open question, answered: keep).
+no product value in E02 (#35's open question, answered: keep).
 
 **The two prices move together.** An `updatePrices` call always carries both values and validates them
 against the single configured platform currency's bounds in one transaction. Currency is not stored
@@ -393,7 +393,7 @@ check and never defines its own opt-out.
 **Accepting an invitation must re-issue the caller's session, and forgetting this signs them out.**
 E01 puts `grantRole` on `session_version`'s closed list of bump triggers and says why: *"a role change
 re-issues the caller's session in the same request rather than ejecting them, and only a route handler
-can set a cookie in the App Router"* — published there explicitly *"for #15, which is the first grant
+can set a cookie in the App Router"* — published there explicitly *"for #34, which is the first grant
 path"*. So `POST /api/invitations/[token]/accept` commits its transaction, then signs a fresh cookie
 carrying the new `sessionVersion` and returns it on its own response. Without that line the accept
 succeeds, the caller's own action invalidates their token, and the redirect to `/mentor` lands on the
@@ -419,7 +419,7 @@ Shared schemas in `core/src/validators/`, imported by both the route and `CrudFo
 ```ts
 // Every field is optional: a mentor saves incrementally, and completeness is the publish gate's job,
 // not the schema's. Making these required would make `mentorPagePublishable` unreachable through the
-// only screen that writes them — and with it, #16's "the missing link is named" acceptance criterion.
+// only screen that writes them — and with it, #35's "the missing link is named" acceptance criterion.
 mentorProfileUpdateSchema = { publicWorkUrl: z.string().url().refine(https-or-http).optional(),
                               bio: z.string().min(1).max(2000).optional(),
                               stackTags: z.array(StackTags.schema).max(4).optional() }
@@ -626,34 +626,34 @@ which differences are decisions and which are mistakes.
 
 | Issue said | This spec says | Why |
 |---|---|---|
-| #16, #17: `getMine`, `update`, `listMine`, `listPublicFor` | concept service methods with E01's injected scoped session | B23 removes route boilerplate through callbacks without imposing a second CRUD-shaped service interface |
-| #16: the tag picker is a colocated component, since `CrudForm` has no multi-select | `multiselect` becomes a `CrudForm` field type (F5′) | Placement rule 2 beats rule 4 once the pattern is concept-agnostic; a checkbox group over `options` is a field type, not a mentor component. The copy button stays colocated under rule 4 |
-| #16: `core/src/services/mentors/stack-tags.ts` | `core/src/domain/vocabularies/stack-tags.ts` | It is a vocabulary, not a mentor service; B25 makes the folder a cross-cutting sibling of `http/` |
-| #15: the invitation page lives under `(mentor)/` | `app/invitation/[token]/page.tsx`, ungrouped | It is a public page opened by someone who is not yet a mentor; `(mentor)` is a guarded group |
-| #15: possession of the link is enough to accept | acceptance also requires the persisted verified normalized user email to match the invitation | The invitation names a person; forwarding a URL must not transfer the mentor grant |
-| #15: `accepted_by_id` unique | not unique | The unique constraint permanently spends a user's one acceptance and breaks the revoke-and-re-invite path the same issue implies |
-| #16: `slug` reaches `not null` | nullable unique slug generated on first publish | Slice 1 can keep creating drafts; a database check makes every published row have a slug |
-| #17: `Slot` carries a `booking` relation | `Slot` never owns one; E03 adds `Booking.slotId` | One slot can have several historical payment attempts and cancellations |
-| #18: four scalar bound variables | `PLATFORM_CURRENCY` plus one `PLATFORM_PRICE_BOUNDS` object | One currency keeps 1.0 small without hiding the unit or bounds |
-| #18: `isBookable(profile)` boolean | the `mentorOfferReady` readiness gate | It explains profile/price readiness without claiming that Checkout and settlement have launched |
-| #17, #18: depend on #15 only | also depend on #16 | Both write to `MentorProfile` columns #16 creates, and both render on the page #16 publishes |
-| #15: "constant-time hash compare" | lookup by hash | A random 256-bit token is located by its digest; no candidate hash comparison occurs |
-| #17: per-slot locking | mechanism deferred to E03 | E02 has no Booking and cannot authoritatively choose E03's concurrency design |
+| #35, #36: `getMine`, `update`, `listMine`, `listPublicFor` | concept service methods with E01's injected scoped session | B23 removes route boilerplate through callbacks without imposing a second CRUD-shaped service interface |
+| #35: the tag picker is a colocated component, since `CrudForm` has no multi-select | `multiselect` becomes a `CrudForm` field type (F5′) | Placement rule 2 beats rule 4 once the pattern is concept-agnostic; a checkbox group over `options` is a field type, not a mentor component. The copy button stays colocated under rule 4 |
+| #35: `core/src/services/mentors/stack-tags.ts` | `core/src/domain/vocabularies/stack-tags.ts` | It is a vocabulary, not a mentor service; B25 makes the folder a cross-cutting sibling of `http/` |
+| #34: the invitation page lives under `(mentor)/` | `app/invitation/[token]/page.tsx`, ungrouped | It is a public page opened by someone who is not yet a mentor; `(mentor)` is a guarded group |
+| #34: possession of the link is enough to accept | acceptance also requires the persisted verified normalized user email to match the invitation | The invitation names a person; forwarding a URL must not transfer the mentor grant |
+| #34: `accepted_by_id` unique | not unique | The unique constraint permanently spends a user's one acceptance and breaks the revoke-and-re-invite path the same issue implies |
+| #35: `slug` reaches `not null` | nullable unique slug generated on first publish | Slice 1 can keep creating drafts; a database check makes every published row have a slug |
+| #36: `Slot` carries a `booking` relation | `Slot` never owns one; E03 adds `Booking.slotId` | One slot can have several historical payment attempts and cancellations |
+| #37: four scalar bound variables | `PLATFORM_CURRENCY` plus one `PLATFORM_PRICE_BOUNDS` object | One currency keeps 1.0 small without hiding the unit or bounds |
+| #37: `isBookable(profile)` boolean | the `mentorOfferReady` readiness gate | It explains profile/price readiness without claiming that Checkout and settlement have launched |
+| #36, #37: depend on #34 only | also depend on #35 | Both write to `MentorProfile` columns #35 creates, and both render on the page #35 publishes |
+| #34: "constant-time hash compare" | lookup by hash | A random 256-bit token is located by its digest; no candidate hash comparison occurs |
+| #36: per-slot locking | mechanism deferred to E03 | E02 has no Booking and cannot authoritatively choose E03's concurrency design |
 
 ## 📋 Phasing
 
 Four slices, one PR each, each leaving the app working. Stripe Connect is linked 1.1 work with its own
 spec and lifecycle; it is not Slice 5 of this epic.
 
-- **Slice 1 — Invitation and role grant (#15).** `risk-high` (grants a role), `needs-qa`, second
+- **Slice 1 — Invitation and role grant (#34).** `risk-high` (grants a role), `needs-qa`, second
   reviewer. Ships B5′, F8 and T1's invitation fixture. *Every later slice depends on it.*
-- **Slice 2 — Mentor page and share link (#16).** `risk-high` (schema migration and a shared contract
+- **Slice 2 — Mentor page and share link (#35).** `risk-high` (schema migration and a shared contract
   surface, `SDLC.md:97`), `needs-qa`, second reviewer. Ships B21′, B22, B23,
   B24, B25, F5′ `multiselect`, F10, T1's profile fixture. *The heaviest slice: it is where the
   domain floor lands.*
-- **Slice 3 — Slots (#17).** `risk-high` (schema migration, `SDLC.md:97`), `needs-qa`, second reviewer.
+- **Slice 3 — Slots (#36).** `risk-high` (schema migration, `SDLC.md:97`), `needs-qa`, second reviewer.
   Ships B23's collection callback, B26 and F5′ `datetime`; booking occupancy remains E03.
-- **Slice 4 — Prices and offer readiness (#18).** `risk-high` (money), `needs-qa`, second reviewer. Ships
+- **Slice 4 — Prices and offer readiness (#37).** `risk-high` (money), `needs-qa`, second reviewer. Ships
   B12′, B16′, F5′ `money`. Blocked until the founders approve the platform currency and both bounds.
 
 ## 📋 Implementation Plan
@@ -663,7 +663,7 @@ without a spec-local exception, is added to `coverage.include` in the same chang
 statements, branches, functions and lines.** That includes `page.tsx`, operational scripts and changed
 generated primitives. Integration coverage supplements and never replaces unit coverage.
 
-### Slice 1 — Invitation and role grant (#15)
+### Slice 1 — Invitation and role grant (#34)
 
 1. **`token.service.ts`** — add `mintOpaqueToken` and `hashToken` (B5′). Tests: shape, length,
    determinism of the hash, distinctness across mints.
@@ -705,7 +705,7 @@ generated primitives. Integration coverage supplements and never replaces unit c
    a signed-in user without an invitation has no path to become a mentor (`expectAbsent`, R07). Plus
    `seedPendingInvitation` (T1).
 
-### Slice 2 — Mentor page and share link (#16)
+### Slice 2 — Mentor page and share link (#35)
 
 1. **`core/src/domain/vocabulary.ts`** (B25) and `vocabularies/stack-tags.ts`. Tests cover the public
    interface; there is no SQL-string formatter in the domain layer.
@@ -736,7 +736,7 @@ generated primitives. Integration coverage supplements and never replaces unit c
    names retry; `expectAbsent` covers rating/score/review/ranking. Plus
    `seedPublishedMentorProfile` (T1), whose name makes its non-null slug contract explicit.
 
-### Slice 3 — Slots (#17)
+### Slice 3 — Slots (#36)
 
 1. **`Slot` entity + `availability-slots` migration** with the partial unique index and no booking relation.
 2. **`validators/availability/slot-create.schema.ts`** validates an ISO instant only.
@@ -750,10 +750,10 @@ generated primitives. Integration coverage supplements and never replaces unit c
    render separately in Slice 4; E03 later adds viable lengths and booking actions.
 7. **Integration** — publish a slot and see it on the share page.
 
-### Slice 4 — Prices and offer readiness (#18)
+### Slice 4 — Prices and offer readiness (#37)
 
 1. **`core/src/money/money.ts`** (B12′) — `Cents`, exact major-decimal parsing and `withinBounds`.
-   Fee splitting remains #25's responsibility and R10 remains unchanged.
+   Fee splitting remains #44's responsibility and R10 remains unchanged.
 2. **`vocabularies/session-lengths.ts`**; after founder confirmation, `config/env.ts` gains
    `PLATFORM_CURRENCY` and `PLATFORM_PRICE_BOUNDS`, with the approved values as defaults; §4's six
    files move together. No `PLATFORM_FEE_PERCENT` lands before its first caller.
@@ -801,8 +801,8 @@ across the whole epic:
 - **Initial platform currency and price bounds** (owner: founder A). Proposed smallest scope: USD and
   one approved bounds object. Both values are **blocking before Slice 4 implementation**; placeholder
   money policy must not become a production default.
-- **Whether the mentor's publish-by report is needed before #30** (owner: both founders). D18's check
-  is "5 of the first 20 within two weeks", and until #30 the operator counts by hand from
+- **Whether the mentor's publish-by report is needed before #49** (owner: both founders). D18's check
+  is "5 of the first 20 within two weeks", and until #49 the operator counts by hand from
   `publish_due_at` (R18). Non-blocking; the column makes the query one line.
 - **Two product choices the brief does not cover** (owner: founder A, non-blocking for Slices 1–3).
   **Invitation validity** — 14 days is a plain choice with nothing behind it. **Slug immutability** — a

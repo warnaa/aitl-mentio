@@ -5,7 +5,7 @@ import { SessionCard, SessionHeader, NotificationItem } from './SessionCard';
 const meta = {
   title: 'Product/Sessions', component: SessionCard, tags: ['autodocs'],
   args: { title: 'A clearer boundary for your TypeScript API', participant: 'Alex Laurent', startsAt: '2026-09-09T12:00:00Z', dateLabel: 'Wednesday, 9 September: 14:00', timeZone: 'Europe/Warsaw', duration: 25, state: 'upcoming', actions: <Button intent="neutral" appearance="stroke">View session</Button> },
-  parameters: { docs: { description: { component: 'Session cards, header and notification for #23/#26. Every booking/session view states the text format. Session state, allowed navigation and channel access come from the application. No channel is chosen by this component (Q18).' } } },
+  parameters: { docs: { description: { component: 'Session cards, header and notification for #42/#45. Every booking/session view states the text format. Session state, allowed navigation and channel access come from the application. No channel is chosen by this component (Q18).' } } },
 } satisfies Meta<typeof SessionCard>;
 export default meta;
 type Story = StoryObj<typeof meta>;

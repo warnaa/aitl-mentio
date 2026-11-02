@@ -2,8 +2,8 @@
 
 Date: 2026-09-08
 Status: active
-Issue: [#16](https://github.com/open-mercato/ai_techleaders_project/issues/16) (epic #8)
-Depends on: E02-S01 (#15); E01 Slices 1, 2 and 4
+Issue: [#35](https://github.com/warnaa/aitl-mentio/issues/35) (epic #27)
+Depends on: E02-S01 (#34); E01 Slices 1, 2 and 4
 Design authority for architecture, data model and contracts:
 `.ai/specs/2026-09-08-mentors-become-bookable.md` (Slice 2). The related entries in
 `.ai/specs/2026-09-08-platform-primitives-ii.md` are catalogue pointers, not a second authority.
@@ -32,7 +32,7 @@ it is the heaviest slice in the epic despite being a small feature.
 is missing; a slug generated on first publication; `unpublish` as the inverse transition; the
 `/m/<slug>` public page; the share link with a copy button.
 
-**Out:** slots (#17) and prices (#18), which the page renders once they exist; the mentor list (#20);
+**Out:** slots (#36) and prices (#37), which the page renders once they exist; the mentor list (#39);
 any rating, review or ranking (N02); slug redirect aliases.
 
 ## 📝 UI/UX

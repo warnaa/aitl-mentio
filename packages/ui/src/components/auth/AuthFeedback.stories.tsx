@@ -12,7 +12,7 @@ const home = <Button intent="neutral" appearance="stroke" onClick={fn()}>Go to m
 const meta = {
   title: 'Product/Authentication feedback', component: AuthFeedback, tags: ['autodocs'],
   args: { state: 'check-inbox', detail: 'Sent to jordan@example.test.', actions: verify },
-  parameters: { docs: { description: { component: 'Compact feedback for E01 authentication and access outcomes (#12 to #14). Error states use an alert; completed actions and information use a status. The host provides the confirmed state, destination or retry time, and working recovery callbacks. Story actions are recorded in the interaction panel; they do not contact authentication services.' } } },
+  parameters: { docs: { description: { component: 'Compact feedback for E01 authentication and access outcomes (#31 to #33). Error states use an alert; completed actions and information use a status. The host provides the confirmed state, destination or retry time, and working recovery callbacks. Story actions are recorded in the interaction panel; they do not contact authentication services.' } } },
   decorators: [Story => <div style={{ width: '100%', maxWidth: 460 }}><Story /></div>],
 } satisfies Meta<typeof AuthFeedback>;
 export default meta;

@@ -17,7 +17,7 @@ function SettingsExample() {
 }
 const meta = {
   title: 'Product/Operator settings', tags: ['autodocs'], render: () => <SettingsExample />,
-  parameters: { msw: { handlers: [http.post('/storybook-api/operator-settings', () => HttpResponse.json({ ok: true, data: { saved: true } }))] }, docs: { description: { component: 'Settings form planned for 1.1 (#31), using CrudForm and a shared Zod schema shape. Values are local examples. The service must authorize the operator, enforce currency policy and apply the chosen fee. First-iteration payout operations still need a product decision (Q19).' } } },
+  parameters: { msw: { handlers: [http.post('/storybook-api/operator-settings', () => HttpResponse.json({ ok: true, data: { saved: true } }))] }, docs: { description: { component: 'Settings form planned for 1.1 (#50), using CrudForm and a shared Zod schema shape. Values are local examples. The service must authorize the operator, enforce currency policy and apply the chosen fee. First-iteration payout operations still need a product decision (Q19).' } } },
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;

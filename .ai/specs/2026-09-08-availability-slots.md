@@ -2,8 +2,8 @@
 
 Date: 2026-09-08
 Status: active
-Issue: [#17](https://github.com/open-mercato/ai_techleaders_project/issues/17) (epic #8)
-Depends on: E02-S01 (#15), E02-S02 (#16); E01 Slices 1, 2 and 4
+Issue: [#36](https://github.com/warnaa/aitl-mentio/issues/36) (epic #27)
+Depends on: E02-S01 (#34), E02-S02 (#35); E01 Slices 1, 2 and 4
 Design authority for architecture, data model and the occupancy rule:
 `.ai/specs/2026-09-08-mentors-become-bookable.md` (Slice 3, and the "occupancy rule" section)
 
@@ -21,7 +21,7 @@ later than two hours before its start. Nothing in the repository stores availabi
 names an `availability` concept that does not exist.
 
 **The story as filed exposed an E03 requirement but does not implement it.** A slot is a bare start
-instant, while #21 lets the mentee choose 25 or 50 minutes at booking time. `viableLengths`, interval
+instant, while #40 lets the mentee choose 25 or 50 minutes at booking time. `viableLengths`, interval
 occupancy and double-booking prevention therefore belong to E03, where real `Booking` intervals exist.
 This slice deliberately avoids a partial occupancy implementation that would have to be replaced.
 
@@ -31,8 +31,8 @@ This slice deliberately avoids a partial occupancy implementation that would hav
 clock at read time; maintenance of the mentor's most-recent-published-availability key (R13); future
 slots on the public page.
 
-**Out:** booking and occupancy, including `viableLengths` and booked-slot removal (#21, #22);
-cancellation (#24); recurring availability, buffers, minimum notice per mentor and daily caps — none
+**Out:** booking and occupancy, including `viableLengths` and booked-slot removal (#40, #41);
+cancellation (#43); recurring availability, buffers, minimum notice per mentor and daily caps — none
 of which any decision asks for (see the epic's market-leader section for why each was skipped).
 
 ## 📝 UI/UX
@@ -86,4 +86,4 @@ D22/R14, R13, R18. R09 is handed to E03 above.
 - **Single start times or recurring hours** — resolved in the epic spec: single start times, the plain
   reading of D22. Recurrence needs an expansion engine and a DST policy and is a later story if D22 is
   superseded.
-- **How the mentor learns a slot was booked** — #23 owns the notification. Non-blocking.
+- **How the mentor learns a slot was booked** — #42 owns the notification. Non-blocking.

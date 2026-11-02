@@ -7,7 +7,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 Walk through sign-in, email registration and role access in the
 [connected prototype](/prototypes/devmentor-journey/index.html#s12).
 This page maps the UI to the Accounts and Roles specification dated
-4 September 2026 and stories #12, #13 and #14. The prototype simulates account
+4 September 2026 and stories #31, #32 and #33. The prototype simulates account
 state during the current visit. It does not create real accounts or establish
 production authorization.
 
@@ -29,17 +29,17 @@ received [mentor invitation, s26](/prototypes/devmentor-journey/index.html#s26).
     </thead>
     <tbody>
       <tr>
-        <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}><a href="https://github.com/open-mercato/ai_techleaders_project/issues/12">#12 GitHub sign-in</a></td>
+        <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}><a href="https://github.com/warnaa/aitl-mentio/issues/31">#31 GitHub sign-in</a></td>
         <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}>Sign-in (<code>s12</code>) opens the labelled GitHub response demo (<code>s23</code>). A successful result opens the account's role home or its permitted continuation.</td>
         <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}>Cancellation, an invalid sign-in request, an unavailable provider, an unverified GitHub primary email and an unverified local account each explain the next action. A refused attempt does not sign the person in.</td>
       </tr>
       <tr>
-        <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}><a href="https://github.com/open-mercato/ai_techleaders_project/issues/13">#13 Email and password</a></td>
+        <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}><a href="https://github.com/warnaa/aitl-mentio/issues/32">#32 Email and password</a></td>
         <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}>Registration (<code>s20</code>) leads to check-inbox (<code>s21</code>), email verification (<code>s22</code>) and the account home. Existing verified accounts use sign-in (<code>s12</code>).</td>
         <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}>Field validation, incorrect credentials, an existing account, a GitHub-only account, an unverified email, service or mail failure and a cooldown have recovery states. Invalid or expired verification links offer another email; reusing a verified link succeeds.</td>
       </tr>
       <tr>
-        <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}><a href="https://github.com/open-mercato/ai_techleaders_project/issues/14">#14 Roles and access</a></td>
+        <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}><a href="https://github.com/warnaa/aitl-mentio/issues/33">#33 Roles and access</a></td>
         <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}>Mentee (<code>s6</code>), mentor (<code>s11</code>) and operator (<code>s24</code>) homes expose the navigation for the account's combined roles. Operators can open Users (<code>s25</code>).</td>
         <td style={{ verticalAlign: 'top', lineHeight: '24px', overflowWrap: 'anywhere' }}>Signed-out or expired sessions lead to sign-in. Wrong-role and revoked-operator states withhold protected content and offer a permitted destination. Sign-out returns to the public homepage.</td>
       </tr>

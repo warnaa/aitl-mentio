@@ -3,7 +3,7 @@
 Date: 2026-09-03
 Branch: `fix/37-setup-installer`
 PR: #38
-Issue: #37
+Issue: #55
 Spec: `.ai/specs/2026-09-03-setup-installer.md`
 
 ## Requested
@@ -12,7 +12,7 @@ Two phases, both autonomous:
 
 1. **Implement** — give contributors a one-command, idempotent `npm run setup` that
    installs dependencies, preserves local environment configuration, provisions or
-   reuses PostgreSQL, migrates, and seeds, then hands off to `npm run dev` (issue #37).
+   reuses PostgreSQL, migrates, and seeds, then hands off to `npm run dev` (issue #55).
 2. **Review and fix** — run `om-code-review` against PR #38 and then "fix all",
    resolving every finding the review raised.
 

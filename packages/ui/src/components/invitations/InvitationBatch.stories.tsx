@@ -9,7 +9,7 @@ const meta = {
     { id: '3', name: 'Oliver Kowalski', email: 'oliver@example.com', status: 'invited', deadline: 'Awaiting acceptance' },
     { id: '4', name: 'Morgan Hayes', email: 'morgan@example.com', status: 'overdue', deadline: '6 September' },
   ], actions: <Button>Invite mentor</Button> },
-  parameters: { docs: { description: { component: 'Later 1.1 operator pattern for #30. Reuses the shared DataTable; shows batch progress, acceptance and first availability deadlines. Batch capacity and eligibility are supplied by the application; actions never send invitations in the catalogue.' } } },
+  parameters: { docs: { description: { component: 'Later 1.1 operator pattern for #49. Reuses the shared DataTable; shows batch progress, acceptance and first availability deadlines. Batch capacity and eligibility are supplied by the application; actions never send invitations in the catalogue.' } } },
 } satisfies Meta<typeof InvitationBatch>;
 export default meta;
 type Story = StoryObj<typeof meta>;

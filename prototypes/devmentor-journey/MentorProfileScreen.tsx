@@ -17,11 +17,11 @@ export interface MentorProfileScreenProps {
 
 export function MentorProfileScreen({ prices, reviews, profile, bookable = true }: MentorProfileScreenProps) {
   const auth = useAuth();
-  if(profile===null) return <Screen id="s1" title="Mentor profile" description="Unpublished mentor pages are not visible to visitors." refs={['#16']}><PublicPage><div className="proto-narrow"><EmptyState title="This profile is not published" description="The mentor is still setting up their page. You can browse other mentors in the meantime." action={<Button onClick={()=>navigate(auth?.user?.roles.includes('mentor')?'s27':'s19')}>{auth?.user?.roles.includes('mentor')?'Back to profile editor':'Browse mentors'}</Button>}/></div></PublicPage></Screen>;
+  if(profile===null) return <Screen id="s1" title="Mentor profile" description="Unpublished mentor pages are not visible to visitors." refs={['#35']}><PublicPage><div className="proto-narrow"><EmptyState title="This profile is not published" description="The mentor is still setting up their page. You can browse other mentors in the meantime." action={<Button onClick={()=>navigate(auth?.user?.roles.includes('mentor')?'s27':'s19')}>{auth?.user?.roles.includes('mentor')?'Back to profile editor':'Browse mentors'}</Button>}/></div></PublicPage></Screen>;
   const name=profile?.displayName??'Alex Laurent';
   const average = reviews.length === 0 ? 0 : reviews.reduce((total, review) => total + review.rating, 0) / reviews.length;
 
-  return <Screen id="s1" title="Mentor profile" description="Read about the mentor and their work, check reviews and choose a session." refs={['#16', '#18']} note="Local profile example. Alex Laurent, the biography, language and timezone details, work sample and initial reviews are fictional. Submitted reviews stay in this prototype. Availability uses the fixed demo clock. The sample answer expands inline and does not reveal private session content.">
+  return <Screen id="s1" title="Mentor profile" description="Read about the mentor and their work, check reviews and choose a session." refs={['#35', '#37']} note="Local profile example. Alex Laurent, the biography, language and timezone details, work sample and initial reviews are fictional. Submitted reviews stay in this prototype. Availability uses the fixed demo clock. The sample answer expands inline and does not reveal private session content.">
     <PublicPage className="mentor-profile-page">
       <div className="mentor-profile-layout">
         <header className="mentor-profile-header">

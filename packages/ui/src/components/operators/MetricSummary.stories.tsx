@@ -10,7 +10,7 @@ const meta = {
     { id: 'lead', label: 'Median booking-to-start', value: '2.4 days', context: 'For confirmed bookings this week' },
     { id: 'declines', label: 'Note declines', value: '2', context: 'Declined note versions this week' },
   ] },
-  parameters: { docs: { description: { component: 'Operator metrics for #14/#22/#29: paid sessions, median time from booking to session start, and declined notes. The application calculates values and sample boundaries. This component does not include sales, revenue, HR metrics or trend data. Loading, error and empty states use the shared feedback components.' } } },
+  parameters: { docs: { description: { component: 'Operator metrics for #33/#41/#48: paid sessions, median time from booking to session start, and declined notes. The application calculates values and sample boundaries. This component does not include sales, revenue, HR metrics or trend data. Loading, error and empty states use the shared feedback components.' } } },
 } satisfies Meta<typeof MetricSummary>;
 export default meta;
 type Story = StoryObj<typeof meta>;

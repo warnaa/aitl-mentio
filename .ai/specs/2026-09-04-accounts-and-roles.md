@@ -5,7 +5,7 @@ Revised: 2026-09-06 — design review; see "What the 2026-09-06 revision changed
 Revised: 2026-09-08 — aligned with the primitives spec's 2026-09-08 grilling review; see "What the
 2026-09-08 revision changed" at the end
 Status: active
-Tracker: epic #7 — stories #12 (E01-S01), #13 (E01-S02), #14 (E01-S03)
+Tracker: epic #26 — stories #31 (E01-S01), #32 (E01-S02), #33 (E01-S03)
 Design authority: `.ai/specs/product-brief.md` (D07, D19, R06, R07, R18)
 Primitives: `.ai/specs/2026-09-04-platform-primitives.md` — the design authority for every
 mechanism this spec *uses*; referenced rather than restated. Where this revision changes a
@@ -29,10 +29,10 @@ callers, in that order.
 
 ## 📝 Problem Statement
 
-Every other epic is blocked on this one. A booking needs a mentee to own it (#21), a slot needs
-a mentor to publish it (#17), a payout needs a Connect account attached to somebody (#19), a
-dispute needs a party to raise it (#32). The backlog's dependency column makes it literal: #15,
-#21 and #14 all list #12 as a prerequisite.
+Every other epic is blocked on this one. A booking needs a mentee to own it (#40), a slot needs
+a mentor to publish it (#36), a payout needs a Connect account attached to somebody (#38), a
+dispute needs a party to raise it (#51). The backlog's dependency column makes it literal: #34,
+#40 and #33 all list #31 as a prerequisite.
 
 The evidence behind the roles is the two interviews the brief rests on. The mentee side: a
 working developer, blocked the day before a release with the only senior on leave, spent 40
@@ -62,15 +62,15 @@ Four delivery slices across the three stories, each independently reviewable and
 the app working. Infrastructure and UI migrations do not share a rollback boundary with auth.
 
 1. **React test infrastructure** — a small prerequisite PR with no production behavior.
-2. **GitHub sign-in and data protection (#12)** — the session mechanism, live authorization,
+2. **GitHub sign-in and data protection (#31)** — the session mechanism, live authorization,
    fixed multi-role storage, page-and-service enforcement, protected `/api/users`, and minimal
    role homes. Everything after this reuses the session; nothing after this re-implements it.
-3. **Signed-in shell (#12)** — `AppShell`, combined-role navigation, and the R07 negative
+3. **Signed-in shell (#31)** — `AppShell`, combined-role navigation, and the R07 negative
    assertion, after auth works.
-4. **Email and password (#13)** — the D07 fallback, on the *same* session, with verification,
+4. **Email and password (#32)** — the D07 fallback, on the *same* session, with verification,
    rate limiting and generic auth errors.
 
-Story #14's guard obligations are not a fifth slice. E01 guards every surface that exists in
+Story #33's guard obligations are not a fifth slice. E01 guards every surface that exists in
 1.0; the remaining surfaces arrive with E02–E05, and each of those stories guards its own. What
 carries the obligation forward is a `CODE_REVIEW.md` checklist line, not a PR that guards
 screens which do not yet exist. See "Authorization enforcement" below.
@@ -110,7 +110,7 @@ does not need to invalidate sessions.
 the caller's session in the same request rather than ejecting them, and only a route handler can
 set a cookie in the App Router. Reconciliation, which can occur during a page render, is
 deliberately not on the list — a page cannot re-issue, so a page must not invalidate. In 1.0 the
-only live trigger is sign-out; the re-issue contract is published here for #15, which is the
+only live trigger is sign-out; the re-issue contract is published here for #34, which is the
 first grant path.
 
 **One logical session per user, and logout is global.** Bumping `session_version` at sign-out
@@ -119,9 +119,9 @@ session too. This is a deliberate 1.0 simplification, not an oversight: it is wh
 copied cookie fail immediately rather than surviving for the remainder of its 24 hours. Per-session
 revocation would require a session store and is out of scope.
 
-**No self-service product path grants a role.** R07 and D19 both require it, and #14 makes it an
+**No self-service product path grants a role.** R07 and D19 both require it, and #33 makes it an
 acceptance criterion in the negative: a signed-in user looking for a "become a mentor" path must
-find none. The mentor role is granted only by accepting an invitation (#15); operator authority
+find none. The mentor role is granted only by accepting an invitation (#34); operator authority
 comes only from the allowlist. Granting either preserves every other role already held. The
 domain service performs additive `grantRole` and subtractive `revokeRole` operations so a future
 operator workflow can adjust the fixed set without a schema change; E01 exposes no general
@@ -164,10 +164,10 @@ Auth.js refuses the same case by default (`OAuthAccountNotLinked`); the reasonin
 - **Auth.js / NextAuth.** Rejected — the structural reasons, and the five things the library gets
   right that this spec adopts anyway, are in the primitives spec ("What we build instead of
   buying"). Summary: it owns `/api/auth/[...nextauth]` as a catch-all and would break the §1
-  envelope; its `useSession` model is a client-side session fetch that contradicts #12's
+  envelope; its `useSession` model is a client-side session fetch that contradicts #31's
   *"nothing of the user's is rendered first"*; its DB adapter puts a vendor between `core` and
   `db`.
-- **Derive `operator` in the token only** (as #14 reads). Rejected — two sources of truth.
+- **Derive `operator` in the token only** (as #33 reads). Rejected — two sources of truth.
 - **Stored `operator` as the authority, reconciled at sign-in.** Rejected: it revokes instantly
   but grants only after a sign-out/sign-in cycle, so onboarding a founder silently requires a
   step nobody documented.
@@ -298,7 +298,7 @@ Both register a **scoped, lazily-resolved `session`** into the awilix scope:
 This is why `MakeCrudRouteOptions` and `CrudService` do not change. `authorize` still returns
 `void`; it denies fast and stays greppable, but **the service is the authority**. Both checks are
 kept deliberately: the route check is defence in depth, the service check is the guarantee. Threading
-a `Session` through `makeCrudRoute`'s `resolve` (a §2 change) remains #23's, per primitives B4.
+a `Session` through `makeCrudRoute`'s `resolve` (a §2 change) remains #42's, per primitives B4.
 
 ### Session mechanism
 
@@ -553,7 +553,7 @@ a password hash outside the server, against this spec's own sensitive-data rule.
 ### A deliberate deviation from the standards spec
 
 The standards spec requires auth errors to be *"generic on login/register … never revealing whether
-a given email is registered"*. The 409 on `registerWithPassword` for a GitHub-tied email (#13's
+a given email is registered"*. The 409 on `registerWithPassword` for a GitHub-tied email (#32's
 acceptance criterion, *"the product refuses and points to GitHub sign-in"*) is a precise oracle for
 "this address has a GitHub account here". Recorded as a deliberate trade: the alternative is a user
 who cannot sign in and is told nothing. **Login stays strictly generic** — the account-existence
@@ -593,7 +593,7 @@ the label: the signed-in admin test asserts the link, so the port keeps it or CI
 primitives spec's F2 entry makes the same §7 error and is corrected in the same PR.)
 
 **Not** in scope and explicitly deferred: threading a `Session` into `makeCrudRoute`'s `resolve` (a
-§2 change to `MakeCrudRouteOptions` / `CrudService`). #23 designs it, per primitives B4; E01 uses
+§2 change to `MakeCrudRouteOptions` / `CrudService`). #42 designs it, per primitives B4; E01 uses
 `authorize` plus a service-level check, which needs no contract change.
 
 ## 📝 UI/UX
@@ -602,7 +602,7 @@ Per the three-surface taxonomy (primitives F1): `(auth)` pages are public Tailwi
 `(mentor)` and `admin` are shadcn inside `AppShell` (from Slice 3).
 
 **`/sign-in`** — "Sign in with GitHub" is the primary action, above the email form (D07 fixes the
-order, and #12 makes it an acceptance criterion). States it must render: `?cancelled=1` →
+order, and #31 makes it an acceptance criterion). States it must render: `?cancelled=1` →
 *"Sign-in was cancelled. No account was created."*; `?error=state` → a plain retry;
 `?error=unavailable` → *"GitHub sign-in is not configured yet."*; `?error=verification` → an
 expired-link message with a way to request another; and, until Slice 4 ships, the email form
@@ -611,14 +611,14 @@ disabled with a one-line note. A visitor who already holds a valid session is re
 
 **Role homes** — `homeFor(roles)` is the single place the default landing is decided. Priority is
 `operator → /admin`, then `mentor → /mentor`, then `mentee → /home`; combined-role navigation still
-exposes every permitted surface. The asymmetry (`/home` vs `/mentor`) is deliberate: #12 names
-`/home`, and #15 and #17 already write `/mentor` and `/mentor/slots`.
+exposes every permitted surface. The asymmetry (`/home` vs `/mentor`) is deliberate: #31 names
+`/home`, and #34 and #36 already write `/mentor` and `/mentor/slots`.
 
 **Guards** — `(mentee)/layout.tsx`, `(mentor)/layout.tsx` and `admin/layout.tsx` each call
 `requirePageRole(...)` before rendering anything, **and so does every guarded `page.tsx` beneath
 them**, because a layout does not re-run on client-side navigation. A missing session redirects to
 `/sign-in?returnTo=<current>`; a wrong role redirects to the caller's own home. Nothing of the
-user's renders before the check (#12).
+user's renders before the check (#31).
 
 **Navigation** — `app/src/lib/nav.ts` (Slice 3) builds links from the union of the user's roles,
 passed to `AppShell` as the `nav` slot. There is no "become a mentor" link and no route that would
@@ -715,7 +715,7 @@ any rollback path: re-exposing account data is a worse outcome than the defect b
 Slice 4's password column is nullable, so reverting it leaves GitHub accounts working; revert
 Slice 4 before Slice 2 if both must go.
 
-**Out of scope.** Password reset (no decision record; a follow-up). Invitation acceptance (#15).
+**Out of scope.** Password reset (no decision record; a follow-up). Invitation acceptance (#34).
 The screens the guards protect — slots, prices, notes, sessions — are E02–E05. Full RBAC beyond the
 three fixed roles, configurable permissions, role inheritance, refresh tokens, per-session
 revocation, email change, and any social provider other than GitHub (D07) are out of scope.
@@ -726,23 +726,23 @@ Each delivery slice is one PR, independently shippable, leaving the app working.
 before the 1.0 ship date (D16: 2026-10-31).
 
 - **Slice 1 — React test infrastructure.** Test dependencies and configuration only. `risk-low`.
-- **Slice 2 — GitHub sign-in and data protection (#12).** The session mechanism, multi-role model,
+- **Slice 2 — GitHub sign-in and data protection (#31).** The session mechanism, multi-role model,
   role homes, page-and-service enforcement, operator guard for the users resource, removal of
   `POST /api/users`, and CSRF enforcement in `apiHandler`. Ships primitives B1, B2, B3
   (`requireSession`, `requireCsrfHeader`, the Cradle registrations), B5 (stateless pair), B6 (503
   + the production-secret check), B7, B10, B14 (GitHub identity port, mock personas via `login`),
   B20, F3, the minimal F4 sign-out action, the ESLint third-party boundary patterns, and the
   harness `signInAs` helper. **This is the unblock point: E02+ may start when it merges.**
-- **Slice 3 — Signed-in shell (#12, #14).** F1/F2, `nav.ts`, combined-role navigation, and F7 with
+- **Slice 3 — Signed-in shell (#31, #33).** F1/F2, `nav.ts`, combined-role navigation, and F7 with
   the R07 negative assertion. Depends on Slice 2. `risk-medium`.
-- **Slice 4 — Email and password (#13).** The D07 fallback on the same session. Ships B8 (with
+- **Slice 4 — Email and password (#32).** The D07 fallback on the same session. Ships B8 (with
   the `AuthRateLimit` table, the 429 error and `TRUSTED_PROXY_HOPS`), B9, B14 (mailer port, Resend
   and log adapters, `waitForMail`), F5.
 
-Story #14's remaining guard obligations ship per-story with E02–E05, carried by the
+Story #33's remaining guard obligations ship per-story with E02–E05, carried by the
 `CODE_REVIEW.md` checklist line. There is no Slice 5: E01 has exactly one list endpoint
 (`/api/users`, operator-only, unscoped), so there is no scoping pattern for it to establish, and
-primitives B4 owns that design for #23.
+primitives B4 owns that design for #42.
 
 ## 📋 Implementation Plan
 
@@ -773,7 +773,7 @@ and no `*.test.tsx` anywhere. The later slices add `.tsx` production files.
    - Record the cost honestly: with page-level enforcement, every guarded `page.tsx` is a
      `coverage.include` entry needing both the authorized and the redirected branch.
 
-### Slice 2 — GitHub sign-in and data protection (#12) (`risk-high`)
+### Slice 2 — GitHub sign-in and data protection (#31) (`risk-high`)
 
 3. **Clock (B1).** `core/src/time/clock.ts`; register `clock` in `container/container.ts` and
    `container/cradle.ts`. The auth services receive it by constructor injection and read it
@@ -922,7 +922,7 @@ and no `*.test.tsx` anywhere. The later slices add `.tsx` production files.
     enforcement checklist item, graded blocker. Fix the `uuid v7` docblock in
     `packages/db/src/entities/base.entity.ts` — the ids are v4.
 
-### Slice 3 — signed-in shell and the R07 assertion (#12, #14) (`risk-medium`)
+### Slice 3 — signed-in shell and the R07 assertion (#31, #33) (`risk-medium`)
 
 18. **AppShell (F2) and the surface taxonomy (F1).** `ui/src/backend/shell/AppShell.tsx` with `nav`
     as a `ReactNode` slot. Update `AGENTS.md` with the three-surface taxonomy.
@@ -938,7 +938,7 @@ and no `*.test.tsx` anywhere. The later slices add `.tsx` production files.
     exists in the navigation of any signed-in role** (R07); the operator sees the users list and a
     mentee gets a 403 from `/api/users`.
 
-### Slice 4 — Email and password (#13) (`risk-high`)
+### Slice 4 — Email and password (#32) (`risk-high`)
 
 21. **Migration + entity.** `auth-password`: `password_hash` (`text`, nullable), with `down` and the
     same up/down migration test as step 6. Seeder: give the mentee and the operator a hash.
@@ -1005,9 +1005,9 @@ and no `*.test.tsx` anywhere. The later slices add `.tsx` production files.
 
 ## ✅ Acceptance criteria
 
-Carried in intent from #12, #13 and #14, with the naming decision applied.
+Carried in intent from #31, #32 and #33, with the naming decision applied.
 
-**Story #12 (delivered by Slices 2–3)**
+**Story #31 (delivered by Slices 2–3)**
 - A developer authorising DevMentor on GitHub gets an account tied to that GitHub identity and lands
   on the mentee home. (R06, D07)
 - A mentor-only GitHub sign-in lands on the mentor home; a mentor/operator lands on `/admin` and can
@@ -1018,15 +1018,15 @@ Carried in intent from #12, #13 and #14, with the naming decision applied.
 - Every sign-in screen offers GitHub first and email second. (D07)
 - A GitHub email matching an unverified local row links nothing and explains why. (security)
 
-**Story #13 (delivered by Slice 4)**
+**Story #32 (delivered by Slice 4)**
 - A user without GitHub registers, confirms their email, and lands on the mentee home. (R06)
 - A wrong password fails with a message that does not say which part was wrong, and starts no
   session.
 - An email already tied to a GitHub account is refused with a pointer to GitHub sign-in.
 - Email/password authentication preserves every stored role; invitation acceptance owns the separate
-  acceptance criterion that it adds `mentor` without replacing existing roles. (#15)
+  acceptance criterion that it adds `mentor` without replacing existing roles. (#34)
 
-**Story #14 (delivered by Slices 2–3, then per-story in E02–E05)**
+**Story #33 (delivered by Slices 2–3, then per-story in E02–E05)**
 - A mentee opening a mentor-only screen is refused and sent to their home. (D05)
 - A mentor-only user opening an operator screen is refused; a mentor/operator is admitted.
 - A revoked operator is refused on their next request, including a client-side navigation within
@@ -1075,7 +1075,7 @@ orient a reviewer reading the diff.
 
 - **Shape.** Five slices became four: Slice 5 dissolved into per-story guards plus a
   `CODE_REVIEW.md` line, because E01 has no scoped list to establish a pattern with (primitives B4
-  owns that for #23). Per-slice risk labels replace a blanket `risk-high`, which is what makes the
+  owns that for #42). Per-slice risk labels replace a blanket `risk-high`, which is what makes the
   plan fit the iteration without cutting a D13-committed story.
 - **Operator model.** The allowlist is now checked live in both directions and reconciliation no
   longer bumps `session_version` — the previous design revoked instantly but granted only after a

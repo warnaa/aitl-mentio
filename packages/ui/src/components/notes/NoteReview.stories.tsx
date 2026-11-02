@@ -16,7 +16,7 @@ function ReviewExample() {
 }
 const meta = {
   title: 'Product/Private notes', component: NoteReview, tags: ['autodocs'], args: note,
-  parameters: { msw: { handlers: [http.post('/storybook-api/note-review', () => HttpResponse.json({ ok: true, data: { version: 2 } }))] }, docs: { description: { component: 'Private note review and version history for #28/#29. Approval is for the whole note; declining uses the existing CrudForm with a required Zod-validated comment. The caller supplies authorized actions and persists transitions. Approval never publishes a note and does not require scrolling to an arbitrary point.' } } },
+  parameters: { msw: { handlers: [http.post('/storybook-api/note-review', () => HttpResponse.json({ ok: true, data: { version: 2 } }))] }, docs: { description: { component: 'Private note review and version history for #47/#48. Approval is for the whole note; declining uses the existing CrudForm with a required Zod-validated comment. The caller supplies authorized actions and persists transitions. Approval never publishes a note and does not require scrolling to an arbitrary point.' } } },
 } satisfies Meta<typeof NoteReview>;
 export default meta;
 type Story = StoryObj<typeof meta>;

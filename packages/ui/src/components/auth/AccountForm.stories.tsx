@@ -43,7 +43,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen', msw: { handlers },
     controls: { exclude: ['schema', 'endpoint', 'initialValues', 'notice'] },
-    docs: { description: { component: 'GitHub and email account forms for E01 (#12 and #13). The host supplies validation schemas, endpoints, notices and navigation. CrudForm handles validation, pending requests and errors through apiCall. Stories use fictional accounts and local mock responses; they do not create accounts, send email or contact GitHub. Password requirements are enforced by the supplied schema.' } },
+    docs: { description: { component: 'GitHub and email account forms for E01 (#31 and #32). The host supplies validation schemas, endpoints, notices and navigation. CrudForm handles validation, pending requests and errors through apiCall. Stories use fictional accounts and local mock responses; they do not create accounts, send email or contact GitHub. Password requirements are enforced by the supplied schema.' } },
   },
 } satisfies Meta<typeof AccountForm>;
 export default meta;

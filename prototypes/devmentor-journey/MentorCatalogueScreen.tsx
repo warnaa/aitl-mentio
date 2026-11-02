@@ -40,7 +40,7 @@ export function MentorCatalogueScreen({ mentors, now, onFullProfile }: { mentors
     setOpen(true);
   }
 
-  return <Screen id="s19" title="Mentor catalogue" description="Search by name, technology or topic, compare session prices and read a mentor's profile." refs={['#16', '#18', '#20']}
+  return <Screen id="s19" title="Mentor catalogue" description="Search by name, technology or topic, compare session prices and read a mentor's profile." refs={['#35', '#37', '#39']}
     note="Six fictional mentors for local search, filter and profile interactions. Availability uses 10 September 2026, 08:00 UTC. All times, prices and rating summaries are sample data. Alex Laurent has the complete booking and session flow; the other profiles return to the catalogue. Search state lasts for this visit and resets on reload. No requests are sent to a search service.">
     <PublicPage className="mentor-catalogue-page">
       <h1 className="sr-only">Mentor catalogue</h1>

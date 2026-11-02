@@ -2,9 +2,9 @@
 
 Date: 2026-09-08
 Status: active
-Issue: [#15](https://github.com/open-mercato/ai_techleaders_project/issues/15) (epic #8)
+Issue: [#34](https://github.com/warnaa/aitl-mentio/issues/34) (epic #27)
 Depends on: E01 Slices 1, 2 and 4 (the test toolchain, the session mechanism, shadcn `input`) — see the
-epic spec's prerequisite table; the issue names E01-S01 (#12), which covers only the session half
+epic spec's prerequisite table; the issue names E01-S01 (#31), which covers only the session half
 Design authority for architecture, data model and contracts:
 `.ai/specs/2026-09-08-mentors-become-bookable.md` (Slice 1). The B5′, F8, F9 and T1 entries in
 `.ai/specs/2026-09-08-platform-primitives-ii.md` are catalogue pointers, not a second authority.
@@ -23,7 +23,7 @@ session by a date, shown explicitly.
 
 ## 📝 Problem Statement
 
-D08/R07 make invitation the only way to become a mentor — there is no open registration, and #14 makes
+D08/R07 make invitation the only way to become a mentor — there is no open registration, and #33 makes
 its absence an acceptance criterion in the negative. D18 makes the invitation itself the test of A03:
 batches of 20, at least one bookable session within two weeks of accepting, and fewer than 5 of the
 first 20 stops further invitations. Nothing in the repository represents an invitation, and
@@ -44,8 +44,8 @@ invitation may exist per normalized email. Also in: the by-hand `invite create|r
 (R18), the mentor home's publish-by ask and the owner-scoped onboarding-status read that survives
 redirect/refresh.
 
-**Out:** batches of 20 and the two-week report (#30 — until then the operator counts from
-`publish_due_at` by hand); the mentor page fields (#16); a real mail transport (E01's log mailer is
+**Out:** batches of 20 and the two-week report (#49 — until then the operator counts from
+`publish_due_at` by hand); the mentor page fields (#35); a real mail transport (E01's log mailer is
 enough until the October batch, D16); any operator screen.
 
 ## 📝 UI/UX

@@ -3,7 +3,7 @@ import { Button } from '../ui/button';
 import { PaymentStatus, ConnectStatus, PayoutStatus } from './PaymentStatus';
 const meta = {
   title: 'Product/Payments', component: PaymentStatus, tags: ['autodocs'], args: { state: 'pending', reference: 'DM-2026-0018', actions: <Button intent="neutral" appearance="stroke">Check payment status</Button> },
-  parameters: { docs: { description: { component: 'Provider-confirmed payment states for #22/#34 and later Connect, transfer and refund patterns for #19/#24/#25/#33. A returned checkout URL is not payment proof. Components do not trigger payments or assume that a failed confirmation means nothing was charged. First-iteration payout policy remains a product dependency (Q19).' } } },
+  parameters: { docs: { description: { component: 'Provider-confirmed payment states for #41/#53 and later Connect, transfer and refund patterns for #38/#43/#44/#52. A returned checkout URL is not payment proof. Components do not trigger payments or assume that a failed confirmation means nothing was charged. First-iteration payout policy remains a product dependency (Q19).' } } },
 } satisfies Meta<typeof PaymentStatus>;
 export default meta;
 type Story = StoryObj<typeof meta>;
