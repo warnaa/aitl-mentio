@@ -111,6 +111,33 @@ Then open:
 The app **builds and boots even with no database running**; DB-backed pages degrade
 to a visible "unavailable" state instead of crashing.
 
+### Configuration
+
+All configuration is read from the environment (or `.env`) and validated once by the
+zod schema in `packages/core/src/config/env.ts`. `.env.example` documents every
+variable; the database and logging ones are listed there as live defaults, the
+account, sign-in and mail ones as commented-out lines you uncomment when needed.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `APP_URL` | `http://localhost:3000` | Public origin, for OAuth callback and email links |
+| `SESSION_SECRET` | unset | HS256 key for session cookies and signed links, at least 32 characters (`openssl rand -base64 32`). **Required when `NODE_ENV=production`** |
+| `SESSION_SECRET_PREVIOUS` | unset | The previous key during a rotation; verified, never used to sign |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | unset | GitHub OAuth app credentials |
+| `OPERATOR_EMAILS` | empty | Comma-separated operator allowlist, matched case-insensitively |
+| `TRUSTED_PROXY_HOPS` | `0` | Trusted reverse proxies when deriving the client IP from `X-Forwarded-For` |
+| `MAIL_API_KEY` / `MAIL_FROM` | unset | Resend API key and sender address for transactional mail |
+| `AUTH_IDENTITY_ADAPTER` | `github` | `mock` is for the integration harness only |
+| `MAILER_ADAPTER` | unset | `resend` or `log`; `log` is for the integration harness only |
+| `INTEGRATION_TEST_RUN` | `0` | Set to `1` by the integration harness; required alongside a `mock` or `log` adapter |
+
+Production requires only `SESSION_SECRET` at boot, and checks it when the app handles
+its first request, not during `npm run build`, so a build needs no secrets. A missing
+`GITHUB_*` or `MAIL_*` value never stops the app from starting: only the feature that
+needs it reports itself unavailable. Selecting a fake adapter (`mock`, `log`) without
+`INTEGRATION_TEST_RUN=1` is refused at startup, so a misconfigured deployment can
+never quietly accept "sign in as anyone".
+
 ## Scripts
 
 | Command | Description |

@@ -7,7 +7,7 @@ import {
   type AwilixContainer,
 } from 'awilix';
 import { getOrm } from '@devmentor/db';
-import { getEnv } from '../config/env';
+import { getEnv, type AppEnv } from '../config/env';
 import { createLogger } from '../logger';
 import { EventBus } from '../events/event-bus';
 import { UserService } from '../services/auth/user.service';
@@ -23,7 +23,24 @@ const globalForContainer = globalThis as unknown as {
   __devmentorContainer?: Promise<AwilixContainer<Cradle>>;
 };
 
+/**
+ * Configuration production cannot serve without. Checked when the container is first
+ * created — never in the zod schema — because `next build` also runs as production,
+ * with no secrets in CI, and reaches `getEnv()`; the container only exists at request
+ * time. Development and the build are unaffected (primitives spec B6, E01 edge case 1b).
+ */
+function assertProductionConfig(env: AppEnv): void {
+  if (env.NODE_ENV === 'production' && !env.SESSION_SECRET) {
+    throw new Error(
+      'SESSION_SECRET is required when NODE_ENV=production (at least 32 characters; generate one with `openssl rand -base64 32`).',
+    );
+  }
+}
+
 async function build(): Promise<AwilixContainer<Cradle>> {
+  const env = getEnv();
+  assertProductionConfig(env);
+
   // Resolve the ORM once up front so it can be registered as a shared singleton value.
   const orm = await getOrm();
 
@@ -33,7 +50,7 @@ async function build(): Promise<AwilixContainer<Cradle>> {
   });
 
   container.register({
-    env: asValue(getEnv()),
+    env: asValue(env),
     logger: asFunction(createLogger).singleton(),
     clock: asValue(systemClock),
     orm: asValue(orm),

@@ -8,7 +8,7 @@ const state = vi.hoisted(() => {
   return {
     logger,
     fork,
-    env: { NODE_ENV: 'test', APP_NAME: 'DevMentor', LOG_LEVEL: 'silent' },
+    env: {} as { NODE_ENV: string; SESSION_SECRET?: string },
     getOrm: vi.fn(async () => ({ em: { fork } })),
   };
 });
@@ -28,6 +28,7 @@ const globalForContainer = globalThis as { __devmentorContainer?: unknown };
 beforeEach(() => {
   delete globalForContainer.__devmentorContainer;
   vi.clearAllMocks();
+  state.env = { NODE_ENV: 'test' };
 });
 
 afterEach(() => {
@@ -61,6 +62,34 @@ describe('getContainer', () => {
     } as never);
 
     expect(state.logger.info).toHaveBeenCalledWith({ userId: 'u1' }, 'auth.user.created');
+  });
+});
+
+describe('production configuration check', () => {
+  const secret = 'x'.repeat(32);
+
+  it('refuses to build in production without SESSION_SECRET, before touching the database', async () => {
+    state.env = { NODE_ENV: 'production' };
+
+    await expect(getContainer()).rejects.toThrow(/SESSION_SECRET is required when NODE_ENV=production/);
+    expect(state.getOrm).not.toHaveBeenCalled();
+  });
+
+  it('builds in production once SESSION_SECRET is set', async () => {
+    state.env = { NODE_ENV: 'production', SESSION_SECRET: secret };
+
+    const container = await getContainer();
+
+    expect(container.cradle.env).toBe(state.env);
+  });
+
+  it.each(['development', 'test'])('builds in %s without SESSION_SECRET', async (nodeEnv) => {
+    state.env = { NODE_ENV: nodeEnv };
+
+    const container = await getContainer();
+
+    expect(container.cradle.env).toBe(state.env);
+    expect(state.getOrm).toHaveBeenCalledTimes(1);
   });
 });
 
