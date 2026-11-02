@@ -184,7 +184,7 @@ node --test prototypes/konta-i-role/*.test.mts        # model, symulacja, nawiga
 node_modules/.bin/tsc -p prototypes/konta-i-role      # także pliki testów (.mts)
 node_modules/.bin/eslint prototypes/konta-i-role/
 node prototypes/konta-i-role/verify-stage3.mjs matrix # 48 stanów × 320/1440 × jasny/ciemny, axe, przepełnienie
-AB_SESSION=konta-role-stage3-controls node prototypes/konta-i-role/verify-stage3.mjs controls
+AB_SESSION=konta-role-stage3-controls node prototypes/konta-i-role/verify-stage3.mjs controls   # 4 warianty + opcje; `options` = same opcje scenariuszy
 AB_SESSION=konta-role-stage3-comments node prototypes/konta-i-role/verify-stage3.mjs comments
 ```
 

@@ -445,12 +445,13 @@ w skrypcie, nie w produkcie. Lekcja w `.ai/lessons.md`.
   jasny/ciemny: axe WCAG 2.1 A/AA bez naruszeń, brak poziomego przewijania i elementów poza ekranem,
   widoczna notatka; rozwinięte kontrolki przy każdej szerokości; 0 błędów runtime;
   wyłącznie żądania GET do localhost. 52 zrzuty 13 kluczowych stanów × 4 warianty (`evidence/stage3/<wariant>-<stan>.png`; `screenshot-probe*` to sondy poprzedniej sesji).
-- **Kontrolki: 64/64 PASS w 4 wariantach; tryb opcji scenariuszy w toku** (`evidence/stage3/controls-results.json`) — w 4 wariantach:
+- **Kontrolki: 109/109 PASS** — 64 w 4 wariantach (`evidence/stage3/controls-viewports-results.json`)
+  i 45 opcji scenariuszy (`options-results.json`) — w 4 wariantach:
   s01 → s12 → s01 i natywne Back/Forward, Tab/Shift+Tab, walidacja z klawiatury z fokusem na
   pierwszym błędzie, logowanie Ctrl+Enter z fokusem na nagłówku celu, dołączenie Enterem,
   skip-link PanelShell, kopiowanie adresu i nieaktywny edytor, ponowienie odczytu s06/s07,
   s11 ponawia tylko odczyt, Escape w Select zwraca fokus, Presentation i hotspoty, blokada
-  wysyłki w trybie Comment. Dalej każda opcja: 8 kont, 6 warunków cookie, 6 + 4 odczyty paneli,
+  wysyłki w trybie Comment. Tryb `options`: każda opcja — 8 kont, 6 warunków cookie, 6 + 4 odczyty paneli,
   10 wyników „Następnego żądania” (każdy zużyty jednorazowo), wstrzymanie/dokończenie,
   oba limity z resetem, 3 akcje operatora, wpisany `returnTo=/admin`, wariant rejestracji,
   rejestr przejść, nieznany adres `#s99` → s08 → s04.

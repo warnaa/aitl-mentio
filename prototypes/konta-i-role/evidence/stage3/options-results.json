@@ -1,0 +1,269 @@
+{
+  "mode": "options",
+  "results": [
+    {
+      "check": "switch-account-Gość",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "switch-account-Ada Przykładowa",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "switch-account-Tomasz Modelowy",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "switch-account-Olga Testowa",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "switch-account-Leon Fikcyjny",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "switch-account-Nina Szkicowa",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "switch-account-Konto archiwalne",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "switch-account-Nowa osoba · rejestracja",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "cookie-Bez cookie",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "cookie-Prawidłowe",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "cookie-Wygasłe",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "cookie-Sfałszowane",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "cookie-Stary format",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "cookie-Bez sesji",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt mentora-Dane konta",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt mentora-Brak strony",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt mentora-Szkic",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt mentora-Opublikowana",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt mentora-Ładowanie",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt mentora-Błąd odczytu",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt operatora-Dane",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt operatora-Zero użytkowników",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt operatora-Ładowanie",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "Odczyt operatora-Błąd danych",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Sukces",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Brak sieci",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Błąd usługi 500",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Logowanie · błędne dane",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Rejestracja · zajęty adres",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Rejestracja · utracona odpowiedź po zapisie",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Limit prób 429",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Dołączenie · wygaśnięcie przed zapisem",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Dołączenie · wygaśnięcie po zapisie",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "outcome-Niepewny wynik operacji",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "hold-and-finish",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "lock-clear-Limit logowania",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "lock-clear-Limit rejestracji",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "operator-action-Nadaj mentor poza sesją",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "operator-action-Odbierz mentor",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "operator-action-Reset operatora",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "typed-returnTo",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "registration-variant-toggle",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "trace-disclosure",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "unknown-screen-home",
+      "variant": "scenario-options",
+      "result": "passed"
+    },
+    {
+      "check": "no-runtime-errors-or-external-requests",
+      "variant": "scenario-options",
+      "result": "passed"
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/index.html?qa=stage3-options",
+      "method": "GET"
+    },
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-DF0xBe8x.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-Ba9JoD92.css",
+      "method": "GET"
+    },
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/index.html?qa=stage3-options",
+      "method": "GET"
+    },
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-DF0xBe8x.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-Ba9JoD92.css",
+      "method": "GET"
+    },
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/index.html?qa=unknown",
+      "method": "GET"
+    },
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-DF0xBe8x.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://localhost:3000/prototypes/konta-i-role/assets/index-Ba9JoD92.css",
+      "method": "GET"
+    }
+  ]
+}
