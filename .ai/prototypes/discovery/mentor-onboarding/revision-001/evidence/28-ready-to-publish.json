@@ -1,0 +1,96 @@
+{
+  "lifecycle": {
+    "effectiveLaunch": {
+      "browserLaunched": true,
+      "engine": "chrome",
+      "launchHash": 9520310828142199193
+    },
+    "launched": false,
+    "relaunchedBrowser": false,
+    "restartedBackground": false,
+    "restoreStatus": "not_configured",
+    "reused": true,
+    "saveStatus": "not_attempted"
+  },
+  "origin": "file:///workspace/.ai/prototypes/discovery/mentor-onboarding/revision-001/index.html#review",
+  "refs": {
+    "e44": {
+      "name": "Przejdź do treści",
+      "role": "link"
+    },
+    "e45": {
+      "name": "Etapy tworzenia strony",
+      "role": "navigation"
+    },
+    "e46": {
+      "name": "Zacznij od nowa",
+      "role": "button"
+    },
+    "e48": {
+      "name": "Wstaw dane przykładowe na tym ekranie",
+      "role": "button"
+    },
+    "e49": {
+      "name": "Niepowodzenie następnego zapisu",
+      "role": "button"
+    },
+    "e50": {
+      "name": "Zajęty e-mail przy następnej rejestracji",
+      "role": "button"
+    },
+    "e51": {
+      "name": "Pokaż brak uprawnień",
+      "role": "button"
+    },
+    "e52": {
+      "name": "Konto",
+      "role": "link"
+    },
+    "e53": {
+      "name": "Twoja strona",
+      "role": "link"
+    },
+    "e54": {
+      "name": "Stawka",
+      "role": "link"
+    },
+    "e55": {
+      "name": "Terminy",
+      "role": "link"
+    },
+    "e56": {
+      "name": "Publikacja",
+      "role": "link"
+    },
+    "e72": {
+      "name": "Sprawdź swoją stronę",
+      "role": "heading"
+    },
+    "e73": {
+      "name": "Popraw opis lub linki",
+      "role": "link"
+    },
+    "e74": {
+      "name": "Zmień stawkę",
+      "role": "link"
+    },
+    "e75": {
+      "name": "Zmień termin",
+      "role": "link"
+    },
+    "e76": {
+      "name": "Pokaż mnie na publicznej liście mentorów",
+      "role": "checkbox"
+    },
+    "e77": {
+      "name": "Opublikuj stronę",
+      "role": "button"
+    },
+    "e78": {
+      "name": "Wróć do terminów",
+      "role": "link"
+    }
+  },
+  "removedRefs": [],
+  "snapshot": "- link \"Przejdź do treści\" [ref=e44]\n- banner\n  - strong\n    - StaticText \"Mentio · prototyp odkrywczy\"\n  - paragraph\n    - StaticText \"Fikcyjne dane. Nic nie jest zapisywane ani publikowane w internecie. Używaj wyłącznie danych przykładowych.\"\n  - button \"Zacznij od nowa\" [ref=e46]\n- navigation \"Etapy tworzenia strony\" [ref=e45]\n  - list\n    - listitem [level=1]\n      - ListMarker \"1. \"\n      - link \"Konto\" [ref=e52]\n    - listitem [level=1]\n      - ListMarker \"2. \"\n      - link \"Twoja strona\" [ref=e53]\n    - listitem [level=1]\n      - ListMarker \"3. \"\n      - link \"Stawka\" [ref=e54]\n    - listitem [level=1]\n      - ListMarker \"4. \"\n      - link \"Terminy\" [ref=e55]\n    - listitem [level=1]\n      - ListMarker \"5. \"\n      - link \"Publikacja\" [ref=e56]\n- status\n  - StaticText \"Przykładowy termin dodany.\"\n- main\n  - generic\n    - paragraph\n      - StaticText \"Publikacja\"\n    - heading \"Sprawdź swoją stronę\" [level=1, ref=e72]\n    - DescriptionList\n      - term \"Nazwa\"\n      - definition\n        - StaticText \"Alicja Przykładowa\"\n      - term \"Adres\"\n      - definition\n        - StaticText \"/mentorzy/alicja-przykladowa\"\n      - term \"Opis\"\n      - definition\n        - StaticText \"Tworzę aplikacje w TypeScript i React. Pomagam przeanalizować konkretny błąd, zaplanować migrację i zrozumieć decyzje w kodzie.\"\n      - term \"Publiczna praca\"\n      - definition\n        - StaticText \"https://example.invalid/alicja/projekt\"\n      - term \"Ceny\"\n      - definition\n        - StaticText \"25 min — 150 zł; 50 min — 300 zł\"\n      - term \"Termin\"\n      - definition\n        - StaticText \"3 listopada 2026, 18:00, Warszawa\"\n    - paragraph\n      - link \"Popraw opis lub linki\" [ref=e73]\n      - StaticText \" · \"\n      - link \"Zmień stawkę\" [ref=e74]\n      - StaticText \" · \"\n      - link \"Zmień termin\" [ref=e75]\n    - form\n      - checkbox \"Pokaż mnie na publicznej liście mentorów\" [checked=false, ref=e76]\n      - paragraph\n        - StaticText \"To Twój wybór. Gdy nie dołączysz do listy, stronę nadal można otworzyć przez Twój link. Każda osoba znająca link może zobaczyć opublikowaną stronę.\"\n      - paragraph\n        - StaticText \"Publikujesz w symulacji. Nie ma prawdziwych płatności ani wypłat; konfiguracja Stripe nie jest krokiem tego onboardingu.\"\n      - button \"Opublikuj stronę\" [ref=e77]\n      - link \"Wróć do terminów\" [ref=e78]\n- complementary \"Stany testowe prototypu\"\n  - group\n    - DisclosureTriangle \"Stany testowe prototypu\" [expanded=true]\n      - StaticText \"Stany testowe prototypu\"\n    - paragraph\n      - StaticText \"Te kontrolki służą do sprawdzania zachowania symulacji.\"\n    - button \"Wstaw dane przykładowe na tym ekranie\" [ref=e48]\n    - button \"Niepowodzenie następnego zapisu\" [ref=e49]\n    - button \"Zajęty e-mail przy następnej rejestracji\" [ref=e50]\n    - button \"Pokaż brak uprawnień\" [ref=e51]\n    - status\n      - StaticText \"Wstawiono fikcyjne dane. Sprawdź formularz i zapisz go, aby przejść dalej.\"\n- contentinfo\n  - StaticText \"Prototyp nie potwierdza popytu ani gotowości aplikacji do wdrożenia. Dane znikają po odświeżeniu strony.\""
+}

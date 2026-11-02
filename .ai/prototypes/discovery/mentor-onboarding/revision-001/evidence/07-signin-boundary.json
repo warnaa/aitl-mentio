@@ -1,0 +1,76 @@
+{
+  "lifecycle": {
+    "effectiveLaunch": {
+      "browserLaunched": true,
+      "engine": "chrome",
+      "launchHash": 9520310828142199193
+    },
+    "launched": false,
+    "relaunchedBrowser": false,
+    "restartedBackground": false,
+    "restoreStatus": "not_configured",
+    "reused": true,
+    "saveStatus": "not_attempted"
+  },
+  "origin": "file:///workspace/.ai/prototypes/discovery/mentor-onboarding/revision-001/index.html#signin-boundary",
+  "refs": {
+    "e1": {
+      "name": "Przejdź do treści",
+      "role": "link"
+    },
+    "e15": {
+      "name": "Wstaw dane przykładowe na tym ekranie",
+      "role": "button"
+    },
+    "e16": {
+      "name": "Niepowodzenie następnego zapisu",
+      "role": "button"
+    },
+    "e17": {
+      "name": "Zajęty e-mail przy następnej rejestracji",
+      "role": "button"
+    },
+    "e18": {
+      "name": "Pokaż brak uprawnień",
+      "role": "button"
+    },
+    "e19": {
+      "name": "Logowanie — poza prototypem",
+      "role": "heading"
+    },
+    "e2": {
+      "name": "Etapy tworzenia strony",
+      "role": "navigation"
+    },
+    "e20": {
+      "name": "Wróć do rejestracji",
+      "role": "link"
+    },
+    "e3": {
+      "name": "Zacznij od nowa",
+      "role": "button"
+    },
+    "e5": {
+      "name": "Konto",
+      "role": "link"
+    },
+    "e6": {
+      "name": "Twoja strona",
+      "role": "link"
+    },
+    "e7": {
+      "name": "Stawka",
+      "role": "link"
+    },
+    "e8": {
+      "name": "Terminy",
+      "role": "link"
+    },
+    "e9": {
+      "name": "Publikacja",
+      "role": "link"
+    }
+  },
+  "removedRefs": [],
+  "snapshot": "- link \"Przejdź do treści\" [ref=e1]\n- banner\n  - strong\n    - StaticText \"Mentio · prototyp odkrywczy\"\n  - paragraph\n    - StaticText \"Fikcyjne dane. Nic nie jest zapisywane ani publikowane w internecie. Używaj wyłącznie danych przykładowych.\"\n  - button \"Zacznij od nowa\" [ref=e3]\n- navigation \"Etapy tworzenia strony\" [ref=e2]\n  - list\n    - listitem [level=1]\n      - ListMarker \"1. \"\n      - link \"Konto\" [ref=e5]\n    - listitem [level=1]\n      - ListMarker \"2. \"\n      - link \"Twoja strona\" [ref=e6]\n    - listitem [level=1]\n      - ListMarker \"3. \"\n      - link \"Stawka\" [ref=e7]\n    - listitem [level=1]\n      - ListMarker \"4. \"\n      - link \"Terminy\" [ref=e8]\n    - listitem [level=1]\n      - ListMarker \"5. \"\n      - link \"Publikacja\" [ref=e9]\n- main\n  - generic\n    - heading \"Logowanie — poza prototypem\" [level=1, ref=e19]\n    - paragraph\n      - StaticText \"Ta rewizja pokazuje zakładanie nowego konta mentora. Nie sprawdza haseł ani istniejących kont.\"\n    - paragraph\n      - StaticText \"Jeśli konto zostało już utworzone, w aplikacji zaloguj się ustawionym hasłem. Nie wysyłamy e-maila do odzyskania hasła. Pomoc operatora wymaga wcześniej ustalonego prywatnego kanału kontaktu.\"\n    - link \"Wróć do rejestracji\" [ref=e20]\n- complementary \"Stany testowe prototypu\"\n  - group\n    - DisclosureTriangle \"Stany testowe prototypu\" [expanded=true]\n      - StaticText \"Stany testowe prototypu\"\n    - paragraph\n      - StaticText \"Te kontrolki służą do sprawdzania zachowania symulacji.\"\n    - button \"Wstaw dane przykładowe na tym ekranie\" [ref=e15]\n    - button \"Niepowodzenie następnego zapisu\" [ref=e16]\n    - button \"Zajęty e-mail przy następnej rejestracji\" [ref=e17]\n    - button \"Pokaż brak uprawnień\" [ref=e18]\n    - status\n      - StaticText \"Jednorazowy stan zajętego adresu został użyty. To fikcyjne dane.\"\n- contentinfo\n  - StaticText \"Prototyp nie potwierdza popytu ani gotowości aplikacji do wdrożenia. Dane znikają po odświeżeniu strony.\""
+}

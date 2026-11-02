@@ -1,0 +1,96 @@
+{
+  "lifecycle": {
+    "effectiveLaunch": {
+      "browserLaunched": true,
+      "engine": "chrome",
+      "launchHash": 9520310828142199193
+    },
+    "launched": false,
+    "relaunchedBrowser": false,
+    "restartedBackground": false,
+    "restoreStatus": "not_configured",
+    "reused": true,
+    "saveStatus": "not_attempted"
+  },
+  "origin": "file:///workspace/.ai/prototypes/discovery/mentor-onboarding/revision-001/index.html#page",
+  "refs": {
+    "e44": {
+      "name": "Przejdź do treści",
+      "role": "link"
+    },
+    "e45": {
+      "name": "Etapy tworzenia strony",
+      "role": "navigation"
+    },
+    "e46": {
+      "name": "Zacznij od nowa",
+      "role": "button"
+    },
+    "e47": {
+      "name": "Pokaż, w czym możesz pomóc",
+      "role": "heading"
+    },
+    "e48": {
+      "name": "Wstaw dane przykładowe na tym ekranie",
+      "role": "button"
+    },
+    "e49": {
+      "name": "Niepowodzenie następnego zapisu",
+      "role": "button"
+    },
+    "e50": {
+      "name": "Zajęty e-mail przy następnej rejestracji",
+      "role": "button"
+    },
+    "e51": {
+      "name": "Pokaż brak uprawnień",
+      "role": "button"
+    },
+    "e52": {
+      "name": "Konto",
+      "role": "link"
+    },
+    "e53": {
+      "name": "Twoja strona",
+      "role": "link"
+    },
+    "e54": {
+      "name": "Stawka",
+      "role": "link"
+    },
+    "e55": {
+      "name": "Terminy",
+      "role": "link"
+    },
+    "e56": {
+      "name": "Publikacja",
+      "role": "link"
+    },
+    "e57": {
+      "name": "Nazwa wyświetlana",
+      "role": "textbox"
+    },
+    "e58": {
+      "name": "Adres strony",
+      "role": "textbox"
+    },
+    "e59": {
+      "name": "Co zrobiłeś i w czym pomagasz?",
+      "role": "textbox"
+    },
+    "e60": {
+      "name": "Linki do publicznej pracy",
+      "role": "textbox"
+    },
+    "e61": {
+      "name": "Zapisz szkic i przejdź dalej",
+      "role": "button"
+    },
+    "e62": {
+      "name": "Wróć do konta",
+      "role": "link"
+    }
+  },
+  "removedRefs": [],
+  "snapshot": "- link \"Przejdź do treści\" [ref=e44]\n- banner\n  - strong\n    - StaticText \"Mentio · prototyp odkrywczy\"\n  - paragraph\n    - StaticText \"Fikcyjne dane. Nic nie jest zapisywane ani publikowane w internecie. Używaj wyłącznie danych przykładowych.\"\n  - button \"Zacznij od nowa\" [ref=e46]\n- navigation \"Etapy tworzenia strony\" [ref=e45]\n  - list\n    - listitem [level=1]\n      - ListMarker \"1. \"\n      - link \"Konto\" [ref=e52]\n    - listitem [level=1]\n      - ListMarker \"2. \"\n      - link \"Twoja strona\" [ref=e53]\n    - listitem [level=1]\n      - ListMarker \"3. \"\n      - link \"Stawka\" [ref=e54]\n    - listitem [level=1]\n      - ListMarker \"4. \"\n      - link \"Terminy\" [ref=e55]\n    - listitem [level=1]\n      - ListMarker \"5. \"\n      - link \"Publikacja\" [ref=e56]\n- status\n  - StaticText \"Konto mentora utworzone w symulacji. Przygotuj swój szkic.\"\n- main\n  - generic\n    - paragraph\n      - StaticText \"Twoja strona · szkic\"\n    - heading \"Pokaż, w czym możesz pomóc\" [level=1, ref=e47]\n    - paragraph\n      - StaticText \"Opisz własne doświadczenie i dodaj linki do publicznej pracy. Zapisanie szkicu nie publikuje strony.\"\n    - form\n      - LabelText\n        - StaticText \"Nazwa wyświetlana\"\n      - textbox \"Nazwa wyświetlana\" [ref=e57]: Alicja Przykładowa\n        - StaticText \"Alicja Przykładowa\"\n      - LabelText\n        - StaticText \"Adres strony\"\n      - textbox \"Adres strony\" [ref=e58]: alicja-przykladowa\n        - StaticText \"alicja-przykladowa\"\n      - paragraph\n        - StaticText \"Fragment po /mentorzy/. Od 3 do 40 znaków: małe litery, cyfry i pojedyncze myślniki.\"\n      - LabelText\n        - StaticText \"Co zrobiłeś i w czym pomagasz?\"\n      - textbox \"Co zrobiłeś i w czym pomagasz?\" [ref=e59]\n      - paragraph\n        - StaticText \"Do publikacji potrzeba opisu od 50 do 2000 znaków. Szkic może być niepełny.\"\n      - LabelText\n        - StaticText \"Linki do publicznej pracy\"\n      - textbox \"Linki do publicznej pracy\" [ref=e60]\n      - paragraph\n        - StaticText \"Jeden adres http lub https w wierszu, maksymalnie 10. Do publikacji potrzeba przynajmniej jednego. W prototypie link otwiera lokalny ekran zastępczy.\"\n      - button \"Zapisz szkic i przejdź dalej\" [ref=e61]\n      - link \"Wróć do konta\" [ref=e62]\n- complementary \"Stany testowe prototypu\"\n  - group\n    - DisclosureTriangle \"Stany testowe prototypu\" [expanded=true]\n      - StaticText \"Stany testowe prototypu\"\n    - paragraph\n      - StaticText \"Te kontrolki służą do sprawdzania zachowania symulacji.\"\n    - button \"Wstaw dane przykładowe na tym ekranie\" [ref=e48]\n    - button \"Niepowodzenie następnego zapisu\" [ref=e49]\n    - button \"Zajęty e-mail przy następnej rejestracji\" [ref=e50]\n    - button \"Pokaż brak uprawnień\" [ref=e51]\n    - status\n      - StaticText \"Jednorazowy stan zajętego adresu został użyty. To fikcyjne dane.\"\n- contentinfo\n  - StaticText \"Prototyp nie potwierdza popytu ani gotowości aplikacji do wdrożenia. Dane znikają po odświeżeniu strony.\""
+}

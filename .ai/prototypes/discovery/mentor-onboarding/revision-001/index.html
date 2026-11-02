@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>Mentio — onboarding mentora, prototyp</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="prototype.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Przejdź do treści</a>
+  <header>
+    <strong>Mentio · prototyp odkrywczy</strong>
+    <p>Fikcyjne dane. Nic nie jest zapisywane ani publikowane w internecie. Używaj wyłącznie danych przykładowych.</p>
+    <button type="button" id="reset">Zacznij od nowa</button>
+  </header>
+  <nav aria-label="Etapy tworzenia strony">
+    <ol>
+      <li><a href="#register">Konto</a></li>
+      <li><a href="#page">Twoja strona</a></li>
+      <li><a href="#price">Stawka</a></li>
+      <li><a href="#slots">Terminy</a></li>
+      <li><a href="#review">Publikacja</a></li>
+    </ol>
+  </nav>
+  <p id="announcement" role="status" aria-live="polite"></p>
+  <main id="main" tabindex="-1">
+    <section id="register" data-screen>
+      <p class="eyebrow">Konto mentora</p>
+      <h1 tabindex="-1">Załóż konto mentora</h1>
+      <p>Przygotuj stronę, pokaż swoją publiczną pracę i ustal stawkę za sesje tekstowe.</p>
+      <p>Nie potrzebujesz zaproszenia ani zgody na publikację. Nie ma kroku weryfikacji e-maila.</p>
+      <form id="register-form" novalidate>
+        <label for="name">Imię i nazwisko</label>
+        <input id="name" maxlength="80" aria-describedby="name-error" autocomplete="off">
+        <p id="name-error" class="error"></p>
+        <label for="email">Adres e-mail</label>
+        <input id="email" type="email" maxlength="320" aria-describedby="email-error" autocomplete="off">
+        <p id="email-error" class="error"></p>
+        <label for="password">Hasło przykładowe</label>
+        <input id="password" type="password" aria-describedby="password-help password-error" autocomplete="off">
+        <p id="password-help" class="hint">Co najmniej 10 znaków, maksymalnie 72 bajty UTF-8. Polskie litery mogą zajmować 2 bajty, inne znaki więcej. Nie wpisuj prawdziwego hasła.</p>
+        <p id="password-error" class="error"></p>
+        <p class="form-error" role="alert"></p>
+        <button class="primary" type="submit">Załóż konto</button>
+      </form>
+      <p>Masz już konto? <a href="#signin-boundary">Zaloguj się — poza tym prototypem</a>.</p>
+    </section>
+
+    <section id="account" data-screen hidden>
+      <h1 tabindex="-1">Konto mentora utworzone</h1>
+      <p id="account-name"></p>
+      <p>Nie wysłaliśmy e-maila. Konto i rola mentora istnieją wyłącznie w tej symulacji.</p>
+      <a class="primary button-link" href="#page">Wróć do tworzenia strony</a>
+    </section>
+
+    <section id="page" data-screen hidden>
+      <p class="eyebrow">Twoja strona · szkic</p>
+      <h1 tabindex="-1">Pokaż, w czym możesz pomóc</h1>
+      <p>Opisz własne doświadczenie i dodaj linki do publicznej pracy. Zapisanie szkicu nie publikuje strony.</p>
+      <form id="page-form" novalidate>
+        <label for="display-name">Nazwa wyświetlana</label>
+        <input id="display-name" maxlength="80" aria-describedby="display-name-error">
+        <p id="display-name-error" class="error"></p>
+        <label for="slug">Adres strony</label>
+        <input id="slug" aria-describedby="slug-help slug-error" maxlength="40">
+        <p id="slug-help" class="hint">Fragment po /mentorzy/. Od 3 do 40 znaków: małe litery, cyfry i pojedyncze myślniki.</p>
+        <p id="slug-error" class="error"></p>
+        <label for="description">Co zrobiłeś i w czym pomagasz?</label>
+        <textarea id="description" rows="5" maxlength="2000" aria-describedby="description-help description-error"></textarea>
+        <p id="description-help" class="hint">Do publikacji potrzeba opisu od 50 do 2000 znaków. Szkic może być niepełny.</p>
+        <p id="description-error" class="error"></p>
+        <label for="work-links">Linki do publicznej pracy</label>
+        <textarea id="work-links" rows="3" aria-describedby="work-links-help work-links-error" spellcheck="false"></textarea>
+        <p id="work-links-help" class="hint">Jeden adres http lub https w wierszu, maksymalnie 10. Do publikacji potrzeba przynajmniej jednego. W prototypie link otwiera lokalny ekran zastępczy.</p>
+        <p id="work-links-error" class="error"></p>
+        <p class="form-error" role="alert"></p>
+        <div class="actions"><button class="primary" type="submit">Zapisz szkic i przejdź dalej</button><a href="#account">Wróć do konta</a></div>
+      </form>
+    </section>
+
+    <section id="price" data-screen hidden>
+      <p class="eyebrow">Stawka</p>
+      <h1 tabindex="-1">Ustal cenę sesji tekstowej</h1>
+      <p>Ustalasz jedną stawkę za 25 minut. Sesja 50-minutowa kosztuje jej dwukrotność.</p>
+      <form id="price-form" novalidate>
+        <label for="rate">Stawka za 25 minut, w zł</label>
+        <input id="rate" type="number" min="90" max="600" step="1" inputmode="numeric" aria-describedby="rate-help rate-error">
+        <p id="rate-help" class="hint">Od 90 do 600 zł, w pełnych złotych.</p>
+        <p id="rate-error" class="error"></p>
+        <div class="notice"><p id="price-preview">Wpisz stawkę, aby zobaczyć obie ceny.</p><p>Mentio pobiera obecnie 20% ceny. Na tej wersji płatności i zarobki są symulowane; nie ma wypłat. Przy prawdziwych płatnościach od udziału mentora zostaną odjęte także opłaty Stripe.</p></div>
+        <p class="form-error" role="alert"></p>
+        <div class="actions"><button class="primary" type="submit">Zapisz stawkę i przejdź dalej</button><a href="#page">Wróć do strony</a></div>
+      </form>
+      <p><button type="button" id="skip-rate" class="quiet">Pomiń stawkę na razie</button> — strona może być opublikowana, ale bez możliwości rezerwacji.</p>
+    </section>
+
+    <section id="slots" data-screen hidden>
+      <p class="eyebrow">Terminy · opcjonalnie</p>
+      <h1 tabindex="-1">Dodaj pierwszy termin</h1>
+      <p>Sesje odbywają się wyłącznie tekstowo, przez 25 lub 50 minut.</p>
+      <p class="hint">Czas w tej symulacji: 1 listopada 2026, 12:00, Warszawa. Pokazujemy jeden przykładowy termin. Edycja kalendarza jest poza prototypem.</p>
+      <div class="notice"><strong>3 listopada 2026, 18:00 · czas polski</strong><p id="slot-status" role="status">Nie masz jeszcze dodanych terminów.</p><button type="button" id="toggle-slot">Dodaj ten termin</button></div>
+      <p id="slot-eligibility"></p>
+      <div class="actions"><a class="primary button-link" href="#review">Przejdź do publikacji</a><a href="#price">Wróć do stawki</a></div>
+    </section>
+
+    <section id="review" data-screen hidden>
+      <p class="eyebrow">Publikacja</p>
+      <h1 tabindex="-1">Sprawdź swoją stronę</h1>
+      <div id="review-summary"></div>
+      <p><a href="#page">Popraw opis lub linki</a> · <a href="#price">Zmień stawkę</a> · <a href="#slots">Zmień termin</a></p>
+      <form id="publish-form" novalidate>
+        <label class="check"><input type="checkbox" id="listed"> Pokaż mnie na publicznej liście mentorów</label>
+        <p class="hint">To Twój wybór. Gdy nie dołączysz do listy, stronę nadal można otworzyć przez Twój link. Każda osoba znająca link może zobaczyć opublikowaną stronę.</p>
+        <p class="notice">Publikujesz w symulacji. Nie ma prawdziwych płatności ani wypłat; konfiguracja Stripe nie jest krokiem tego onboardingu.</p>
+        <p class="form-error" role="alert"></p>
+        <div class="actions"><button class="primary" type="submit">Opublikuj stronę</button><a href="#slots">Wróć do terminów</a></div>
+      </form>
+    </section>
+
+    <section id="published" data-screen hidden>
+      <p class="eyebrow">Strona opublikowana · symulacja</p>
+      <h1 tabindex="-1">Twoja strona jest gotowa</h1>
+      <p>Publikacja zakończyła się w tym prototypie. W internecie nie powstała żadna strona.</p>
+      <p>Przykładowy adres strony: <code id="share-path"></code></p>
+      <p id="listing-result"></p>
+      <p id="readiness-result"></p>
+      <div class="actions"><a class="primary button-link" href="#public-preview">Otwórz swój link w prototypie</a><a href="#directory">Zobacz symulację listy mentorów</a></div>
+      <p>Edytowanie już opublikowanej strony i wycofanie publikacji są poza zakresem tej rewizji.</p>
+    </section>
+
+    <section id="public-preview" data-screen hidden>
+      <p class="eyebrow">Widok publiczny · symulacja osoby z linkiem</p>
+      <h1 id="public-name" tabindex="-1"></h1>
+      <p id="public-description" class="preserve"></p>
+      <h2>Publiczna praca</h2><ul id="public-links"></ul>
+      <h2>Sesje tekstowe</h2><p>Sesje odbywają się wyłącznie tekstowo.</p><p id="public-price"></p>
+      <h2>Wolne terminy</h2><p id="public-slot"></p>
+      <p id="booking-boundary" class="notice">Rezerwacja, pytanie i płatność są poza tym prototypem.</p>
+      <p><a href="#published">Wróć do wyniku publikacji</a> · <a href="#directory">Lista mentorów</a></p>
+    </section>
+
+    <section id="directory" data-screen hidden>
+      <p class="eyebrow">Publiczna lista · tylko dane z tej symulacji</p>
+      <h1 tabindex="-1">Mentorzy</h1>
+      <div id="directory-content"></div>
+      <p><a href="#published">Wróć do wyniku publikacji</a></p>
+    </section>
+
+    <section id="work-boundary" data-screen hidden>
+      <h1 tabindex="-1">Publiczna praca — poza prototypem</h1>
+      <p>W aplikacji ten link otworzyłby publiczną pracę mentora. Tutaj pozostajesz w lokalnej symulacji.</p>
+      <p id="work-address" class="preserve"></p><a href="#public-preview">Wróć do strony mentora</a>
+    </section>
+
+    <section id="signin-boundary" data-screen hidden>
+      <h1 tabindex="-1">Logowanie — poza prototypem</h1>
+      <p>Ta rewizja pokazuje zakładanie nowego konta mentora. Nie sprawdza haseł ani istniejących kont.</p>
+      <p>Jeśli konto zostało już utworzone, w aplikacji zaloguj się ustawionym hasłem. Nie wysyłamy e-maila do odzyskania hasła. Pomoc operatora wymaga wcześniej ustalonego prywatnego kanału kontaktu.</p>
+      <a href="#register">Wróć do rejestracji</a>
+    </section>
+
+    <section id="denied" data-screen hidden>
+      <h1 tabindex="-1">Brak dostępu do edycji</h1>
+      <p>Ten stan testowy przedstawia próbę edycji bez roli mentora. Nie zmieniłeś szkicu ani publikacji.</p>
+      <button type="button" id="restore-access">Wróć do własnego szkicu w symulacji</button>
+    </section>
+
+    <section id="not-found" data-screen hidden>
+      <h1 tabindex="-1">Nie ma takiego ekranu</h1>
+      <p>Ten adres nie należy do dostępnych ekranów prototypu.</p><a id="recover-link" href="#register">Wróć do dostępnego etapu</a>
+    </section>
+  </main>
+  <aside aria-labelledby="test-heading">
+    <details>
+      <summary id="test-heading">Stany testowe prototypu</summary>
+      <p>Te kontrolki służą do sprawdzania zachowania symulacji.</p>
+      <div class="actions"><button id="sample" type="button">Wstaw dane przykładowe na tym ekranie</button><button id="fail-next" type="button">Niepowodzenie następnego zapisu</button><button id="taken-email" type="button">Zajęty e-mail przy następnej rejestracji</button><button id="deny-access" type="button">Pokaż brak uprawnień</button></div>
+      <p id="test-status" role="status"></p>
+    </details>
+  </aside>
+  <footer>Prototyp nie potwierdza popytu ani gotowości aplikacji do wdrożenia. Dane znikają po odświeżeniu strony.</footer>
+</body>
+</html>
