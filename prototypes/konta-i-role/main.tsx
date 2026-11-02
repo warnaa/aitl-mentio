@@ -1,6 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useState, useSyncExternalStore, type FormEvent, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { z } from 'zod';
 import { AccountNav } from '@mentio/ui/components/auth/AccountNav';
 import { AuthPanel } from '@mentio/ui/components/auth/AuthPanel';
 import { CrudForm } from '@mentio/ui/backend/forms';
@@ -20,6 +19,7 @@ import { DEMO_PASSWORD, SCREENS, SCREEN_NOTES, isScreen, slugFor, type ScreenId 
 import { Simulation, UNCERTAIN, type Cookie, type Outcome, type ReadState } from './simulation';
 import { STATES, labelForState, type StateId } from './states';
 import { prepareState } from './scenarios';
+import { introSchema, loginSchema, registerSchema } from './forms';
 import { installReviewHints } from './review-integration';
 import './review/comments.js';
 import './review/prototype.js';
@@ -27,12 +27,6 @@ import './styles.css';
 
 declare global { interface Window { __PROTOTYPE_START__: () => boolean } }
 const sim = new Simulation();
-// Local schemas preserve production constraints without importing the app or data layer.
-const email = z.string({ error: 'Wpisz poprawny adres e-mail demo' }).trim().toLowerCase().pipe(z.email({ error: 'Wpisz poprawny adres e-mail demo' }).max(320, 'Maksymalnie 320 znaków'));
-const password = z.string({ error: 'Wpisz hasło demo' }).min(1, 'Wpisz hasło demo').refine(value => new TextEncoder().encode(value).length <= 72, 'Hasło może mieć maksymalnie 72 bajty UTF-8');
-const loginSchema = z.object({ email, password });
-const registerSchema = z.object({ name: z.string({ error: 'Wpisz imię i nazwisko demo' }).trim().min(1, 'Wpisz imię i nazwisko demo').max(80, 'Maksymalnie 80 znaków'), email, password: password.refine(value => Array.from(value).length >= 10, 'Hasło musi mieć co najmniej 10 znaków') });
-const introSchema = z.object({ displayName: z.string(), slug: z.string() });
 const success = () => ({ ok: true as const, data: null, status: 200 });
 const message = 'Symulacja konta i logowania. Używaj wyłącznie danych demo. Nie wpisuj prawdziwego hasła. Niczego nie wysyłamy.';
 function navigate(screen: ScreenId) { const target = sim.route(screen); document.dispatchEvent(new CustomEvent('prototype:navigate', { detail: target })); }

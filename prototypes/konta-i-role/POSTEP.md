@@ -467,6 +467,16 @@ w skrypcie, nie w produkcie. Lekcja w `.ai/lessons.md`.
   generowany `packages/app/next-env.d.ts`. Silnik przeglądu identyczny z wejściem
   (`evidence/stage3/preservation.json`). Wynik budowania nadal poza Gitem.
 
+### Poprawka po przeglądzie — 2026-11-02
+
+Uwaga użytkownika: błąd „Wpisz hasło demo” zasłaniał podpowiedź z hasłem. CrudForm ukrywa opis pola,
+gdy pole ma błąd (`showDescription = description && !errors`), więc dotyczyło to każdego błędu hasła.
+Schematy przeniesiono do `forms.ts`; każdy komunikat błędu hasła (puste, >72 bajty, <10 znaków przy
+rejestracji) zawiera `MentioDemo!`. Test `forms.test.mts` (2 testy; łącznie lokalnie 31/31).
+W przeglądarce przy 320 px: komunikat w `aria-describedby`, axe bez naruszeń, brak przewijania.
+Pełnej macierzy i audytu kontrolek nie powtarzano — zmiana dotyczy tylko treści błędów hasła.
+Obserwacja DS (nie nowa luka): CrudForm nie potrafi pokazać jednocześnie opisu i błędu pola.
+
 ### Czego nie sprawdzono
 
 - `npm run test:integration` — nie uruchamiano ponownie; w etapach 1–2 runner nie startował
