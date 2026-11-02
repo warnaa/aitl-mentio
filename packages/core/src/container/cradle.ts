@@ -3,6 +3,7 @@ import type { AppEnv } from '../config/env';
 import type { Logger } from '../logger';
 import type { EventBus } from '../events/event-bus';
 import type { UserService } from '../services/auth/user.service';
+import type { Clock } from '../time/clock';
 
 /**
  * The typed shape of everything registered in the awilix container. Resolving any
@@ -10,7 +11,7 @@ import type { UserService } from '../services/auth/user.service';
  * type-checked against this interface end to end.
  *
  * Lifetimes:
- * - `env`, `logger`, `orm`, `eventBus` — SINGLETON (shared for the process).
+ * - `env`, `logger`, `clock`, `orm`, `eventBus` — SINGLETON (shared for the process).
  * - `em`, `userService` — SCOPED (created fresh per request scope).
  *
  * As services grow to ~9 concepts, each new one is a new explicit line here and in
@@ -19,6 +20,7 @@ import type { UserService } from '../services/auth/user.service';
 export interface Cradle {
   env: AppEnv;
   logger: Logger;
+  clock: Clock;
   orm: MikroORM;
   eventBus: EventBus;
   em: EntityManager;

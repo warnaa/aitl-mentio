@@ -32,8 +32,11 @@ The shape is declared twice on purpose, in `packages/core/src/http/apiHandler.ts
 **Status and error codes**, from `packages/core/src/http/errors.ts` and `apiHandler.ts`:
 400 `bad_request`, 401 `unauthorized`, 403 `forbidden`, 404 `not_found`,
 409 `conflict`, 422 `validation_failed` (with `fieldErrors`, keyed by dotted path or
-`_root`), 500 `internal_error`. The client adds `network_error` and
-`invalid_response` in `apiCall.ts`.
+`_root`), 500 `internal_error`, 503 `service_unavailable` (`ServiceUnavailableError`:
+a required integration or credential is missing, or an upstream timed out, failed or
+answered non-2xx; see `fetchJson` in `outbound.ts`). An `AppError` may carry optional
+`headers`, which `apiHandler` copies onto the response. The client adds
+`network_error` and `invalid_response` in `apiCall.ts`.
 
 **Routes in place:**
 
@@ -66,8 +69,9 @@ API between packages. `npm run typecheck` is the consumer check.
 
 - `@devmentor/core` (`.`, `./container`, `./services`, `./http`, `./events`,
   `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`, the
-  `Cradle` keys (`env`, `logger`, `orm`, `eventBus`, `em`, `userService`),
-  `UserService` and `UserDto`, the `AppError` family and `isAppError`, `apiHandler`,
+  `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`, `em`, `userService`),
+  `Clock` and `systemClock`, `UserService` and `UserDto`, the `AppError` family
+  (with its optional `headers`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`,
   `jsonOk`, `jsonError`, `makeCrudRoute` with `CrudService` and
   `MakeCrudRouteOptions`, `readSession`, `requireSession`, `requireRole`,
   `assertOwnership`, `Session`, `Role` (`'student' | 'mentor'`), `EventBus`,

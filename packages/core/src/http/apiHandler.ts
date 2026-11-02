@@ -1,5 +1,5 @@
 import { createLogger, type Logger } from '../logger';
-import { type FieldErrors, isAppError } from './errors';
+import { type ErrorHeaders, type FieldErrors, isAppError } from './errors';
 
 /**
  * The response envelope every `/api/*` route returns. This is a *shape convention*
@@ -27,11 +27,15 @@ function logger(): Logger {
   return (cachedLogger ??= createLogger());
 }
 
-function json(status: number, body: ApiResponseBody<unknown>): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'content-type': 'application/json' },
-  });
+function json(
+  status: number,
+  body: ApiResponseBody<unknown>,
+  extraHeaders?: ErrorHeaders,
+): Response {
+  // The envelope is always JSON, whatever an error's own headers say.
+  const headers = new Headers(extraHeaders);
+  headers.set('content-type', 'application/json');
+  return new Response(JSON.stringify(body), { status, headers });
 }
 
 export function jsonOk<T>(data: T, status = 200): Response {
@@ -43,18 +47,21 @@ export function jsonError(
   code: string,
   message: string,
   fieldErrors?: FieldErrors,
+  headers?: ErrorHeaders,
 ): Response {
-  return json(status, {
-    ok: false,
-    error: { code, message, ...(fieldErrors ? { fieldErrors } : {}) },
-  });
+  return json(
+    status,
+    { ok: false, error: { code, message, ...(fieldErrors ? { fieldErrors } : {}) } },
+    headers,
+  );
 }
 
 /**
  * Wrap a route function: run it, wrap its return value in the success envelope (or
  * pass through a `Response` it built itself), and turn any thrown `AppError` into the
- * matching status + failure envelope. Unexpected errors are logged via the shared
- * logger and returned as a generic 500 — a raw stack trace never reaches the client.
+ * matching status + failure envelope, copying the error's optional `headers` onto the
+ * response. Unexpected errors are logged via the shared logger and returned as a
+ * generic 500 — a raw stack trace never reaches the client.
  *
  * Every route handler goes through this — no route writes its own `try/catch`.
  */
@@ -65,7 +72,13 @@ export function apiHandler(logic: RouteLogic): ApiRouteHandler {
       return result instanceof Response ? result : jsonOk(result);
     } catch (error) {
       if (isAppError(error)) {
-        return jsonError(error.status, error.code, error.message, error.fieldErrors);
+        return jsonError(
+          error.status,
+          error.code,
+          error.message,
+          error.fieldErrors,
+          error.headers,
+        );
       }
       logger().error({ err: error, path: req.url }, 'unhandled route error');
       return jsonError(500, 'internal_error', 'Something went wrong');

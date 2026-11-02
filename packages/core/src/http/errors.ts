@@ -5,23 +5,30 @@
  */
 export type FieldErrors = Record<string, string[]>;
 
+/** Extra response headers an error asks `apiHandler` to send (e.g. `Retry-After`). */
+export type ErrorHeaders = Readonly<Record<string, string>>;
+
+export interface AppErrorOptions {
+  fieldErrors?: FieldErrors;
+  cause?: unknown;
+  headers?: ErrorHeaders;
+}
+
 export class AppError extends Error {
   readonly status: number;
   readonly code: string;
   readonly fieldErrors?: FieldErrors;
+  /** Copied onto the response by `apiHandler`. No header is ever required. */
+  readonly headers?: ErrorHeaders;
 
-  constructor(
-    message: string,
-    status: number,
-    code: string,
-    options?: { fieldErrors?: FieldErrors; cause?: unknown },
-  ) {
+  constructor(message: string, status: number, code: string, options?: AppErrorOptions) {
     super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
     // `new.target.name` gives the concrete subclass name (e.g. `NotFoundError`).
     this.name = new.target.name;
     this.status = status;
     this.code = code;
     this.fieldErrors = options?.fieldErrors;
+    this.headers = options?.headers;
   }
 }
 
@@ -58,6 +65,20 @@ export class ConflictError extends AppError {
 export class ValidationError extends AppError {
   constructor(message = 'Validation failed', fieldErrors?: FieldErrors) {
     super(message, 422, 'validation_failed', { fieldErrors });
+  }
+}
+
+/**
+ * An integration or required configuration is unavailable: a missing credential, an
+ * upstream that timed out, failed, or answered non-2xx. Fail closed with 503 instead
+ * of hanging or pretending to succeed.
+ */
+export class ServiceUnavailableError extends AppError {
+  constructor(
+    message = 'This service is temporarily unavailable',
+    options?: { cause?: unknown; headers?: ErrorHeaders },
+  ) {
+    super(message, 503, 'service_unavailable', options);
   }
 }
 

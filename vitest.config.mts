@@ -23,7 +23,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: [
+        'packages/core/src/container/container.ts',
+        'packages/core/src/container/cradle.ts',
+        'packages/core/src/http/apiHandler.ts',
+        'packages/core/src/http/errors.ts',
         'packages/core/src/http/makeCrudRoute.ts',
+        'packages/core/src/http/outbound.ts',
+        'packages/core/src/http/return-to.ts',
+        'packages/core/src/time/clock.ts',
         'packages/db/src/config.ts',
         'packages/db/src/seeders/database.seeder.ts',
         'packages/ui/src/backend/feedback/EmptyState.tsx',

@@ -6,7 +6,10 @@ export {
   NotFoundError,
   ConflictError,
   ValidationError,
+  ServiceUnavailableError,
   isAppError,
+  type AppErrorOptions,
+  type ErrorHeaders,
   type FieldErrors,
 } from './errors';
 export {
@@ -33,3 +36,10 @@ export {
   type Session,
   type Role,
 } from './auth';
+export { safeReturnTo } from './return-to';
+export {
+  fetchJson,
+  DEFAULT_OUTBOUND_TIMEOUT_MS,
+  type FetchJsonInit,
+  type OutboundFailure,
+} from './outbound';
