@@ -516,6 +516,14 @@ tylko w bundlu; stałe `id="panel-main"` w PanelShell; brak kompozycji instrukcj
 Nowa obserwacja (nie luka DS): dostarczony silnik przeglądu nie obsługuje klawiatury w liście wątków
 i przy 320 px panel zakrywa pasek — warto poprawić w samym silniku przeglądu.
 
+### Pokrycie ekranów kryteriami specyfikacji — 2026-11-02
+
+Kontrola: s01–s04 miały kryteria „Done means”; s07/s08/s11 tylko zachowanie, nie treść; s06 i s12 żadnego;
+start według ról (L04) był sprzeczny z kryterium #9. Zatwierdzona przez właściciela poprawka
+`.ai/specs/2026-10-30-accounts-and-sign-in.md` dodaje do UI/UX teksty L04–L09/L12 i 7 kryteriów
+(nagłówek, s12 + link, utrata sesji, 404, strona błędu, `/admin`, wejście do s06 według L04), a #9 opisuje L04.
+Trasa `/pomoc-z-logowaniem` staje się trasą specyfikacji. Treść pierwszego wejścia s06 pozostaje w E01 #14.
+
 ### Pytania do specyfikacji, które wyszły przy budowie
 
 Brak otwartych. Pięć kandydatów z pierwszej wersji raportu po sprawdzeniu okazało się
