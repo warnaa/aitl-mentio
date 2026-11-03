@@ -496,6 +496,34 @@ describe('UserService.list', () => {
   });
 });
 
+describe('UserService.current', () => {
+  it('throws 401 for an anonymous caller without reading users', async () => {
+    const em = fakeEm([row()]);
+
+    await expect(service(em).current()).rejects.toBeInstanceOf(UnauthorizedError);
+    expect(em.findOne).not.toHaveBeenCalled();
+  });
+
+  it("returns any signed-in caller's own DTO, with the mentor profile populated", async () => {
+    const own = row({ id: 'caller', displayName: 'Grace', mentorProfile: { id: 'mp-2', headline: 'Compilers' } });
+    const em = fakeEm([row(), own]);
+    const session = Promise.resolve<Session>({ userId: 'caller', roles: ['mentee'] });
+
+    const dto = await service(em, { session }).current();
+
+    expect(em.findOne).toHaveBeenCalledWith(db.User, { id: 'caller' }, { populate: ['mentorProfile'] });
+    expect(dto).toMatchObject({ id: 'caller', displayName: 'Grace', mentorProfile: { id: 'mp-2', headline: 'Compilers' } });
+    expect(dto).not.toHaveProperty('passwordHash');
+  });
+
+  it('throws 401 when the session user no longer exists', async () => {
+    const em = fakeEm([row()]);
+    const session = Promise.resolve<Session>({ userId: 'deleted', roles: ['mentee'] });
+
+    await expect(service(em, { session }).current()).rejects.toBeInstanceOf(UnauthorizedError);
+  });
+});
+
 describe('UserService.findByEmail', () => {
   it('looks a user up by exact email', async () => {
     const existing = row({ email: 'grace@devmentor.test' });

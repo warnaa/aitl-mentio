@@ -165,6 +165,25 @@ export class UserService {
     return users.map(toUserDto);
   }
 
+  /**
+   * The caller's own account, for signed-in screens to say who is signed in. Any role
+   * may read itself. `UserDto.roles` is the *stored* set (a stored `operator` is only a
+   * cache), so authorization and role display use `Session.roles` instead.
+   *
+   * @throws UnauthorizedError when there is no live session, or its user is gone.
+   */
+  async current(): Promise<UserDto> {
+    const session = await this.session();
+    if (!session) {
+      throw new UnauthorizedError();
+    }
+    const user = await this.em.findOne(User, { id: session.userId }, { populate: ['mentorProfile'] });
+    if (!user) {
+      throw new UnauthorizedError();
+    }
+    return toUserDto(user);
+  }
+
   async findByEmail(email: string): Promise<IUser | null> {
     return this.em.findOne(User, { email });
   }

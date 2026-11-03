@@ -147,7 +147,11 @@ export default async function setup(project: TestProject) {
       .withPassword('devmentor')
       .start();
 
-    const environment = integrationChildEnvironment(postgres.getConnectionUri());
+    // Chosen before the child environment, which must carry the app's real address as
+    // APP_URL (the mock GitHub adapter redirects there).
+    const port = await availablePort();
+    const baseUrl = `http://127.0.0.1:${port}`;
+    const environment = integrationChildEnvironment(postgres.getConnectionUri(), baseUrl);
     await runNpm(['run', 'db:migrate'], environment);
     await runNpm(['run', 'db:seed'], environment);
     // Seed a second time on purpose. `npm run setup` re-seeds on every invocation, so
@@ -157,8 +161,6 @@ export default async function setup(project: TestProject) {
     await runNpm(['run', 'db:seed'], environment);
     await runNpm(['run', 'build'], environment);
 
-    const port = await availablePort();
-    const baseUrl = `http://127.0.0.1:${port}`;
     appLog = createWriteStream(resolve(integrationArtifactsDirectory, 'app.log'), {
       flags: 'w',
     });

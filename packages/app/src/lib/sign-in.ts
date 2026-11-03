@@ -2,6 +2,7 @@ import {
   createLogger,
   GithubAccountConflictError,
   GithubEmailUnverifiedError,
+  safeReturnTo,
   ServiceUnavailableError,
   UnverifiedAccountLinkError,
   type Logger,
@@ -33,6 +34,47 @@ export type SignInError = (typeof SIGN_IN_ERRORS)[number];
 
 export function signInErrorPath(reason: SignInError): string {
   return `${SIGN_IN_PATH}?error=${reason}`;
+}
+
+/**
+ * Every `?error=` reason `/sign-in` explains: the GitHub routes' reasons plus
+ * `verification`, which the email-verification route sends from Slice 4 (an expired
+ * or invalid link).
+ */
+export type SignInNoticeReason = SignInError | 'verification';
+
+export const SIGN_IN_CANCELLED_NOTICE = 'Sign-in was cancelled. No account was created.';
+
+/**
+ * What `/sign-in` says for each reason. A `Record` over the union, so a reason added to
+ * `SIGN_IN_ERRORS` without copy fails to typecheck. Email sign-in is not available
+ * until Slice 4, so no message sends anyone to the email form.
+ */
+export const SIGN_IN_NOTICES: Readonly<Record<SignInNoticeReason, string>> = {
+  unavailable:
+    'GitHub sign-in is unavailable right now. It may not be configured yet, or GitHub did not respond. Try again in a few minutes.',
+  state: 'This sign-in attempt expired or was started in another browser. Sign in with GitHub again.',
+  email:
+    'Your GitHub account has no verified primary email address. Verify one in your GitHub email settings, then sign in again. No account was created.',
+  unverified:
+    'A DevMentor account with this email address is waiting for email verification, so GitHub was not connected to it. Open the verification link sent to that address first, then sign in with GitHub.',
+  conflict:
+    'This email address belongs to a DevMentor account connected to a different GitHub account. Sign in with that GitHub account instead.',
+  verification: 'This verification link has expired or is not valid. Sign in with GitHub to continue.',
+};
+
+const isNoticeReason = (value: string): value is SignInNoticeReason => Object.hasOwn(SIGN_IN_NOTICES, value);
+
+/**
+ * The notice for `/sign-in`'s query, or `null` when there is nothing to say. A known
+ * `?error=` wins over `?cancelled=1` (the routes never send both); an unknown error or
+ * any other `cancelled` value is ignored rather than echoed.
+ */
+export function signInNotice(query: { cancelled?: string; error?: string }): string | null {
+  if (query.error !== undefined && isNoticeReason(query.error)) {
+    return SIGN_IN_NOTICES[query.error];
+  }
+  return query.cancelled === '1' ? SIGN_IN_CANCELLED_NOTICE : null;
 }
 
 /**
@@ -82,4 +124,16 @@ let cachedLogger: Logger | undefined;
 /** The auth routes' logger, created on first use (it must work without a container). */
 export function authRouteLogger(): Logger {
   return (cachedLogger ??= createLogger());
+}
+
+/** The GitHub start route. Reached by navigation, never by fetch: it answers with redirects. */
+export const GITHUB_SIGN_IN_PATH = '/api/auth/github';
+
+/**
+ * The "Sign in with GitHub" link: `/api/auth/github`, carrying `returnTo` only when
+ * `safeReturnTo` accepts it as a page path. The start route sanitises it again.
+ */
+export function githubSignInHref(returnTo: string | undefined): string {
+  const safe = safeReturnTo(returnTo, '');
+  return safe ? `${GITHUB_SIGN_IN_PATH}?returnTo=${encodeURIComponent(safe)}` : GITHUB_SIGN_IN_PATH;
 }

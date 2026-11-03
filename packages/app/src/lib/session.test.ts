@@ -30,6 +30,7 @@ vi.mock('next/navigation', () => ({ redirect: next.redirect }));
 
 const scope = vi.hoisted(() => ({
   session: Promise.resolve(null) as Promise<Session | null>,
+  current: vi.fn(),
   withSessionCookieScope: vi.fn(),
 }));
 vi.mock('@devmentor/core', async (importOriginal) => ({
@@ -38,8 +39,17 @@ vi.mock('@devmentor/core', async (importOriginal) => ({
 }));
 
 const { SESSION_COOKIE_NAME, ROLE_HOMES } = await import('@devmentor/core');
-const { getPageSession, homeFor, requirePageRole, requirePageSession, signInRedirectPath } =
-  await import('./session');
+const {
+  getPageAccount,
+  getPageSession,
+  homeFor,
+  requirePageAccount,
+  requirePageRole,
+  requirePageSession,
+  signInRedirectPath,
+} = await import('./session');
+
+const user = { id: 'user-1', displayName: 'Grace Hopper', email: 'mock-mentee@devmentor.test' };
 
 function signedInAs(...roles: RoleSet): Session {
   const session: Session = { userId: 'user-1', roles };
@@ -67,10 +77,12 @@ beforeEach(() => {
     throw new RedirectSentinel(location);
   });
   scope.session = Promise.resolve(null);
+  scope.current.mockReset();
+  scope.current.mockResolvedValue(user);
   scope.withSessionCookieScope.mockReset();
   scope.withSessionCookieScope.mockImplementation(
-    (_token: string, fn: (cradle: { session: Promise<Session | null> }) => unknown) =>
-      Promise.resolve(fn({ session: scope.session })),
+    (_token: string, fn: (cradle: { session: Promise<Session | null>; userService: { current: () => unknown } }) => unknown) =>
+      Promise.resolve(fn({ session: scope.session, userService: { current: scope.current } })),
   );
 });
 
@@ -171,6 +183,51 @@ describe('requirePageRole', () => {
   it('sends a combined mentee/mentor away from /admin to /mentor, not /home', async () => {
     signedInAs('mentee', 'mentor');
     await expect(redirectOf(requirePageRole('operator', '/admin'))).resolves.toBe('/mentor');
+  });
+});
+
+describe('getPageAccount', () => {
+  it('returns null without a cookie and never builds a scope', async () => {
+    await expect(getPageAccount()).resolves.toBeNull();
+    expect(scope.withSessionCookieScope).not.toHaveBeenCalled();
+  });
+
+  it('returns null for a dead session without reading the user', async () => {
+    next.cookieValue = 'expired-token';
+    await expect(getPageAccount()).resolves.toBeNull();
+    expect(scope.current).not.toHaveBeenCalled();
+  });
+
+  it('reads the session and its own account in one scope', async () => {
+    const session = signedInAs('mentee');
+    await expect(getPageAccount()).resolves.toEqual({ session, user });
+    expect(scope.withSessionCookieScope).toHaveBeenCalledOnce();
+    expect(scope.current).toHaveBeenCalledOnce();
+  });
+});
+
+describe('requirePageAccount', () => {
+  it('sends a signed-out visitor to sign-in with the returnTo', async () => {
+    await expect(redirectOf(requirePageAccount('mentee', '/home'))).resolves.toBe('/sign-in?returnTo=%2Fhome');
+  });
+
+  it('sends a caller without the role to their own home', async () => {
+    signedInAs('mentee');
+    await expect(redirectOf(requirePageAccount('mentor', '/mentor'))).resolves.toBe('/home');
+    expect(scope.current).toHaveBeenCalledOnce();
+  });
+
+  it('returns the session and the account when the role is held', async () => {
+    const session = signedInAs('mentor');
+    await expect(requirePageAccount('mentor', '/mentor')).resolves.toEqual({ session, user });
+    expect(next.redirect).not.toHaveBeenCalled();
+  });
+
+  it('propagates an infrastructure failure without redirecting', async () => {
+    next.cookieValue = 'signed-token';
+    scope.withSessionCookieScope.mockRejectedValue(new Error('database unreachable'));
+    await expect(requirePageAccount('mentee', '/home')).rejects.toThrow('database unreachable');
+    expect(next.redirect).not.toHaveBeenCalled();
   });
 });
 
