@@ -364,3 +364,52 @@ describe('TC-AUTH-007 email registration, end to end', () => {
     });
   });
 });
+
+describe('TC-AUTH-008 GitHub and email accounts for the same address', () => {
+  it('links nothing when a GitHub email matches an unverified registration, and says why (edge case 4)', async () => {
+    const baseUrl = inject('integrationBaseUrl');
+    // The mock adapter's identity for login L has the verified email L@devmentor.test.
+    const login = `pending-link-${process.pid}`;
+    const registered = await postJson(baseUrl, '/api/auth/register', {
+      displayName: 'Pending Person',
+      email: `${login}@devmentor.test`,
+      password: 'a long enough password',
+    });
+    expect(registered.status).toBe(200);
+
+    await inBrowser('unverified-link', async (session) => {
+      await runAgentBrowser(session, 'open', `${baseUrl}/api/auth/github?login=${login}`);
+      await runAgentBrowser(session, 'wait', '--text', 'waiting for email verification');
+
+      const url = await currentUrl(session);
+      expect(url.pathname).toBe('/sign-in');
+      expect(url.searchParams.get('error')).toBe('unverified');
+      expect(await sessionCookie(session)).toBeUndefined();
+      await screenshot(session, 'auth-github-unverified-link');
+    });
+  });
+
+  it('refuses to register an address tied to a GitHub account, pointing to GitHub (edge case 14)', async () => {
+    const baseUrl = inject('integrationBaseUrl');
+    const login = `github-only-${process.pid}`;
+
+    await inBrowser('github-only', async (session) => {
+      await signInAs(session, baseUrl, login); // creates a verified, GitHub-only account
+    });
+
+    await inBrowser('github-only-register', async (session) => {
+      await runAgentBrowser(session, 'open', `${baseUrl}/register`);
+      await runAgentBrowser(session, 'wait', '--text', 'Create your DevMentor account');
+      await runAgentBrowser(session, 'find', 'label', 'Display name', 'fill', 'Someone Else');
+      await runAgentBrowser(session, 'find', 'label', 'Email address', 'fill', `${login}@devmentor.test`);
+      await runAgentBrowser(session, 'find', 'label', 'Password', 'fill', 'a long enough password');
+      await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Create account', '--exact');
+      await runAgentBrowser(session, 'wait', '--text', 'signs in with GitHub');
+
+      const page = await runAgentBrowser(session, 'snapshot');
+      expect(page).toContain('This email address signs in with GitHub. Choose Continue with GitHub.');
+      expect(page).not.toContain('Check your inbox');
+      await screenshot(session, 'auth-register-github-account');
+    });
+  });
+});
