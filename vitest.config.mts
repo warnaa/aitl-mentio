@@ -70,6 +70,7 @@ export default defineConfig({
         'packages/core/src/services/auth/user-version.ts',
         'packages/core/src/time/clock.ts',
         'packages/db/migrations/Migration20261102230816_auth_identity.ts',
+        'packages/db/migrations/Migration20261103080749_auth_password.ts',
         'packages/db/src/config.ts',
         'packages/db/src/entities/auth/user.entity.ts',
         'packages/db/src/seeders/database.seeder.ts',

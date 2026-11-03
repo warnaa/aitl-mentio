@@ -11,6 +11,7 @@ import { runNpm } from './npm';
  */
 const BASELINE = 'Migration20260901142829';
 const AUTH_IDENTITY = 'Migration20261102230816_auth_identity';
+const AUTH_PASSWORD = 'Migration20261103080749_auth_password';
 const DATABASE = 'devmentor_migrations';
 const IDENTITY_COLUMNS = [
   'roles',
@@ -23,6 +24,27 @@ const IDENTITY_COLUMNS = [
 
 let postgres: StartedPostgreSqlContainer | undefined;
 let environment: NodeJS.ProcessEnv;
+
+/** Migrate up to and including `name`, whatever later migrations exist. */
+const migrateTo = (name: string) =>
+  runNpm(['run', 'migration:up', '--workspace', '@devmentor/db', '--', '--to', name], environment);
+
+/** Each scenario owns a fresh PostgreSQL, stopped afterwards on success or failure. */
+function ownPostgres(): void {
+  beforeAll(async () => {
+    postgres = await new PostgreSqlContainer('postgres:17-alpine')
+      .withDatabase(DATABASE)
+      .withUsername('devmentor')
+      .withPassword('devmentor')
+      .start();
+    environment = integrationChildEnvironment(postgres.getConnectionUri());
+  });
+
+  afterAll(async () => {
+    await postgres?.stop();
+    postgres = undefined;
+  });
+}
 
 /** Run one statement with psql in the container; the statement must yield one JSON value. */
 async function queryJson<T>(sql: string): Promise<T> {
@@ -133,32 +155,17 @@ async function expectBackfilled(): Promise<void> {
 }
 
 describe('TC-MIGRATION-001 auth-identity migration round trip', () => {
-  beforeAll(async () => {
-    postgres = await new PostgreSqlContainer('postgres:17-alpine')
-      .withDatabase(DATABASE)
-      .withUsername('devmentor')
-      .withPassword('devmentor')
-      .start();
-    environment = integrationChildEnvironment(postgres.getConnectionUri());
-  });
-
-  afterAll(async () => {
-    await postgres?.stop();
-    postgres = undefined;
-  });
+  ownPostgres();
 
   it('applies up, down and up again, preserving rows and enforcing the roles check', async () => {
     // Start from the schema as it was before the migration, with existing rows in it.
-    await runNpm(
-      ['run', 'migration:up', '--workspace', '@devmentor/db', '--', '--to', BASELINE],
-      environment,
-    );
+    await migrateTo(BASELINE);
     expect(await appliedMigrations()).toEqual([BASELINE]);
     expect((await insertUser('legacy-a@devmentor.test')).exitCode).toBe(0);
     expect((await insertUser('legacy-b@devmentor.test')).exitCode).toBe(0);
 
-    // up
-    await runNpm(['run', 'db:migrate'], environment);
+    // up (pinned: later migrations are exercised by their own scenario)
+    await migrateTo(AUTH_IDENTITY);
     await expectIdentitySchema();
     await expectBackfilled();
 
@@ -199,8 +206,54 @@ describe('TC-MIGRATION-001 auth-identity migration round trip', () => {
     ).toEqual(['legacy-a@devmentor.test', 'legacy-b@devmentor.test']);
 
     // up again
-    await runNpm(['run', 'db:migrate'], environment);
+    await migrateTo(AUTH_IDENTITY);
     await expectIdentitySchema();
     await expectBackfilled();
+  }, 300_000);
+});
+
+async function passwordColumn(): Promise<Column[]> {
+  return (
+    (await queryJson<Column[] | null>(`
+      select json_agg(json_build_object(
+        'name', column_name,
+        'type', udt_name,
+        'nullable', is_nullable = 'YES',
+        'default', column_default,
+        'length', character_maximum_length
+      ))
+      from information_schema.columns
+      where table_schema = 'public' and table_name = 'users' and column_name = 'password_hash'`)) ?? []
+  );
+}
+
+describe('TC-MIGRATION-002 auth-password migration round trip', () => {
+  ownPostgres();
+
+  it('adds a nullable text password_hash, drops it on down, and keeps every row', async () => {
+    await migrateTo(AUTH_IDENTITY);
+    expect((await insertUser('github-only@devmentor.test')).exitCode).toBe(0);
+
+    // up: existing (GitHub-only) rows have no password
+    await runNpm(['run', 'db:migrate'], environment);
+    expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY, AUTH_PASSWORD]);
+    expect(await passwordColumn()).toEqual([
+      { name: 'password_hash', type: 'text', nullable: true, default: null, length: null },
+    ]);
+    expect(await queryJson(`select json_agg(password_hash) from users`)).toEqual([null]);
+    // `text`, not a fixed width: a long self-describing hash fits.
+    const longHash = `scrypt$131072$8$1$${'s'.repeat(24)}$${'k'.repeat(88)}`;
+    expect((await psql(`update users set password_hash = '${longHash}'`)).exitCode).toBe(0);
+
+    // down: the column goes, the row stays
+    await runNpm(['run', 'db:migrate:down'], environment);
+    expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY]);
+    expect(await passwordColumn()).toEqual([]);
+    expect(await queryJson(`select json_agg(email) from users`)).toEqual(['github-only@devmentor.test']);
+
+    // up again
+    await runNpm(['run', 'db:migrate'], environment);
+    expect(await passwordColumn()).toHaveLength(1);
+    expect(await queryJson(`select json_agg(password_hash) from users`)).toEqual([null]);
   }, 300_000);
 });

@@ -57,6 +57,7 @@ beforeEach(() => {
     githubId: null,
     githubLogin: null,
     avatarUrl: null,
+    passwordHash: null,
     emailVerifiedAt: new Date('2026-10-01T00:00:00.000Z'),
     createdAt: new Date('2026-10-01T00:00:00.000Z'),
     updatedAt: new Date('2026-10-01T00:00:00.000Z'),

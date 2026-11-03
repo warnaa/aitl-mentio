@@ -161,7 +161,8 @@ the change spans several concepts; note it in the PR body.
 - Tables: `users` (`id` uuid, `created_at`, `updated_at`, `email` unique,
   `display_name`, `roles` `text[]` default `{mentee}` under the `users_roles_check`
   constraint, `github_id` unique, `github_login`, `avatar_url`, `email_verified_at`,
-  `session_version` default 0) and `mentor_profiles` (`id`, timestamps, `user_id` unique with a
+  `session_version` default 0, `password_hash` `text` null — a self-describing scrypt
+  hash, null for GitHub-only accounts) and `mentor_profiles` (`id`, timestamps, `user_id` unique with a
   cascading foreign key to `users`, `headline`, `bio` nullable,
   `years_of_experience` default 0). Column names are snake_case mappings of the
   camelCase entity properties.
@@ -174,7 +175,9 @@ the change spans several concepts; note it in the PR body.
   (`mock-mentor@devmentor.test`, `Ada Lovelace`, roles `mentor`) with a mentor profile
   (`Systems & algorithms mentor`), a mentee (`mock-mentee@devmentor.test`) and an
   operator who also holds `mentor` (`mock-operator@devmentor.test`), all with a verified
-  email. Addresses follow `<login>@devmentor.test` so the mock GitHub adapter links to
+  email. The mentee and the operator also get the demo password `SEED_PASSWORD`
+  (`devmentor-demo-password`), backfilled onto rows seeded earlier that have none; Ada
+  stays GitHub-only. Addresses follow `<login>@devmentor.test` so the mock GitHub adapter links to
   them; a database seeded with Ada's pre-E01 `ada@devmentor.dev` row has that row
   adopted rather than duplicated. `tests/integration/admin.integration.test.ts`
   asserts on Ada's exact cells.

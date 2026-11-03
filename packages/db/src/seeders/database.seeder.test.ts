@@ -1,3 +1,4 @@
+import { scrypt } from 'node:crypto';
 import type { EntityManager } from '@mikro-orm/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { User } from '../entities/auth/user.entity';
@@ -8,6 +9,8 @@ import {
   SEED_MENTEE_EMAIL,
   SEED_MENTOR_EMAIL,
   SEED_OPERATOR_EMAIL,
+  SEED_PASSWORD,
+  SEED_PASSWORD_HASH,
 } from './database.seeder';
 
 const NOW = new Date('2026-11-02T12:00:00.000Z');
@@ -46,12 +49,14 @@ const mentee = {
   displayName: 'Grace Hopper',
   roles: ['mentee'],
   emailVerifiedAt: NOW,
+  passwordHash: SEED_PASSWORD_HASH,
 };
 const operator = {
   email: SEED_OPERATOR_EMAIL,
   displayName: 'Margaret Hamilton',
   roles: ['mentor', 'operator'],
   emailVerifiedAt: NOW,
+  passwordHash: SEED_PASSWORD_HASH,
 };
 
 describe('DatabaseSeeder', () => {
@@ -119,14 +124,46 @@ describe('DatabaseSeeder', () => {
     // `npm run db:seed` — and therefore a second `npm run setup` — fail outright.
     const em = fakeEntityManager({
       [SEED_MENTOR_EMAIL]: { id: 1, email: SEED_MENTOR_EMAIL },
-      [SEED_MENTEE_EMAIL]: { id: 2, email: SEED_MENTEE_EMAIL },
-      [SEED_OPERATOR_EMAIL]: { id: 3, email: SEED_OPERATOR_EMAIL },
+      [SEED_MENTEE_EMAIL]: { id: 2, email: SEED_MENTEE_EMAIL, passwordHash: 'scrypt$kept' },
+      [SEED_OPERATOR_EMAIL]: { id: 3, email: SEED_OPERATOR_EMAIL, passwordHash: 'scrypt$kept' },
     });
 
     await seed(em);
 
     expect(em.findOne).not.toHaveBeenCalledWith(User, { email: LEGACY_SEED_MENTOR_EMAIL });
     expect(em.create).not.toHaveBeenCalled();
+  });
+
+  it('gives fixtures seeded before Slice 4 the demo password, never overwriting a hash', async () => {
+    const menteeRow: { email: string; passwordHash: string | null } = { email: SEED_MENTEE_EMAIL, passwordHash: null };
+    const operatorRow = { email: SEED_OPERATOR_EMAIL, passwordHash: 'scrypt$changed-by-hand' };
+    const adaRow: { email: string; passwordHash?: string } = { email: SEED_MENTOR_EMAIL };
+    const em = fakeEntityManager({ [SEED_MENTOR_EMAIL]: adaRow, [SEED_MENTEE_EMAIL]: menteeRow, [SEED_OPERATOR_EMAIL]: operatorRow });
+
+    await seed(em);
+
+    expect(menteeRow.passwordHash).toBe(SEED_PASSWORD_HASH);
+    expect(operatorRow.passwordHash).toBe('scrypt$changed-by-hand');
+    expect(adaRow.passwordHash).toBeUndefined(); // Ada stays GitHub-only
+  });
+
+  it('stores a scrypt hash of SEED_PASSWORD, never the password itself', async () => {
+    expect(SEED_PASSWORD.length).toBeGreaterThanOrEqual(12); // registerSchema's minimum
+    expect(SEED_PASSWORD_HASH).not.toContain(SEED_PASSWORD);
+    // Re-derive with the parameters and salt the hash carries (core's PasswordService format).
+    const [scheme, N, r, p, salt, key] = SEED_PASSWORD_HASH.split('$') as [string, string, string, string, string, string];
+    expect(scheme).toBe('scrypt');
+    const expected = Buffer.from(key, 'base64');
+    const derived = await new Promise<Buffer>((resolve, reject) =>
+      scrypt(
+        SEED_PASSWORD,
+        Buffer.from(salt, 'base64'),
+        expected.length,
+        { N: Number(N), r: Number(r), p: Number(p), maxmem: 2 * 128 * Number(N) * Number(r) },
+        (error, value) => (error ? reject(error) : resolve(value)),
+      ),
+    );
+    expect(derived.equals(expected)).toBe(true);
   });
 
   it('adds only the missing accounts to a partly seeded database', async () => {

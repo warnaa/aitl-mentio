@@ -64,6 +64,8 @@ describe('User entity', () => {
     expect(property('emailVerifiedAt')).toMatchObject({ columnTypes: ['timestamptz'], nullable: true });
     expect(property('sessionVersion')).toMatchObject({ columnTypes: ['int'], default: 0 });
     expect(property('sessionVersion').nullable).toBeFalsy();
+    // Null for GitHub-only accounts; `text` so the hashing algorithm can change.
+    expect(property('passwordHash')).toMatchObject({ columnTypes: ['text'], nullable: true });
   });
 
   it('generates the DDL the auth-identity migration applies', async () => {

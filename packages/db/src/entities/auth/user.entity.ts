@@ -39,6 +39,9 @@ export const User = defineSingletonEntity('User', () =>
       avatarUrl: p.text().nullable(),
       // Gates account linking: only a verified address may be matched to an identity.
       emailVerifiedAt: p.datetime().nullable(),
+      // A self-describing scrypt hash (core's PasswordService); null for GitHub-only
+      // accounts. `text`, not a fixed width, so the algorithm can change. Never in a DTO.
+      passwordHash: p.text().nullable(),
       sessionVersion: p.integer().default(0),
       // Per-property thunk so the cross-entity reference is resolved lazily at
       // discovery time, avoiding the circular-import pitfall between the two files.
