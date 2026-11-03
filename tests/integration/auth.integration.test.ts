@@ -202,3 +202,48 @@ describe('TC-AUTH-004 a signed-out deep link survives sign-in', () => {
     });
   });
 });
+
+describe('TC-AUTH-005 sign-out ends every session, including a copied cookie', () => {
+  /** Whether `cookie` is a live session: probed through a page and an API, without following redirects. */
+  async function probe(baseUrl: string, cookie: BrowserCookie) {
+    const home = await fetch(`${baseUrl}/home`, { headers: cookieHeader(cookie), redirect: 'manual' });
+    const users = await fetch(`${baseUrl}/api/users`, { headers: cookieHeader(cookie) });
+    const payload = (await users.json()) as { ok: boolean; error?: { code: string } };
+    return { home: home.status, homeLocation: home.headers.get('location'), users: users.status, code: payload.error?.code };
+  }
+
+  it('refuses a sign-out without the CSRF header, then signs out and kills the copy', async () => {
+    const baseUrl = inject('integrationBaseUrl');
+
+    // A user owned by this scenario: sign-out bumps session_version for *every* session of
+    // the user, so a seeded persona would also kill cookies other scenarios hold.
+    await inBrowser('sign-out', async (session) => {
+      const copied = await signInAs(session, baseUrl, 'mock-signout');
+      await runAgentBrowser(session, 'wait', '--text', 'Mentee home');
+
+      // Live: the page renders, and the operator-only API answers 403 (signed in, wrong role).
+      expect(await probe(baseUrl, copied)).toEqual({ home: 200, homeLocation: null, users: 403, code: 'forbidden' });
+
+      // A cross-site form post cannot set the header: refused, and the session survives.
+      const forged = await fetch(`${baseUrl}/api/auth/logout`, { method: 'POST', headers: cookieHeader(copied) });
+      expect(forged.status).toBe(403);
+      expect(((await forged.json()) as { error?: { code: string } }).error?.code).toBe('forbidden');
+      expect(forged.headers.get('set-cookie')).toBeNull();
+      expect(await probe(baseUrl, copied)).toEqual({ home: 200, homeLocation: null, users: 403, code: 'forbidden' });
+
+      await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Sign out');
+      await runAgentBrowser(session, 'wait', '--url', `${baseUrl}/`);
+      expect((await currentUrl(session)).pathname).toBe('/');
+      expect(await sessionCookie(session)).toBeUndefined();
+      await screenshot(session, 'auth-signed-out');
+
+      // The copy taken before sign-out is dead in PostgreSQL, not just deleted in this browser.
+      expect(await probe(baseUrl, copied)).toEqual({
+        home: 307,
+        homeLocation: '/sign-in?returnTo=%2Fhome',
+        users: 401,
+        code: 'unauthorized',
+      });
+    });
+  });
+});
