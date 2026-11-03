@@ -4,7 +4,8 @@ Date: 2026-09-04
 Revised: 2026-09-06 — design review; see "What the 2026-09-06 revision changed" at the end
 Revised: 2026-09-08 — aligned with the primitives spec's 2026-09-08 grilling review; see "What the
 2026-09-08 revision changed" at the end
-Status: active
+Implemented: 2026-11-03 — PR #56 (squash `c695d8c`); see "What the implementation changed" at the end
+Status: implemented
 Tracker: epic #26 — stories #31 (E01-S01), #32 (E01-S02), #33 (E01-S03)
 Design authority: `.ai/specs/product-brief.md` (D07, D19, R06, R07, R18)
 Primitives: `.ai/specs/2026-09-04-platform-primitives.md` — the design authority for every
@@ -1119,3 +1120,39 @@ wherever the two overlap. The body above is authoritative; this list orients a r
   sign-out ends in a hard navigation; `safeReturnTo` also rejects `/api/` and `/_next/`.
 - **Boundaries.** The ESLint third-party patterns (`next`, `react`) land in Slice 2; until then
   the `core ↛ next` rule is a convention, which the architecture section now says.
+
+## 📝 What the implementation changed (2026-11-03)
+
+Delivered by PR #56 in four phases matching the four slices. The body above is the design; these
+are the places the shipped code differs from it or goes beyond it, each recorded in
+`BACKWARD_COMPATIBILITY.md` and reviewed on the PR. A later change to any of them needs a new
+spec, not an edit here.
+
+- **A claim voids older verification links.** Claiming an unverified registration bumps
+  `session_version`, and the verification token carries that version
+  (`EmailVerificationService`). Without it, a link sent before someone overwrote the password would
+  verify the account under the new password.
+- **An already-verified link issues no session.** It stays idempotent (edge case 16) but redirects
+  to `/sign-in?verified=1`, so a verification link is never a 24-hour sign-in link.
+- **`POST /api/auth/login` answers `{ redirectTo }`**, the sanitised `returnTo` or the role home,
+  not a `UserDto`: the form only needs where to go.
+- **Production also requires `MAIL_FROM`** at container creation, next to `MAIL_API_KEY`.
+- **No rate limit on `GET /api/auth/verify-email`** (no policy was defined; the token is signed).
+  The "verification resend" policy is `VERIFICATION_MAIL_PER_EMAIL`, consumed by every registration
+  that sends a verification mail.
+- **New error code `403 email_unverified`** (`EmailNotVerifiedError`) for a right password on an
+  unverified address; registration 409s keep the code `conflict` and differ by message.
+- **pino redacts credentials** (`password`, `passwordHash`, API keys, `authorization`, `cookie`),
+  which the Data Model section assumed already existed.
+- **Deep links survive sign-in** through a `proxy.ts` request header (`x-devmentor-path`) the page
+  guards read through `safeReturnTo`; the proxy is not an auth boundary.
+- **One signed-in shell.** `SignedInShell` (`AppShell` + `WorkspaceNav`, links from `lib/nav.ts`)
+  serves `(mentee)`, `(mentor)` and `/admin`; the admin layout's guard became `requirePageAccount`
+  with the same role and path, to supply the user block. No compact-screen menu toggle (the links
+  wrap), by the maintainer's decision.
+- **The GitHub action is the design system's `button "Continue with GitHub"`** inside
+  `AccountForm`, not a link.
+- **Found along the way:** `nativeUpdate` bypasses MikroORM's identity map (fixed with
+  `updateUserAtVersion`); `safeReturnTo` accepted inputs that normalise into `//host` (fixed); the
+  migration snapshot name did not match the committed file (fixed in `config.ts`). See
+  `.ai/lessons.md`, 2026-11-03.

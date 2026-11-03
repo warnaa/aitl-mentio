@@ -16,7 +16,7 @@ reader's computer; they are not shared deployments.
 
 The [UI/prototype specification](../../.ai/specs/2026-09-09-e02-design-handoff.md)
 defines the E01/E02 screen handoff. The
-[E01 production specification](../../.ai/specs/2026-09-04-accounts-and-roles.md)
+[E01 production specification](../../.ai/specs/implemented/2026-09-04-accounts-and-roles.md)
 defines the account implementation. The E02 production specifications are also
 in the repository. Use the [E02 architecture and shared contracts](../../.ai/specs/2026-09-08-mentors-become-bookable.md)
 with the relevant story specification:

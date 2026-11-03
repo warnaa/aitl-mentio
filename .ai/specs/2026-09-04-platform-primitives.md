@@ -4,7 +4,7 @@ Date: 2026-09-04
 Revised: 2026-09-08 — grilling review; see "What the 2026-09-08 revision changed" at the end
 Status: active — moves to `implemented/` when its E01 `SHIP` entries land
 Design authority: `.ai/specs/product-brief.md`, `.ai/specs/2026-09-01-engineering-standards.md`
-First consumer: `.ai/specs/2026-09-04-accounts-and-roles.md` (issue #26)
+First consumer: `.ai/specs/implemented/2026-09-04-accounts-and-roles.md` (issue #26)
 
 ## 📝 TLDR
 
@@ -980,7 +980,7 @@ That list is the honest cost of building rather than buying, and it is paid here
 ## 📋 Phasing
 
 This spec ships **no phase of its own**. Every SHIP entry is delivered inside a slice of
-`.ai/specs/2026-09-04-accounts-and-roles.md`, against a real consumer. E01 has four slices and
+`.ai/specs/implemented/2026-09-04-accounts-and-roles.md`, against a real consumer. E01 has four slices and
 no fifth; the first is test tooling only.
 
 | Delivered in | Primitives |
