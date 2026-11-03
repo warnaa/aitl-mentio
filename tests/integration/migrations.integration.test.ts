@@ -12,6 +12,7 @@ import { runNpm } from './npm';
 const BASELINE = 'Migration20260901142829';
 const AUTH_IDENTITY = 'Migration20261102230816_auth_identity';
 const AUTH_PASSWORD = 'Migration20261103080749_auth_password';
+const AUTH_RATE_LIMIT = 'Migration20261103081334_auth_rate_limit';
 const DATABASE = 'devmentor_migrations';
 const IDENTITY_COLUMNS = [
   'roles',
@@ -234,8 +235,10 @@ describe('TC-MIGRATION-002 auth-password migration round trip', () => {
     await migrateTo(AUTH_IDENTITY);
     expect((await insertUser('github-only@devmentor.test')).exitCode).toBe(0);
 
-    // up: existing (GitHub-only) rows have no password
-    await runNpm(['run', 'db:migrate'], environment);
+    // up (pinned: `db:migrate` would also apply later migrations, and `db:migrate:down`
+    // would then revert the newest one instead of this): existing GitHub-only rows have
+    // no password
+    await migrateTo(AUTH_PASSWORD);
     expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY, AUTH_PASSWORD]);
     expect(await passwordColumn()).toEqual([
       { name: 'password_hash', type: 'text', nullable: true, default: null, length: null },
@@ -252,8 +255,61 @@ describe('TC-MIGRATION-002 auth-password migration round trip', () => {
     expect(await queryJson(`select json_agg(email) from users`)).toEqual(['github-only@devmentor.test']);
 
     // up again
-    await runNpm(['run', 'db:migrate'], environment);
+    await migrateTo(AUTH_PASSWORD);
     expect(await passwordColumn()).toHaveLength(1);
     expect(await queryJson(`select json_agg(password_hash) from users`)).toEqual([null]);
+  }, 300_000);
+});
+
+async function rateLimitTable(): Promise<{ columns: Column[]; indexes: string[] }> {
+  const columns =
+    (await queryJson<Column[] | null>(`
+      select json_agg(json_build_object(
+        'name', column_name,
+        'type', udt_name,
+        'nullable', is_nullable = 'YES',
+        'default', column_default,
+        'length', character_maximum_length
+      ) order by column_name)
+      from information_schema.columns
+      where table_schema = 'public' and table_name = 'auth_rate_limits'`)) ?? [];
+  const indexes =
+    (await queryJson<string[] | null>(
+      `select json_agg(indexname order by indexname) from pg_indexes where schemaname = 'public' and tablename = 'auth_rate_limits'`,
+    )) ?? [];
+  return { columns, indexes };
+}
+
+describe('TC-MIGRATION-003 auth-rate-limit migration round trip', () => {
+  ownPostgres();
+
+  it('creates the counter table with its index, drops it on down, and creates it again', async () => {
+    await migrateTo(AUTH_PASSWORD);
+    expect((await insertUser('kept@devmentor.test')).exitCode).toBe(0);
+
+    // up: the newest migration, so plain `db:migrate` is exactly this step
+    await runNpm(['run', 'db:migrate'], environment);
+    expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY, AUTH_PASSWORD, AUTH_RATE_LIMIT]);
+    expect(await rateLimitTable()).toEqual({
+      columns: [
+        { name: 'count', type: 'int4', nullable: false, default: null, length: null },
+        { name: 'key', type: 'text', nullable: false, default: null, length: null },
+        { name: 'window_start', type: 'timestamptz', nullable: false, default: null, length: null },
+      ],
+      indexes: ['auth_rate_limits_pkey', 'auth_rate_limits_window_start_index'],
+    });
+    expect((await psql(`insert into auth_rate_limits (key, window_start, count) values ('sign-in:ip:x', now(), 1)`)).exitCode).toBe(0);
+    const duplicate = await psql(`insert into auth_rate_limits (key, window_start, count) values ('sign-in:ip:x', now(), 1)`);
+    expect(duplicate.exitCode).not.toBe(0); // the key is the primary key
+
+    // down: the disposable counters go, users stay
+    await runNpm(['run', 'db:migrate:down'], environment);
+    expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY, AUTH_PASSWORD]);
+    expect(await rateLimitTable()).toEqual({ columns: [], indexes: [] });
+    expect(await queryJson(`select json_agg(email) from users`)).toEqual(['kept@devmentor.test']);
+
+    // up again
+    await runNpm(['run', 'db:migrate'], environment);
+    expect((await rateLimitTable()).indexes).toEqual(['auth_rate_limits_pkey', 'auth_rate_limits_window_start_index']);
   }, 300_000);
 });
