@@ -19,6 +19,7 @@ import { LogMailer } from '../services/notifications/adapters/log-mailer';
 import { ResendMailer } from '../services/notifications/adapters/resend-mailer';
 import type { Mailer } from '../services/notifications/mailer.port';
 import { EventBus } from '../events/event-bus';
+import { EmailVerificationService } from '../services/auth/email-verification.service';
 import { PasswordService } from '../services/auth/password.service';
 import { readSessionCookie, SessionService } from '../services/auth/session.service';
 import { TokenService } from '../services/auth/token.service';
@@ -116,6 +117,8 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     tokenService: asClass(TokenService).singleton(),
     // A singleton on purpose: its concurrency gate must be one per process.
     passwordService: asClass(PasswordService).singleton(),
+    // Stateless over `tokenService` + `env`: makes and reads verification links.
+    emailVerification: asClass(EmailVerificationService).singleton(),
     // Real GitHub by default; missing credentials surface per call as a 503.
     identity: identityAdapter(env),
     // Resend unless a log mailer is explicitly selected (see `mailerChoice`).

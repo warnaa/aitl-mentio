@@ -39,6 +39,7 @@ const { SessionService } = await import('../services/auth/session.service');
 const { TokenService } = await import('../services/auth/token.service');
 const { PasswordService } = await import('../services/auth/password.service');
 const { RateLimiter } = await import('../http/rate-limit');
+const { EmailVerificationService } = await import('../services/auth/email-verification.service');
 const { LogMailer } = await import('../services/notifications/adapters/log-mailer');
 const { ResendMailer } = await import('../services/notifications/adapters/resend-mailer');
 const { GithubIdentityAdapter } = await import('../services/auth/adapters/github-identity');
@@ -72,7 +73,11 @@ describe('getContainer', () => {
       sessionService: cradle.sessionService,
       tokenService: cradle.tokenService,
       passwordService: cradle.passwordService,
+      emailVerification: cradle.emailVerification,
     }));
+
+    expect(container.cradle.emailVerification).toBeInstanceOf(EmailVerificationService);
+    expect(scoped.emailVerification).toBe(container.cradle.emailVerification);
 
     // One hashing gate per process: a scoped instance would give every request its own.
     expect(container.cradle.passwordService).toBeInstanceOf(PasswordService);

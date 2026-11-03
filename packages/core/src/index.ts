@@ -30,6 +30,12 @@ export {
 } from './services/auth/session.service';
 export { TokenService, type PurposeTokenInput } from './services/auth/token.service';
 export { PasswordService, type PasswordHasher } from './services/auth/password.service';
+export {
+  EMAIL_VERIFY_PURPOSE,
+  EmailVerificationService,
+  VERIFY_EMAIL_PATH,
+  type VerificationClaims,
+} from './services/auth/email-verification.service';
 export type { Mailer, MailMessage } from './services/notifications/mailer.port';
 export { MAIL_SENT_LOG_MESSAGE } from './services/notifications/adapters/log-mailer';
 export {
