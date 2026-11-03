@@ -20,7 +20,7 @@ monorepo built on the latest Next.js + TypeScript + React.
 | Config validation  | zod                                                |
 | Logging            | pino                                               |
 | Frontend styling   | Tailwind CSS v4 (public/marketing pages)           |
-| Backend/admin UI   | shadcn-ui components (in `@devmentor/ui`)          |
+| Signed-in/admin UI | shadcn-ui components (in `@devmentor/ui`)          |
 | Package manager    | npm workspaces (Node ≥ 24)                          |
 
 ### Monorepo layout
@@ -166,9 +166,23 @@ the reference example every new concept copies. See
 - **`em.persistAndFlush()` was removed** — use `em.persist(e); await em.flush()`.
 - Touch the DB only in **dynamic** routes (`export const dynamic = "force-dynamic"`)
   and degrade gracefully; the app must build and boot with no database reachable.
-- **Public pages use Tailwind utilities; `/admin/*` pages use shadcn-ui components**
-  from `@devmentor/ui`. Add shadcn components with `npx shadcn@latest add <c>` run in
-  `packages/ui` (its `components.json` is committed).
+- **Three surfaces, each with one styling rule** (primitives spec F1):
+
+  | Surface  | Routes                                              | Styling                                          |
+  | -------- | --------------------------------------------------- | ------------------------------------------------ |
+  | `public` | landing, mentor catalogue and share links, `(auth)/*` | Tailwind utilities                               |
+  | `app`    | `(mentee)/*`, `(mentor)/*` — signed in               | shadcn via `@devmentor/ui`, inside `AppShell`    |
+  | `admin`  | `/admin/*` — operator                                | shadcn via `@devmentor/ui`, inside `AppShell`    |
+
+  Every `app` and `admin` layout renders `SignedInShell`
+  (`app/src/components/auth/`), which puts `AppShell` around the page with
+  `WorkspaceNav`: the links for the **union** of the user's roles, from
+  `app/src/lib/nav.ts`. A new signed-in page gets its link there — never a link to a
+  page that does not exist yet, and never one that grants a role (R07: mentors join by
+  invitation, operators by configuration). `AppShell` lives in `ui`, so it knows no
+  `Role` and no `next/link`; the app supplies the rendered links. Add shadcn
+  components with `npx shadcn@latest add <c>` run in `packages/ui` (its
+  `components.json` is committed).
 - Request-scoped work goes through `withScope(fn)` from `@devmentor/core`, which opens
   an awilix scope with a forked `EntityManager` and disposes it afterward.
 - **Never hand-roll fetch / validation / error-handling / CRUD.** Server routes use

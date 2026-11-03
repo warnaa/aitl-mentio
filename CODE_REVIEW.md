@@ -10,7 +10,7 @@ fix.
 The repository is an npm-workspaces monorepo: Next.js 16 App Router + React 19,
 TypeScript 5 strict, MikroORM v7 on PostgreSQL, awilix for dependency injection, zod
 for every input and env schema, pino for logs, Tailwind v4 on public pages and
-shadcn-ui in `@devmentor/ui` for `/admin/*`. Packages ship TypeScript source and are
+shadcn-ui in `@devmentor/ui` for the signed-in `(mentee)`, `(mentor)` and `/admin/*` surfaces. Packages ship TypeScript source and are
 transpiled by Next.
 
 ## Review priorities
@@ -106,8 +106,11 @@ Read the diff in this order. A finding higher on the list outranks everything be
   `npx shadcn@latest add <component>` run inside `packages/ui`; hand-written primitives
   are a finding. Concept-specific components go to `packages/ui/src/components/<concept>/`;
   a component used by one page stays next to that `page.tsx`.
-- Public pages use Tailwind utilities; `/admin/*` uses `@devmentor/ui` components and
-  the tokens in `packages/ui/src/tokens.css`. No hardcoded colors where a token exists.
+- Public pages use Tailwind utilities; the signed-in `(mentee)`, `(mentor)` and
+  `/admin/*` surfaces use `@devmentor/ui` components inside `SignedInShell` and the
+  tokens in `packages/ui/src/tokens.css`. No hardcoded colors where a token exists. A
+  signed-in page's link belongs in `app/src/lib/nav.ts`; a nav link that grants a role
+  is a finding (R07).
 
 ### Data layer (`packages/db/`)
 

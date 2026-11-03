@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type { ReactElement } from 'react';
-import Link from 'next/link';
 import { Badge } from '@devmentor/ui';
 import { AppShell } from '@devmentor/ui/backend';
 import { findAllByType, findByType, textOf } from '../../test/element-tree';
-import { RoleChips, ROLE_HOME_LABELS, ROLE_LABELS, SignedInShell } from './SignedInShell';
+import { RoleChips, ROLE_LABELS, SignedInShell } from './SignedInShell';
 import { SignOutButton } from './SignOutButton';
+import { WorkspaceNav } from './WorkspaceNav';
 
 const user = { displayName: 'Margaret Hamilton' };
 
 describe('SignedInShell', () => {
   it('renders AppShell with the signed-in user, sign-out and the page', () => {
-    const tree = SignedInShell({ user, roles: ['mentee'], current: 'mentee', children: <p>page</p> }) as ReactElement<
+    const tree = SignedInShell({ user, roles: ['mentee'], children: <p>page</p> }) as ReactElement<
       Record<string, unknown>
     >;
 
@@ -21,19 +21,15 @@ describe('SignedInShell', () => {
     expect(tree.props.children).toEqual(<p>page</p>);
   });
 
-  it('links the home of every role held, marking the current surface', () => {
-    const tree = SignedInShell({ user, roles: ['mentor', 'operator'], current: 'mentor', children: null });
+  it('passes every held role to the workspace navigation, as the nav slot', () => {
+    const tree = SignedInShell({ user, roles: ['mentor', 'operator'], children: null });
 
-    const links = findAllByType(tree, Link);
-    expect(links.map((link) => [link.props.href, textOf(link), link.props['aria-current']])).toEqual([
-      ['/mentor', 'Mentor home', 'page'],
-      ['/admin', 'Admin', undefined],
-    ]);
+    const nav = findByType(tree, WorkspaceNav);
+    expect(nav.props.roles).toEqual(['mentor', 'operator']);
   });
 
-  it('names every role and its home', () => {
+  it('names every role', () => {
     expect(ROLE_LABELS).toEqual({ mentee: 'Mentee', mentor: 'Mentor', operator: 'Operator' });
-    expect(ROLE_HOME_LABELS).toEqual({ mentee: 'Mentee home', mentor: 'Mentor home', operator: 'Admin' });
   });
 });
 

@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function MenteeLayout({ children }: { children: ReactNode }) {
   const { session, user } = await requirePageAccount('mentee', '/home');
   return (
-    <SignedInShell user={user} roles={session.roles} current="mentee">
+    <SignedInShell user={user} roles={session.roles}>
       {children}
     </SignedInShell>
   );

@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
-import Link from 'next/link';
-import { SignOutButton } from '../../components/auth/SignOutButton';
-import { admit, deny, GuardRedirect, guards } from '../../test/page-guards';
-import { findAllByType, findByType, textOf } from '../../test/element-tree';
+import { SignedInShell } from '../../components/auth/SignedInShell';
+import { admit, deny, GuardRedirect, guards, user } from '../../test/page-guards';
 
 vi.mock('../../lib/session', async () => (await import('../../test/page-guards')).guards);
 
@@ -22,20 +20,15 @@ describe('admin layout', () => {
 
   it('requires operator, returning to /admin', async () => {
     await render();
-    expect(guards.requirePageRole).toHaveBeenCalledExactlyOnceWith('operator', '/admin');
+    expect(guards.requirePageAccount).toHaveBeenCalledExactlyOnceWith('operator', '/admin');
   });
 
-  it('keeps the chrome: the Dashboard and Users links, the page, and adds sign-out', async () => {
+  it('wraps the page in the shared signed-in shell, with every held role for the navigation', async () => {
+    const live = admit('mentor', 'operator');
     const tree = await render();
 
-    const links = findAllByType(tree, Link).map((link) => [link.props.href, textOf(link)]);
-    expect(links).toEqual([
-      ['/', 'DevMentor'],
-      ['/admin', 'Dashboard'],
-      ['/admin/users', 'Users'],
-    ]);
-    findByType(tree, SignOutButton);
-    expect(textOf(findByType(tree, 'main'))).toBe('page');
+    expect(tree.type).toBe(SignedInShell);
+    expect(tree.props).toMatchObject({ user, roles: live.roles, children: <p>page</p> });
   });
 
   it.each(['/sign-in?returnTo=%2Fadmin', '/mentor', '/home'])(

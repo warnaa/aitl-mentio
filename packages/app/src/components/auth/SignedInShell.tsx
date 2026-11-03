@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { AppShell } from '@devmentor/ui/backend';
 import { Badge } from '@devmentor/ui';
-import { ROLE_HOMES, type Role, type Session } from '@devmentor/core';
+import type { Role, Session } from '@devmentor/core';
 import { SignOutButton } from './SignOutButton';
+import { WorkspaceNav } from './WorkspaceNav';
 
 /** How each role is named on screen. */
 export const ROLE_LABELS = {
@@ -12,37 +12,24 @@ export const ROLE_LABELS = {
   operator: 'Operator',
 } as const satisfies Record<Role, string>;
 
-/** The navigation label for each role's home surface. */
-export const ROLE_HOME_LABELS = {
-  mentee: 'Mentee home',
-  mentor: 'Mentor home',
-  operator: 'Admin',
-} as const satisfies Record<Role, string>;
-
 export interface SignedInShellProps {
   user: { displayName: string };
   roles: Session['roles'];
-  /** The surface this layout serves; its link is marked as the current page. */
-  current: Role;
   children: ReactNode;
 }
 
 /**
- * The minimal signed-in chrome for the `(mentee)` and `(mentor)` surfaces (E01 Slice 2):
- * the design system's `AppShell` with who is signed in, a link to the home of every
- * role held (so a combined role set can reach each surface) and sign-out. Slice 3
- * replaces the inline links with `lib/nav.ts` and ports `/admin` onto the same shell.
+ * The chrome of every signed-in surface — `(mentee)`, `(mentor)` and `/admin` (the
+ * `app` and `admin` surfaces of AGENTS.md's taxonomy): the design system's `AppShell`
+ * with who is signed in, the navigation for the union of their roles
+ * (`WorkspaceNav`, from `lib/nav.ts`) and sign-out.
  *
- * Presentational only: the calling layout has already run `requirePageAccount`.
+ * Presentational only: the calling layout has already run `requirePageAccount`, and
+ * hiding a link is not enforcement — every page guards itself.
  */
-export function SignedInShell({ user, roles, current, children }: SignedInShellProps) {
-  const nav = roles.map((role) => (
-    <Link key={role} href={ROLE_HOMES[role]} aria-current={role === current ? 'page' : undefined}>
-      {ROLE_HOME_LABELS[role]}
-    </Link>
-  ));
+export function SignedInShell({ user, roles, children }: SignedInShellProps) {
   return (
-    <AppShell nav={nav} user={user} actions={<SignOutButton />}>
+    <AppShell nav={<WorkspaceNav roles={roles} />} user={user} actions={<SignOutButton />}>
       {children}
     </AppShell>
   );

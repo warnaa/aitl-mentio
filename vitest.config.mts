@@ -40,6 +40,8 @@ export default defineConfig({
         'packages/app/src/app/api/users/route.ts',
         'packages/app/src/components/auth/SignedInShell.tsx',
         'packages/app/src/components/auth/SignOutButton.tsx',
+        'packages/app/src/components/auth/WorkspaceNav.tsx',
+        'packages/app/src/lib/nav.ts',
         'packages/app/src/lib/request-path.ts',
         'packages/app/src/lib/session.ts',
         'packages/app/src/lib/sign-in.ts',

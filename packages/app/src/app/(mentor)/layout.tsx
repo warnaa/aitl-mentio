@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function MentorLayout({ children }: { children: ReactNode }) {
   const { session, user } = await requirePageAccount('mentor', '/mentor');
   return (
-    <SignedInShell user={user} roles={session.roles} current="mentor">
+    <SignedInShell user={user} roles={session.roles}>
       {children}
     </SignedInShell>
   );

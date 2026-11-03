@@ -28,7 +28,7 @@ describe('(mentor) layout', () => {
     const tree = await render();
 
     expect(tree.type).toBe(SignedInShell);
-    expect(tree.props).toMatchObject({ user, roles: live.roles, current: 'mentor', children: <p>page</p> });
+    expect(tree.props).toMatchObject({ user, roles: live.roles, children: <p>page</p> });
   });
 
   it('renders nothing of the user when the guard redirects', async () => {
