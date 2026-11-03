@@ -147,7 +147,7 @@ describe('diffRoles', () => {
 });
 
 describe('reconcileOperatorRole', () => {
-  const em = { nativeUpdate: vi.fn(async () => 1) };
+  const em = { nativeUpdate: vi.fn(async () => 1), refresh: vi.fn(async <T>(entity: T) => entity) };
   const eventBus = { emit: vi.fn(async () => undefined) };
   let operatorEmails: readonly string[];
   const deps = () => ({ em, eventBus, env: { OPERATOR_EMAILS: operatorEmails } }) as never;
@@ -164,15 +164,19 @@ describe('reconcileOperatorRole', () => {
       'mentor',
     ]);
     expect(em.nativeUpdate).not.toHaveBeenCalled();
+    expect(em.refresh).not.toHaveBeenCalled(); // the read path pays no extra query
     expect(eventBus.emit).not.toHaveBeenCalled();
   });
 
   it('promotes a verified allowlisted user, preserving mentor, without bumping sessionVersion', async () => {
     operatorEmails = [FOUNDER];
 
-    const roles = await reconcileOperatorRole(row({ email: FOUNDER, roles: ['mentor'] }), deps());
+    const user = row({ email: FOUNDER, roles: ['mentor'] });
+    const roles = await reconcileOperatorRole(user, deps());
 
     expect(roles).toEqual(['mentor', 'operator']);
+    // nativeUpdate bypasses the identity map, so the entity is re-synced after the write.
+    expect(em.refresh).toHaveBeenCalledWith(user);
     expect(em.nativeUpdate).toHaveBeenCalledWith(
       UserEntity,
       { id: 'user-1', sessionVersion: 4 },

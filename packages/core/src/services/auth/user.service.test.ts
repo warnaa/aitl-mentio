@@ -105,6 +105,9 @@ function fakeEm(rows: Row[], options: { beforeFind?: () => Promise<void> } = {})
       Object.assign(target, data);
       return 1;
     }),
+    // Rows are the "entities" here, so there is nothing to re-sync; the identity-map
+    // behaviour this stands in for is pinned on real MikroORM in user-version.test.ts.
+    refresh: vi.fn(async <T>(entity: T) => entity),
     transactional: vi.fn(async <T>(cb: (inner: unknown) => Promise<T>) => {
       pending = [];
       return cb(em);

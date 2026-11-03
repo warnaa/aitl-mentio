@@ -12,6 +12,7 @@ const db = vi.hoisted(() => {
     findOne: async (_entity: unknown, where: { id: string }) => rows.get(where.id) ?? null,
     find: async () => [],
     nativeUpdate: async () => 1,
+    refresh: async <T>(entity: T) => entity,
   };
   return {
     rows,

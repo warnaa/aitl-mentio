@@ -16,6 +16,7 @@ const db = vi.hoisted(() => {
       Object.assign(row, data);
       return 1;
     }),
+    refresh: vi.fn(async <T>(entity: T) => entity),
   };
   return {
     rows,
@@ -93,6 +94,8 @@ describe('POST /api/auth/logout', () => {
   it('clears the cookie and bumps sessionVersion for a live session, so a copy of the cookie dies', async () => {
     const row = seed(0);
     const cookie = await cookieFor(0);
+    // The route swallows a failed bump, so only the absent warning proves it fully succeeded.
+    const warn = vi.spyOn(authRouteLogger(), 'warn');
 
     await expectSignedOut(await logout({ cookie }));
     expect(row.sessionVersion).toBe(1);
@@ -101,6 +104,8 @@ describe('POST /api/auth/logout', () => {
     await expectSignedOut(await logout({ cookie }));
     expect(row.sessionVersion).toBe(1);
     expect(db.em.nativeUpdate).toHaveBeenCalledTimes(1);
+    expect(db.em.refresh).toHaveBeenCalledWith(row);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('succeeds without a cookie and bumps nothing', async () => {

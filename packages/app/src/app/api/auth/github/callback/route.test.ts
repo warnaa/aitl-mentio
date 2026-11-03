@@ -47,6 +47,7 @@ const db = vi.hoisted(() => {
       Object.assign(target, data);
       return 1;
     },
+    refresh: async <T>(entity: T) => entity,
     transactional: async <T>(fn: (inner: unknown) => Promise<T>) => fn(em),
   };
   return {

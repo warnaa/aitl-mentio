@@ -31,7 +31,7 @@ export const CSRF_HEADER_VALUE = '1';
 /** What `loadSession` needs from the request scope. */
 export interface SessionLoaderDeps extends ReconcileDeps {
   sessionService: Pick<SessionService, 'verify'>;
-  em: Pick<EntityManager, 'findOne' | 'nativeUpdate'>;
+  em: Pick<EntityManager, 'findOne' | 'nativeUpdate' | 'refresh'>;
   env: Pick<AppEnv, 'OPERATOR_EMAILS'>;
 }
 

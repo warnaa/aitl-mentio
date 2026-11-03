@@ -64,6 +64,7 @@ export default defineConfig({
         'packages/core/src/services/auth/session.service.ts',
         'packages/core/src/services/auth/token.service.ts',
         'packages/core/src/services/auth/user.service.ts',
+        'packages/core/src/services/auth/user-version.ts',
         'packages/core/src/time/clock.ts',
         'packages/db/migrations/Migration20261102230816_auth_identity.ts',
         'packages/db/src/config.ts',

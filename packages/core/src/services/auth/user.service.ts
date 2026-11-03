@@ -6,6 +6,7 @@ import { AppError, BadRequestError, ConflictError, NotFoundError, UnauthorizedEr
 import type { Logger } from '../../logger';
 import type { Clock } from '../../time/clock';
 import type { GithubIdentity } from './github-identity.port';
+import { updateUserAtVersion } from './user-version';
 import {
   BASELINE_ROLE,
   diffRoles,
@@ -292,12 +293,11 @@ export class UserService {
     if (!user) {
       return;
     }
-    const updated = await this.em.nativeUpdate(
-      User,
-      { id: user.id, sessionVersion: user.sessionVersion },
-      { sessionVersion: user.sessionVersion + 1, updatedAt: this.clock.now() },
-    );
-    if (updated > 0) {
+    const updated = await updateUserAtVersion(this.em, user, {
+      sessionVersion: user.sessionVersion + 1,
+      updatedAt: this.clock.now(),
+    });
+    if (updated) {
       this.logger.info({ userId: user.id }, 'ended all sessions');
     }
   }
@@ -380,12 +380,12 @@ export class UserService {
       throw new ConflictError('A user must keep at least one role');
     }
     const sessionVersion = user.sessionVersion + 1;
-    const updated = await this.em.nativeUpdate(
-      User,
-      { id: user.id, sessionVersion: user.sessionVersion },
-      { roles: after, sessionVersion, updatedAt: this.clock.now() },
-    );
-    if (updated === 0) {
+    const updated = await updateUserAtVersion(this.em, user, {
+      roles: after,
+      sessionVersion,
+      updatedAt: this.clock.now(),
+    });
+    if (!updated) {
       throw new ConflictError('The user changed while their roles were being updated. Try again.');
     }
     this.logger.info({ userId: user.id, added, removed }, 'changed user roles');

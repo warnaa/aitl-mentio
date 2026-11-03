@@ -1,5 +1,6 @@
-import { User, type EntityManager } from '@devmentor/db';
+import type { EntityManager } from '@devmentor/db';
 import type { EventBus } from '../../events/event-bus';
+import { updateUserAtVersion } from './user-version';
 
 /**
  * The fixed role vocabulary and the operator-cache reconciliation (E01). A leaf module:
@@ -117,7 +118,7 @@ export interface ReconcilableUser extends RoleSource {
 
 /** What reconciliation needs: a narrow write, the event bus, and the allowlist. */
 export interface ReconcileDeps {
-  em: Pick<EntityManager, 'nativeUpdate'>;
+  em: Pick<EntityManager, 'nativeUpdate' | 'refresh'>;
   eventBus: Pick<EventBus, 'emit'>;
   env: { OPERATOR_EMAILS: readonly string[] };
 }
@@ -138,8 +139,10 @@ export interface ReconcileDeps {
  * nothing and cannot overwrite the grant. A skipped write is harmless: the next request
  * reconciles again from the fresh row.
  *
- * The update is a targeted `nativeUpdate`, not a `flush`, so a session resolved midway
- * through a service never flushes that service's pending unit of work.
+ * The write goes through `updateUserAtVersion`: a targeted `nativeUpdate`, not a
+ * `flush`, so a session resolved midway through a service never flushes that service's
+ * pending unit of work, followed by a refresh so the scope's identity map holds the
+ * written roles. `user` must therefore be an entity managed by `em`.
  *
  * @throws Error when the stored set holds no valid role (see `effectiveRoles`).
  */
@@ -156,12 +159,8 @@ export async function reconcileOperatorRole(
   }
   // Diff before writing: the write must not be able to change what it is compared with.
   const { added, removed } = diffRoles(user.roles, roles);
-  const updated = await em.nativeUpdate(
-    User,
-    { id: user.id, sessionVersion: user.sessionVersion },
-    { roles: [...roles] },
-  );
-  if (updated > 0 && (added.length > 0 || removed.length > 0)) {
+  const updated = await updateUserAtVersion(em, user, { roles: [...roles] });
+  if (updated && (added.length > 0 || removed.length > 0)) {
     await eventBus.emit('auth.user.roles_changed', { userId: user.id, added, removed });
   }
   return roles;

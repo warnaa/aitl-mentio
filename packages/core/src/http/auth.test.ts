@@ -54,7 +54,7 @@ async function tokenFor(user: { id: string; sessionVersion: number }, at: Date =
 
 let stored: Row | null;
 let operatorEmails: readonly string[];
-const em = { findOne: vi.fn(async () => stored), nativeUpdate: vi.fn(async () => 1) };
+const em = { findOne: vi.fn(async () => stored), nativeUpdate: vi.fn(async () => 1), refresh: vi.fn(async <T>(entity: T) => entity) };
 const eventBus = { emit: vi.fn(async () => undefined) };
 
 function deps(service = sessionService()) {
