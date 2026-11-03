@@ -3,7 +3,8 @@ import { defineEntity } from '@mikro-orm/core';
 const p = defineEntity.properties;
 
 /**
- * Shared columns for every entity: a uuid v7 primary key (time-sortable) plus
+ * Shared columns for every entity: a uuid v4 primary key (`crypto.randomUUID()`, random,
+ * not time-sortable) plus
  * created/updated timestamps maintained by the ORM. Concrete entities spread
  * `baseProperties` into their own `properties` map.
  */

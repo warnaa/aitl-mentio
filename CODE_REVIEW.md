@@ -25,7 +25,13 @@ Read the diff in this order. A finding higher on the list outranks everything be
    "unavailable" state when the database is down: the app must build and boot with no
    database reachable.
 2. **Security.** Auth is enforced server-side on every route that is not explicitly
-   public; hiding a button in the UI is not enforcement. Mutations check ownership of
+   public; hiding a button in the UI is not enforcement. A guarded page enforces at the
+   page **and** the service, not only at its layout: the layout and every `page.tsx`
+   under it call `requirePageRole`/`requirePageAccount` from
+   `packages/app/src/lib/session.ts` (a layout does not re-run on client-side
+   navigation), and the service behind it checks the session again. `proxy.ts` only
+   forwards the requested path for the post-sign-in redirect; a PR that makes it an
+   auth check, or relies on it instead of a guard, is a finding. Mutations check ownership of
    the specific record, not just "is logged in". Security decisions fail closed: an
    unexpected error inside an auth or ownership check denies. Write endpoints parse an
    explicit zod schema and never spread the raw request body into `em.create()` or
@@ -182,7 +188,8 @@ both locally (Docker plus `npm run test:browser:install`) before review.
 
 ## Severity guidance
 
-- **Blocker** (the PR cannot merge as-is): any item under Security above; a
+- **Blocker** (the PR cannot merge as-is): any item under Security above, including a
+  guarded page that enforces only at its layout; a
   dependency-direction violation or a loosened ESLint boundary; a protected surface
   changed without the path `BACKWARD_COMPATIBILITY.md` requires; a failing validation
   gate; new or changed behavior without unit tests, or a production file missing from

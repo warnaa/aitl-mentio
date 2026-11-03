@@ -138,6 +138,24 @@ needs it reports itself unavailable. Selecting a fake adapter (`mock`, `log`) wi
 `INTEGRATION_TEST_RUN=1` is refused at startup, so a misconfigured deployment can
 never quietly accept "sign in as anyone".
 
+#### Creating a GitHub OAuth app
+
+1. On GitHub open **Settings → Developer settings → OAuth Apps → New OAuth App**
+   (or the same page under an organisation's settings).
+2. Set **Homepage URL** to your `APP_URL` and **Authorization callback URL** to
+   `<APP_URL>/api/auth/github/callback`, e.g.
+   `http://localhost:3000/api/auth/github/callback` locally. GitHub allows one
+   callback URL per app, so use a separate app for each environment.
+3. Register it, then **Generate a new client secret**. Put the Client ID in
+   `GITHUB_CLIENT_ID` and the secret in `GITHUB_CLIENT_SECRET`, and set
+   `SESSION_SECRET` if you have not already.
+4. Restart the app. DevMentor requests the `read:user user:email` scopes and signs in
+   only accounts whose primary GitHub email is verified. Add your email to
+   `OPERATOR_EMAILS` to open `/admin`.
+
+Without these values the "Sign in with GitHub" link sends you back to `/sign-in` with
+a "not available" message; nothing else stops working.
+
 ## Scripts
 
 | Command | Description |

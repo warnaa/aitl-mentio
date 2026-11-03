@@ -178,6 +178,24 @@ the reference example every new concept copies. See
   lists use `DataTable`, and loading/error/empty states use the `feedback/` components.
 - **Collection routes are non-dynamic**, so Next passes no `params` — CRUD helpers
   guard `ctx.params` before reading it.
+- **Browser-navigated vs fetched routes.** A route the browser *navigates* to (the
+  GitHub OAuth start and callback, and later the email-verification link) catches its
+  own failures and returns a redirect `Response` — typically to `/sign-in?error=…` —
+  which `apiHandler` passes through unchanged, so a user never sees a JSON envelope
+  rendered as a page. Every other route is *fetched* through `apiCall` and answers the
+  `{ ok, data }` / `{ ok, error }` envelope.
+- **State-changing routes are JSON-only.** `apiHandler` requires the
+  `x-devmentor-request` header on every method other than `GET`/`HEAD`/`OPTIONS`
+  (login CSRF defence), so a mutating route is called through `apiCall` or `CrudForm`,
+  never a native HTML `<form>` post. Routes never call `requireCsrfHeader` themselves;
+  the only opt-out, `apiHandler(logic, { csrf: false })`, is reserved for the payment
+  webhook.
+- **Signed-in pages guard at the layout and at every `page.tsx`** with
+  `requirePageRole`/`requirePageAccount` from `app/src/lib/session.ts` (a layout does
+  not re-run on client-side navigation), and the service checks the session again.
+  `app/src/proxy.ts` is **not** an auth boundary: it only forwards the requested path
+  as `x-devmentor-path` so a signed-out deep link survives sign-in. A new signed-in
+  surface goes into its `matcher`, or its deep links fall back to the section root.
 
 ### Design-system rules confirmed by the user
 
