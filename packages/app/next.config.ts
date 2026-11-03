@@ -1,4 +1,10 @@
 import type { NextConfig } from "next";
+import { loadRepoEnv } from "./src/lib/repo-env";
+
+// Next reads env files only from this package; the documented `.env` is the repo root.
+// Resolved here, not in the helper: Next compiles this config next to itself, so
+// `import.meta.url` is always `packages/app/`.
+loadRepoEnv(new URL("../../.env", import.meta.url));
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["*"],

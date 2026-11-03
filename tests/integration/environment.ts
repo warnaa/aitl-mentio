@@ -30,6 +30,21 @@ export function integrationChildEnvironment(databaseUrl: string, appUrl?: string
     // Verification mail becomes a `mail.sent` line in app.log, read by `waitForMail`.
     MAILER_ADAPTER: 'log',
     INTEGRATION_TEST_RUN: '1',
+    // The app loads the repo-root `.env` for any key still unset, so pin every other
+    // documented key: a developer's real mailer, OAuth app or proxy setting must never
+    // reach a test run. An empty value blocks `.env` and is read as "not configured".
+    APP_NAME: 'DevMentor',
+    LOG_LEVEL: 'info',
+    DB_DEBUG: 'false',
+    DB_POOL_IDLE_MS: '30000',
+    SESSION_SECRET_PREVIOUS: '',
+    GITHUB_CLIENT_ID: '',
+    GITHUB_CLIENT_SECRET: '',
+    TRUSTED_PROXY_HOPS: '',
+    PASSWORD_HASH_CONCURRENCY: '',
+    PASSWORD_HASH_WAIT_MS: '',
+    MAIL_API_KEY: '',
+    MAIL_FROM: '',
     // Obviously fake on purpose (mirrored in .github/workflows/ci.yml); the real founder
     // addresses live only in deployment configuration. The mock adapter derives
     // `<login>@devmentor.test`, so the `mock-operator` login signs in as this operator.

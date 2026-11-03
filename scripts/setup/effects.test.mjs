@@ -97,6 +97,23 @@ describe('createNodeEffects', () => {
     expect(result.stderr).toContain('ENOENT');
   });
 
+  it('reports a synchronous launch refusal as a failed exit instead of throwing', async () => {
+    // A NUL byte makes spawn throw synchronously on every platform, the same way
+    // Windows refuses a `.cmd` without a shell (EINVAL), which used to crash setup.
+    const result = await effects.run('node\u0000', []);
+
+    expect(result.code).toBe(SPAWN_FAILED);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).not.toBe('');
+  });
+
+  it('runs a command string through a shell when asked', async () => {
+    const result = await effects.run(`"${process.execPath}" --version`, [], { shell: true });
+
+    expect(result.code).toBe(0);
+    expect(result.stdout.trim()).toBe(process.version);
+  });
+
   it('detects a port that is accepting connections', async () => {
     const server = await listenOnEphemeralPort();
 
