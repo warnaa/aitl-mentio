@@ -35,6 +35,7 @@ const { EventBus } = await import('../events/event-bus');
 const { SessionService } = await import('../services/auth/session.service');
 const { TokenService } = await import('../services/auth/token.service');
 const { PasswordService } = await import('../services/auth/password.service');
+const { RateLimiter } = await import('../http/rate-limit');
 const { GithubIdentityAdapter } = await import('../services/auth/adapters/github-identity');
 const { MockGithubIdentityAdapter } = await import('../services/auth/adapters/mock-github-identity');
 
@@ -240,13 +241,17 @@ describe('withScope', () => {
     const result = await withScope((cradle) => ({
       em: cradle.em,
       userService: cradle.userService,
+      rateLimiter: cradle.rateLimiter,
       clock: cradle.clock,
     }));
+    const other = await withScope((cradle) => cradle.rateLimiter);
 
     expect(result.em).toMatchObject({ forked: true });
     expect(result.userService).toBeInstanceOf(UserService);
+    expect(result.rateLimiter).toBeInstanceOf(RateLimiter);
+    expect(other).not.toBe(result.rateLimiter); // counts through its own scope's em
     expect(result.clock).toBe(systemClock);
-    expect(state.fork).toHaveBeenCalledTimes(1);
+    expect(state.fork).toHaveBeenCalledTimes(2);
   });
 
   it('honours a fixed clock registered on the scope', async () => {

@@ -1,5 +1,5 @@
 export { apiCall, apiCallOrThrow, ApiError, type ApiCallOptions } from './api/apiCall';
-export type { ApiResult, FieldErrors } from './api/types';
+export type { ApiFailure, ApiResult, FieldErrors } from './api/types';
 export { CrudForm, type CrudField, type CrudFieldType, type CrudFormProps } from './forms/CrudForm';
 export {
   DataTable,

@@ -25,14 +25,17 @@ a breaking change and follows the path in "How to make a breaking change" at the
 ### 1. HTTP API (`packages/app/src/app/api/`)
 
 **The envelope.** Every `/api/*` route built with `apiHandler` or `makeCrudRoute`
-answers `{ ok: true, data }` or `{ ok: false, error: { code, message, fieldErrors? } }`.
+answers `{ ok: true, data }` or `{ ok: false, error: { code, message, fieldErrors?, retryAfterSeconds? } }`
+(`retryAfterSeconds` only on a 429).
 The shape is declared twice on purpose, in `packages/core/src/http/apiHandler.ts` and
 `packages/ui/src/backend/api/types.ts`, because `ui` must not import `core`.
 
 **Status and error codes**, from `packages/core/src/http/errors.ts` and `apiHandler.ts`:
 400 `bad_request`, 401 `unauthorized`, 403 `forbidden`, 404 `not_found`,
 409 `conflict`, 422 `validation_failed` (with `fieldErrors`, keyed by dotted path or
-`_root`), 500 `internal_error`, 503 `service_unavailable` (`ServiceUnavailableError`:
+`_root`), 429 `rate_limited` (`TooManyRequestsError`: too many attempts in the rate-limit
+window, with `retryAfterSeconds` in the envelope and a `Retry-After` header; the message never
+says whether an email address has an account), 500 `internal_error`, 503 `service_unavailable` (`ServiceUnavailableError`:
 a required integration or credential is missing, or an upstream timed out, failed or
 answered non-2xx; see `fetchJson` in `outbound.ts`), and the concept-owned 403
 `github_email_unverified` (`GithubEmailUnverifiedError` in
@@ -105,15 +108,19 @@ API between packages. `npm run typecheck` is the consumer check.
   `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`,
   `withRequestScope`, `withSessionCookieScope` (reserved for the app's page session
   helper), the `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`,
-  `sessionService`, `tokenService`, `identity: GithubIdentityPort`, `em`,
-  `userService`, and the request-scoped `session: Promise<Session | null>`), the
+  `sessionService`, `tokenService`, `passwordService`, `identity: GithubIdentityPort`, `em`,
+  `userService`, `rateLimiter`, and the request-scoped `session: Promise<Session | null>`), the
   GitHub identity port (`GithubIdentityPort` with `authorizeUrl({ state, login? })`,
   `exchangeCode`, `fetchIdentity`; `GithubIdentity`, `AuthorizeUrlInput`,
   `GithubEmailUnverifiedError`, `GITHUB_CALLBACK_PATH`, `githubCallbackUrl`,
   `GITHUB_LOGIN_PATTERN`, `githubLoginHint`), the OAuth state cookie helpers
   (`OAUTH_STATE_COOKIE_NAME`, `OAUTH_STATE_COOKIE_PATH`, `OAUTH_STATE_PURPOSE`,
   `OAUTH_STATE_TTL_SECONDS`, `oauthStateCookie`, `clearOAuthStateCookie`,
-  `readOAuthStateCookie`), `homeFor(RoleSet)` and `ROLE_HOMES`, `readCookie`,
+  `readOAuthStateCookie`), `PasswordService` (`withHashingSlot(hasher => …)`) with
+  `PasswordHasher`, the rate limiter (`RateLimiter` with `consume(key, policy)` and
+  `consumeFor(policy, identifier | null)`, `RateLimitPolicy`, `rateLimitKey`, `clientIp`,
+  and the policies `SIGN_IN_PER_IP`, `SIGN_IN_PER_EMAIL`, `REGISTER_PER_IP`,
+  `VERIFICATION_MAIL_PER_EMAIL`), `homeFor(RoleSet)` and `ROLE_HOMES`, `readCookie`,
   `serializeCookie` and `CookieAttributes`,
   `Clock` and `systemClock`, `UserService` (`list`, `findByEmail`,
   `create(CreateUserInput)`, `findOrCreateFromGithub(GithubIdentity) → GithubSignIn`,
@@ -123,7 +130,7 @@ API between packages. `npm run typecheck` is the consumer check.
   `ASSIGNABLE_ROLES`, `UnverifiedAccountLinkError` and `GithubAccountConflictError`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`, `clearSessionCookie`,
   `SESSION_COOKIE_NAME` and `SESSION_TTL_SECONDS`, `TokenService` with
   `PurposeTokenInput`, the `AppError` family
-  (with its optional `headers`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`
+  (with its optional `headers` and `retryAfterSeconds`, and `TooManyRequestsError`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`
   (with `ApiHandlerOptions`), `jsonOk`, `jsonError`, `makeCrudRoute` with `CrudService` and
   `MakeCrudRouteOptions`, `requireSession(req, cradle)`, `requireRole`,
   `requireCsrfHeader`, `assertOwnership`, `resolveRoles` with `RoleSource`, `ROLES`, `RoleSet`,
@@ -162,7 +169,9 @@ the change spans several concepts; note it in the PR body.
   `display_name`, `roles` `text[]` default `{mentee}` under the `users_roles_check`
   constraint, `github_id` unique, `github_login`, `avatar_url`, `email_verified_at`,
   `session_version` default 0, `password_hash` `text` null — a self-describing scrypt
-  hash, null for GitHub-only accounts) and `mentor_profiles` (`id`, timestamps, `user_id` unique with a
+  hash, null for GitHub-only accounts), `auth_rate_limits` (`key` text primary key of the
+  form `<scope>:<kind>:<sha256>`, `window_start` timestamptz indexed, `count` int; no id or
+  timestamps — counters are disposable and may be truncated at any time) and `mentor_profiles` (`id`, timestamps, `user_id` unique with a
   cascading foreign key to `users`, `headline`, `bio` nullable,
   `years_of_experience` default 0). Column names are snake_case mappings of the
   camelCase entity properties.

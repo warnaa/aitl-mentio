@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiRouteContext } from './apiHandler';
-import { AppError, ServiceUnavailableError, ValidationError } from './errors';
+import { AppError, ServiceUnavailableError, ValidationError, TooManyRequestsError } from './errors';
 
 const state = vi.hoisted(() => ({
   logger: { error: vi.fn() },
@@ -100,6 +100,19 @@ describe('apiHandler', () => {
     await expect(response.json()).resolves.toEqual({
       ok: false,
       error: { code: 'service_unavailable', message: 'GitHub sign-in is unavailable' },
+    });
+  });
+
+  it('puts a 429’s retryAfterSeconds in the envelope and the Retry-After header', async () => {
+    const response = await apiHandler(() => {
+      throw new TooManyRequestsError(42);
+    })(request(), ctx);
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('retry-after')).toBe('42');
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: { code: 'rate_limited', message: 'Too many attempts. Wait a few minutes, then try again.', retryAfterSeconds: 42 },
     });
   });
 

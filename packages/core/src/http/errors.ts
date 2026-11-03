@@ -12,6 +12,8 @@ export interface AppErrorOptions {
   fieldErrors?: FieldErrors;
   cause?: unknown;
   headers?: ErrorHeaders;
+  /** Seconds until a refused request may be retried; sent in the failure envelope. */
+  retryAfterSeconds?: number;
 }
 
 export class AppError extends Error {
@@ -20,6 +22,7 @@ export class AppError extends Error {
   readonly fieldErrors?: FieldErrors;
   /** Copied onto the response by `apiHandler`. No header is ever required. */
   readonly headers?: ErrorHeaders;
+  readonly retryAfterSeconds?: number;
 
   constructor(message: string, status: number, code: string, options?: AppErrorOptions) {
     super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
@@ -29,6 +32,7 @@ export class AppError extends Error {
     this.code = code;
     this.fieldErrors = options?.fieldErrors;
     this.headers = options?.headers;
+    this.retryAfterSeconds = options?.retryAfterSeconds;
   }
 }
 
@@ -84,4 +88,19 @@ export class ServiceUnavailableError extends AppError {
 
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
+}
+
+/**
+ * Too many attempts in the current rate-limit window (primitives B8). The message is
+ * generic on purpose: it must not reveal whether an email address has an account.
+ * Carries `retryAfterSeconds` in the envelope and as a `Retry-After` header.
+ */
+export class TooManyRequestsError extends AppError {
+  constructor(retryAfterSeconds: number, message = 'Too many attempts. Wait a few minutes, then try again.') {
+    const seconds = Math.max(1, Math.ceil(retryAfterSeconds));
+    super(message, 429, 'rate_limited', {
+      retryAfterSeconds: seconds,
+      headers: { 'Retry-After': String(seconds) },
+    });
+  }
 }

@@ -3,6 +3,7 @@ import type { AppEnv } from '../config/env';
 import type { Logger } from '../logger';
 import type { EventBus } from '../events/event-bus';
 import type { Session } from '../http/auth';
+import type { RateLimiter } from '../http/rate-limit';
 import type { GithubIdentityPort } from '../services/auth/github-identity.port';
 import type { PasswordService } from '../services/auth/password.service';
 import type { SessionService } from '../services/auth/session.service';
@@ -20,7 +21,7 @@ import type { Clock } from '../time/clock';
  *   `passwordService`, `identity` — SINGLETON (shared for the process; the password
  *   service's hashing gate must be process-wide). `identity` is the real GitHub
  *   adapter unless `AUTH_IDENTITY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`.
- * - `em`, `userService` — SCOPED (created fresh per request scope).
+ * - `em`, `userService`, `rateLimiter` — SCOPED (created fresh per request scope).
  * - `session` — SCOPED and lazy, registered only by `withRequestScope` /
  *   `withSessionCookieScope`: the caller's live `Session`, or `null` when signed out.
  *   A promise, because resolving it verifies the cookie and loads the user; awilix
@@ -43,5 +44,6 @@ export interface Cradle {
   identity: GithubIdentityPort;
   em: EntityManager;
   userService: UserService;
+  rateLimiter: RateLimiter;
   session: Promise<Session | null>;
 }

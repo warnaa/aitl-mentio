@@ -7,6 +7,7 @@ export {
   ConflictError,
   ValidationError,
   ServiceUnavailableError,
+  TooManyRequestsError,
   isAppError,
   type AppErrorOptions,
   type ErrorHeaders,
@@ -51,3 +52,13 @@ export {
   type FetchJsonInit,
   type OutboundFailure,
 } from './outbound';
+export {
+  clientIp,
+  rateLimitKey,
+  RateLimiter,
+  REGISTER_PER_IP,
+  SIGN_IN_PER_EMAIL,
+  SIGN_IN_PER_IP,
+  VERIFICATION_MAIL_PER_EMAIL,
+  type RateLimitPolicy,
+} from './rate-limit';

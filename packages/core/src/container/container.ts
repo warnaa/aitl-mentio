@@ -10,6 +10,7 @@ import {
 import { getOrm } from '@devmentor/db';
 import { getEnv, type AppEnv } from '../config/env';
 import { loadSession } from '../http/auth';
+import { RateLimiter } from '../http/rate-limit';
 import { createLogger } from '../logger';
 import { GithubIdentityAdapter } from '../services/auth/adapters/github-identity';
 import { MockGithubIdentityAdapter } from '../services/auth/adapters/mock-github-identity';
@@ -85,6 +86,8 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     // A forked EntityManager per scope gives each request its own identity map / UoW.
     em: asFunction(({ orm }: Cradle) => orm.em.fork()).scoped(),
     userService: asClass(UserService).scoped(),
+    // Scoped: it counts through the request's `em`.
+    rateLimiter: asClass(RateLimiter).scoped(),
   });
 
   // Default in-process subscribers. Concept side effects (send a message, invalidate

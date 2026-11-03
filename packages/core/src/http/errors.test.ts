@@ -9,6 +9,7 @@ import {
   ServiceUnavailableError,
   UnauthorizedError,
   ValidationError,
+  TooManyRequestsError,
 } from './errors';
 
 describe('AppError', () => {
@@ -23,6 +24,7 @@ describe('AppError', () => {
     expect(error.cause).toBeUndefined();
     expect(error.fieldErrors).toBeUndefined();
     expect(error.headers).toBeUndefined();
+    expect(error.retryAfterSeconds).toBeUndefined();
   });
 
   it('keeps the cause, field errors and headers it is given', () => {
@@ -36,6 +38,37 @@ describe('AppError', () => {
     expect(error.cause).toBe(cause);
     expect(error.fieldErrors).toEqual({ name: ['Required'] });
     expect(error.headers).toEqual({ 'retry-after': '30' });
+  });
+
+  it('keeps a retryAfterSeconds it is given', () => {
+    expect(new AppError('Slow down', 429, 'rate_limited', { retryAfterSeconds: 12 }).retryAfterSeconds).toBe(12);
+  });
+});
+
+describe('TooManyRequestsError', () => {
+  it('is a 429 rate_limited with a generic message, the delay and a Retry-After header', () => {
+    const error = new TooManyRequestsError(90);
+
+    expect(error).toBeInstanceOf(AppError);
+    expect(error).toMatchObject({ status: 429, code: 'rate_limited', name: 'TooManyRequestsError', retryAfterSeconds: 90 });
+    expect(error.headers).toEqual({ 'Retry-After': '90' });
+    expect(error.message).toBe('Too many attempts. Wait a few minutes, then try again.');
+    expect(error.message).not.toMatch(/email|account|password/i);
+  });
+
+  it.each([
+    [0.2, 1],
+    [0, 1],
+    [-5, 1],
+    [59.01, 60],
+  ])('rounds a delay of %s seconds up to a whole %s', (input, expected) => {
+    const error = new TooManyRequestsError(input);
+    expect(error.retryAfterSeconds).toBe(expected);
+    expect(error.headers).toEqual({ 'Retry-After': String(expected) });
+  });
+
+  it('accepts a custom message', () => {
+    expect(new TooManyRequestsError(5, 'Slow down').message).toBe('Slow down');
   });
 });
 
