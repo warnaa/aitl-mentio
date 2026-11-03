@@ -18,7 +18,8 @@ function isUnder(pathname: string, prefix: string): boolean {
  * `fallback`, which the caller supplies and must already be safe.
  *
  * The accepted path is returned in its normalised form (`pathname + search + hash`),
- * so dot segments and percent-encoded characters cannot smuggle a path into `/api/`.
+ * and every check also holds for that form, so dot segments, backslashes and
+ * percent-encoded characters cannot smuggle a path into `/api/` or off-site.
  */
 export function safeReturnTo(value: string | null | undefined, fallback: string): string {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) {
@@ -35,6 +36,13 @@ export function safeReturnTo(value: string | null | undefined, fallback: string)
   // Browsers strip tabs and newlines while parsing, so `/\t/evil.example` would become
   // `//evil.example`. The URL parser does the same, and the origin check catches it.
   if (url.origin !== PROBE_ORIGIN) {
+    return fallback;
+  }
+  // Normalisation can create the very prefix the first check refused: dot segments and
+  // backslashes collapse `/foo/..//evil.example` or `/.\\evil.example` into
+  // `//evil.example`, which a browser follows off-site. (The parser turns `\` into `/`,
+  // so checking the normalised path for `//` covers `/\` too.)
+  if (url.pathname.startsWith('//')) {
     return fallback;
   }
   // Compare the decoded path, so `/%61pi/users` cannot pass as a page.

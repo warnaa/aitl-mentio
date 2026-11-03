@@ -39,7 +39,26 @@ describe('safeReturnTo', () => {
     ['a tab that browsers strip into //host', '/\t/evil.example'],
     ['a tab that leaves an invalid host', '/\t/['],
     ['a malformed percent escape', '/%'],
+    // Normalisation collapsing a valid-looking path into a protocol-relative `//host`.
+    ['a dot-dot segment into //host', '/foo/..//evil.example'],
+    ['an encoded dot-dot segment into //host', '/%2e%2e//evil.example'],
+    ['a dot segment into //host', '/.//evil.example'],
+    ['nested dot-dot segments into //host, with query and hash', '/a/b/../..//evil.example/x?y#z'],
+    ['two backslashes into //host', '/foo/..\\\\evil.example'],
+    ['a slash and a backslash into //host', '/foo/../\\evil.example'],
   ])('falls back for %s', (_label, value) => {
     expect(safeReturnTo(value, FALLBACK)).toBe(FALLBACK);
+  });
+
+  it('accepts an encoded double slash: it stays one path segment, never a host', () => {
+    expect(safeReturnTo('/%2F%2Fevil.example', FALLBACK)).toBe('/%2F%2Fevil.example');
+  });
+
+  it('never returns a value it would itself refuse (normalised output is a fixed point)', () => {
+    const inputs = ['/a/./b/../c', '/a b', '/foo/..//evil.example', '/%2e%2e//evil.example', '/mentors/ada?x=1#y'];
+    for (const input of inputs) {
+      const once = safeReturnTo(input, FALLBACK);
+      expect(safeReturnTo(once, 'refused')).toBe(once);
+    }
   });
 });
