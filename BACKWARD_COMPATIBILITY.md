@@ -64,7 +64,7 @@ a different GitHub account). An `AppError` may carry optional
   route's `authorize` answers 401 `unauthorized` without a live session and 403
   `forbidden` without the `operator` role, before the service runs, and
   `UserService.list` repeats the check.
-  *Breaking change recorded (E01, `.ai/specs/2026-09-04-accounts-and-roles.md`
+  *Breaking change recorded (E01, `.ai/specs/implemented/2026-09-04-accounts-and-roles.md`
   breaking changes 2 and 3):* the route was public before E01, and `POST /api/users`
   (`{ email, displayName }` → `UserDto`) has been **removed** — accounts are created by
   sign-in only. In-repo consumers: `admin/users/page.tsx` (client-side `apiCall`, moves

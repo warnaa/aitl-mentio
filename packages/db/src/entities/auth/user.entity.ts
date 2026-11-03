@@ -13,7 +13,7 @@ const p = defineEntity.properties;
  * array whose members are all drawn from `mentee | mentor | operator` — no nulls, no
  * other values. Duplicates are **not** rejected here (a `CHECK` cannot hold a subquery);
  * keeping the set duplicate-free is an application invariant owned by `core`, which
- * also owns the `Role` type. See `.ai/specs/2026-09-04-accounts-and-roles.md`.
+ * also owns the `Role` type. See `.ai/specs/implemented/2026-09-04-accounts-and-roles.md`.
  *
  * `email` is the account-linking key and is never rewritten after creation;
  * `sessionVersion` is bumped to revoke every session the user holds.

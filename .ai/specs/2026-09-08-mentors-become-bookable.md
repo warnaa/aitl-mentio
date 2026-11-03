@@ -4,7 +4,7 @@ Date: 2026-09-08
 Status: active — moves to `implemented/` when its four first-iteration slices land
 Issue: [#27](https://github.com/warnaa/aitl-mentio/issues/27) — stories #34, #35, #36, #37
 Design authority: `.ai/specs/product-brief.md`, `.ai/specs/2026-09-01-engineering-standards.md`
-Builds on: `.ai/specs/2026-09-04-accounts-and-roles.md` (E01), `.ai/specs/2026-09-04-platform-primitives.md`
+Builds on: `.ai/specs/implemented/2026-09-04-accounts-and-roles.md` (E01), `.ai/specs/2026-09-04-platform-primitives.md`
 Uses the non-normative pattern catalogue: `.ai/specs/2026-09-08-platform-primitives-ii.md`
 Story specs: `2026-09-08-invitations.md`, `-mentor-page.md`, `-availability-slots.md`,
 `-mentor-prices.md` — each owns its acceptance criteria and screens; this document is the sole
