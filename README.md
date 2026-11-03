@@ -161,6 +161,23 @@ never quietly accept "sign in as anyone".
 Without these values the "Sign in with GitHub" link sends you back to `/sign-in` with
 a "not available" message; nothing else stops working.
 
+#### Signing in locally
+
+Two ways to sign in, GitHub first (`/sign-in`) and email registration (`/register`):
+
+- **Email and password.** Register at `/register`. In `npm run dev` with no
+  `MAILER_ADAPTER`, the verification link is not mailed but written to the server log
+  as a `mail.sent` line; open it to confirm the address and land on the mentee home.
+  `npm run db:seed` gives the seeded mentee (`mock-mentee@devmentor.test`) and the
+  mentor/operator (`mock-operator@devmentor.test`) the demo password
+  `devmentor-demo-password`; Ada Lovelace (`mock-mentor@devmentor.test`) is GitHub-only.
+  Sign-in attempts are limited per address (5 per 15 minutes) and, behind a trusted proxy
+  (`TRUSTED_PROXY_HOPS`), per IP; over the limit the form says to wait.
+- **GitHub without an OAuth app.** With `AUTH_IDENTITY_ADAPTER=mock` and
+  `INTEGRATION_TEST_RUN=1`, open `/api/auth/github?login=mock-operator` (or
+  `mock-mentee`, `mock-mentor`, any other login for a new mentee). Never set these in a
+  deployed environment.
+
 ## Scripts
 
 | Command | Description |

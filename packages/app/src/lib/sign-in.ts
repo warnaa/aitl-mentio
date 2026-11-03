@@ -69,8 +69,20 @@ export const SIGN_IN_NOTICES: Readonly<Record<SignInNoticeReason, string>> = {
     'We could not confirm your email address right now. Open the link from your email again in a few minutes.',
 };
 
-/** What `/sign-in?verified=1` says. */
-export const SIGN_IN_VERIFIED_NOTICE = 'Your email address is confirmed. Sign in to continue.';
+/** The detail `/sign-in?verified=1` adds under the design system's "Email verified" status. */
+export const SIGN_IN_VERIFIED_NOTICE = 'Sign in with your email address and password to continue.';
+
+/** The email registration page. */
+export const REGISTER_PATH = '/register';
+
+/**
+ * `/sign-in` or `/register`, carrying `returnTo` only when `safeReturnTo` accepts it,
+ * so switching between the two keeps where the visitor was going.
+ */
+export function authPageHref(path: typeof SIGN_IN_PATH | typeof REGISTER_PATH, returnTo: string | undefined): string {
+  const safe = safeReturnTo(returnTo, '');
+  return safe ? `${path}?returnTo=${encodeURIComponent(safe)}` : path;
+}
 
 const isNoticeReason = (value: string): value is SignInNoticeReason => Object.hasOwn(SIGN_IN_NOTICES, value);
 
@@ -79,12 +91,9 @@ const isNoticeReason = (value: string): value is SignInNoticeReason => Object.ha
  * `?error=` wins over `?cancelled=1` (the routes never send both); an unknown error or
  * any other `cancelled` value is ignored rather than echoed.
  */
-export function signInNotice(query: { cancelled?: string; error?: string; verified?: string }): string | null {
+export function signInNotice(query: { cancelled?: string; error?: string }): string | null {
   if (query.error !== undefined && isNoticeReason(query.error)) {
     return SIGN_IN_NOTICES[query.error];
-  }
-  if (query.verified === '1') {
-    return SIGN_IN_VERIFIED_NOTICE;
   }
   return query.cancelled === '1' ? SIGN_IN_CANCELLED_NOTICE : null;
 }

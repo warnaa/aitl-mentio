@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
-import { Button } from '@devmentor/ui';
+import { AuthFeedback } from '@devmentor/ui';
 import { AuthLayout, ErrorMessage } from '@devmentor/ui/backend';
 import type { RoleSet, Session } from '@devmentor/core';
-import { findAll, findAllByType, findByType, orderOf, textOf } from '../../../test/element-tree';
+import { AccountPanel } from '../../../components/auth/AccountPanel';
+import { findAll, findAllByType, findByType, textOf } from '../../../test/element-tree';
 
 /*
  * The page's two seams (AGENTS.md): `lib/session` is mocked — the live session check
  * is tested there — and `redirect` throws a sentinel the way Next's control-flow error
- * does. The notice copy and the GitHub link come from the real `lib/sign-in`.
+ * does. The notice copy and the links come from the real `lib/sign-in`; the form itself
+ * is `AccountPanel`, tested on its own under jsdom.
  */
 class RedirectSentinel extends Error {
   constructor(readonly location: string) {
@@ -36,16 +38,14 @@ vi.mock('../../../lib/sign-in', async (importOriginal) => ({
 }));
 
 const { default: SignInPage, dynamic } = await import('./page');
-const { SIGN_IN_CANCELLED_NOTICE, SIGN_IN_NOTICES } = await import('../../../lib/sign-in');
+const { SIGN_IN_CANCELLED_NOTICE, SIGN_IN_NOTICES, SIGN_IN_VERIFIED_NOTICE } = await import('../../../lib/sign-in');
 
 type Query = Record<string, string | string[] | undefined>;
 
 const render = (query: Query = {}) => SignInPage({ searchParams: Promise.resolve(query) }) as Promise<ReactElement>;
 
-const githubLink = (tree: ReactElement) => {
-  const [link] = findAll(tree, (element) => element.type === 'a');
-  return link!;
-};
+const panel = (tree: ReactElement) => findByType(tree, AccountPanel);
+const notice = (tree: ReactElement) => panel(tree).props.notice as ReactElement<Record<string, unknown>> | undefined;
 
 beforeEach(() => {
   mocks.getPageSession.mockReset();
@@ -58,34 +58,17 @@ describe('/sign-in', () => {
     expect(dynamic).toBe('force-dynamic');
   });
 
-  it('offers GitHub first, as a navigation to the start route, then the email form', async () => {
+  it('renders the account panel in sign-in mode, GitHub first (the panel orders it), linking to registration', async () => {
     const tree = await render();
 
-    const layout = findByType(tree, AuthLayout);
-    expect(layout.props.title).toBe('Sign in to DevMentor');
-    const link = githubLink(tree);
-    expect(link.props.href).toBe('/api/auth/github');
-    expect(textOf(link)).toBe('Sign in with GitHub');
-    const fieldset = findByType(tree, 'fieldset');
-    expect(orderOf(tree, link)).toBeLessThan(orderOf(tree, fieldset));
-  });
-
-  it('shows the email form disabled, with a one-line note and labelled fields', async () => {
-    const tree = await render();
-
-    const fieldset = findByType(tree, 'fieldset');
-    expect(fieldset.props.disabled).toBe(true);
-    expect(textOf(findByType(fieldset, 'legend'))).toBe('Sign in with email');
-    const note = findAll(fieldset, (element) => element.props.id === 'email-sign-in-note');
-    expect(textOf(note)).toBe('Email sign-in is not available yet. Use GitHub for now.');
-    expect(fieldset.props['aria-describedby']).toBe('email-sign-in-note');
-    const labels = findAll(fieldset, (element) => typeof element.props.htmlFor === 'string');
-    expect(labels.map((label) => [label.props.htmlFor, textOf(label)])).toEqual([
-      ['sign-in-email', 'Email address'],
-      ['sign-in-password', 'Password'],
-    ]);
-    const submit = findAllByType(fieldset, Button).at(-1)!;
-    expect(textOf(submit)).toBe('Sign in with email');
+    expect(findByType(tree, AuthLayout).props.title).toBe('Sign in to DevMentor');
+    expect(panel(tree).props).toMatchObject({
+      mode: 'sign-in',
+      returnTo: undefined,
+      githubHref: '/api/auth/github',
+      switchHref: '/register',
+      notice: undefined,
+    });
   });
 
   it('keeps a back-to-home link in the footer, separate from both sign-in methods', async () => {
@@ -96,34 +79,44 @@ describe('/sign-in', () => {
     expect(textOf(back)).toBe('Back to home');
   });
 
-  it('renders no notice for a plain visit', async () => {
-    expect(findAllByType(await render(), ErrorMessage)).toEqual([]);
-  });
-
   it('says a cancelled authorisation created no account, in an alert (edge case 2)', async () => {
-    const notice = findByType(await render({ cancelled: '1' }), ErrorMessage);
-    expect(notice.props.message).toBe(SIGN_IN_CANCELLED_NOTICE);
-    expect(notice.props.message).toBe('Sign-in was cancelled. No account was created.');
+    const shown = notice(await render({ cancelled: '1' }))!;
+    expect(shown.type).toBe(ErrorMessage);
+    expect(shown.props.message).toBe(SIGN_IN_CANCELLED_NOTICE);
   });
 
-  it.each(['unavailable', 'state', 'email', 'unverified', 'conflict', 'verification'] as const)(
-    'explains ?error=%s above the sign-in actions',
+  it.each(['unavailable', 'state', 'email', 'unverified', 'conflict', 'verification', 'verification-unavailable'] as const)(
+    'explains ?error=%s in an alert above the form',
     async (reason) => {
-      const tree = await render({ error: reason });
-      const notice = findByType(tree, ErrorMessage);
-      expect(notice.props.message).toBe(SIGN_IN_NOTICES[reason]);
-      expect(orderOf(tree, notice)).toBeLessThan(orderOf(tree, githubLink(tree)));
+      const shown = notice(await render({ error: reason }))!;
+      expect(shown.type).toBe(ErrorMessage);
+      expect(shown.props.message).toBe(SIGN_IN_NOTICES[reason]);
     },
   );
 
-  it('ignores an unknown reason and a repeated query value', async () => {
-    expect(findAllByType(await render({ error: '<script>' }), ErrorMessage)).toEqual([]);
-    expect(findAllByType(await render({ cancelled: ['1', '1'] }), ErrorMessage)).toEqual([]);
+  it('confirms an already-verified address as a status, not an error (edge case 16)', async () => {
+    const shown = notice(await render({ verified: '1' }))!;
+    expect(shown.type).toBe(AuthFeedback);
+    expect(shown.props).toEqual({ state: 'verified', detail: SIGN_IN_VERIFIED_NOTICE });
   });
 
-  it('carries a safe returnTo into the GitHub link, encoded', async () => {
-    const link = githubLink(await render({ returnTo: '/admin/users?page=2' }));
-    expect(link.props.href).toBe('/api/auth/github?returnTo=%2Fadmin%2Fusers%3Fpage%3D2');
+  it('lets an error win over verified', async () => {
+    expect(notice(await render({ verified: '1', error: 'verification' }))!.type).toBe(ErrorMessage);
+  });
+
+  it('ignores an unknown reason, other verified values and a repeated query value', async () => {
+    expect(notice(await render({ error: '<script>' }))).toBeUndefined();
+    expect(notice(await render({ verified: 'yes' }))).toBeUndefined();
+    expect(notice(await render({ cancelled: ['1', '1'] }))).toBeUndefined();
+    expect(findAllByType(await render({ error: '<script>' }), ErrorMessage)).toEqual([]);
+  });
+
+  it('carries a safe returnTo into the form and both links, encoded', async () => {
+    expect(panel(await render({ returnTo: '/admin/users?page=2' })).props).toMatchObject({
+      returnTo: '/admin/users?page=2',
+      githubHref: '/api/auth/github?returnTo=%2Fadmin%2Fusers%3Fpage%3D2',
+      switchHref: '/register?returnTo=%2Fadmin%2Fusers%3Fpage%3D2',
+    });
   });
 
   it.each([
@@ -131,9 +124,12 @@ describe('/sign-in', () => {
     ['an absolute URL', 'https://evil.example/home'],
     ['an API route', '/api/auth/github'],
     ['an asset path', '/_next/static/x.js'],
-    ['a repeated parameter', ['/home', '/admin']],
-  ])('drops a returnTo pointing at %s', async (_label, returnTo) => {
-    expect(githubLink(await render({ returnTo })).props.href).toBe('/api/auth/github');
+  ])('drops a returnTo pointing at %s from the links (the route re-checks the form’s)', async (_label, returnTo) => {
+    expect(panel(await render({ returnTo })).props).toMatchObject({ githubHref: '/api/auth/github', switchHref: '/register' });
+  });
+
+  it('ignores a repeated returnTo parameter', async () => {
+    expect(panel(await render({ returnTo: ['/home', '/admin'] })).props.returnTo).toBeUndefined();
   });
 
   it.each<[RoleSet, string]>([
@@ -155,7 +151,7 @@ describe('/sign-in', () => {
 
     const tree = await render();
 
-    expect(githubLink(tree).props.href).toBe('/api/auth/github');
-    expect(mocks.warn).toHaveBeenCalledWith({ err: failure }, 'could not check the session on /sign-in');
+    expect(panel(tree).props.mode).toBe('sign-in');
+    expect(mocks.warn).toHaveBeenCalledWith({ err: failure }, 'could not check the session on an auth page');
   });
 });

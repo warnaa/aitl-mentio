@@ -13,6 +13,8 @@ import {
   SIGN_IN_ERRORS,
   SIGN_IN_NOTICES,
   SIGN_IN_PATH,
+  REGISTER_PATH,
+  authPageHref,
   SIGN_IN_VERIFIED_NOTICE,
   SIGN_IN_VERIFIED_PATH,
   signInNotice,
@@ -115,11 +117,8 @@ describe('signInNotice', () => {
     expect(signInNotice({ error: 'verification-unavailable' })).toMatch(/^We could not confirm your email address right now\./);
   });
 
-  it('confirms a verified address without a session, and lets an error win over it', () => {
-    expect(signInNotice({ verified: '1' })).toBe(SIGN_IN_VERIFIED_NOTICE);
-    expect(SIGN_IN_VERIFIED_NOTICE).toBe('Your email address is confirmed. Sign in to continue.');
-    expect(signInNotice({ verified: '1', error: 'verification' })).toBe(SIGN_IN_NOTICES.verification);
-    expect(signInNotice({ verified: 'yes' })).toBeNull();
+  it('tells a verified visitor how to continue (rendered by the page as a status)', () => {
+    expect(SIGN_IN_VERIFIED_NOTICE).toBe('Sign in with your email address and password to continue.');
   });
 
   it('prefers a known error over cancelled', () => {
@@ -145,5 +144,18 @@ describe('githubSignInHref', () => {
 
   it('carries a safe page path, encoded as one parameter', () => {
     expect(githubSignInHref('/admin/users?page=2&q=a')).toBe('/api/auth/github?returnTo=%2Fadmin%2Fusers%3Fpage%3D2%26q%3Da');
+  });
+});
+
+describe('authPageHref', () => {
+  it('is the bare page without a usable returnTo', () => {
+    expect(REGISTER_PATH).toBe('/register');
+    expect(authPageHref(REGISTER_PATH, undefined)).toBe('/register');
+    expect(authPageHref(SIGN_IN_PATH, '//evil.example')).toBe('/sign-in');
+    expect(authPageHref(SIGN_IN_PATH, '/api/users')).toBe('/sign-in');
+  });
+
+  it('carries a safe page path as one encoded parameter', () => {
+    expect(authPageHref(REGISTER_PATH, '/admin/users?page=2')).toBe('/register?returnTo=%2Fadmin%2Fusers%3Fpage%3D2');
   });
 });

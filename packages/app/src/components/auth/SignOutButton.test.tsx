@@ -3,7 +3,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiResult } from '@devmentor/ui/backend';
-import { navigation, SIGNED_OUT_PATH, SignOutButton } from './SignOutButton';
+import { navigation } from '../../lib/navigation';
+import { SIGNED_OUT_PATH, SignOutButton } from './SignOutButton';
 
 /*
  * The real `WorkflowAction` and `apiCall` run; only `fetch` (what `apiCall` calls) and
@@ -61,13 +62,5 @@ describe('SignOutButton', () => {
     expect((await screen.findByRole('alert')).textContent).toBe('Missing or invalid request header');
     expect(assign).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Sign out' }).hasAttribute('disabled')).toBe(false);
-  });
-});
-
-describe('navigation.assign', () => {
-  it('drives window.location — observable in jsdom through a same-document hash change', () => {
-    assign.mockRestore();
-    navigation.assign('#signed-out');
-    expect(window.location.hash).toBe('#signed-out');
   });
 });

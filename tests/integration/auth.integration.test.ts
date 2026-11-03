@@ -12,6 +12,7 @@ import {
   signInAs,
   type BrowserCookie,
 } from './agent-browser';
+import { firstLink, waitForMail } from './mail';
 
 /*
  * E01 #31 sign-in through the mock GitHub adapter (AUTH_IDENTITY_ADAPTER=mock with
@@ -37,6 +38,25 @@ async function inBrowser(name: string, scenario: (session: string) => Promise<vo
   } finally {
     await closeAgentBrowser(session);
   }
+}
+
+/** The seeded mentee's and operator's demo password (`SEED_PASSWORD` in the seeder). */
+const SEED_PASSWORD = 'devmentor-demo-password';
+
+/** Fill and submit the email form on the open `/sign-in` page. */
+async function signInWithEmail(session: string, email: string, password: string): Promise<void> {
+  await runAgentBrowser(session, 'find', 'label', 'Email address', 'fill', email);
+  await runAgentBrowser(session, 'find', 'label', 'Password', 'fill', password);
+  await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Sign in', '--exact');
+}
+
+/** A POST as `apiCall` sends it, from outside the browser. */
+function postJson(baseUrl: string, path: string, body: unknown): Promise<Response> {
+  return fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-devmentor-request': '1' },
+    body: JSON.stringify(body),
+  });
 }
 
 /** The number of accounts, read through the operator-only `/api/users`. */
@@ -67,10 +87,11 @@ describe('TC-AUTH-001 a cancelled GitHub authorisation', () => {
         expect(url.searchParams.get('cancelled')).toBe('1');
         expect(page).toContain('heading "Sign in to DevMentor"');
         expect(page).toMatch(/- alert\n\s+- paragraph\n\s+- StaticText "Sign-in was cancelled\. No account was created\."/);
-        // GitHub first, then the email form, which is disabled until email sign-in ships.
-        expect(page.indexOf('link "Sign in with GitHub"')).toBeGreaterThan(-1);
-        expect(page.indexOf('link "Sign in with GitHub"')).toBeLessThan(page.indexOf('group "Sign in with email"'));
-        expect(page).toMatch(/textbox "Email address" \[disabled/);
+        // GitHub first, then the email form (D07), which is live from Slice 4.
+        expect(page.indexOf('button "Continue with GitHub"')).toBeGreaterThan(-1);
+        expect(page.indexOf('button "Continue with GitHub"')).toBeLessThan(page.indexOf('group "Sign in with email"'));
+        expect(page).toMatch(/textbox "Email address/);
+        expect(page).not.toMatch(/textbox "Email address[^\n]*\[disabled/);
         expect(await sessionCookie(session)).toBeUndefined();
         await screenshot(session, 'auth-cancelled');
       });
@@ -166,7 +187,7 @@ describe('TC-AUTH-003 an invalid session on a signed-in screen', () => {
       const url = await currentUrl(session);
       expect(url.pathname).toBe('/sign-in');
       expect(url.searchParams.get('returnTo')).toBe('/home');
-      expect(page).toContain('link "Sign in with GitHub"');
+      expect(page).toContain('button "Continue with GitHub"');
       expect(page).not.toContain('Grace Hopper');
       expect(page).not.toContain('Mentee home');
       expect(page).not.toContain('mock-mentee@devmentor.test');
@@ -176,7 +197,7 @@ describe('TC-AUTH-003 an invalid session on a signed-in screen', () => {
 });
 
 describe('TC-AUTH-004 a signed-out deep link survives sign-in', () => {
-  it('returns the operator to /admin/users, not to the admin layout\'s /admin', async () => {
+  it('returns the operator to /admin/users through the email form, not to the admin layout\'s /admin', async () => {
     const baseUrl = inject('integrationBaseUrl');
 
     await inBrowser('deep-link', async (session) => {
@@ -186,12 +207,10 @@ describe('TC-AUTH-004 a signed-out deep link survives sign-in', () => {
       const signIn = await currentUrl(session);
       expect(signIn.pathname).toBe('/sign-in');
       expect(signIn.searchParams.get('returnTo')).toBe('/admin/users');
-      const href = await runAgentBrowser(session, 'get', 'attr', 'a[href^="/api/auth/github"]', 'href');
-      expect(href.trim()).toBe('/api/auth/github?returnTo=%2Fadmin%2Fusers');
       await screenshot(session, 'auth-deep-link-sign-in');
 
-      // Follow the page's own GitHub link, adding only the mock adapter's login hint.
-      await runAgentBrowser(session, 'open', `${baseUrl}${href.trim()}&login=mock-operator`);
+      // The seeded operator's demo password (SEED_PASSWORD); the form carries returnTo.
+      await signInWithEmail(session, 'mock-operator@devmentor.test', SEED_PASSWORD);
       await runAgentBrowser(session, 'wait', '--text', 'Ada Lovelace');
       expect((await currentUrl(session)).pathname).toBe('/admin/users');
       const users = await runAgentBrowser(session, 'snapshot');
@@ -244,6 +263,104 @@ describe('TC-AUTH-005 sign-out ends every session, including a copied cookie', (
         users: 401,
         code: 'unauthorized',
       });
+    });
+  });
+});
+
+describe('TC-AUTH-006 a failed email sign-in says nothing about which part was wrong', () => {
+  it('shows one generic message for a wrong password and an unknown address, and sets no cookie', async () => {
+    const baseUrl = inject('integrationBaseUrl');
+
+    await inBrowser('wrong-password', async (session) => {
+      for (const [email, password] of [
+        ['mock-mentee@devmentor.test', 'not the right password'],
+        ['nobody-here@devmentor.test', SEED_PASSWORD],
+      ] as const) {
+        await runAgentBrowser(session, 'open', `${baseUrl}/sign-in`);
+        await runAgentBrowser(session, 'wait', '--text', 'Sign in to DevMentor');
+        await signInWithEmail(session, email, password);
+        await runAgentBrowser(session, 'wait', '--text', 'Email or password is incorrect.');
+
+        const page = await runAgentBrowser(session, 'snapshot');
+        expect(page, email).toMatch(/alert[^\n]*\n?[^\n]*Email or password is incorrect\./);
+        expect((await currentUrl(session)).pathname).toBe('/sign-in');
+        expect(await sessionCookie(session), email).toBeUndefined();
+      }
+      await screenshot(session, 'auth-wrong-password');
+    });
+  });
+
+  it('answers 429 with Retry-After once an address has used its attempts (edge case 17)', async () => {
+    const baseUrl = inject('integrationBaseUrl');
+    // An address no other scenario uses: the per-address counter must not lock a fixture out.
+    const email = `rate-limit-${process.pid}@devmentor.test`;
+
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      expect((await postJson(baseUrl, '/api/auth/login', { email, password: 'wrong password' })).status, `attempt ${attempt}`).toBe(401);
+    }
+    const limited = await postJson(baseUrl, '/api/auth/login', { email, password: 'wrong password' });
+    const payload = (await limited.json()) as { ok: boolean; error: { code: string; message: string; retryAfterSeconds: number } };
+
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get('retry-after'))).toBeGreaterThan(0);
+    expect(payload.error).toMatchObject({ code: 'rate_limited', retryAfterSeconds: Number(limited.headers.get('retry-after')) });
+    expect(payload.error.message).not.toMatch(/email|account|password/i);
+    expect(limited.headers.get('set-cookie')).toBeNull();
+  });
+});
+
+describe('TC-AUTH-007 email registration, end to end', () => {
+  it('registers, refuses sign-in until the emailed link is opened, then lands on the mentee home', async () => {
+    const baseUrl = inject('integrationBaseUrl');
+    const email = `new-mentee-${process.pid}@devmentor.test`;
+    const password = 'a long enough password';
+
+    await inBrowser('register', async (session) => {
+      await runAgentBrowser(session, 'open', `${baseUrl}/register`);
+      await runAgentBrowser(session, 'wait', '--text', 'Create your DevMentor account');
+      const form = await runAgentBrowser(session, 'snapshot');
+      expect(form.indexOf('button "Continue with GitHub"')).toBeLessThan(form.indexOf('group "Create an account with email"'));
+      await screenshot(session, 'auth-register-form');
+
+      const since = Date.now();
+      await runAgentBrowser(session, 'find', 'label', 'Display name', 'fill', 'Katherine Johnson');
+      await runAgentBrowser(session, 'find', 'label', 'Email address', 'fill', email);
+      await runAgentBrowser(session, 'find', 'label', 'Password', 'fill', password);
+      await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Create account', '--exact');
+      await runAgentBrowser(session, 'wait', '--text', 'Check your inbox');
+      expect(await runAgentBrowser(session, 'snapshot')).toContain(`We sent the link to ${email}.`);
+      expect(await sessionCookie(session)).toBeUndefined();
+      await screenshot(session, 'auth-register-check-inbox');
+
+      // Before verification the right password is refused with the reason, and no session.
+      const early = await postJson(baseUrl, '/api/auth/login', { email, password });
+      expect(early.status).toBe(403);
+      await expect(early.json()).resolves.toMatchObject({ error: { code: 'email_unverified' } });
+
+      // Follow the real link the log mailer wrote — no test-signed token.
+      const mail = await waitForMail(email, { since });
+      expect(mail.subject).toBe('Confirm your DevMentor email address');
+      const link = new URL(firstLink(mail));
+      expect(link.pathname).toBe('/api/auth/verify-email');
+      await runAgentBrowser(session, 'open', `${baseUrl}${link.pathname}${link.search}`);
+      await runAgentBrowser(session, 'wait', '--text', 'Mentee home');
+      expect((await currentUrl(session)).pathname).toBe('/home');
+      const home = await runAgentBrowser(session, 'snapshot');
+      expect(home).toContain('StaticText "Katherine Johnson"');
+      expect(await sessionCookie(session)).toBeDefined();
+      await screenshot(session, 'auth-register-verified-home');
+
+      // The link again: already verified, so a confirmation and no new session.
+      await runAgentBrowser(session, 'cookies', 'clear');
+      await runAgentBrowser(session, 'open', `${baseUrl}${link.pathname}${link.search}`);
+      await runAgentBrowser(session, 'wait', '--text', 'Email verified');
+      expect((await currentUrl(session)).search).toBe('?verified=1');
+      expect(await sessionCookie(session)).toBeUndefined();
+
+      // And the password now signs in.
+      await signInWithEmail(session, email, password);
+      await runAgentBrowser(session, 'wait', '--text', 'Mentee home');
+      expect((await currentUrl(session)).pathname).toBe('/home');
     });
   });
 });

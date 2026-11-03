@@ -1,21 +1,10 @@
 'use client';
 
 import { WorkflowAction } from '@devmentor/ui/backend';
+import { navigation } from '../../lib/navigation';
 
 /** Where a signed-out user lands. */
 export const SIGNED_OUT_PATH = '/';
-
-/**
- * A full page load, not a client-side push: the server-rendered tree still holds the
- * signed-in user, and a soft navigation could render stale chrome until the next
- * server round trip (primitives spec F4). A seam so tests can observe it — jsdom's
- * `window.location.assign` is not replaceable.
- */
-export const navigation = {
-  assign(path: string): void {
-    window.location.assign(path);
-  },
-};
 
 /**
  * Sign out — the first `WorkflowAction` (E01). POSTs `/api/auth/logout` through
