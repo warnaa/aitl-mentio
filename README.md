@@ -126,6 +126,8 @@ account, sign-in and mail ones as commented-out lines you uncomment when needed.
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | unset | GitHub OAuth app credentials |
 | `OPERATOR_EMAILS` | empty | Comma-separated operator allowlist, matched case-insensitively |
 | `TRUSTED_PROXY_HOPS` | `0` | Trusted reverse proxies when deriving the client IP from `X-Forwarded-For` |
+| `PASSWORD_HASH_CONCURRENCY` | `2` | Password hashes run at once; each scrypt hash holds about 128 MiB |
+| `PASSWORD_HASH_WAIT_MS` | `5000` | How long a sign-in or registration waits for a hashing slot before a retryable 503 |
 | `MAIL_API_KEY` / `MAIL_FROM` | unset | Resend API key and sender address for transactional mail |
 | `AUTH_IDENTITY_ADAPTER` | `github` | `mock` is for the integration harness only |
 | `MAILER_ADAPTER` | unset | `resend` or `log`; `log` is for the integration harness only |

@@ -62,6 +62,7 @@ export default defineConfig({
         'packages/core/src/services/auth/github-identity.port.ts',
         'packages/core/src/services/auth/jwt.ts',
         'packages/core/src/services/auth/oauth-state.ts',
+        'packages/core/src/services/auth/password.service.ts',
         'packages/core/src/services/auth/roles.ts',
         'packages/core/src/services/auth/session.service.ts',
         'packages/core/src/services/auth/token.service.ts',

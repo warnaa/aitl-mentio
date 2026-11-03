@@ -29,6 +29,7 @@ export {
   type SessionClaims,
 } from './services/auth/session.service';
 export { TokenService, type PurposeTokenInput } from './services/auth/token.service';
+export { PasswordService, type PasswordHasher } from './services/auth/password.service';
 export {
   GithubEmailUnverifiedError,
   GITHUB_CALLBACK_PATH,

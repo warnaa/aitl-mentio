@@ -184,9 +184,14 @@ explicit**, not the one that looks more "enterprise."
 
 ### Security & Validation — Minimum Requirements
 
-- **Password hashing:** `bcrypt`/`bcryptjs`, cost factor **≥ 12** (OWASP's floor is
-  10; raise it since this is a small user base and the extra ~50ms per login is free).
-  If a faster/stronger option becomes desirable later, the documented upgrade path is
+- **Password hashing:** `node:crypto` `scrypt` at OWASP's parameters (N = 2¹⁷, r = 8,
+  p = 1, `maxmem` raised explicitly), behind a process-wide concurrency gate
+  (`PasswordService`). *Amended 2026-11-03 by the accounts-and-roles spec (E01):* the
+  original bullet named `bcrypt`/`bcryptjs` cost ≥ 12 on the grounds that "the extra
+  ~50 ms per login is free", which is true of the native binding only — `bcryptjs` is
+  pure JavaScript on the main thread, so cost 12 stalls the whole Next server for about
+  a second per attempt. `scrypt` runs on the libuv threadpool and adds no dependency.
+  If a stronger option becomes desirable later, the documented upgrade path is still
   `argon2id` (memory ≥ 19 MiB, iterations ≥ 2, parallelism 1) — don't switch without a
   reason, but don't invent a third option either.
 - **JWT:** signed with `HS256` minimum, using a secret ≥ 32 random bytes loaded from

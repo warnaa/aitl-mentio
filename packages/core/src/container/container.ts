@@ -15,6 +15,7 @@ import { GithubIdentityAdapter } from '../services/auth/adapters/github-identity
 import { MockGithubIdentityAdapter } from '../services/auth/adapters/mock-github-identity';
 import type { GithubIdentityPort } from '../services/auth/github-identity.port';
 import { EventBus } from '../events/event-bus';
+import { PasswordService } from '../services/auth/password.service';
 import { readSessionCookie, SessionService } from '../services/auth/session.service';
 import { TokenService } from '../services/auth/token.service';
 import { UserService } from '../services/auth/user.service';
@@ -77,6 +78,8 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     // Stateless signers over `env` + `clock`; a missing secret surfaces per call as a 503.
     sessionService: asClass(SessionService).singleton(),
     tokenService: asClass(TokenService).singleton(),
+    // A singleton on purpose: its concurrency gate must be one per process.
+    passwordService: asClass(PasswordService).singleton(),
     // Real GitHub by default; missing credentials surface per call as a 503.
     identity: identityAdapter(env),
     // A forked EntityManager per scope gives each request its own identity map / UoW.

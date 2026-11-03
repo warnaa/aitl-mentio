@@ -40,6 +40,8 @@ describe('getEnv', () => {
       APP_URL: 'http://localhost:3000',
       OPERATOR_EMAILS: [],
       TRUSTED_PROXY_HOPS: 0,
+      PASSWORD_HASH_CONCURRENCY: 2,
+      PASSWORD_HASH_WAIT_MS: 5000,
       AUTH_IDENTITY_ADAPTER: 'github',
       INTEGRATION_TEST_RUN: false,
     });
@@ -69,6 +71,8 @@ describe('getEnv', () => {
       SESSION_SECRET_PREVIOUS: '',
       GITHUB_CLIENT_ID: '',
       TRUSTED_PROXY_HOPS: '',
+      PASSWORD_HASH_CONCURRENCY: '',
+      PASSWORD_HASH_WAIT_MS: '',
       AUTH_IDENTITY_ADAPTER: '',
       MAILER_ADAPTER: '',
       INTEGRATION_TEST_RUN: '',
@@ -79,6 +83,8 @@ describe('getEnv', () => {
     expect(env.SESSION_SECRET_PREVIOUS).toBeUndefined();
     expect(env.GITHUB_CLIENT_ID).toBeUndefined();
     expect(env.TRUSTED_PROXY_HOPS).toBe(0);
+    expect(env.PASSWORD_HASH_CONCURRENCY).toBe(2);
+    expect(env.PASSWORD_HASH_WAIT_MS).toBe(5000);
     expect(env.AUTH_IDENTITY_ADAPTER).toBe('github');
     expect(env.MAILER_ADAPTER).toBeUndefined();
     expect(env.INTEGRATION_TEST_RUN).toBe(false);
@@ -91,6 +97,8 @@ describe('getEnv', () => {
       SESSION_SECRET_PREVIOUS: 'b'.repeat(40),
       APP_URL: 'https://devmentor.example/',
       TRUSTED_PROXY_HOPS: '2',
+      PASSWORD_HASH_CONCURRENCY: '4',
+      PASSWORD_HASH_WAIT_MS: '0',
       MAILER_ADAPTER: 'resend',
       MAIL_API_KEY: 're_key',
       MAIL_FROM: 'DevMentor <no-reply@devmentor.example>',
@@ -103,6 +111,8 @@ describe('getEnv', () => {
       GITHUB_CLIENT_SECRET: 'client-secret',
       APP_URL: 'https://devmentor.example',
       TRUSTED_PROXY_HOPS: 2,
+      PASSWORD_HASH_CONCURRENCY: 4,
+      PASSWORD_HASH_WAIT_MS: 0,
       MAILER_ADAPTER: 'resend',
       MAIL_API_KEY: 're_key',
       MAIL_FROM: 'DevMentor <no-reply@devmentor.example>',
@@ -126,6 +136,14 @@ describe('getEnv', () => {
 
   it.each(['-1', '1.5', 'two'])('rejects TRUSTED_PROXY_HOPS=%s', async (value) => {
     await expect(parse({ TRUSTED_PROXY_HOPS: value })).rejects.toThrow();
+  });
+
+  it.each(['0', '-1', '1.5', 'two'])('rejects PASSWORD_HASH_CONCURRENCY=%s', async (value) => {
+    await expect(parse({ PASSWORD_HASH_CONCURRENCY: value })).rejects.toThrow();
+  });
+
+  it.each(['-1', '1.5', 'soon'])('rejects PASSWORD_HASH_WAIT_MS=%s', async (value) => {
+    await expect(parse({ PASSWORD_HASH_WAIT_MS: value })).rejects.toThrow();
   });
 
   it.each(['ftp://devmentor.example', 'not a url'])('rejects APP_URL=%s', async (value) => {

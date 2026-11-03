@@ -98,6 +98,13 @@ const appEnvSchema = z
         .transform((value) => value === '1'),
     ),
 
+    /**
+     * Password hashes allowed to run at once (each holds ~128 MiB), and how long a
+     * request waits for a slot before a retryable 503. See `PasswordService`.
+     */
+    PASSWORD_HASH_CONCURRENCY: z.preprocess(blankAsUnset, z.coerce.number().int().min(1).default(2)),
+    PASSWORD_HASH_WAIT_MS: z.preprocess(blankAsUnset, z.coerce.number().int().min(0).default(5000)),
+
     // Transactional mail over Resend's HTTP API (consumed from Slice 4).
     MAIL_API_KEY: optional(z.string()),
     MAIL_FROM: optional(z.string()),

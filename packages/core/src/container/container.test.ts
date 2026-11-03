@@ -34,6 +34,7 @@ const { UserService } = await import('../services/auth/user.service');
 const { EventBus } = await import('../events/event-bus');
 const { SessionService } = await import('../services/auth/session.service');
 const { TokenService } = await import('../services/auth/token.service');
+const { PasswordService } = await import('../services/auth/password.service');
 const { GithubIdentityAdapter } = await import('../services/auth/adapters/github-identity');
 const { MockGithubIdentityAdapter } = await import('../services/auth/adapters/mock-github-identity');
 
@@ -59,12 +60,17 @@ describe('getContainer', () => {
     expect(container.cradle.eventBus).toBeInstanceOf(EventBus);
   });
 
-  it('registers the session and token services as process-wide singletons', async () => {
+  it('registers the session, token and password services as process-wide singletons', async () => {
     const container = await getContainer();
     const scoped = await withScope((cradle) => ({
       sessionService: cradle.sessionService,
       tokenService: cradle.tokenService,
+      passwordService: cradle.passwordService,
     }));
+
+    // One hashing gate per process: a scoped instance would give every request its own.
+    expect(container.cradle.passwordService).toBeInstanceOf(PasswordService);
+    expect(scoped.passwordService).toBe(container.cradle.passwordService);
 
     expect(container.cradle.sessionService).toBeInstanceOf(SessionService);
     expect(container.cradle.tokenService).toBeInstanceOf(TokenService);
