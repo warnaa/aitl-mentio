@@ -30,6 +30,8 @@ export {
 } from './services/auth/session.service';
 export { TokenService, type PurposeTokenInput } from './services/auth/token.service';
 export { PasswordService, type PasswordHasher } from './services/auth/password.service';
+export type { Mailer, MailMessage } from './services/notifications/mailer.port';
+export { MAIL_SENT_LOG_MESSAGE } from './services/notifications/adapters/log-mailer';
 export {
   GithubEmailUnverifiedError,
   GITHUB_CALLBACK_PATH,

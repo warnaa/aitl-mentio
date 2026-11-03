@@ -130,11 +130,14 @@ account, sign-in and mail ones as commented-out lines you uncomment when needed.
 | `PASSWORD_HASH_WAIT_MS` | `5000` | How long a sign-in or registration waits for a hashing slot before a retryable 503 |
 | `MAIL_API_KEY` / `MAIL_FROM` | unset | Resend API key and sender address for transactional mail |
 | `AUTH_IDENTITY_ADAPTER` | `github` | `mock` is for the integration harness only |
-| `MAILER_ADAPTER` | unset | `resend` or `log`; `log` is for the integration harness only |
+| `MAILER_ADAPTER` | unset | `resend` or `log`. Unset means `log` in development and `resend` elsewhere; an explicit `log` is for the integration harness only |
 | `INTEGRATION_TEST_RUN` | `0` | Set to `1` by the integration harness; required alongside a `mock` or `log` adapter |
 
-Production requires only `SESSION_SECRET` at boot, and checks it when the app handles
-its first request, not during `npm run build`, so a build needs no secrets. A missing
+Production requires `SESSION_SECRET`, `MAIL_API_KEY` and `MAIL_FROM` at boot, and checks
+them when the app handles its first request, not during `npm run build`, so a build needs
+no secrets. In `npm run dev` with no `MAILER_ADAPTER`, mail is not sent: each message is
+written to the server log as a `mail.sent` line (with the verification link), and a
+warning at startup says so. A missing
 `GITHUB_*` or `MAIL_*` value never stops the app from starting: only the feature that
 needs it reports itself unavailable. Selecting a fake adapter (`mock`, `log`) without
 `INTEGRATION_TEST_RUN=1` is refused at startup, so a misconfigured deployment can

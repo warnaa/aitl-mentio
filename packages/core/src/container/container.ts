@@ -15,6 +15,9 @@ import { createLogger } from '../logger';
 import { GithubIdentityAdapter } from '../services/auth/adapters/github-identity';
 import { MockGithubIdentityAdapter } from '../services/auth/adapters/mock-github-identity';
 import type { GithubIdentityPort } from '../services/auth/github-identity.port';
+import { LogMailer } from '../services/notifications/adapters/log-mailer';
+import { ResendMailer } from '../services/notifications/adapters/resend-mailer';
+import type { Mailer } from '../services/notifications/mailer.port';
 import { EventBus } from '../events/event-bus';
 import { PasswordService } from '../services/auth/password.service';
 import { readSessionCookie, SessionService } from '../services/auth/session.service';
@@ -39,11 +42,43 @@ const globalForContainer = globalThis as unknown as {
  * time. Development and the build are unaffected (primitives spec B6, E01 edge case 1b).
  */
 function assertProductionConfig(env: AppEnv): void {
-  if (env.NODE_ENV === 'production' && !env.SESSION_SECRET) {
+  if (env.NODE_ENV !== 'production') {
+    return;
+  }
+  if (!env.SESSION_SECRET) {
     throw new Error(
       'SESSION_SECRET is required when NODE_ENV=production (at least 32 characters; generate one with `openssl rand -base64 32`).',
     );
   }
+  // Registration cannot succeed without mail: refuse to serve rather than 503 every sign-up.
+  if (mailerChoice(env) === 'resend' && (!env.MAIL_API_KEY || !env.MAIL_FROM)) {
+    throw new Error(
+      'MAIL_API_KEY and MAIL_FROM are required when NODE_ENV=production (Resend API key and sender address).',
+    );
+  }
+}
+
+type MailerChoice = 'log' | 'log-by-default' | 'resend';
+
+/**
+ * Which mailer serves this environment (primitives spec B14). The log mailer — which
+ * writes message bodies to the log — is chosen only from flags that are *present*:
+ * `MAILER_ADAPTER=log` with `INTEGRATION_TEST_RUN=1` (the env schema refuses the switch
+ * alone), or plain `npm run dev` with no `MAILER_ADAPTER` at all, so a local
+ * registration form works without a provider. Everything else delivers through Resend.
+ */
+function mailerChoice(env: AppEnv): MailerChoice {
+  if (env.MAILER_ADAPTER === 'log' && env.INTEGRATION_TEST_RUN) {
+    return 'log';
+  }
+  if (env.MAILER_ADAPTER === undefined && env.NODE_ENV === 'development') {
+    return 'log-by-default';
+  }
+  return 'resend';
+}
+
+function mailerAdapter(choice: MailerChoice): Resolver<Mailer> {
+  return choice === 'resend' ? asClass(ResendMailer).singleton() : asClass(LogMailer).singleton();
 }
 
 /**
@@ -83,12 +118,20 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     passwordService: asClass(PasswordService).singleton(),
     // Real GitHub by default; missing credentials surface per call as a 503.
     identity: identityAdapter(env),
+    // Resend unless a log mailer is explicitly selected (see `mailerChoice`).
+    mailer: mailerAdapter(mailerChoice(env)),
     // A forked EntityManager per scope gives each request its own identity map / UoW.
     em: asFunction(({ orm }: Cradle) => orm.em.fork()).scoped(),
     userService: asClass(UserService).scoped(),
     // Scoped: it counts through the request's `em`.
     rateLimiter: asClass(RateLimiter).scoped(),
   });
+
+  if (mailerChoice(env) === 'log-by-default') {
+    container.cradle.logger.warn(
+      'MAILER_ADAPTER is unset in development: mail is written to this log (msg "mail.sent"), not delivered',
+    );
+  }
 
   // Default in-process subscribers. Concept side effects (send a message, invalidate
   // a cache) register here; for now we just log so the event path is observable.

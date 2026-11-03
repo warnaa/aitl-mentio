@@ -9,6 +9,7 @@ import type { PasswordService } from '../services/auth/password.service';
 import type { SessionService } from '../services/auth/session.service';
 import type { TokenService } from '../services/auth/token.service';
 import type { UserService } from '../services/auth/user.service';
+import type { Mailer } from '../services/notifications/mailer.port';
 import type { Clock } from '../time/clock';
 
 /**
@@ -18,9 +19,10 @@ import type { Clock } from '../time/clock';
  *
  * Lifetimes:
  * - `env`, `logger`, `clock`, `orm`, `eventBus`, `sessionService`, `tokenService`,
- *   `passwordService`, `identity` — SINGLETON (shared for the process; the password
+ *   `passwordService`, `identity`, `mailer` — SINGLETON (shared for the process; the password
  *   service's hashing gate must be process-wide). `identity` is the real GitHub
- *   adapter unless `AUTH_IDENTITY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`.
+ *   adapter unless `AUTH_IDENTITY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`;
+ *   `mailer` is Resend unless a log mailer is selected (`container.ts`, `mailerChoice`).
  * - `em`, `userService`, `rateLimiter` — SCOPED (created fresh per request scope).
  * - `session` — SCOPED and lazy, registered only by `withRequestScope` /
  *   `withSessionCookieScope`: the caller's live `Session`, or `null` when signed out.
@@ -42,6 +44,7 @@ export interface Cradle {
   tokenService: TokenService;
   passwordService: PasswordService;
   identity: GithubIdentityPort;
+  mailer: Mailer;
   em: EntityManager;
   userService: UserService;
   rateLimiter: RateLimiter;

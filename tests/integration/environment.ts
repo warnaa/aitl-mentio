@@ -27,6 +27,8 @@ export function integrationChildEnvironment(databaseUrl: string, appUrl?: string
     SESSION_SECRET: randomBytes(32).toString('base64url'),
     // The mock GitHub adapter is accepted only together with the run signal.
     AUTH_IDENTITY_ADAPTER: 'mock',
+    // Verification mail becomes a `mail.sent` line in app.log, read by `waitForMail`.
+    MAILER_ADAPTER: 'log',
     INTEGRATION_TEST_RUN: '1',
     // Obviously fake on purpose (mirrored in .github/workflows/ci.yml); the real founder
     // addresses live only in deployment configuration. The mock adapter derives

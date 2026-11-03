@@ -17,6 +17,9 @@ const state = vi.hoisted(() => {
       APP_URL?: string;
       AUTH_IDENTITY_ADAPTER?: 'github' | 'mock';
       INTEGRATION_TEST_RUN?: boolean;
+      MAILER_ADAPTER?: 'resend' | 'log';
+      MAIL_API_KEY?: string;
+      MAIL_FROM?: string;
     },
     getOrm: vi.fn(async () => ({ em: { fork } })),
   };
@@ -36,6 +39,8 @@ const { SessionService } = await import('../services/auth/session.service');
 const { TokenService } = await import('../services/auth/token.service');
 const { PasswordService } = await import('../services/auth/password.service');
 const { RateLimiter } = await import('../http/rate-limit');
+const { LogMailer } = await import('../services/notifications/adapters/log-mailer');
+const { ResendMailer } = await import('../services/notifications/adapters/resend-mailer');
 const { GithubIdentityAdapter } = await import('../services/auth/adapters/github-identity');
 const { MockGithubIdentityAdapter } = await import('../services/auth/adapters/mock-github-identity');
 
@@ -180,7 +185,7 @@ describe('identity adapter selection', () => {
   });
 
   it('registers the mock only when AUTH_IDENTITY_ADAPTER=mock and INTEGRATION_TEST_RUN are both set', async () => {
-    state.env = { NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32), APP_URL: appUrl, AUTH_IDENTITY_ADAPTER: 'mock', INTEGRATION_TEST_RUN: true };
+    state.env = { NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32), APP_URL: appUrl, AUTH_IDENTITY_ADAPTER: 'mock', INTEGRATION_TEST_RUN: true, MAILER_ADAPTER: 'log' };
     const container = await getContainer();
 
     expect(container.cradle.identity).toBeInstanceOf(MockGithubIdentityAdapter);
@@ -197,6 +202,40 @@ describe('identity adapter selection', () => {
     const container = await getContainer();
 
     expect(container.cradle.identity).toBeInstanceOf(GithubIdentityAdapter);
+  });
+});
+
+describe('mailer selection', () => {
+  it('logs mail in development when MAILER_ADAPTER is unset, warning once at boot', async () => {
+    state.env = { NODE_ENV: 'development' };
+    const container = await getContainer();
+    const scoped = await withScope((cradle) => cradle.mailer);
+
+    expect(container.cradle.mailer).toBeInstanceOf(LogMailer);
+    expect(scoped).toBe(container.cradle.mailer);
+    expect(state.logger.warn).toHaveBeenCalledExactlyOnceWith(
+      'MAILER_ADAPTER is unset in development: mail is written to this log (msg "mail.sent"), not delivered',
+    );
+  });
+
+  it('selects the log mailer from MAILER_ADAPTER=log with INTEGRATION_TEST_RUN, without the warning', async () => {
+    state.env = { NODE_ENV: 'test', MAILER_ADAPTER: 'log', INTEGRATION_TEST_RUN: true };
+    const container = await getContainer();
+
+    expect(container.cradle.mailer).toBeInstanceOf(LogMailer);
+    expect(state.logger.warn).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['test with no adapter set', { NODE_ENV: 'test' }],
+    ['the log switch without the run flag', { NODE_ENV: 'development', MAILER_ADAPTER: 'log', INTEGRATION_TEST_RUN: false }],
+    ['an explicit resend in development', { NODE_ENV: 'development', MAILER_ADAPTER: 'resend' }],
+  ] as const)('delivers through Resend for %s', async (_name, env) => {
+    state.env = { ...env };
+    const container = await getContainer();
+
+    expect(container.cradle.mailer).toBeInstanceOf(ResendMailer);
+    expect(state.logger.warn).not.toHaveBeenCalled();
   });
 });
 
@@ -218,12 +257,33 @@ describe('production configuration check', () => {
     await expect(withScope(() => 'served')).rejects.toThrow(/SESSION_SECRET is required/);
   });
 
-  it('builds in production once SESSION_SECRET is set', async () => {
-    state.env = { NODE_ENV: 'production', SESSION_SECRET: secret };
+  const mail = { MAIL_API_KEY: 're_key', MAIL_FROM: 'DevMentor <no-reply@devmentor.example>' };
+
+  it('builds in production once SESSION_SECRET and the mail configuration are set', async () => {
+    state.env = { NODE_ENV: 'production', SESSION_SECRET: secret, ...mail };
 
     const container = await getContainer();
 
     expect(container.cradle.env).toBe(state.env);
+    expect(container.cradle.mailer).toBeInstanceOf(ResendMailer);
+  });
+
+  it.each([
+    ['MAIL_API_KEY', { MAIL_FROM: mail.MAIL_FROM }],
+    ['MAIL_FROM', { MAIL_API_KEY: mail.MAIL_API_KEY }],
+  ])('refuses to build in production without %s, before touching the database (edge case 1b)', async (_missing, partial) => {
+    state.env = { NODE_ENV: 'production', SESSION_SECRET: secret, ...partial };
+
+    await expect(getContainer()).rejects.toThrow(/MAIL_API_KEY and MAIL_FROM are required when NODE_ENV=production/);
+    expect(state.getOrm).not.toHaveBeenCalled();
+  });
+
+  it('builds in production without mail configuration only for the harness log mailer', async () => {
+    state.env = { NODE_ENV: 'production', SESSION_SECRET: secret, MAILER_ADAPTER: 'log', INTEGRATION_TEST_RUN: true };
+
+    const container = await getContainer();
+
+    expect(container.cradle.mailer).toBeInstanceOf(LogMailer);
   });
 
   it.each(['development', 'test'])('builds in %s without SESSION_SECRET', async (nodeEnv) => {
