@@ -6,11 +6,18 @@ import {
   CardTitle,
 } from "@devmentor/ui";
 import { checkDbConnection, getEnv } from "@devmentor/core";
+import { requirePageRole } from "../../lib/session";
 
 // Touches the DB — keep it out of the static prerender.
 export const dynamic = "force-dynamic";
 
+/**
+ * Operators only. The database card still degrades to "Unavailable" rather than
+ * failing, but the guard comes first: with a session cookie and no database, the
+ * session cannot be checked and the error page renders instead (fail closed).
+ */
 export default async function AdminDashboard() {
+  await requirePageRole("operator", "/admin");
   const env = getEnv();
   const db = await checkDbConnection();
 

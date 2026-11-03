@@ -1,4 +1,4 @@
-import type { ApiResult, FieldErrors } from './types';
+import type { ApiFailure, ApiResult, FieldErrors } from './types';
 
 /**
  * The one sanctioned place a `fetch()` to `/api/*` happens. No component calls
@@ -73,12 +73,14 @@ export async function apiCall<T>(
 export class ApiError extends Error {
   readonly code: string;
   readonly fieldErrors?: FieldErrors;
+  readonly retryAfterSeconds?: number;
 
-  constructor(error: { code: string; message: string; fieldErrors?: FieldErrors }) {
+  constructor(error: ApiFailure) {
     super(error.message);
     this.name = 'ApiError';
     this.code = error.code;
     this.fieldErrors = error.fieldErrors;
+    this.retryAfterSeconds = error.retryAfterSeconds;
   }
 }
 

@@ -6,7 +6,11 @@ export {
   NotFoundError,
   ConflictError,
   ValidationError,
+  ServiceUnavailableError,
+  TooManyRequestsError,
   isAppError,
+  type AppErrorOptions,
+  type ErrorHeaders,
   type FieldErrors,
 } from './errors';
 export {
@@ -18,6 +22,7 @@ export {
   type ApiResponseBody,
   type ApiRouteContext,
   type ApiRouteHandler,
+  type ApiHandlerOptions,
   type RouteLogic,
 } from './apiHandler';
 export {
@@ -26,10 +31,35 @@ export {
   type MakeCrudRouteOptions,
 } from './makeCrudRoute';
 export {
-  readSession,
+  ROLES,
+  CSRF_HEADER_NAME,
+  CSRF_HEADER_VALUE,
+  resolveRoles,
   requireSession,
   requireRole,
+  requireCsrfHeader,
   assertOwnership,
+  type RoleSet,
+  type RoleSource,
   type Session,
   type Role,
 } from './auth';
+export { safeReturnTo } from './return-to';
+export { readCookie, serializeCookie, type CookieAttributes } from './cookies';
+export {
+  fetchJson,
+  DEFAULT_OUTBOUND_TIMEOUT_MS,
+  type FetchJsonInit,
+  type OutboundFailure,
+} from './outbound';
+export {
+  clientIp,
+  rateLimitKey,
+  RateLimiter,
+  REGISTER_PER_IP,
+  SIGN_IN_PER_EMAIL,
+  SIGN_IN_PER_IP,
+  VERIFICATION_MAIL_PER_EMAIL,
+  type RateLimitPolicy,
+} from './rate-limit';
+export { flattenZodError, parseJsonBody, parseWith, readJsonBody } from './body';

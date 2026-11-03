@@ -25,15 +25,31 @@ a breaking change and follows the path in "How to make a breaking change" at the
 ### 1. HTTP API (`packages/app/src/app/api/`)
 
 **The envelope.** Every `/api/*` route built with `apiHandler` or `makeCrudRoute`
-answers `{ ok: true, data }` or `{ ok: false, error: { code, message, fieldErrors? } }`.
+answers `{ ok: true, data }` or `{ ok: false, error: { code, message, fieldErrors?, retryAfterSeconds? } }`
+(`retryAfterSeconds` only on a 429).
 The shape is declared twice on purpose, in `packages/core/src/http/apiHandler.ts` and
 `packages/ui/src/backend/api/types.ts`, because `ui` must not import `core`.
 
 **Status and error codes**, from `packages/core/src/http/errors.ts` and `apiHandler.ts`:
 400 `bad_request`, 401 `unauthorized`, 403 `forbidden`, 404 `not_found`,
 409 `conflict`, 422 `validation_failed` (with `fieldErrors`, keyed by dotted path or
-`_root`), 500 `internal_error`. The client adds `network_error` and
-`invalid_response` in `apiCall.ts`.
+`_root`), 429 `rate_limited` (`TooManyRequestsError`: too many attempts in the rate-limit
+window, with `retryAfterSeconds` in the envelope and a `Retry-After` header; the message never
+says whether an email address has an account), 500 `internal_error`, 503 `service_unavailable` (`ServiceUnavailableError`:
+a required integration or credential is missing, or an upstream timed out, failed or
+answered non-2xx; see `fetchJson` in `outbound.ts`), the concept-owned 403
+`email_unverified` (`EmailNotVerifiedError` in `services/auth/user.service.ts`: the password
+was right, but the address has not been verified; never sent for a wrong password), the 403
+`github_email_unverified` (`GithubEmailUnverifiedError` in
+`services/auth/github-identity.port.ts`: the GitHub account has no verified primary
+email), and the GitHub sign-in refusals thrown by `UserService.findOrCreateFromGithub`
+(`services/auth/user.service.ts`): 403 `account_link_unverified`
+(`UnverifiedAccountLinkError`: the email matches an account whose own address is not
+verified, so nothing is linked) and 409 `github_account_conflict`
+(`GithubAccountConflictError`: the verified account with that email is already linked to
+a different GitHub account). An `AppError` may carry optional
+`headers`, which `apiHandler` copies onto the response. The client adds
+`network_error` and `invalid_response` in `apiCall.ts`.
 
 **Routes in place:**
 
@@ -41,10 +57,54 @@ The shape is declared twice on purpose, in `packages/core/src/http/apiHandler.ts
   `{ status: "ok", app, environment, database: "up" | "down", databaseError? }`, HTTP
   200 even when the database is down. `tests/integration/global-setup.ts` polls it and
   waits for `status === "ok"` and `database === "up"`; `README.md` documents it.
-- `GET /api/users` returns `UserDto[]`; `POST /api/users` takes
-  `{ email, displayName }` (`userCreateSchema`) and returns `UserDto`, where
-  `UserDto = { id, email, displayName, createdAt (ISO string), mentorProfile: { id, headline } | null }`.
-  The route is intentionally public until the `auth` concept lands.
+- `GET /api/users` returns `UserDto[]`, where
+  `UserDto = { id, email, displayName, roles, githubLogin, avatarUrl, createdAt (ISO string), mentorProfile: { id, headline } | null }`
+  (`roles` is the stored set in `ROLES` order; `UserDto` never carries `passwordHash`,
+  `emailVerifiedAt`, `sessionVersion` or `githubId`). **Operators only** since E01: the
+  route's `authorize` answers 401 `unauthorized` without a live session and 403
+  `forbidden` without the `operator` role, before the service runs, and
+  `UserService.list` repeats the check.
+  *Breaking change recorded (E01, `.ai/specs/2026-09-04-accounts-and-roles.md`
+  breaking changes 2 and 3):* the route was public before E01, and `POST /api/users`
+  (`{ email, displayName }` → `UserDto`) has been **removed** — accounts are created by
+  sign-in only. In-repo consumers: `admin/users/page.tsx` (client-side `apiCall`, moves
+  under the operator page guard) and `tests/integration/setup.integration.test.ts`
+  (fetches the route anonymously and must sign in as an operator first); the `POST` had
+  no caller.
+- `GET /api/auth/github` (`?returnTo&login`) and `GET /api/auth/github/callback`
+  (`?code&state` / `?error`) are **browser-navigated**: they never answer JSON, only a
+  302. The start route sets the `devmentor_oauth_state` cookie (HttpOnly, `SameSite=Lax`,
+  `Secure` in production, `Path=/api/auth/github/callback`, 10 minutes) and redirects to
+  GitHub; the callback always clears that cookie and, on success, sets
+  `devmentor_session` and redirects to the sanitised `returnTo` or the role home
+  (`homeFor`: `/admin`, `/mentor`, `/home`). Failures redirect to `/sign-in?cancelled=1`
+  (the user cancelled on GitHub) or `/sign-in?error=` with one of the reasons
+  `unavailable`, `state`, `email`, `unverified`, `conflict`
+  (`packages/app/src/lib/sign-in.ts`, `SIGN_IN_ERRORS`) — the sign-in page renders
+  them, so renaming or removing one is breaking. Own-site `Location`s are relative.
+- `POST /api/auth/logout` (CSRF header required, no session required) answers
+  `{ ok: true, data: null }` with the expiring `devmentor_session` cookie, and bumps
+  `session_version` only when the request carries a live session. Past the CSRF check
+  it never fails: if the session cannot be resolved (secret unset, database down) the
+  failure is logged, the bump skipped, and the cookie still expired.
+- `POST /api/auth/register` (CSRF header required; `registerSchema` body
+  `{ displayName, email, password, returnTo? }`) answers `{ ok: true, data: { email } }`
+  once the verification mail is accepted — it sets no cookie — or 409 `conflict` (a
+  verified account owns the address; the message says whether to sign in or use GitHub),
+  422, 429 `rate_limited`, 503.
+- `POST /api/auth/login` (CSRF header required; `loginSchema` body
+  `{ email, password, returnTo? }`) sets `devmentor_session` and answers
+  `{ ok: true, data: { redirectTo } }` (the sanitised `returnTo`, else the role home —
+  not a `UserDto`, which the spec first named: the form only needs where to go), or,
+  with no cookie, 401 `unauthorized` with the one message "Email or password is
+  incorrect." for an unknown address and a wrong password alike, 403 `email_unverified`,
+  422, 429, 503.
+- `GET /api/auth/verify-email?token` is **browser-navigated** (302 only): a fresh
+  verification sets `devmentor_session` and redirects to the sanitised `returnTo` or
+  the role home; an already-verified account goes to `/sign-in?verified=1` with no
+  session; a missing, invalid, expired or superseded token to
+  `/sign-in?error=verification`; anything unexpected to
+  `/sign-in?error=verification-unavailable`. Both reasons are rendered by `/sign-in`.
 - `makeCrudRoute` behavior asserted by `packages/core/src/http/makeCrudRoute.test.ts`:
   the default id parameter `id`, and the messages "This operation is not supported",
   "Missing resource id", and "Request body must be valid JSON".
@@ -65,17 +125,55 @@ The `exports` maps in each `package.json` and the named exports behind them are 
 API between packages. `npm run typecheck` is the consumer check.
 
 - `@devmentor/core` (`.`, `./container`, `./services`, `./http`, `./events`,
-  `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`, the
-  `Cradle` keys (`env`, `logger`, `orm`, `eventBus`, `em`, `userService`),
-  `UserService` and `UserDto`, the `AppError` family and `isAppError`, `apiHandler`,
-  `jsonOk`, `jsonError`, `makeCrudRoute` with `CrudService` and
-  `MakeCrudRouteOptions`, `readSession`, `requireSession`, `requireRole`,
-  `assertOwnership`, `Session`, `Role` (`'student' | 'mentor'`), `EventBus`,
-  `EventMap`, `userCreateSchema`, and the re-exported `checkDbConnection`.
+  `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`,
+  `withRequestScope`, `withSessionCookieScope` (reserved for the app's page session
+  helper), the `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`,
+  `sessionService`, `tokenService`, `passwordService`, `identity: GithubIdentityPort`, `em`,
+  `userService`, `rateLimiter`, and the request-scoped `session: Promise<Session | null>`), the
+  GitHub identity port (`GithubIdentityPort` with `authorizeUrl({ state, login? })`,
+  `exchangeCode`, `fetchIdentity`; `GithubIdentity`, `AuthorizeUrlInput`,
+  `GithubEmailUnverifiedError`, `GITHUB_CALLBACK_PATH`, `githubCallbackUrl`,
+  `GITHUB_LOGIN_PATTERN`, `githubLoginHint`), the OAuth state cookie helpers
+  (`OAUTH_STATE_COOKIE_NAME`, `OAUTH_STATE_COOKIE_PATH`, `OAUTH_STATE_PURPOSE`,
+  `OAUTH_STATE_TTL_SECONDS`, `oauthStateCookie`, `clearOAuthStateCookie`,
+  `readOAuthStateCookie`), `PasswordService` (`withHashingSlot(hasher => …)`) with
+  `PasswordHasher`, the rate limiter (`RateLimiter` with `consume(key, policy)` and
+  `consumeFor(policy, identifier | null)`, `RateLimitPolicy`, `rateLimitKey`, `clientIp`,
+  and the policies `SIGN_IN_PER_IP`, `SIGN_IN_PER_EMAIL`, `REGISTER_PER_IP`,
+  `VERIFICATION_MAIL_PER_EMAIL`), `homeFor(RoleSet)` and `ROLE_HOMES`, `readCookie`,
+  `serializeCookie` and `CookieAttributes`,
+  `Clock` and `systemClock`, `UserService` (`list`, `findByEmail`,
+  `create(CreateUserInput)`, `findOrCreateFromGithub(GithubIdentity) → GithubSignIn`,
+  `grantRole`/`revokeRole(userId, AssignableRole) → sessionVersion`,
+  `endAllSessions(userId)`, `registerWithPassword(RegisterInput, RequestOrigin) → { email }`,
+  `authenticateWithPassword(LoginInput, RequestOrigin) → GithubSignIn`,
+  `verifyEmail(VerificationClaims) → EmailVerification`) with `UserDto`, `RequestOrigin`,
+  `EmailVerification`, `EmailNotVerifiedError`, `INVALID_CREDENTIALS_MESSAGE`, the
+  `EmailVerificationService` (`link`, `message`, `read`) with `VerificationClaims`,
+  `EMAIL_VERIFY_PURPOSE` and `VERIFY_EMAIL_PATH`, the `Mailer` port with `MailMessage` and
+  `MAIL_SENT_LOG_MESSAGE`, the shared schemas `validators/auth/register.schema`
+  (`registerSchema`, `RegisterInput`) and `validators/auth/login.schema` (`loginSchema`,
+  `LoginInput`),
+  `CreateUserInput`, `GithubSignIn`, `UserServiceDeps`, `AssignableRole`,
+  `ASSIGNABLE_ROLES`, `UnverifiedAccountLinkError` and `GithubAccountConflictError`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`, `clearSessionCookie`,
+  `SESSION_COOKIE_NAME` and `SESSION_TTL_SECONDS`, `TokenService` with
+  `PurposeTokenInput`, the `AppError` family
+  (with its optional `headers` and `retryAfterSeconds`, and `TooManyRequestsError`) and `isAppError`, `safeReturnTo`, `fetchJson`, `apiHandler`
+  (with `ApiHandlerOptions`), `jsonOk`, `jsonError`, `makeCrudRoute` with `CrudService` and
+  `MakeCrudRouteOptions`, `requireSession(req, cradle)`, `requireRole`,
+  `requireCsrfHeader`, `assertOwnership`, `resolveRoles` with `RoleSource`, `ROLES`, `RoleSet`,
+  `CSRF_HEADER_NAME`, `CSRF_HEADER_VALUE`, `Session` (`{ userId, roles }`, `roles` a
+  non-empty `readonly [Role, ...Role[]]`), `Role` (`'mentee' | 'mentor' | 'operator'`), `EventBus`,
+  `EventMap`, and the re-exported `checkDbConnection`.
+  *Breaking change recorded (E01 breaking change 3):* `userCreateSchema` and
+  `UserCreateInput` (`validators/auth/user-create.schema.ts`) were **removed** with
+  `POST /api/users`; they had no in-repo consumer. `UserService.create` now takes the
+  explicit `CreateUserInput` (`{ email, displayName }`) and cannot set roles.
 - `@devmentor/db` (`.`, `./entities`, `./config`): `User`, `MentorProfile`, `IUser`,
   `IMentorProfile`, `baseProperties`, `entities`, `createOrmConfig`, `getOrm`,
   `closeOrm`, `checkDbConnection`, `getDbEnv`, `MikroORM`, `EntityManager`, and the
-  re-exported `EntityRepository`, `FilterQuery`, `Loaded`, `RequiredEntityData`.
+  re-exported `EntityRepository`, `UniqueConstraintViolationException`, `FilterQuery`,
+  `Loaded`, `RequiredEntityData`.
 - `@devmentor/ui` (`.`, `./backend`, `./tokens.css`, `./lib/utils`, `./components/*`):
   `cn`, `Button` and `buttonVariants`, the `Card*` family; from `./backend`:
   `apiCall`, `apiCallOrThrow`, `ApiError`, `ApiCallOptions`, `ApiResult`,
@@ -96,19 +194,30 @@ the change spans several concepts; note it in the PR body.
 ### 3. Database schema, migrations, and seed data (`packages/db/`)
 
 - Tables: `users` (`id` uuid, `created_at`, `updated_at`, `email` unique,
-  `display_name`) and `mentor_profiles` (`id`, timestamps, `user_id` unique with a
+  `display_name`, `roles` `text[]` default `{mentee}` under the `users_roles_check`
+  constraint, `github_id` unique, `github_login`, `avatar_url`, `email_verified_at`,
+  `session_version` default 0, `password_hash` `text` null — a self-describing scrypt
+  hash, null for GitHub-only accounts), `auth_rate_limits` (`key` text primary key of the
+  form `<scope>:<kind>:<sha256>`, `window_start` timestamptz indexed, `count` int; no id or
+  timestamps — counters are disposable and may be truncated at any time) and `mentor_profiles` (`id`, timestamps, `user_id` unique with a
   cascading foreign key to `users`, `headline`, `bio` nullable,
   `years_of_experience` default 0). Column names are snake_case mappings of the
   camelCase entity properties.
 - Migrations live in `packages/db/migrations/Migration<timestamp>.ts` next to the
   committed snapshot `.snapshot-devmentor.json`, run transactionally, and are
-  generated with `npm run db:migration:create -- --name <x>`. The integration harness
-  pins `MIKRO_ORM_MIGRATIONS_SNAPSHOT_NAME=.snapshot-devmentor` so a test run never
-  creates a second snapshot.
-- The seeder `packages/db/src/seeders/database.seeder.ts` creates one user
-  (`ada@devmentor.dev`, `Ada Lovelace`) with a mentor profile
-  (`Systems & algorithms mentor`). `tests/integration/admin.integration.test.ts`
-  asserts on those exact cells.
+  generated with `npm run db:migration:create -- --name <x>`. `packages/db/src/config.ts`
+  names the snapshot `.snapshot-devmentor`, so every migration command reads and writes
+  that one file.
+- The seeder `packages/db/src/seeders/database.seeder.ts` creates the mentor
+  (`mock-mentor@devmentor.test`, `Ada Lovelace`, roles `mentor`) with a mentor profile
+  (`Systems & algorithms mentor`), a mentee (`mock-mentee@devmentor.test`) and an
+  operator who also holds `mentor` (`mock-operator@devmentor.test`), all with a verified
+  email. The mentee and the operator also get the demo password `SEED_PASSWORD`
+  (`devmentor-demo-password`), backfilled onto rows seeded earlier that have none; Ada
+  stays GitHub-only. Addresses follow `<login>@devmentor.test` so the mock GitHub adapter links to
+  them; a database seeded with Ada's pre-E01 `ada@devmentor.dev` row has that row
+  adopted rather than duplicated. `tests/integration/admin.integration.test.ts`
+  asserts on Ada's exact cells.
 
 **Breaking:** dropping or renaming a table or column; tightening a constraint that
 existing rows may violate; editing an already applied migration or the snapshot by
@@ -154,7 +263,10 @@ maintainer updates the ruleset before the PR merges, otherwise the PR blocks its
 ### 6. Domain events (`packages/core/src/events/event-map.ts`)
 
 Event ids follow `concept.entity.action`. Today: `auth.user.created` with payload
-`{ userId, email }`, subscribed in `packages/core/src/container/container.ts`.
+`{ userId, email }`, and `auth.user.roles_changed` with payload
+`{ userId, added: Role[], removed: Role[] }` (emitted by `grantRole`/`revokeRole` and by
+operator-cache reconciliation), both subscribed in
+`packages/core/src/container/container.ts`.
 
 **Breaking:** renaming an event id; removing or retyping a payload field.
 
@@ -163,14 +275,26 @@ PR; adding a payload field is additive.
 
 ### 7. Session and CSRF conventions
 
-The session cookie name `devmentor_session` and the `Role` union live in
-`packages/core/src/http/auth.ts`; the CSRF header `x-devmentor-request` is set by
-`apiCall` in `packages/ui/src/backend/api/apiCall.ts`. Real session verification and
-the server-side header check are not implemented yet; every guarded route currently
-denies.
+The session cookie name `devmentor_session` lives in
+`packages/core/src/services/auth/session.service.ts`; the `Role` union
+(`'mentee' | 'mentor' | 'operator'`) is defined in
+`packages/core/src/services/auth/roles.ts` and re-exported from
+`packages/core/src/http/auth.ts`, where the `Session` shape (`{ userId, roles }`) and the
+CSRF header name and value live. `apiCall` in
+`packages/ui/src/backend/api/apiCall.ts` sends `x-devmentor-request: 1` on every
+request, and `apiHandler` **enforces** it on every method other than GET, HEAD and
+OPTIONS — so every mutating route, including `makeCrudRoute`'s `POST`/`PUT`/`DELETE`,
+answers `403 forbidden` without it. The only opt-out, `apiHandler(logic, { csrf: false })`,
+is reserved for the payment-webhook route. `requireSession(req, cradle)` verifies the
+cookie, reloads the user, rejects a bumped `session_version`, and returns the stored
+`mentee`/`mentor` roles with `operator` derived live from `OPERATOR_EMAILS`; when the
+stored set disagrees it is reconciled (a de-listed operator-only account resolves to
+`mentee`) without bumping `session_version`. `session_version` is bumped only by
+sign-out and `grantRole`/`revokeRole`.
 
-**Breaking:** once auth ships, renaming the cookie or the header, or changing the
-`Role` values.
+**Breaking:** renaming the cookie or the header, changing the header's value, changing
+the `Role` values or the `Session` shape, or adding a CSRF opt-out other than the
+webhook route.
 
 **Required path:** change `core/src/http/auth.ts` and `ui/src/backend/api/apiCall.ts`
 together, with an integration scenario covering the denied path.

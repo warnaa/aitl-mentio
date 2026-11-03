@@ -111,6 +111,73 @@ Then open:
 The app **builds and boots even with no database running**; DB-backed pages degrade
 to a visible "unavailable" state instead of crashing.
 
+### Configuration
+
+All configuration is read from the environment (or `.env`) and validated once by the
+zod schema in `packages/core/src/config/env.ts`. `.env.example` documents every
+variable; the database and logging ones are listed there as live defaults, the
+account, sign-in and mail ones as commented-out lines you uncomment when needed.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `APP_URL` | `http://localhost:3000` | Public origin, for OAuth callback and email links |
+| `SESSION_SECRET` | unset | HS256 key for session cookies and signed links, at least 32 characters (`openssl rand -base64 32`). **Required when `NODE_ENV=production`** |
+| `SESSION_SECRET_PREVIOUS` | unset | The previous key during a rotation; verified, never used to sign |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | unset | GitHub OAuth app credentials |
+| `OPERATOR_EMAILS` | empty | Comma-separated operator allowlist, matched case-insensitively |
+| `TRUSTED_PROXY_HOPS` | `0` | Trusted reverse proxies when deriving the client IP from `X-Forwarded-For` |
+| `PASSWORD_HASH_CONCURRENCY` | `2` | Password hashes run at once; each scrypt hash holds about 128 MiB |
+| `PASSWORD_HASH_WAIT_MS` | `5000` | How long a sign-in or registration waits for a hashing slot before a retryable 503 |
+| `MAIL_API_KEY` / `MAIL_FROM` | unset | Resend API key and sender address for transactional mail |
+| `AUTH_IDENTITY_ADAPTER` | `github` | `mock` is for the integration harness only |
+| `MAILER_ADAPTER` | unset | `resend` or `log`. Unset means `log` in development and `resend` elsewhere; an explicit `log` is for the integration harness only |
+| `INTEGRATION_TEST_RUN` | `0` | Set to `1` by the integration harness; required alongside a `mock` or `log` adapter |
+
+Production requires `SESSION_SECRET`, `MAIL_API_KEY` and `MAIL_FROM` at boot, and checks
+them when the app handles its first request, not during `npm run build`, so a build needs
+no secrets. In `npm run dev` with no `MAILER_ADAPTER`, mail is not sent: each message is
+written to the server log as a `mail.sent` line (with the verification link), and a
+warning at startup says so. A missing
+`GITHUB_*` or `MAIL_*` value never stops the app from starting: only the feature that
+needs it reports itself unavailable. Selecting a fake adapter (`mock`, `log`) without
+`INTEGRATION_TEST_RUN=1` is refused at startup, so a misconfigured deployment can
+never quietly accept "sign in as anyone".
+
+#### Creating a GitHub OAuth app
+
+1. On GitHub open **Settings → Developer settings → OAuth Apps → New OAuth App**
+   (or the same page under an organisation's settings).
+2. Set **Homepage URL** to your `APP_URL` and **Authorization callback URL** to
+   `<APP_URL>/api/auth/github/callback`, e.g.
+   `http://localhost:3000/api/auth/github/callback` locally. GitHub allows one
+   callback URL per app, so use a separate app for each environment.
+3. Register it, then **Generate a new client secret**. Put the Client ID in
+   `GITHUB_CLIENT_ID` and the secret in `GITHUB_CLIENT_SECRET`, and set
+   `SESSION_SECRET` if you have not already.
+4. Restart the app. DevMentor requests the `read:user user:email` scopes and signs in
+   only accounts whose primary GitHub email is verified. Add your email to
+   `OPERATOR_EMAILS` to open `/admin`.
+
+Without these values the "Sign in with GitHub" link sends you back to `/sign-in` with
+a "not available" message; nothing else stops working.
+
+#### Signing in locally
+
+Two ways to sign in, GitHub first (`/sign-in`) and email registration (`/register`):
+
+- **Email and password.** Register at `/register`. In `npm run dev` with no
+  `MAILER_ADAPTER`, the verification link is not mailed but written to the server log
+  as a `mail.sent` line; open it to confirm the address and land on the mentee home.
+  `npm run db:seed` gives the seeded mentee (`mock-mentee@devmentor.test`) and the
+  mentor/operator (`mock-operator@devmentor.test`) the demo password
+  `devmentor-demo-password`; Ada Lovelace (`mock-mentor@devmentor.test`) is GitHub-only.
+  Sign-in attempts are limited per address (5 per 15 minutes) and, behind a trusted proxy
+  (`TRUSTED_PROXY_HOPS`), per IP; over the limit the form says to wait.
+- **GitHub without an OAuth app.** With `AUTH_IDENTITY_ADAPTER=mock` and
+  `INTEGRATION_TEST_RUN=1`, open `/api/auth/github?login=mock-operator` (or
+  `mock-mentee`, `mock-mentor`, any other login for a new mentee). Never set these in a
+  deployed environment.
+
 ## Scripts
 
 | Command | Description |
@@ -193,9 +260,11 @@ by Next.js via `transpilePackages`.
 - **Scoped** — a forked `EntityManager` and the domain services that use it.
 
 Request handlers call `withScope(fn)`, which opens a scope with its own forked
-`EntityManager`, runs the callback, and disposes the scope. The admin users page is a
-worked example: `withScope((c) => c.userService.list())` → forked EM → repository →
-entity with a populated 1:1 relation.
+`EntityManager`, runs the callback, and disposes the scope. Work done for a request
+uses `withRequestScope(req, fn)`, which also registers the caller's lazily-resolved
+`session`. `GET /api/users` is a worked example: `withRequestScope(req, (c) =>
+c.userService.list())` → operator check → forked EM → repository → entity with a
+populated 1:1 relation.
 
 ### Database
 

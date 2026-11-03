@@ -10,12 +10,14 @@ import {
 
 const testState = vi.hoisted(() => ({
   cradle: {} as unknown,
-  withScope: vi.fn(),
+  withRequestScope: vi.fn(),
 }));
 
 vi.mock('../container/container', () => ({
-  withScope: testState.withScope,
+  withRequestScope: testState.withRequestScope,
 }));
+// `apiHandler` → `auth` imports the `User` entity; keep the ORM graph out of this test.
+vi.mock('@devmentor/db', () => ({ User: class User {} }));
 
 type Entity = { id: string; name: string };
 type Input = { name: string };
@@ -28,12 +30,15 @@ function context(params?: Record<string, string | string[]>): ApiRouteContext {
     : { params: Promise.resolve(params) };
 }
 
-function request(method: string, body?: string): Request {
+/** A request as `apiCall` sends it: always with the CSRF header. */
+function request(method: string, body?: string, csrf = true): Request {
   return new Request('http://devmentor.test/api/resources', {
     method,
-    ...(body === undefined
-      ? {}
-      : { body, headers: { 'content-type': 'application/json' } }),
+    headers: {
+      ...(csrf ? { 'x-devmentor-request': '1' } : {}),
+      ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+    },
+    ...(body === undefined ? {} : { body }),
   });
 }
 
@@ -66,8 +71,8 @@ function route(
 
 beforeEach(() => {
   vi.clearAllMocks();
-  testState.withScope.mockImplementation(
-    async (callback: (cradle: Cradle) => Promise<unknown>) =>
+  testState.withRequestScope.mockImplementation(
+    async (_req: Request, callback: (cradle: Cradle) => Promise<unknown>) =>
       callback(testState.cradle as Cradle),
   );
 });
@@ -87,7 +92,14 @@ describe('makeCrudRoute GET', () => {
       data: [{ id: '1', name: 'Ada' }],
     });
     expect(authorize).toHaveBeenCalledWith(req, testState.cradle);
+    expect(testState.withRequestScope).toHaveBeenCalledWith(req, expect.any(Function));
     expect(currentService.list).toHaveBeenCalledOnce();
+  });
+
+  it('serves a GET without the CSRF header', async () => {
+    const response = await route(service()).GET(request('GET', undefined, false), context());
+
+    expect(response.status).toBe(200);
   });
 
   it('lists when an empty params object is provided', async () => {
@@ -290,5 +302,26 @@ describe('makeCrudRoute DELETE', () => {
     expect(await body(response)).toMatchObject({
       error: { message: 'This operation is not supported' },
     });
+  });
+});
+
+describe('makeCrudRoute CSRF', () => {
+  it.each([
+    ['POST', context()],
+    ['PUT', context({ id: 'resource-1' })],
+    ['DELETE', context({ id: 'resource-1' })],
+  ] as const)('refuses a %s without the CSRF header before opening a scope', async (method, ctx) => {
+    const currentService = service();
+    const handlers = route(currentService);
+    const body = method === 'DELETE' ? undefined : JSON.stringify({ name: 'Grace' });
+
+    const response = await handlers[method](request(method, body, false), ctx);
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ ok: false, error: { code: 'forbidden' } });
+    expect(testState.withRequestScope).not.toHaveBeenCalled();
+    expect(currentService.create).not.toHaveBeenCalled();
+    expect(currentService.update).not.toHaveBeenCalled();
+    expect(currentService.delete).not.toHaveBeenCalled();
   });
 });

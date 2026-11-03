@@ -1,5 +1,5 @@
 export { apiCall, apiCallOrThrow, ApiError, type ApiCallOptions } from './api/apiCall';
-export type { ApiResult, FieldErrors } from './api/types';
+export type { ApiFailure, ApiResult, FieldErrors } from './api/types';
 export { CrudForm, type CrudField, type CrudFieldType, type CrudFormProps } from './forms/CrudForm';
 export {
   DataTable,
@@ -10,6 +10,11 @@ export {
 export { LoadingMessage } from './feedback/LoadingMessage';
 export { ErrorMessage } from './feedback/ErrorMessage';
 export { EmptyState } from './feedback/EmptyState';
+export {
+  WorkflowAction,
+  WORKFLOW_ACTION_FAILURE,
+  type WorkflowActionProps,
+} from './actions/WorkflowAction';
 
 export * from './forms/FormField';
 export * from './shell/AppShell';

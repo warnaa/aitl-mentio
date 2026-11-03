@@ -20,7 +20,7 @@ monorepo built on the latest Next.js + TypeScript + React.
 | Config validation  | zod                                                |
 | Logging            | pino                                               |
 | Frontend styling   | Tailwind CSS v4 (public/marketing pages)           |
-| Backend/admin UI   | shadcn-ui components (in `@devmentor/ui`)          |
+| Signed-in/admin UI | shadcn-ui components (in `@devmentor/ui`)          |
 | Package manager    | npm workspaces (Node ≥ 24)                          |
 
 ### Monorepo layout
@@ -166,9 +166,23 @@ the reference example every new concept copies. See
 - **`em.persistAndFlush()` was removed** — use `em.persist(e); await em.flush()`.
 - Touch the DB only in **dynamic** routes (`export const dynamic = "force-dynamic"`)
   and degrade gracefully; the app must build and boot with no database reachable.
-- **Public pages use Tailwind utilities; `/admin/*` pages use shadcn-ui components**
-  from `@devmentor/ui`. Add shadcn components with `npx shadcn@latest add <c>` run in
-  `packages/ui` (its `components.json` is committed).
+- **Three surfaces, each with one styling rule** (primitives spec F1):
+
+  | Surface  | Routes                                              | Styling                                          |
+  | -------- | --------------------------------------------------- | ------------------------------------------------ |
+  | `public` | landing, mentor catalogue and share links, `(auth)/*` | Tailwind utilities                               |
+  | `app`    | `(mentee)/*`, `(mentor)/*` — signed in               | shadcn via `@devmentor/ui`, inside `AppShell`    |
+  | `admin`  | `/admin/*` — operator                                | shadcn via `@devmentor/ui`, inside `AppShell`    |
+
+  Every `app` and `admin` layout renders `SignedInShell`
+  (`app/src/components/auth/`), which puts `AppShell` around the page with
+  `WorkspaceNav`: the links for the **union** of the user's roles, from
+  `app/src/lib/nav.ts`. A new signed-in page gets its link there — never a link to a
+  page that does not exist yet, and never one that grants a role (R07: mentors join by
+  invitation, operators by configuration). `AppShell` lives in `ui`, so it knows no
+  `Role` and no `next/link`; the app supplies the rendered links. Add shadcn
+  components with `npx shadcn@latest add <c>` run in `packages/ui` (its
+  `components.json` is committed).
 - Request-scoped work goes through `withScope(fn)` from `@devmentor/core`, which opens
   an awilix scope with a forked `EntityManager` and disposes it afterward.
 - **Never hand-roll fetch / validation / error-handling / CRUD.** Server routes use
@@ -178,6 +192,24 @@ the reference example every new concept copies. See
   lists use `DataTable`, and loading/error/empty states use the `feedback/` components.
 - **Collection routes are non-dynamic**, so Next passes no `params` — CRUD helpers
   guard `ctx.params` before reading it.
+- **Browser-navigated vs fetched routes.** A route the browser *navigates* to (the
+  GitHub OAuth start and callback, and later the email-verification link) catches its
+  own failures and returns a redirect `Response` — typically to `/sign-in?error=…` —
+  which `apiHandler` passes through unchanged, so a user never sees a JSON envelope
+  rendered as a page. Every other route is *fetched* through `apiCall` and answers the
+  `{ ok, data }` / `{ ok, error }` envelope.
+- **State-changing routes are JSON-only.** `apiHandler` requires the
+  `x-devmentor-request` header on every method other than `GET`/`HEAD`/`OPTIONS`
+  (login CSRF defence), so a mutating route is called through `apiCall` or `CrudForm`,
+  never a native HTML `<form>` post. Routes never call `requireCsrfHeader` themselves;
+  the only opt-out, `apiHandler(logic, { csrf: false })`, is reserved for the payment
+  webhook.
+- **Signed-in pages guard at the layout and at every `page.tsx`** with
+  `requirePageRole`/`requirePageAccount` from `app/src/lib/session.ts` (a layout does
+  not re-run on client-side navigation), and the service checks the session again.
+  `app/src/proxy.ts` is **not** an auth boundary: it only forwards the requested path
+  as `x-devmentor-path` so a signed-out deep link survives sign-in. A new signed-in
+  surface goes into its `matcher`, or its deep links fall back to the section root.
 
 ### Design-system rules confirmed by the user
 
@@ -219,6 +251,18 @@ the reference example every new concept copies. See
 - Unit tests live next to their source as `*.test.ts` / `*.test.tsx`. Test every
   success, error, validation, authorization, and edge-case branch. Every bug fix
   requires a regression test that fails without the fix.
+- **Component tests.** `vitest.config.mts` keeps `environment: 'node'` and loads
+  `@vitejs/plugin-react`. *Server components* (`page.tsx`, `layout.tsx`) are async
+  functions returning an element tree: invoke them directly and assert the returned
+  tree in the node environment, with no DOM or renderer. *Client components* opt in
+  with a per-file `// @vitest-environment jsdom` pragma and use
+  `@testing-library/react` + `@testing-library/user-event`.
+- **Guarded pages have two mocking seams**, because `redirect()` throws a framework
+  control-flow error instead of returning. Page tests mock `app/src/lib/session.ts`,
+  assert the tree on the allowed path and a sentinel throw on the denied one;
+  `session.test.ts` mocks `next/navigation` and asserts the `redirect` arguments.
+  Never assert against Next internals. The cost: every guarded `page.tsx` is a
+  `coverage.include` entry that needs both the authorized and the redirected branch.
 - Integration/browser tests **supplement but never replace unit tests** or the 100%
   unit-coverage requirement. Add integration coverage whenever behavior crosses the
   app/database/API/browser boundary.

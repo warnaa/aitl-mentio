@@ -8,4 +8,12 @@ export type FieldErrors = Record<string, string[]>;
 
 export type ApiResult<T> =
   | { ok: true; data: T }
-  | { ok: false; error: { code: string; message: string; fieldErrors?: FieldErrors } };
+  | { ok: false; error: ApiFailure };
+
+/** The failure half of the envelope. `retryAfterSeconds` comes with a 429 `rate_limited`. */
+export interface ApiFailure {
+  code: string;
+  message: string;
+  fieldErrors?: FieldErrors;
+  retryAfterSeconds?: number;
+}

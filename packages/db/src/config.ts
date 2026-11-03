@@ -42,10 +42,16 @@ export function createOrmConfig() {
       pathTs: resolve(packageRoot, 'migrations'),
       snapshot: true,
       // Fixed name so the snapshot file is deterministic regardless of the connected
-      // database name (which may come from DATABASE_URL and vary per environment).
-      snapshotName: 'devmentor',
+      // database name (which may come from DATABASE_URL and vary per environment). It is
+      // the committed `migrations/.snapshot-devmentor.json`: any other name makes
+      // `migration:create` diff against the live database instead, and `migration:up`
+      // write a stray copy beside it.
+      snapshotName: '.snapshot-devmentor',
       transactional: true,
       emit: 'ts',
+      // Same trap as the seeder glob below: the default (`!(*.d).{js,ts,cjs}`) would
+      // load a colocated migration `*.test.ts` as a migration. Exclude test files.
+      glob: '!(*.d|*.test).{js,ts,cjs}',
     },
     seeder: {
       path: resolve(packageRoot, 'src', 'seeders'),

@@ -10,7 +10,7 @@ fix.
 The repository is an npm-workspaces monorepo: Next.js 16 App Router + React 19,
 TypeScript 5 strict, MikroORM v7 on PostgreSQL, awilix for dependency injection, zod
 for every input and env schema, pino for logs, Tailwind v4 on public pages and
-shadcn-ui in `@devmentor/ui` for `/admin/*`. Packages ship TypeScript source and are
+shadcn-ui in `@devmentor/ui` for the signed-in `(mentee)`, `(mentor)` and `/admin/*` surfaces. Packages ship TypeScript source and are
 transpiled by Next.
 
 ## Review priorities
@@ -25,7 +25,13 @@ Read the diff in this order. A finding higher on the list outranks everything be
    "unavailable" state when the database is down: the app must build and boot with no
    database reachable.
 2. **Security.** Auth is enforced server-side on every route that is not explicitly
-   public; hiding a button in the UI is not enforcement. Mutations check ownership of
+   public; hiding a button in the UI is not enforcement. A guarded page enforces at the
+   page **and** the service, not only at its layout: the layout and every `page.tsx`
+   under it call `requirePageRole`/`requirePageAccount` from
+   `packages/app/src/lib/session.ts` (a layout does not re-run on client-side
+   navigation), and the service behind it checks the session again. `proxy.ts` only
+   forwards the requested path for the post-sign-in redirect; a PR that makes it an
+   auth check, or relies on it instead of a guard, is a finding. Mutations check ownership of
    the specific record, not just "is logged in". Security decisions fail closed: an
    unexpected error inside an auth or ownership check denies. Write endpoints parse an
    explicit zod schema and never spread the raw request body into `em.create()` or
@@ -75,13 +81,16 @@ Read the diff in this order. A finding higher on the list outranks everything be
 - Errors are thrown as `AppError` subclasses from `packages/core/src/http/errors.ts`
   (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`,
   `ConflictError`, `ValidationError`). A service never builds a `Response`.
-- Guarded routes call `requireSession`, `requireRole`, or `assertOwnership` from
-  `packages/core/src/http/auth.ts` before touching a service. `readSession` currently
-  returns `null` by design (fail closed until the `auth` concept lands); the PR that
-  wires real session verification is `risk-high` and needs a second reviewer.
+- Guarded routes call `requireSession(req, cradle)` (inside `withRequestScope`), then
+  `requireRole` or `assertOwnership`, from `packages/core/src/http/auth.ts` before
+  touching a service. No route calls `requireCsrfHeader` itself — `apiHandler` enforces
+  it on every non-GET/HEAD/OPTIONS method; a `{ csrf: false }` outside the payment
+  webhook route is a finding. Changes to session verification are `risk-high` and need
+  a second reviewer.
 - Collection routes are non-dynamic, so Next passes no `params`; helpers guard
   `ctx.params` before reading it (see `.ai/lessons.md`, 2026-09-02).
-- Request-scoped work goes through `withScope(fn)`; nothing resolves the root
+- Request-scoped work goes through `withRequestScope(req, fn)` (or `withScope(fn)` for
+  unauthenticated/system work, which has no `session`); nothing resolves the root
   container directly from a handler.
 
 ### Client layer (`packages/ui/src/backend/`, `packages/app/src/app/**/page.tsx`)
@@ -97,8 +106,11 @@ Read the diff in this order. A finding higher on the list outranks everything be
   `npx shadcn@latest add <component>` run inside `packages/ui`; hand-written primitives
   are a finding. Concept-specific components go to `packages/ui/src/components/<concept>/`;
   a component used by one page stays next to that `page.tsx`.
-- Public pages use Tailwind utilities; `/admin/*` uses `@devmentor/ui` components and
-  the tokens in `packages/ui/src/tokens.css`. No hardcoded colors where a token exists.
+- Public pages use Tailwind utilities; the signed-in `(mentee)`, `(mentor)` and
+  `/admin/*` surfaces use `@devmentor/ui` components inside `SignedInShell` and the
+  tokens in `packages/ui/src/tokens.css`. No hardcoded colors where a token exists. A
+  signed-in page's link belongs in `app/src/lib/nav.ts`; a nav link that grants a role
+  is a finding (R07).
 
 ### Data layer (`packages/db/`)
 
@@ -179,7 +191,8 @@ both locally (Docker plus `npm run test:browser:install`) before review.
 
 ## Severity guidance
 
-- **Blocker** (the PR cannot merge as-is): any item under Security above; a
+- **Blocker** (the PR cannot merge as-is): any item under Security above, including a
+  guarded page that enforces only at its layout; a
   dependency-direction violation or a loosened ESLint boundary; a protected surface
   changed without the path `BACKWARD_COMPATIBILITY.md` requires; a failing validation
   gate; new or changed behavior without unit tests, or a production file missing from
