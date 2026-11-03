@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '../../http/auth';
-import { BadRequestError, ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '../../http/errors';
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+  ServiceUnavailableError,
+  TooManyRequestsError,
+} from '../../http/errors';
 
 const db = vi.hoisted(() => {
   class User {}
@@ -14,7 +22,15 @@ const db = vi.hoisted(() => {
 vi.mock('@devmentor/db', () => db);
 
 const { getEnv } = await import('../../config/env');
-const { GithubAccountConflictError, UnverifiedAccountLinkError, UserService } = await import('./user.service');
+const {
+  ACCOUNT_EXISTS_MESSAGE,
+  EmailNotVerifiedError,
+  GITHUB_ACCOUNT_MESSAGE,
+  GithubAccountConflictError,
+  INVALID_CREDENTIALS_MESSAGE,
+  UnverifiedAccountLinkError,
+  UserService,
+} = await import('./user.service');
 
 const NOW = new Date('2026-11-02T10:00:00.000Z');
 const CREATED = new Date('2026-10-01T00:00:00.000Z');
@@ -108,6 +124,9 @@ function fakeEm(rows: Row[], options: { beforeFind?: () => Promise<void> } = {})
     // Rows are the "entities" here, so there is nothing to re-sync; the identity-map
     // behaviour this stands in for is pinned on real MikroORM in user-version.test.ts.
     refresh: vi.fn(async <T>(entity: T) => entity),
+    clear: vi.fn(() => {
+      pending = [];
+    }),
     transactional: vi.fn(async <T>(cb: (inner: unknown) => Promise<T>) => {
       pending = [];
       return cb(em);
@@ -121,6 +140,42 @@ type FakeEm = ReturnType<typeof fakeEm>;
 const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
 const eventBus = { emit: vi.fn(async () => undefined) };
 
+/*
+ * Collaborators of the password paths. Each records into `calls`, so a test can assert
+ * the order the spec fixes: hashing slot, then rate limits, then the hash.
+ */
+const calls: string[] = [];
+const gate = {
+  saturated: false,
+  withHashingSlot: vi.fn(async <T>(work: (hasher: { hash(p: string): Promise<string>; verify(p: string, s: string | null): Promise<boolean> }) => Promise<T>) => {
+    calls.push('slot');
+    if (gate.saturated) {
+      throw new ServiceUnavailableError('Sign-in is busy right now. Try again in a moment.');
+    }
+    return work({
+      hash: async (password) => {
+        calls.push('hash');
+        return `hash:${password}`;
+      },
+      verify: async (password, stored) => {
+        calls.push(`verify:${stored ?? 'none'}`);
+        return stored === `hash:${password}`;
+      },
+    });
+  }),
+};
+const rateLimiter = {
+  consumeFor: vi.fn(async (policy: { scope: string; kind: string }, identifier: string | null) => {
+    calls.push(`limit:${policy.scope}:${policy.kind}:${identifier}`);
+  }),
+};
+const mailer = { send: vi.fn(async (_message: { to: string; subject: string; text: string }) => undefined) };
+const emailVerification = {
+  link: vi.fn(async (user: { id: string; sessionVersion: number }, returnTo?: string) =>
+    `https://devmentor.example/api/auth/verify-email?token=${user.id}.${user.sessionVersion}${returnTo ? `.${returnTo}` : ''}`),
+  message: vi.fn((to: string, displayName: string, link: string) => ({ to, subject: 'Confirm', text: `${displayName} ${link}` })),
+};
+
 function service(
   em: FakeEm,
   { session = Promise.resolve(null), operatorEmails = [] }: { session?: Promise<Session | null>; operatorEmails?: readonly string[] } = {},
@@ -132,6 +187,10 @@ function service(
     clock: { now: () => NOW },
     env: { OPERATOR_EMAILS: operatorEmails },
     session,
+    passwordService: gate,
+    rateLimiter,
+    mailer,
+    emailVerification,
   } as never);
 }
 
@@ -148,6 +207,8 @@ const eventsNamed = (name: string) => eventBus.emit.mock.calls.filter((call) => 
 
 beforeEach(() => {
   vi.clearAllMocks();
+  calls.length = 0;
+  gate.saturated = false;
 });
 
 describe('UserService.findOrCreateFromGithub', () => {
@@ -687,5 +748,301 @@ describe('UserService.endAllSessions', () => {
 
     await expect(service(em).endAllSessions(user.id)).resolves.toBeUndefined();
     expect(logger.info).not.toHaveBeenCalled();
+  });
+});
+
+describe('UserService.registerWithPassword — the state matrix', () => {
+  const input = { displayName: 'Grace Hopper', email: 'Grace@DevMentor.Test', password: 'correct horse battery' };
+  const origin = { clientIp: '203.0.113.7' };
+
+  it('none → creates an unverified mentee with the hash written, then mails the link', async () => {
+    const rows: Row[] = [];
+    const em = fakeEm(rows);
+
+    await expect(service(em).registerWithPassword({ ...input, returnTo: '/mentor' }, origin)).resolves.toEqual({
+      email: 'grace@devmentor.test',
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      email: 'grace@devmentor.test',
+      displayName: 'Grace Hopper',
+      roles: ['mentee'],
+      passwordHash: 'hash:correct horse battery',
+      emailVerifiedAt: null,
+      sessionVersion: 0,
+    });
+    expect(eventsNamed('auth.user.created')).toEqual([['auth.user.created', { userId: rows[0]!.id, email: 'grace@devmentor.test' }]]);
+    expect(emailVerification.link).toHaveBeenCalledWith(rows[0], '/mentor');
+    expect(mailer.send).toHaveBeenCalledExactlyOnceWith({
+      to: 'grace@devmentor.test',
+      subject: 'Confirm',
+      text: `Grace Hopper https://devmentor.example/api/auth/verify-email?token=${rows[0]!.id}.0./mentor`,
+    });
+  });
+
+  it('takes the hashing slot first, then the per-IP and per-address limits, then hashes', async () => {
+    await service(fakeEm([])).registerWithPassword(input, origin);
+
+    expect(calls).toEqual([
+      'slot',
+      'limit:register:ip:203.0.113.7',
+      'limit:verification-mail:email:grace@devmentor.test',
+      'hash',
+    ]);
+  });
+
+  it('counts no attempt when the hashing gate is saturated (edge case 18)', async () => {
+    gate.saturated = true;
+    const rows: Row[] = [];
+
+    await expect(service(fakeEm(rows)).registerWithPassword(input, origin)).rejects.toBeInstanceOf(ServiceUnavailableError);
+    expect(rateLimiter.consumeFor).not.toHaveBeenCalled();
+    expect(rows).toEqual([]);
+    expect(mailer.send).not.toHaveBeenCalled();
+  });
+
+  it('stops at the rate limit before hashing, creating and mailing nothing', async () => {
+    rateLimiter.consumeFor.mockRejectedValueOnce(new TooManyRequestsError(60));
+    const rows: Row[] = [];
+
+    await expect(service(fakeEm(rows)).registerWithPassword(input, origin)).rejects.toBeInstanceOf(TooManyRequestsError);
+    expect(calls).not.toContain('hash');
+    expect(rows).toEqual([]);
+    expect(mailer.send).not.toHaveBeenCalled();
+  });
+
+  it('verified with a password → 409, nothing changed or sent', async () => {
+    const existing = row({ email: 'grace@devmentor.test', passwordHash: 'hash:old', emailVerifiedAt: CREATED });
+    const em = fakeEm([existing]);
+
+    await expect(service(em).registerWithPassword(input, origin)).rejects.toThrow(new ConflictError(ACCOUNT_EXISTS_MESSAGE));
+    expect(existing.passwordHash).toBe('hash:old');
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+    expect(mailer.send).not.toHaveBeenCalled();
+  });
+
+  it('verified, GitHub only → 409 pointing to GitHub sign-in (edge case 14)', async () => {
+    const existing = row({ email: 'grace@devmentor.test', githubId: '42', emailVerifiedAt: CREATED });
+
+    await expect(service(fakeEm([existing])).registerWithPassword(input, origin)).rejects.toThrow(new ConflictError(GITHUB_ACCOUNT_MESSAGE));
+    expect(existing.passwordHash).toBeUndefined();
+  });
+
+  it('verified with neither password nor GitHub → the generic 409', async () => {
+    const existing = row({ email: 'grace@devmentor.test', emailVerifiedAt: CREATED });
+    await expect(service(fakeEm([existing])).registerWithPassword(input, origin)).rejects.toThrow(new ConflictError(ACCOUNT_EXISTS_MESSAGE));
+  });
+
+  it('matches the address case-insensitively, so a differently cased row is still the account', async () => {
+    const existing = row({ email: 'GRACE@devmentor.test', passwordHash: 'hash:old', emailVerifiedAt: CREATED });
+    await expect(service(fakeEm([existing])).registerWithPassword(input, origin)).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it.each([
+    ['without a password', undefined],
+    ['with a password', 'hash:someone else'],
+  ])('unverified %s → claims it: writes the hash and name, bumps sessionVersion, mails the new link', async (_label, previousHash) => {
+    const existing = row({ email: 'grace@devmentor.test', displayName: 'Old name', emailVerifiedAt: null, passwordHash: previousHash, sessionVersion: 3 });
+    const em = fakeEm([existing]);
+
+    await expect(service(em).registerWithPassword(input, origin)).resolves.toEqual({ email: 'grace@devmentor.test' });
+
+    expect(em.nativeUpdate).toHaveBeenCalledWith(
+      expect.anything(),
+      { id: existing.id, sessionVersion: 3 },
+      { passwordHash: 'hash:correct horse battery', displayName: 'Grace Hopper', sessionVersion: 4, updatedAt: NOW },
+    );
+    expect(existing).toMatchObject({ passwordHash: 'hash:correct horse battery', sessionVersion: 4, emailVerifiedAt: null });
+    // The link carries the bumped version, so links sent before the claim no longer verify.
+    expect(emailVerification.link).toHaveBeenCalledWith(expect.objectContaining({ id: existing.id, sessionVersion: 4 }), undefined);
+    expect(eventsNamed('auth.user.created')).toEqual([]);
+  });
+
+  it('refuses a claim whose row moved concurrently', async () => {
+    const existing = row({ email: 'grace@devmentor.test', emailVerifiedAt: null });
+    const em = fakeEm([existing]);
+    em.nativeUpdate.mockResolvedValueOnce(0);
+
+    await expect(service(em).registerWithPassword(input, origin)).rejects.toBeInstanceOf(ConflictError);
+    expect(mailer.send).not.toHaveBeenCalled();
+  });
+
+  it('claims the winner when a concurrent registration created the row first', async () => {
+    const rows: Row[] = [];
+    const em = fakeEm(rows);
+    // The other registration commits between our lookup and our insert.
+    em.flush.mockImplementationOnce(async () => {
+      rows.push(row({ email: 'grace@devmentor.test', emailVerifiedAt: null, sessionVersion: 0 }));
+      throw new db.UniqueConstraintViolationException('users_email_unique');
+    });
+
+    await expect(service(em).registerWithPassword(input, origin)).resolves.toEqual({ email: 'grace@devmentor.test' });
+    expect(em.clear).toHaveBeenCalledOnce();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ passwordHash: 'hash:correct horse battery', sessionVersion: 1 });
+  });
+
+  it('propagates an unrelated constraint violation instead of retrying', async () => {
+    const em = fakeEm([]);
+    em.flush.mockRejectedValueOnce(new db.UniqueConstraintViolationException('users_something_else'));
+    await expect(service(em).registerWithPassword(input, origin)).rejects.toBeInstanceOf(db.UniqueConstraintViolationException);
+  });
+
+  it('gives up after one retry if the race repeats', async () => {
+    const em = fakeEm([]);
+    em.flush.mockRejectedValue(new db.UniqueConstraintViolationException('users_email_unique'));
+    await expect(service(em).registerWithPassword(input, origin)).rejects.toBeInstanceOf(db.UniqueConstraintViolationException);
+    expect(em.flush).toHaveBeenCalledTimes(2);
+  });
+
+  it('fails closed with a 503 when the mail cannot be delivered; registering again is a claim', async () => {
+    const rows: Row[] = [];
+    mailer.send.mockRejectedValueOnce(new ServiceUnavailableError());
+
+    await expect(service(fakeEm(rows)).registerWithPassword(input, origin)).rejects.toBeInstanceOf(ServiceUnavailableError);
+    expect(rows[0]).toMatchObject({ emailVerifiedAt: null }); // never reported as registered
+
+    await expect(service(fakeEm(rows)).registerWithPassword(input, origin)).resolves.toEqual({ email: 'grace@devmentor.test' });
+    expect(rows).toHaveLength(1);
+  });
+});
+
+describe('UserService.authenticateWithPassword', () => {
+  const login = { email: 'Grace@DevMentor.Test', password: 'correct horse battery' };
+  const origin = { clientIp: null };
+
+  function account(overrides: Partial<Row> = {}) {
+    return row({ email: 'grace@devmentor.test', passwordHash: 'hash:correct horse battery', emailVerifiedAt: CREATED, roles: ['mentee', 'mentor'], ...overrides });
+  }
+
+  it('signs a verified account in, preserving every stored role', async () => {
+    const user = account();
+    await expect(service(fakeEm([user])).authenticateWithPassword(login, origin)).resolves.toEqual({
+      userId: user.id,
+      sessionVersion: 3,
+      roles: ['mentee', 'mentor'],
+    });
+  });
+
+  it('counts the attempt per IP and per address inside the slot, before checking the password', async () => {
+    await service(fakeEm([account()])).authenticateWithPassword(login, { clientIp: '203.0.113.7' });
+    expect(calls).toEqual([
+      'slot',
+      'limit:sign-in:ip:203.0.113.7',
+      'limit:sign-in:email:grace@devmentor.test',
+      'verify:hash:correct horse battery',
+    ]);
+  });
+
+  it('answers a wrong password and an unknown address with byte-identical errors (edge case 13)', async () => {
+    const refusal = (attempt: Promise<unknown>) =>
+      attempt.then(
+        () => {
+          throw new Error('expected a refusal');
+        },
+        (error: unknown) => error as UnauthorizedError,
+      );
+    const wrong = await refusal(service(fakeEm([account()])).authenticateWithPassword({ ...login, password: 'wrong password!' }, origin));
+    const unknown = await refusal(service(fakeEm([])).authenticateWithPassword({ ...login, email: 'nobody@devmentor.test' }, origin));
+
+    expect(wrong).toBeInstanceOf(UnauthorizedError);
+    expect(unknown).toBeInstanceOf(UnauthorizedError);
+    expect(wrong.message).toBe(INVALID_CREDENTIALS_MESSAGE);
+    expect(unknown.message).toBe(wrong.message);
+    expect([unknown.status, unknown.code]).toEqual([wrong.status, wrong.code]);
+    // The unknown address still paid one verification.
+    expect(calls.filter((call) => call.startsWith('verify:'))).toEqual(['verify:hash:correct horse battery', 'verify:none']);
+  });
+
+  it('refuses a GitHub-only account generically', async () => {
+    await expect(service(fakeEm([account({ passwordHash: undefined, githubId: '42' })])).authenticateWithPassword(login, origin)).rejects.toThrow(
+      new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE),
+    );
+  });
+
+  it('refuses an unverified address with the reason — but only once the password was right (edge case 15)', async () => {
+    const pending = account({ emailVerifiedAt: null });
+
+    await expect(service(fakeEm([pending])).authenticateWithPassword(login, origin)).rejects.toBeInstanceOf(EmailNotVerifiedError);
+    await expect(
+      service(fakeEm([pending])).authenticateWithPassword({ ...login, password: 'wrong password!' }, origin),
+    ).rejects.toThrow(new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE));
+    expect(new EmailNotVerifiedError()).toMatchObject({ status: 403, code: 'email_unverified' });
+  });
+
+  it('reconciles operator live from the allowlist, like a GitHub sign-in', async () => {
+    const user = account({ email: FOUNDER, roles: ['mentor'] });
+    await expect(
+      service(fakeEm([user]), { operatorEmails: [FOUNDER] }).authenticateWithPassword({ ...login, email: FOUNDER }, origin),
+    ).resolves.toMatchObject({ roles: ['mentor', 'operator'] });
+  });
+
+  it('propagates a rate-limit refusal without verifying anything', async () => {
+    rateLimiter.consumeFor.mockRejectedValueOnce(new TooManyRequestsError(30));
+    await expect(service(fakeEm([account()])).authenticateWithPassword(login, origin)).rejects.toBeInstanceOf(TooManyRequestsError);
+    expect(calls.some((call) => call.startsWith('verify:'))).toBe(false);
+  });
+});
+
+describe('UserService.verifyEmail', () => {
+  const pending = (overrides: Partial<Row> = {}) =>
+    row({ email: 'grace@devmentor.test', passwordHash: 'hash:x', emailVerifiedAt: null, sessionVersion: 4, ...overrides });
+
+  it('marks the address verified and returns what the route needs for a session', async () => {
+    const user = pending();
+    const em = fakeEm([user]);
+
+    await expect(service(em).verifyEmail({ userId: user.id, version: 4, returnTo: '/mentor' })).resolves.toEqual({
+      status: 'verified',
+      userId: user.id,
+      sessionVersion: 4,
+      roles: ['mentee'],
+      returnTo: '/mentor',
+    });
+    expect(user.emailVerifiedAt).toEqual(NOW);
+    expect(em.nativeUpdate).toHaveBeenCalledWith(expect.anything(), { id: user.id, sessionVersion: 4 }, { emailVerifiedAt: NOW, updatedAt: NOW });
+  });
+
+  it('omits returnTo when the link had none', async () => {
+    const user = pending();
+    await expect(service(fakeEm([user])).verifyEmail({ userId: user.id, version: 4 })).resolves.not.toHaveProperty('returnTo');
+  });
+
+  it('is idempotent for an already-verified account, issuing nothing (edge case 16)', async () => {
+    const user = pending({ emailVerifiedAt: CREATED, sessionVersion: 9 });
+    const em = fakeEm([user]);
+
+    await expect(service(em).verifyEmail({ userId: user.id, version: 4 })).resolves.toEqual({ status: 'already-verified' });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+  });
+
+  it('refuses a link from before a newer registration of the address', async () => {
+    const user = pending({ sessionVersion: 5 });
+    await expect(service(fakeEm([user])).verifyEmail({ userId: user.id, version: 4 })).rejects.toBeInstanceOf(BadRequestError);
+    expect(user.emailVerifiedAt).toBeNull();
+  });
+
+  it('refuses a link for a user that no longer exists', async () => {
+    await expect(service(fakeEm([])).verifyEmail({ userId: 'gone', version: 0 })).rejects.toBeInstanceOf(BadRequestError);
+  });
+
+  it('reports already-verified when a concurrent click verified it between read and write', async () => {
+    const user = pending();
+    const em = fakeEm([user]);
+    em.nativeUpdate.mockImplementationOnce(async () => {
+      user.emailVerifiedAt = NOW; // the other click won
+      return 0;
+    });
+
+    await expect(service(em).verifyEmail({ userId: user.id, version: 4 })).resolves.toEqual({ status: 'already-verified' });
+  });
+
+  it('refuses when the row changed otherwise between read and write', async () => {
+    const user = pending();
+    const em = fakeEm([user]);
+    em.nativeUpdate.mockResolvedValueOnce(0);
+
+    await expect(service(em).verifyEmail({ userId: user.id, version: 4 })).rejects.toBeInstanceOf(BadRequestError);
   });
 });

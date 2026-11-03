@@ -1,7 +1,9 @@
 import { User, type EntityManager, type IUser } from '@devmentor/db';
 
 /** The user columns a version-guarded write may change. */
-export type UserVersionedUpdate = Partial<Pick<IUser, 'roles' | 'sessionVersion' | 'updatedAt'>>;
+export type UserVersionedUpdate = Partial<
+  Pick<IUser, 'roles' | 'sessionVersion' | 'updatedAt' | 'passwordHash' | 'displayName' | 'emailVerifiedAt'>
+>;
 
 /**
  * Write `data` to the user's row only while its `session_version` is still the one

@@ -37,7 +37,9 @@ The shape is declared twice on purpose, in `packages/core/src/http/apiHandler.ts
 window, with `retryAfterSeconds` in the envelope and a `Retry-After` header; the message never
 says whether an email address has an account), 500 `internal_error`, 503 `service_unavailable` (`ServiceUnavailableError`:
 a required integration or credential is missing, or an upstream timed out, failed or
-answered non-2xx; see `fetchJson` in `outbound.ts`), and the concept-owned 403
+answered non-2xx; see `fetchJson` in `outbound.ts`), the concept-owned 403
+`email_unverified` (`EmailNotVerifiedError` in `services/auth/user.service.ts`: the password
+was right, but the address has not been verified; never sent for a wrong password), the 403
 `github_email_unverified` (`GithubEmailUnverifiedError` in
 `services/auth/github-identity.port.ts`: the GitHub account has no verified primary
 email), and the GitHub sign-in refusals thrown by `UserService.findOrCreateFromGithub`
@@ -125,7 +127,15 @@ API between packages. `npm run typecheck` is the consumer check.
   `Clock` and `systemClock`, `UserService` (`list`, `findByEmail`,
   `create(CreateUserInput)`, `findOrCreateFromGithub(GithubIdentity) → GithubSignIn`,
   `grantRole`/`revokeRole(userId, AssignableRole) → sessionVersion`,
-  `endAllSessions(userId)`) with `UserDto`,
+  `endAllSessions(userId)`, `registerWithPassword(RegisterInput, RequestOrigin) → { email }`,
+  `authenticateWithPassword(LoginInput, RequestOrigin) → GithubSignIn`,
+  `verifyEmail(VerificationClaims) → EmailVerification`) with `UserDto`, `RequestOrigin`,
+  `EmailVerification`, `EmailNotVerifiedError`, `INVALID_CREDENTIALS_MESSAGE`, the
+  `EmailVerificationService` (`link`, `message`, `read`) with `VerificationClaims`,
+  `EMAIL_VERIFY_PURPOSE` and `VERIFY_EMAIL_PATH`, the `Mailer` port with `MailMessage` and
+  `MAIL_SENT_LOG_MESSAGE`, the shared schemas `validators/auth/register.schema`
+  (`registerSchema`, `RegisterInput`) and `validators/auth/login.schema` (`loginSchema`,
+  `LoginInput`),
   `CreateUserInput`, `GithubSignIn`, `UserServiceDeps`, `AssignableRole`,
   `ASSIGNABLE_ROLES`, `UnverifiedAccountLinkError` and `GithubAccountConflictError`, `SessionService` with `SessionClaims`, `IssuedSession`, `readSessionCookie`, `clearSessionCookie`,
   `SESSION_COOKIE_NAME` and `SESSION_TTL_SECONDS`, `TokenService` with

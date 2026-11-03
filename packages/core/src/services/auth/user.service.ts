@@ -3,9 +3,21 @@ import type { AppEnv } from '../../config/env';
 import type { EventBus } from '../../events/event-bus';
 import { requireRole, type Session } from '../../http/auth';
 import { AppError, BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '../../http/errors';
+import {
+  REGISTER_PER_IP,
+  SIGN_IN_PER_EMAIL,
+  SIGN_IN_PER_IP,
+  VERIFICATION_MAIL_PER_EMAIL,
+  type RateLimiter,
+} from '../../http/rate-limit';
 import type { Logger } from '../../logger';
 import type { Clock } from '../../time/clock';
+import type { RegisterInput } from '../../validators/auth/register.schema';
+import type { LoginInput } from '../../validators/auth/login.schema';
+import type { Mailer } from '../notifications/mailer.port';
+import type { EmailVerificationService, VerificationClaims } from './email-verification.service';
 import type { GithubIdentity } from './github-identity.port';
+import type { PasswordService } from './password.service';
 import { updateUserAtVersion } from './user-version';
 import {
   BASELINE_ROLE,
@@ -78,6 +90,40 @@ export class GithubAccountConflictError extends AppError {
   }
 }
 
+/**
+ * The one answer to a failed password sign-in, for an unknown email and a wrong password
+ * alike (E01 edge case 13). Both paths throw this exact message.
+ */
+export const INVALID_CREDENTIALS_MESSAGE = 'Email or password is incorrect.';
+
+/**
+ * The password was right but the address is not verified yet (edge case 15). Thrown
+ * only *after* the password verified, so it reveals nothing to someone guessing.
+ */
+export class EmailNotVerifiedError extends AppError {
+  constructor(
+    message = 'Confirm your email address first: open the verification link we emailed you.',
+  ) {
+    super(message, 403, 'email_unverified');
+  }
+}
+
+/** A verified account already owns this address (registration matrix rows 2 and 3). */
+export const ACCOUNT_EXISTS_MESSAGE = 'An account already uses this email address. Sign in instead.';
+/** …and that account signs in with GitHub only (row 3, edge case 14). */
+export const GITHUB_ACCOUNT_MESSAGE = 'This email address signs in with GitHub. Choose Continue with GitHub.';
+
+/** Which caller a request scope serves, for the per-IP rate limits. */
+export interface RequestOrigin {
+  /** The trusted client IP (`clientIp`), or `null` when none can be derived. */
+  clientIp: string | null;
+}
+
+/** What a verification link did. */
+export type EmailVerification =
+  | ({ status: 'verified'; returnTo?: string } & GithubSignIn)
+  | { status: 'already-verified' };
+
 /** The unique constraints two racing first sign-ins for one identity can trip. */
 const IDENTITY_CONSTRAINTS: readonly string[] = ['users_email_unique', 'users_github_id_unique'];
 
@@ -115,6 +161,10 @@ export interface UserServiceDeps {
   eventBus: EventBus;
   clock: Clock;
   env: Pick<AppEnv, 'OPERATOR_EMAILS'>;
+  passwordService: Pick<PasswordService, 'withHashingSlot'>;
+  rateLimiter: Pick<RateLimiter, 'consumeFor'>;
+  mailer: Mailer;
+  emailVerification: Pick<EmailVerificationService, 'link' | 'message'>;
   /** The caller's live session (request scopes only). Read lazily — see `list`. */
   session: Promise<Session | null>;
 }
@@ -133,6 +183,10 @@ export class UserService {
   private readonly clock: Clock;
   private readonly env: Pick<AppEnv, 'OPERATOR_EMAILS'>;
   private readonly session: () => Promise<Session | null>;
+  private readonly passwords: UserServiceDeps['passwordService'];
+  private readonly rateLimiter: UserServiceDeps['rateLimiter'];
+  private readonly mailer: Mailer;
+  private readonly emailVerification: UserServiceDeps['emailVerification'];
 
   constructor(deps: UserServiceDeps) {
     this.em = deps.em;
@@ -140,6 +194,10 @@ export class UserService {
     this.eventBus = deps.eventBus;
     this.clock = deps.clock;
     this.env = deps.env;
+    this.passwords = deps.passwordService;
+    this.rateLimiter = deps.rateLimiter;
+    this.mailer = deps.mailer;
+    this.emailVerification = deps.emailVerification;
     // Read on demand, not here: resolving `session` verifies the cookie and loads the
     // user, which only `list` needs, and a plain `withScope` registers no session.
     this.session = () => deps.session;
@@ -249,6 +307,165 @@ export class UserService {
       env: this.env,
     });
     return { userId: user.id, sessionVersion: user.sessionVersion, roles };
+  }
+
+  /**
+   * Register with email and password (E01 #32), then email a verification link. The
+   * state matrix for an existing row with this address (spec, `registerWithPassword`):
+   *
+   * | existing row                            | answer                                   |
+   * |-----------------------------------------|------------------------------------------|
+   * | none                                    | create an unverified `mentee`            |
+   * | verified, with a password               | 409 `ACCOUNT_EXISTS_MESSAGE`             |
+   * | verified, GitHub only                   | 409 `GITHUB_ACCOUNT_MESSAGE`             |
+   * | verified, neither                       | 409 `ACCOUNT_EXISTS_MESSAGE`             |
+   * | unverified (with or without a password) | **claim**: write the hash and name       |
+   *
+   * The hash is written immediately: `emailVerifiedAt` is what gates sign-in, and only
+   * whoever reads the mail can verify. A claim also bumps `sessionVersion`, which voids
+   * every verification link sent before — otherwise an older link, opened by the
+   * address owner, would verify the account under the claimer's password.
+   *
+   * Order (primitives B8): hashing slot, then the rate limits (per IP; per address for
+   * the mail), then the hash. Database work and the mail happen after the slot is
+   * released. A mail failure fails the registration closed (503); the row stays, and
+   * registering again is a claim.
+   *
+   * @throws TooManyRequestsError, ServiceUnavailableError (hashing gate, mail),
+   *   ConflictError (a verified account owns the address).
+   */
+  async registerWithPassword(input: RegisterInput, origin: RequestOrigin): Promise<{ email: string }> {
+    const email = input.email.trim().toLowerCase();
+    const passwordHash = await this.passwords.withHashingSlot(async (hasher) => {
+      await this.rateLimiter.consumeFor(REGISTER_PER_IP, origin.clientIp);
+      await this.rateLimiter.consumeFor(VERIFICATION_MAIL_PER_EMAIL, email);
+      return hasher.hash(input.password);
+    });
+
+    const user = await this.claimOrCreate(email, input.displayName, passwordHash, true);
+    const link = await this.emailVerification.link(user, input.returnTo);
+    await this.mailer.send(this.emailVerification.message(user.email, user.displayName, link));
+    this.logger.info({ userId: user.id }, 'sent email verification');
+    return { email: user.email };
+  }
+
+  /**
+   * Sign in with email and password. An unknown address and a wrong password give the
+   * same `UnauthorizedError` with `INVALID_CREDENTIALS_MESSAGE`, after the same work: the
+   * hasher verifies against a missing hash too. Every attempt is counted first, per IP
+   * and per address. Stored roles are preserved; `operator` is reconciled live.
+   *
+   * @throws TooManyRequestsError, ServiceUnavailableError (hashing gate),
+   *   UnauthorizedError (generic), EmailNotVerifiedError (right password, unverified).
+   */
+  async authenticateWithPassword(input: LoginInput, origin: RequestOrigin): Promise<GithubSignIn> {
+    const email = input.email.trim().toLowerCase();
+    const user = await this.passwords.withHashingSlot(async (hasher) => {
+      await this.rateLimiter.consumeFor(SIGN_IN_PER_IP, origin.clientIp);
+      await this.rateLimiter.consumeFor(SIGN_IN_PER_EMAIL, email);
+      const candidate = (await this.sameEmail(this.em, email))[0] ?? null;
+      const matches = await hasher.verify(input.password, candidate?.passwordHash ?? null);
+      return matches ? candidate : null;
+    });
+    if (!user) {
+      throw new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE);
+    }
+    if (!user.emailVerifiedAt) {
+      throw new EmailNotVerifiedError();
+    }
+    const roles = await reconcileOperatorRole(user, { em: this.em, eventBus: this.eventBus, env: this.env });
+    return { userId: user.id, sessionVersion: user.sessionVersion, roles };
+  }
+
+  /**
+   * Apply a verification link's claims: mark the address verified so the route can
+   * issue a session. Opening a link for an already-verified account is **not an error**
+   * (edge case 16) — a mail scanner may have opened it first — but it issues no session:
+   * the link is not a 24-hour sign-in link.
+   *
+   * @throws BadRequestError when the user is gone or the link predates a newer
+   *   registration of the same address (`version` no longer matches).
+   */
+  async verifyEmail(claims: VerificationClaims): Promise<EmailVerification> {
+    const user = await this.em.findOne(User, { id: claims.userId });
+    if (!user) {
+      throw new BadRequestError('This link is invalid or has expired');
+    }
+    if (user.emailVerifiedAt) {
+      return { status: 'already-verified' };
+    }
+    if (user.sessionVersion !== claims.version) {
+      throw new BadRequestError('This link is invalid or has expired');
+    }
+    const now = this.clock.now();
+    if (!(await updateUserAtVersion(this.em, user, { emailVerifiedAt: now, updatedAt: now }))) {
+      // Something changed the row between the read and the write; the refresh re-read it.
+      if (user.emailVerifiedAt) {
+        return { status: 'already-verified' };
+      }
+      throw new BadRequestError('This link is invalid or has expired');
+    }
+    this.logger.info({ userId: user.id }, 'verified email address');
+    const roles = await reconcileOperatorRole(user, { em: this.em, eventBus: this.eventBus, env: this.env });
+    return {
+      status: 'verified',
+      userId: user.id,
+      sessionVersion: user.sessionVersion,
+      roles,
+      ...(claims.returnTo ? { returnTo: claims.returnTo } : {}),
+    };
+  }
+
+  /** Every row whose email equals `email` case-insensitively, oldest first. */
+  private sameEmail(em: EntityManager, email: string): Promise<IUser[]> {
+    return em.find(User, { email: { $ilike: escapeLike(email) } }, { orderBy: { createdAt: 'asc' } });
+  }
+
+  /** The registration matrix (see `registerWithPassword`), retried once on a create race. */
+  private async claimOrCreate(email: string, displayName: string, passwordHash: string, retry: boolean): Promise<IUser> {
+    const rows = await this.sameEmail(this.em, email);
+    const verified = rows.find((row) => row.emailVerifiedAt != null);
+    if (verified) {
+      throw new ConflictError(
+        !verified.passwordHash && verified.githubId ? GITHUB_ACCOUNT_MESSAGE : ACCOUNT_EXISTS_MESSAGE,
+      );
+    }
+    const pending = rows[0];
+    if (pending) {
+      const claimed = await updateUserAtVersion(this.em, pending, {
+        passwordHash,
+        displayName,
+        sessionVersion: pending.sessionVersion + 1,
+        updatedAt: this.clock.now(),
+      });
+      if (!claimed) {
+        throw new ConflictError('This registration changed while it was being saved. Try again.');
+      }
+      this.logger.info({ userId: pending.id }, 'claimed an unverified registration');
+      return pending;
+    }
+    const user = this.em.create(User, {
+      email,
+      displayName,
+      roles: [BASELINE_ROLE],
+      passwordHash,
+      emailVerifiedAt: null,
+      sessionVersion: 0,
+    });
+    try {
+      this.em.persist(user);
+      await this.em.flush();
+    } catch (error) {
+      if (!retry || !isIdentityRace(error)) {
+        throw error;
+      }
+      // A concurrent registration created the row first: forget ours and claim theirs.
+      this.em.clear();
+      return this.claimOrCreate(email, displayName, passwordHash, false);
+    }
+    this.logger.info({ userId: user.id }, 'created user from registration');
+    await this.eventBus.emit('auth.user.created', { userId: user.id, email: user.email });
+    return user;
   }
 
   /**
