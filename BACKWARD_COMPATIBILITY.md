@@ -167,9 +167,9 @@ the change spans several concepts; note it in the PR body.
   camelCase entity properties.
 - Migrations live in `packages/db/migrations/Migration<timestamp>.ts` next to the
   committed snapshot `.snapshot-devmentor.json`, run transactionally, and are
-  generated with `npm run db:migration:create -- --name <x>`. The integration harness
-  pins `MIKRO_ORM_MIGRATIONS_SNAPSHOT_NAME=.snapshot-devmentor` so a test run never
-  creates a second snapshot.
+  generated with `npm run db:migration:create -- --name <x>`. `packages/db/src/config.ts`
+  names the snapshot `.snapshot-devmentor`, so every migration command reads and writes
+  that one file.
 - The seeder `packages/db/src/seeders/database.seeder.ts` creates the mentor
   (`mock-mentor@devmentor.test`, `Ada Lovelace`, roles `mentor`) with a mentor profile
   (`Systems & algorithms mentor`), a mentee (`mock-mentee@devmentor.test`) and an

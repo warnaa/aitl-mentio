@@ -75,7 +75,8 @@ describe('createOrmConfig', () => {
   it('keeps the migration snapshot name independent of the database name', () => {
     const config = ormConfig({ DB_NAME: 'something_else' });
 
-    expect(config.migrations?.snapshotName).toBe('devmentor');
+    // The committed file; a different name would leave it unread (see config.ts).
+    expect(config.migrations?.snapshotName).toBe('.snapshot-devmentor');
   });
 
   it('excludes colocated unit tests from the seeder glob', () => {

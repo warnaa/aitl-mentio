@@ -22,9 +22,6 @@ export function integrationChildEnvironment(databaseUrl: string, appUrl?: string
     // matters for the `secure` session cookie: Chrome accepts it over plain HTTP only
     // because loopback origins are trustworthy (spec edge case 32).
     ...(appUrl === undefined ? {} : { APP_URL: appUrl }),
-    // Keep migration:up aligned with the repository's committed snapshot name so a
-    // test run never creates a duplicate migrations/devmentor.json artifact.
-    MIKRO_ORM_MIGRATIONS_SNAPSHOT_NAME: '.snapshot-devmentor',
     // Production refuses to serve without a session secret; a fresh one per run means
     // no key is committed and no cookie outlives the run.
     SESSION_SECRET: randomBytes(32).toString('base64url'),
