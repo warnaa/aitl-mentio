@@ -174,3 +174,31 @@ describe('TC-AUTH-003 an invalid session on a signed-in screen', () => {
     });
   });
 });
+
+describe('TC-AUTH-004 a signed-out deep link survives sign-in', () => {
+  it('returns the operator to /admin/users, not to the admin layout\'s /admin', async () => {
+    const baseUrl = inject('integrationBaseUrl');
+
+    await inBrowser('deep-link', async (session) => {
+      await runAgentBrowser(session, 'open', `${baseUrl}/admin/users`);
+      await runAgentBrowser(session, 'wait', '--text', 'Sign in to DevMentor');
+
+      const signIn = await currentUrl(session);
+      expect(signIn.pathname).toBe('/sign-in');
+      expect(signIn.searchParams.get('returnTo')).toBe('/admin/users');
+      const href = await runAgentBrowser(session, 'get', 'attr', 'a[href^="/api/auth/github"]', 'href');
+      expect(href.trim()).toBe('/api/auth/github?returnTo=%2Fadmin%2Fusers');
+      await screenshot(session, 'auth-deep-link-sign-in');
+
+      // Follow the page's own GitHub link, adding only the mock adapter's login hint.
+      await runAgentBrowser(session, 'open', `${baseUrl}${href.trim()}&login=mock-operator`);
+      await runAgentBrowser(session, 'wait', '--text', 'Ada Lovelace');
+      expect((await currentUrl(session)).pathname).toBe('/admin/users');
+      const users = await runAgentBrowser(session, 'snapshot');
+      expect(users).toContain('heading "Users"');
+      expect(users).toContain('cell "Ada Lovelace"');
+      expect(await sessionCookie(session)).toBeDefined();
+      await screenshot(session, 'auth-deep-link-users');
+    });
+  });
+});

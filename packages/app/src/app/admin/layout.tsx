@@ -12,7 +12,8 @@ export const dynamic = "force-dynamic";
  *
  * Operators only: it guards before rendering anything, and every page under it guards
  * again, because a layout does not re-run on client-side navigation (edge case 21).
- * The layout cannot see the path, so a signed-out visitor returns to `/admin`.
+ * The layout cannot see the path: a signed-out visitor returns to the page they asked
+ * for via the path `proxy.ts` forwards, or to `/admin` when it forwarded none.
  */
 const nav = [
   { href: "/admin", label: "Dashboard" },

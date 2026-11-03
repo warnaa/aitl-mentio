@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Role, RoleSet, Session } from '@devmentor/core';
 
 /**
- * The guards' seam with Next: `cookies()` and `redirect()` are mocked, and `redirect`
- * throws a sentinel the way the real one throws its control-flow error. The live session
+ * The guards' seam with Next: `cookies()`, `headers()` and `redirect()` are mocked, and
+ * `redirect` throws a sentinel the way the real one throws its control-flow error. The live session
  * check is core's (tested there); here `withSessionCookieScope` hands back a canned cradle.
  */
 class RedirectSentinel extends Error {
@@ -14,6 +14,7 @@ class RedirectSentinel extends Error {
 
 const next = vi.hoisted(() => ({
   cookieValue: undefined as string | undefined,
+  requestPath: null as string | null,
   get: vi.fn(),
   redirect: vi.fn(),
 }));
@@ -25,6 +26,7 @@ vi.mock('next/headers', () => ({
       return next.cookieValue === undefined ? undefined : { name, value: next.cookieValue };
     },
   })),
+  headers: vi.fn(async () => new Headers(next.requestPath === null ? {} : { 'x-devmentor-path': next.requestPath })),
 }));
 vi.mock('next/navigation', () => ({ redirect: next.redirect }));
 
@@ -71,6 +73,7 @@ async function redirectOf(action: Promise<unknown>): Promise<string> {
 
 beforeEach(() => {
   next.cookieValue = undefined;
+  next.requestPath = null;
   next.get.mockReset();
   next.redirect.mockReset();
   next.redirect.mockImplementation((location: string) => {
@@ -183,6 +186,36 @@ describe('requirePageRole', () => {
   it('sends a combined mentee/mentor away from /admin to /mentor, not /home', async () => {
     signedInAs('mentee', 'mentor');
     await expect(redirectOf(requirePageRole('operator', '/admin'))).resolves.toBe('/mentor');
+  });
+});
+
+describe('the path proxy.ts forwards (deep-link returnTo)', () => {
+  it('returns a signed-out visitor to the requested page, not the layout\'s section root', async () => {
+    next.requestPath = '/admin/users?page=2';
+    await expect(redirectOf(requirePageRole('operator', '/admin'))).resolves.toBe(
+      '/sign-in?returnTo=%2Fadmin%2Fusers%3Fpage%3D2',
+    );
+  });
+
+  it('applies to requirePageAccount as well', async () => {
+    next.requestPath = '/home/sessions';
+    await expect(redirectOf(requirePageAccount('mentee', '/home'))).resolves.toBe(
+      '/sign-in?returnTo=%2Fhome%2Fsessions',
+    );
+  });
+
+  it.each(['//evil.example', 'https://evil.example/admin', '/api/users', '/_next/static/x.js', ''])(
+    'falls back to the caller\'s own path when the forwarded path is unsafe (%j)',
+    async (requestPath) => {
+      next.requestPath = requestPath;
+      await expect(redirectOf(requirePageSession('/admin'))).resolves.toBe('/sign-in?returnTo=%2Fadmin');
+    },
+  );
+
+  it('never consults the path for a signed-in caller without the role — they go home', async () => {
+    next.requestPath = '/admin/users';
+    signedInAs('mentee');
+    await expect(redirectOf(requirePageRole('operator', '/admin'))).resolves.toBe('/home');
   });
 });
 

@@ -1,7 +1,8 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import {
   homeFor,
+  safeReturnTo,
   SESSION_COOKIE_NAME,
   withSessionCookieScope,
   type Cradle,
@@ -9,6 +10,7 @@ import {
   type Session,
   type UserDto,
 } from '@devmentor/core';
+import { REQUEST_PATH_HEADER } from './request-path';
 import { SIGN_IN_PATH } from './sign-in';
 
 /**
@@ -21,8 +23,12 @@ import { SIGN_IN_PATH } from './sign-in';
  * Every page or layout calling these is dynamic (`export const dynamic = 'force-dynamic'`):
  * the answer depends on the request's cookie and the database.
  *
- * Next gives a server component no pathname, so a guarded page passes its own path as
- * `returnTo` — a literal like `'/admin/users'`, built from `params` on a dynamic route.
+ * Next gives a server component no pathname, so `proxy.ts` forwards the requested
+ * `pathname + search` as the `x-devmentor-path` request header and a signed-out visitor
+ * returns to that (validated by `safeReturnTo`). Each guard still takes its own path as
+ * the fallback `returnTo` — a literal like `'/admin/users'` — used when the header is
+ * absent (proxy not matched) or unsafe. This matters for layouts: Next lets a layout's
+ * redirect win over its page's, and a layout's literal is only its section root.
  *
  * Failure stays closed and never loops: a missing or dead session redirects to sign-in,
  * but an infrastructure failure while a cookie is present (database down,
@@ -79,20 +85,35 @@ export function signInRedirectPath(returnTo: string): string {
 }
 
 /**
- * The live session, or a redirect to `/sign-in?returnTo=<returnTo>` when there is none.
+ * Where a signed-out visitor returns after sign-in: the path `proxy.ts` forwarded for
+ * this request when `safeReturnTo` accepts it, else `fallback`.
+ */
+async function requestedPath(fallback: string): Promise<string> {
+  return safeReturnTo((await headers()).get(REQUEST_PATH_HEADER), fallback);
+}
+
+/** Redirect to sign-in, returning to the requested path (see `requestedPath`). */
+async function redirectToSignIn(fallback: string): Promise<never> {
+  redirect(signInRedirectPath(await requestedPath(fallback)));
+}
+
+/**
+ * The live session, or a redirect to `/sign-in?returnTo=<requested path>` when there is
+ * none.
  *
- * @param returnTo the calling page's own path, e.g. `'/home'`.
+ * @param returnTo the calling page's own path, e.g. `'/home'` — the fallback when the
+ *   proxy forwarded no usable path.
  */
 export async function requirePageSession(returnTo: string): Promise<Session> {
   const session = await getPageSession();
   if (!session) {
-    redirect(signInRedirectPath(returnTo));
+    return redirectToSignIn(returnTo);
   }
   return session;
 }
 
 /**
- * The live session when it holds `role`. Signed out → `/sign-in?returnTo=<returnTo>`;
+ * The live session when it holds `role`. Signed out → `/sign-in?returnTo=<requested path>`;
  * signed in without `role` → the caller's own home (`homeFor`). That cannot loop as long
  * as each home page requires the role `homeFor` picked it for: `/admin` → `operator`,
  * `/mentor` → `mentor`, `/home` → `mentee`.
@@ -100,7 +121,7 @@ export async function requirePageSession(returnTo: string): Promise<Session> {
  * Call it in the layout **and** in every guarded `page.tsx`: a layout does not re-run on
  * client-side navigation.
  *
- * @param returnTo the calling page's own path, e.g. `'/admin/users'`.
+ * @param returnTo the calling page's own path, e.g. `'/admin/users'` (fallback, as above).
  */
 export async function requirePageRole(role: Role, returnTo: string): Promise<Session> {
   const session = await requirePageSession(returnTo);
@@ -112,12 +133,12 @@ export async function requirePageRole(role: Role, returnTo: string): Promise<Ses
  * `requirePageRole` that also returns the user's own account (see `getPageAccount`),
  * for a layout or page that shows who is signed in. Same redirects, same failures.
  *
- * @param returnTo the calling page's own path, e.g. `'/home'`.
+ * @param returnTo the calling page's own path, e.g. `'/home'` (fallback, as above).
  */
 export async function requirePageAccount(role: Role, returnTo: string): Promise<PageAccount> {
   const account = await getPageAccount();
   if (!account) {
-    redirect(signInRedirectPath(returnTo));
+    return redirectToSignIn(returnTo);
   }
   requireHeldRole(account.session, role);
   return account;
