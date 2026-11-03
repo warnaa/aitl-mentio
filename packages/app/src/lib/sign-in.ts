@@ -32,16 +32,19 @@ export const SIGN_IN_ERRORS = ['unavailable', 'state', 'email', 'unverified', 'c
 
 export type SignInError = (typeof SIGN_IN_ERRORS)[number];
 
-export function signInErrorPath(reason: SignInError): string {
+export function signInErrorPath(reason: SignInNoticeReason): string {
   return `${SIGN_IN_PATH}?error=${reason}`;
 }
 
+/** Where an already-verified link lands: confirmed, but no session (edge case 16). */
+export const SIGN_IN_VERIFIED_PATH = `${SIGN_IN_PATH}?verified=1`;
+
 /**
- * Every `?error=` reason `/sign-in` explains: the GitHub routes' reasons plus
- * `verification`, which the email-verification route sends from Slice 4 (an expired
- * or invalid link).
+ * Every `?error=` reason `/sign-in` explains: the GitHub routes' reasons plus the two
+ * the email-verification route sends — `verification` (an expired, invalid or
+ * superseded link) and `verification-unavailable` (the link could not be checked).
  */
-export type SignInNoticeReason = SignInError | 'verification';
+export type SignInNoticeReason = SignInError | 'verification' | 'verification-unavailable';
 
 export const SIGN_IN_CANCELLED_NOTICE = 'Sign-in was cancelled. No account was created.';
 
@@ -60,8 +63,14 @@ export const SIGN_IN_NOTICES: Readonly<Record<SignInNoticeReason, string>> = {
     'A DevMentor account with this email address is waiting for email verification, so GitHub was not connected to it. Open the verification link sent to that address first, then sign in with GitHub.',
   conflict:
     'This email address belongs to a DevMentor account connected to a different GitHub account. Sign in with that GitHub account instead.',
-  verification: 'This verification link has expired or is not valid. Sign in with GitHub to continue.',
+  verification:
+    'This verification link has expired or is not valid. Register again with the same email address to get a new link, or sign in if you already confirmed it.',
+  'verification-unavailable':
+    'We could not confirm your email address right now. Open the link from your email again in a few minutes.',
 };
+
+/** What `/sign-in?verified=1` says. */
+export const SIGN_IN_VERIFIED_NOTICE = 'Your email address is confirmed. Sign in to continue.';
 
 const isNoticeReason = (value: string): value is SignInNoticeReason => Object.hasOwn(SIGN_IN_NOTICES, value);
 
@@ -70,9 +79,12 @@ const isNoticeReason = (value: string): value is SignInNoticeReason => Object.ha
  * `?error=` wins over `?cancelled=1` (the routes never send both); an unknown error or
  * any other `cancelled` value is ignored rather than echoed.
  */
-export function signInNotice(query: { cancelled?: string; error?: string }): string | null {
+export function signInNotice(query: { cancelled?: string; error?: string; verified?: string }): string | null {
   if (query.error !== undefined && isNoticeReason(query.error)) {
     return SIGN_IN_NOTICES[query.error];
+  }
+  if (query.verified === '1') {
+    return SIGN_IN_VERIFIED_NOTICE;
   }
   return query.cancelled === '1' ? SIGN_IN_CANCELLED_NOTICE : null;
 }

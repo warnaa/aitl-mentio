@@ -87,6 +87,24 @@ a different GitHub account). An `AppError` may carry optional
   `session_version` only when the request carries a live session. Past the CSRF check
   it never fails: if the session cannot be resolved (secret unset, database down) the
   failure is logged, the bump skipped, and the cookie still expired.
+- `POST /api/auth/register` (CSRF header required; `registerSchema` body
+  `{ displayName, email, password, returnTo? }`) answers `{ ok: true, data: { email } }`
+  once the verification mail is accepted — it sets no cookie — or 409 `conflict` (a
+  verified account owns the address; the message says whether to sign in or use GitHub),
+  422, 429 `rate_limited`, 503.
+- `POST /api/auth/login` (CSRF header required; `loginSchema` body
+  `{ email, password, returnTo? }`) sets `devmentor_session` and answers
+  `{ ok: true, data: { redirectTo } }` (the sanitised `returnTo`, else the role home —
+  not a `UserDto`, which the spec first named: the form only needs where to go), or,
+  with no cookie, 401 `unauthorized` with the one message "Email or password is
+  incorrect." for an unknown address and a wrong password alike, 403 `email_unverified`,
+  422, 429, 503.
+- `GET /api/auth/verify-email?token` is **browser-navigated** (302 only): a fresh
+  verification sets `devmentor_session` and redirects to the sanitised `returnTo` or
+  the role home; an already-verified account goes to `/sign-in?verified=1` with no
+  session; a missing, invalid, expired or superseded token to
+  `/sign-in?error=verification`; anything unexpected to
+  `/sign-in?error=verification-unavailable`. Both reasons are rendered by `/sign-in`.
 - `makeCrudRoute` behavior asserted by `packages/core/src/http/makeCrudRoute.test.ts`:
   the default id parameter `id`, and the messages "This operation is not supported",
   "Missing resource id", and "Request body must be valid JSON".

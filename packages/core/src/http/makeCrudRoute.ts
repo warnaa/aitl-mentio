@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { withRequestScope } from '../container/container';
 import type { Cradle } from '../container/cradle';
 import { apiHandler, type ApiRouteContext } from './apiHandler';
-import { BadRequestError, type FieldErrors, ValidationError } from './errors';
+import { readJsonBody, parseWith } from './body';
+import { BadRequestError } from './errors';
 
 /**
  * The service shape a CRUD route drives. Every method is optional except `list` — a
@@ -34,32 +35,11 @@ export interface MakeCrudRouteOptions<Entity, CreateInput, UpdateInput> {
   authorize?: (req: Request, cradle: Cradle) => void | Promise<void>;
 }
 
-function flattenZodError(error: z.ZodError): FieldErrors {
-  const fieldErrors: FieldErrors = {};
-  for (const issue of error.issues) {
-    const key = issue.path.length ? issue.path.join('.') : '_root';
-    (fieldErrors[key] ??= []).push(issue.message);
-  }
-  return fieldErrors;
-}
-
-async function readJsonBody(req: Request): Promise<unknown> {
-  try {
-    return await req.json();
-  } catch {
-    throw new BadRequestError('Request body must be valid JSON');
-  }
-}
-
-function parseWith<T>(schema: z.ZodType<T> | undefined, data: unknown): T {
+function parseInput<T>(schema: z.ZodType<T> | undefined, data: unknown): T {
   if (!schema) {
     throw new BadRequestError('This operation is not supported');
   }
-  const result = schema.safeParse(data);
-  if (!result.success) {
-    throw new ValidationError('Validation failed', flattenZodError(result.error));
-  }
-  return result.data;
+  return parseWith(schema, data);
 }
 
 /**
@@ -106,7 +86,7 @@ export function makeCrudRoute<Entity, CreateInput = never, UpdateInput = never>(
     run(req, async (cradle) => {
       const service = options.resolve(cradle);
       if (!service.create) throw new BadRequestError('This operation is not supported');
-      return service.create(parseWith(options.createSchema, await readJsonBody(req)));
+      return service.create(parseInput(options.createSchema, await readJsonBody(req)));
     }),
   );
 
@@ -116,7 +96,7 @@ export function makeCrudRoute<Entity, CreateInput = never, UpdateInput = never>(
       const id = await idFrom(ctx);
       if (id === undefined) throw new BadRequestError('Missing resource id');
       if (!service.update) throw new BadRequestError('This operation is not supported');
-      return service.update(id, parseWith(options.updateSchema, await readJsonBody(req)));
+      return service.update(id, parseInput(options.updateSchema, await readJsonBody(req)));
     }),
   );
 

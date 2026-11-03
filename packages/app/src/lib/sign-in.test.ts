@@ -13,6 +13,8 @@ import {
   SIGN_IN_ERRORS,
   SIGN_IN_NOTICES,
   SIGN_IN_PATH,
+  SIGN_IN_VERIFIED_NOTICE,
+  SIGN_IN_VERIFIED_PATH,
   signInNotice,
   GITHUB_SIGN_IN_PATH,
   githubSignInHref,
@@ -31,6 +33,8 @@ describe('sign-in paths', () => {
     expect(SIGN_IN_CANCELLED_PATH).toBe('/sign-in?cancelled=1');
     expect(SIGN_IN_ERRORS).toEqual(['unavailable', 'state', 'email', 'unverified', 'conflict']);
     expect(signInErrorPath('state')).toBe('/sign-in?error=state');
+    expect(signInErrorPath('verification-unavailable')).toBe('/sign-in?error=verification-unavailable');
+    expect(SIGN_IN_VERIFIED_PATH).toBe('/sign-in?verified=1');
   });
 });
 
@@ -94,8 +98,8 @@ describe('signInNotice', () => {
     expect(SIGN_IN_CANCELLED_NOTICE).toBe('Sign-in was cancelled. No account was created.');
   });
 
-  it('has copy for every reason the GitHub routes send, and for verification', () => {
-    for (const reason of [...SIGN_IN_ERRORS, 'verification'] as const) {
+  it('has copy for every reason the GitHub and verification routes send', () => {
+    for (const reason of [...SIGN_IN_ERRORS, 'verification', 'verification-unavailable'] as const) {
       expect(signInNotice({ error: reason })).toBe(SIGN_IN_NOTICES[reason]);
       expect(SIGN_IN_NOTICES[reason]).not.toMatch(/[·•]/);
     }
@@ -107,7 +111,15 @@ describe('signInNotice', () => {
     expect(signInNotice({ error: 'email' })).toMatch(/no verified primary email address/);
     expect(signInNotice({ error: 'unverified' })).toMatch(/Open the verification link sent to that address first/);
     expect(signInNotice({ error: 'conflict' })).toMatch(/different GitHub account/);
-    expect(signInNotice({ error: 'verification' })).toMatch(/^This verification link has expired or is not valid\./);
+    expect(signInNotice({ error: 'verification' })).toMatch(/^This verification link has expired or is not valid\. Register again/);
+    expect(signInNotice({ error: 'verification-unavailable' })).toMatch(/^We could not confirm your email address right now\./);
+  });
+
+  it('confirms a verified address without a session, and lets an error win over it', () => {
+    expect(signInNotice({ verified: '1' })).toBe(SIGN_IN_VERIFIED_NOTICE);
+    expect(SIGN_IN_VERIFIED_NOTICE).toBe('Your email address is confirmed. Sign in to continue.');
+    expect(signInNotice({ verified: '1', error: 'verification' })).toBe(SIGN_IN_NOTICES.verification);
+    expect(signInNotice({ verified: 'yes' })).toBeNull();
   });
 
   it('prefers a known error over cancelled', () => {
