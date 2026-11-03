@@ -14,7 +14,7 @@ export const SPAWN_FAILED = -1;
  * `steps.mjs`.
  *
  * @typedef {object} SetupEffects
- * @property {(command: string, args: string[]) => Promise<{code: number, stdout: string, stderr: string}>} run
+ * @property {(command: string, args: string[], options?: {shell?: boolean}) => Promise<{code: number, stdout: string, stderr: string}>} run
  * @property {(path: string) => Promise<string|null>} readText
  * @property {(path: string, text: string) => Promise<void>} writeText
  * @property {(path: string) => Promise<number|null>} mtime
@@ -33,12 +33,24 @@ export function createNodeEffects() {
   return {
     /**
      * Run a command to completion, inheriting stdin and streaming nothing: stdout and
-     * stderr are captured so a failing step can report why. Never uses a shell, so no
-     * argument needs quoting.
+     * stderr are captured so a failing step can report why. Uses a shell only when the
+     * caller asks (npm's Windows `.cmd` shim, see `npmInvocation`), and then with a
+     * fixed command string that needs no quoting.
      */
-    run: (command, args) =>
+    run: (command, args, options = {}) =>
       new Promise((resolve) => {
-        const child = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+        let child;
+        try {
+          child = spawn(command, args, {
+            shell: options.shell === true,
+            stdio: ['ignore', 'pipe', 'pipe'],
+          });
+        } catch (error) {
+          // Some launch refusals throw synchronously instead of emitting 'error' (e.g.
+          // a `.cmd` without a shell on Windows): report them the same way.
+          resolve({ code: SPAWN_FAILED, stdout: '', stderr: error.message });
+          return;
+        }
         let stdout = '';
         let stderr = '';
 

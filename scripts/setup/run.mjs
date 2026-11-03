@@ -23,14 +23,29 @@ export const DATABASE_POLL_INTERVAL_MS = 1_000;
 export const DATABASE_PROBE_TIMEOUT_MS = 2_000;
 
 /**
- * On Windows, `npm` is a shell shim; spawning without a shell needs the `.cmd` name.
- * Same guard `tests/integration/global-setup.ts` uses.
+ * How to launch npm with these arguments. On Windows `npm` is the `npm.cmd` shim,
+ * which Node refuses to spawn without a shell (`EINVAL`, CVE-2024-27980), and passing
+ * an argument array alongside `shell` is deprecated (DEP0190), so there it becomes one
+ * command string. Every npm argument here is a fixed literal, so the shell has nothing
+ * to interpret. Same approach as `tests/integration/npm.ts`.
  *
  * @param {string} platform
- * @returns {string}
+ * @param {string[]} args
+ * @returns {{command: string, args: string[], options: {shell: boolean}}}
  */
-export function npmExecutable(platform) {
-  return platform === 'win32' ? 'npm.cmd' : 'npm';
+export function npmInvocation(platform, args) {
+  return platform === 'win32'
+    ? { command: `npm.cmd ${args.join(' ')}`, args: [], options: { shell: true } }
+    : { command: 'npm', args, options: { shell: false } };
+}
+
+/**
+ * @param {import('./effects.mjs').SetupEffects} effects
+ * @param {string[]} args
+ */
+function runNpm(effects, args) {
+  const npm = npmInvocation(effects.platform, args);
+  return effects.run(npm.command, npm.args, npm.options);
 }
 
 /**
@@ -75,7 +90,7 @@ export async function installDependencies(effects) {
     return step('Install dependencies', SKIPPED, 'node_modules is up to date with package-lock.json');
   }
 
-  const result = await effects.run(npmExecutable(effects.platform), ['install']);
+  const result = await runNpm(effects, ['install']);
 
   if (result.code !== 0) {
     return step('Install dependencies', FAILED, `npm install exited with code ${result.code}`);
@@ -239,7 +254,7 @@ export async function provisionDatabase(effects, options = {}) {
  * @param {string} script
  */
 export async function runNpmScript(effects, name, script) {
-  const result = await effects.run(npmExecutable(effects.platform), ['run', script]);
+  const result = await runNpm(effects, ['run', script]);
 
   if (result.code !== 0) {
     return step(

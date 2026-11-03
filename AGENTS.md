@@ -133,6 +133,12 @@ the reference example every new concept copies. See
 
 - Copy `.env.example` to `.env`. `.env` is git-ignored; defaults match
   `docker-compose.yml` (`devmentor` / `devmentor` / `devmentor`).
+- The root `.env` is the only env file. Next reads env files only from
+  `packages/app/`, so `next.config.ts` loads the root one through
+  `src/lib/repo-env.ts` (`process.loadEnvFile`), as `mikro-orm.config.ts` does for the
+  CLI. A variable already set in the real environment always wins over `.env`, and a
+  missing file is ignored. The integration harness pins every documented key so a
+  developer's `.env` never leaks into a test run.
 - All env access funnels through zod schemas — `@devmentor/core` (`config/env.ts`) for
   the app, `@devmentor/db` (`env.ts`) for the MikroORM CLI. **Nothing under `packages/`
   reads `process.env` directly.** There are exactly two documented exceptions, both

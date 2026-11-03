@@ -6,7 +6,7 @@ import {
   MINIMUM_NODE_MAJOR,
   configureEnvironment,
   installDependencies,
-  npmExecutable,
+  npmInvocation,
   preflight,
   provisionDatabase,
   runNpmScript,
@@ -37,13 +37,23 @@ function fakeEffects(overrides = {}) {
   };
 }
 
-describe('npmExecutable', () => {
-  it('uses the cmd shim on Windows', () => {
-    expect(npmExecutable('win32')).toBe('npm.cmd');
+describe('npmInvocation', () => {
+  it('runs the cmd shim as one shell command string on Windows', () => {
+    // Spawning npm.cmd without a shell is refused with EINVAL (CVE-2024-27980), and an
+    // argument array next to `shell` is deprecated (DEP0190).
+    expect(npmInvocation('win32', ['run', 'db:migrate'])).toEqual({
+      command: 'npm.cmd run db:migrate',
+      args: [],
+      options: { shell: true },
+    });
   });
 
-  it('uses plain npm elsewhere', () => {
-    expect(npmExecutable('darwin')).toBe('npm');
+  it('runs plain npm with an argument array and no shell elsewhere', () => {
+    expect(npmInvocation('linux', ['install'])).toEqual({
+      command: 'npm',
+      args: ['install'],
+      options: { shell: false },
+    });
   });
 });
 
@@ -185,7 +195,15 @@ describe('installDependencies', () => {
     const result = await installDependencies(effects);
 
     expect(result.status).toBe('ran');
-    expect(effects.run).toHaveBeenCalledWith('npm', ['install']);
+    expect(effects.run).toHaveBeenCalledWith('npm', ['install'], { shell: false });
+  });
+
+  it('installs through a shell on Windows instead of spawning npm.cmd directly', async () => {
+    const effects = fakeEffects({ platform: 'win32' });
+
+    await installDependencies(effects);
+
+    expect(effects.run).toHaveBeenCalledWith('npm.cmd install', [], { shell: true });
   });
 
   it('fails and reports the exit code when npm install breaks', async () => {
@@ -408,7 +426,7 @@ describe('runNpmScript', () => {
       status: 'ran',
       detail: 'npm run db:migrate',
     });
-    expect(effects.run).toHaveBeenCalledWith('npm', ['run', 'db:migrate']);
+    expect(effects.run).toHaveBeenCalledWith('npm', ['run', 'db:migrate'], { shell: false });
   });
 
   it('fails with stderr detail', async () => {
