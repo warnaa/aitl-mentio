@@ -10,6 +10,11 @@ export {
 export { LoadingMessage } from './feedback/LoadingMessage';
 export { ErrorMessage } from './feedback/ErrorMessage';
 export { EmptyState } from './feedback/EmptyState';
+export {
+  WorkflowAction,
+  WORKFLOW_ACTION_FAILURE,
+  type WorkflowActionProps,
+} from './actions/WorkflowAction';
 
 export * from './forms/FormField';
 export * from './shell/AppShell';
