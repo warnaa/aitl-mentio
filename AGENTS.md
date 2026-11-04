@@ -1,12 +1,8 @@
 # AGENTS.md
 
-Instructions for any AI agent (Claude Code, other CLIs, autonomous runs) working in
-this repository.
-
 ## Project
 
-**DevMentor** — a platform connecting developers with mentors. It is an npm-workspaces
-monorepo built on the latest Next.js + TypeScript + React.
+**DevMentor** — a platform connecting developers with mentors.
 
 ### Tech stack
 
@@ -25,32 +21,23 @@ monorepo built on the latest Next.js + TypeScript + React.
 
 ### Monorepo layout
 
-Everything lives under `packages/*`. The dependency graph is strictly one-way:
+Workspace packages live under `packages/*`; dependencies flow `app → core → db`
+and `app → ui`.
 
-```
-app ──> core ──> db
- └────> ui
+- `@devmentor/app`: Next.js host and composition root; may import every package.
+- `@devmentor/core`: zod config, pino logger, awilix container and domain services;
+  knows db, never imports React/Next/ui.
+- `@devmentor/db`: MikroORM config, entities, migrations and seeders; imports no
+  other workspace. Only db may import `@mikro-orm/*`.
+- `@devmentor/ui`: presentational shadcn primitives and Tailwind tokens; no core/db imports.
 
-packages/
-  app    @devmentor/app    Next.js host + composition root (the only package that
-                           may import every other package)
-  core   @devmentor/core   config (zod), logger (pino), awilix container, domain
-                           services. Knows about db; never imports react/next/ui.
-  db     @devmentor/db     MikroORM config, entities, migrations, seeders. The leaf —
-                           the only package that imports @mikro-orm/*. Knows nothing
-                           about the others.
-  ui     @devmentor/ui     shadcn-ui primitives + Tailwind design tokens.
-                           Presentational only — no core/db imports.
-```
-
-These boundaries are enforced by ESLint (`no-restricted-imports` in
-`eslint.config.mjs`); a cycle-introducing import fails `npm run lint`.
+Run `npm run lint` for the dependency rules (`no-restricted-imports` in
+`eslint.config.mjs`).
 
 ### Domain concept convention
 
-Domain code is not organized into `modules/`. Each concept (`auth`, `mentors`,
-`availability`, `bookings`, `payments`, `messages`, `favorites`, `reviews`, ...) is a
-same-named sub-folder repeated across the layers that need it:
+Do not organize domain code into `modules/`. Repeat each concept name (`auth`, `mentors`, `availability`,
+`bookings`, `payments`, `messages`, `favorites`, `reviews`, ...) across layers:
 
 - `packages/db/src/entities/<concept>/<name>.entity.ts`
 - `packages/core/src/services/<concept>/<name>.service.ts`
@@ -58,10 +45,9 @@ same-named sub-folder repeated across the layers that need it:
 - `packages/app/src/app/api/<concept>/route.ts` and the matching `page.tsx` under
   the relevant persona route group
 
-Create a concept folder only when its first file is added — never scaffold empty
-ones. This is a directory convention, not a module runtime: there is no per-concept
-setup/ACL/auto-discovery. See `.ai/specs/2026-09-01-engineering-standards.md` for the
-full naming table and the payments-port/event-emitter patterns.
+Create concept folders with their first file; no empty scaffolding or per-concept
+setup/ACL/auto-discovery. Naming and payments-port/event-emitter patterns:
+`.ai/specs/2026-09-01-engineering-standards.md`.
 
 Event IDs follow `concept.entity.action` (e.g. `bookings.booking.created`) and are
 emitted through the typed emitter in `packages/core/src/events`, registered on the
@@ -69,46 +55,43 @@ emitted through the typed emitter in `packages/core/src/events`, registered on t
 
 ### Reusable API & UI layer
 
-Every route and every page reuses two shared layers instead of re-implementing
-fetch/validation/auth/error-handling per feature:
+Use these shared layers; never hand-roll fetch, validation, auth, error handling or CRUD:
 
 - `packages/core/src/http/` — `errors.ts` (typed `AppError` hierarchy),
   `apiHandler.ts` (wraps a route: catches `AppError`s, maps to status + JSON
   envelope, logs unexpected failures), `makeCrudRoute.ts` (schema + service in,
   `{ GET, POST, PUT, DELETE }` out, for plain CRUD resources), `auth.ts`
-  (`requireSession`, `requireRole`, ownership assertions).
+  (`requireSession`, `requireRole`, ownership assertions). Services throw typed
+  `AppError`s and return DTOs, never responses. Server routes use
+  `makeCrudRoute`/`apiHandler`; no bare `try/catch` + `NextResponse.json`.
 - `packages/ui/src/backend/` — `api/apiCall.ts` (the only sanctioned `fetch()` call
   site), `forms/CrudForm.tsx`, `tables/DataTable.tsx`,
-  `feedback/{LoadingMessage,ErrorMessage,EmptyState}.tsx`.
+  `feedback/{LoadingMessage,ErrorMessage,EmptyState}.tsx`. Client pages use
+  `apiCall`/`apiCallOrThrow`, forms `CrudForm`, lists `DataTable`, and states `feedback/`.
 
 New reusable components have one designated home each — never scattered ad hoc:
 
-1. Shadcn primitive → `ui/src/components/ui/` (via `npx shadcn@latest add`, never
-   hand-written).
+1. Shadcn primitive → `ui/src/components/ui/`; never hand-write. Run
+   `npx shadcn@latest add <c>` in `packages/ui` (committed `components.json`).
 2. Generic, concept-agnostic panel pattern → `ui/src/backend/<category>/`.
 3. Component tied to one concept's domain shape → `ui/src/components/<concept>/`,
    named after the same concept folder used in `db`/`core`.
 4. Used by exactly one page → colocate next to that `page.tsx` until a second
    consumer appears.
 
-The API envelope (`{ ok, data }` / `{ ok, error }`) is a *shape convention*, not a
-shared type: `core/src/http` and `ui/src/backend/api` each declare their own matching
-type because `ui` must not import `core`. `/api/users` + `/admin/users/page.tsx` are
-the reference example every new concept copies. See
-`.ai/specs/2026-09-01-engineering-standards.md` for the full rationale.
+Declare matching `{ ok, data }` / `{ ok, error }` types separately in `core/src/http`
+and `ui/src/backend/api`; ui must not import core. Copy `/api/users` +
+`/admin/users/page.tsx` for new concepts. Rationale: the engineering-standards spec above.
 
 ### Scripts (run from the repo root)
 
-- `npm run setup` — one-command installer: `npm install`, `.env` from `.env.example`,
-  PostgreSQL available, migrations, seed. **Idempotent** — every step reports itself as
-  `ran` or `skipped`, an existing `.env` is never overwritten, and the dev server is
-  deliberately not started (`npm run dev` never exits). **Docker is a fallback, not a
-  requirement**: setup TCP-probes the configured address (`DATABASE_URL`, else
-  `DB_HOST`/`DB_PORT`, environment before `.env`) and reuses any PostgreSQL already
-  listening; Compose is only used when nothing answers. Implementation in
-  `scripts/setup/` (plain Node ESM, `node:*` built-ins only, so it runs on a fresh
-  clone) — pure decisions in `steps.mjs`, all I/O behind the injectable effects in
-  `effects.mjs`, ordering in `run.mjs`.
+- `npm run setup` — `npm install`, create `.env` from `.env.example`, ensure
+  PostgreSQL, migrate and seed. Idempotent: report `ran`/`skipped` per step, never
+  overwrite `.env` or start the nonterminating dev server. TCP-probe `DATABASE_URL`,
+  else `DB_HOST`/`DB_PORT` (environment before `.env`); reuse a listening PostgreSQL,
+  use Compose only if nothing answers. `scripts/setup/` uses plain Node ESM and
+  `node:*` built-ins to run before install: pure decisions in `steps.mjs`, I/O in
+  injectable `effects.mjs`, ordering in `run.mjs`.
 - `npm run dev` — start the Next.js app (`@devmentor/app`).
 - `npm run build` / `npm run start` — production build / serve (force `NODE_ENV=production`).
 - `npm run typecheck` — `tsc --noEmit` across all packages.
@@ -133,39 +116,31 @@ the reference example every new concept copies. See
 
 - Copy `.env.example` to `.env`. `.env` is git-ignored; defaults match
   `docker-compose.yml` (`devmentor` / `devmentor` / `devmentor`).
-- The root `.env` is the only env file. Next reads env files only from
-  `packages/app/`, so `next.config.ts` loads the root one through
-  `src/lib/repo-env.ts` (`process.loadEnvFile`), as `mikro-orm.config.ts` does for the
-  CLI. A variable already set in the real environment always wins over `.env`, and a
-  missing file is ignored. The integration harness pins every documented key so a
-  developer's `.env` never leaks into a test run.
-- All env access funnels through zod schemas — `@devmentor/core` (`config/env.ts`) for
-  the app, `@devmentor/db` (`env.ts`) for the MikroORM CLI. **Nothing under `packages/`
-  reads `process.env` directly.** There are exactly two documented exceptions, both
-  outside `packages/`:
+- Use only the root `.env`. Next normally reads from `packages/app/`;
+  `next.config.ts` loads the root via `src/lib/repo-env.ts` (`process.loadEnvFile`),
+  as `mikro-orm.config.ts` does for the CLI. Real environment wins; ignore a missing
+  file. The integration harness pins every documented key to isolate developer config.
+- Read env through zod: `@devmentor/core` `config/env.ts` for the app,
+  `@devmentor/db` `env.ts` for the CLI. No direct `process.env` under `packages/`.
+  Two documented exceptions outside packages:
   - `tests/integration/environment.ts` — inherits the parent environment to pass
     ephemeral test configuration to migration/build/app child processes.
-  - `scripts/setup/effects.mjs` — `npm run setup` runs on a fresh clone *before*
-    `npm install`, so it cannot import zod. It reads `process.env`, `process.version`,
-    and `process.platform` behind the injectable `SetupEffects` adapter, and
-    re-implements the `DATABASE_URL`-over-`DB_*` precedence in `steps.mjs`
-    (`resolveDatabaseTarget`). Keep that precedence in step with the two zod schemas.
+  - `scripts/setup/effects.mjs` — before install, use no zod. Read `process.env`,
+    `process.version`, `process.platform` behind injectable `SetupEffects`. Keep
+    `steps.mjs` `resolveDatabaseTarget` (`DATABASE_URL` over `DB_*`) in sync with both schemas.
 
 ### Conventions & gotchas (learned the hard way — see `.ai/lessons.md`)
 
-- **Packages ship TypeScript source**, not built JS. They are consumed via `exports`
-  → `./src/*` and compiled by Next's `transpilePackages`. There is no per-package
-  build step.
-- **Use extensionless relative imports** inside packages (`./foo`, not `./foo.js`).
-  Turbopack does not rewrite `.js`→`.ts` the way `tsc` does; extensionless works for
-  `tsc` (bundler), Turbopack, and `tsx` alike.
+- Ship TypeScript source via `exports` → `./src/*`; Next compiles it with
+  `transpilePackages`. No per-package build step.
+- Use extensionless relative imports (`./foo`, not `./foo.js`) inside packages.
+  Turbopack cannot rewrite `.js`→`.ts`; extensionless works with tsc (bundler) and tsx too.
 - **MikroORM v7 has no decorators** in `@mikro-orm/core`. Define entities with
   `defineEntity` + the `p` (`defineEntity.properties`) builders. For cross-entity
   relations use a **per-property thunk** (`user: () => p.oneToOne(User)...`) so the
   reference resolves lazily at discovery time (avoids circular-import + wrapping bugs).
-- **Entities are registered as `globalThis` singletons** (`entities/define.ts`) so the
-  same schema object is shared across Next's RSC/SSR/route module graphs. Without this,
-  queries pass a different schema instance than was discovered and `populate` breaks.
+- Register entities as `globalThis` singletons (`entities/define.ts`) across Next's
+  RSC/SSR/route graphs; different query/discovery schema instances break `populate`.
 - **`MikroORM.init()` does not connect in v7** — `getOrm()` calls `orm.connect()`
   explicitly and does not cache a failed connection (so the app recovers if the DB
   comes back). The ORM and awilix container are cached on `globalThis` to survive HMR.
@@ -180,30 +155,19 @@ the reference example every new concept copies. See
   | `app`    | `(mentee)/*`, `(mentor)/*` — signed in               | shadcn via `@devmentor/ui`, inside `AppShell`    |
   | `admin`  | `/admin/*` — operator                                | shadcn via `@devmentor/ui`, inside `AppShell`    |
 
-  Every `app` and `admin` layout renders `SignedInShell`
-  (`app/src/components/auth/`), which puts `AppShell` around the page with
-  `WorkspaceNav`: the links for the **union** of the user's roles, from
-  `app/src/lib/nav.ts`. A new signed-in page gets its link there — never a link to a
-  page that does not exist yet, and never one that grants a role (R07: mentors join by
-  invitation, operators by configuration). `AppShell` lives in `ui`, so it knows no
-  `Role` and no `next/link`; the app supplies the rendered links. Add shadcn
-  components with `npx shadcn@latest add <c>` run in `packages/ui` (its
-  `components.json` is committed).
+  Every app/admin layout renders `SignedInShell` (`app/src/components/auth/`) with
+  `AppShell` and `WorkspaceNav`. Add existing signed-in pages to `app/src/lib/nav.ts`
+  for the union of user roles; never add nonexistent pages or role-granting links
+  (R07: mentors by invitation, operators by configuration). App supplies rendered
+  links; ui's `AppShell` knows neither `Role` nor `next/link`.
 - Request-scoped work goes through `withScope(fn)` from `@devmentor/core`, which opens
   an awilix scope with a forked `EntityManager` and disposes it afterward.
-- **Never hand-roll fetch / validation / error-handling / CRUD.** Server routes use
-  `makeCrudRoute`/`apiHandler` (no bare `try/catch` + `NextResponse.json`); services
-  throw the typed `AppError`s and return DTOs, never build responses. Client pages
-  fetch through `apiCall`/`apiCallOrThrow` (never raw `fetch`), forms use `CrudForm`,
-  lists use `DataTable`, and loading/error/empty states use the `feedback/` components.
 - **Collection routes are non-dynamic**, so Next passes no `params` — CRUD helpers
   guard `ctx.params` before reading it.
-- **Browser-navigated vs fetched routes.** A route the browser *navigates* to (the
-  GitHub OAuth start and callback, and later the email-verification link) catches its
-  own failures and returns a redirect `Response` — typically to `/sign-in?error=…` —
-  which `apiHandler` passes through unchanged, so a user never sees a JSON envelope
-  rendered as a page. Every other route is *fetched* through `apiCall` and answers the
-  `{ ok, data }` / `{ ok, error }` envelope.
+- Browser-navigated routes (GitHub OAuth start/callback and later email verification)
+  catch failures and redirect, typically to `/sign-in?error=…`. `apiHandler` passes
+  the `Response` through so JSON is never rendered as a page. Other routes use
+  `apiCall` and the `{ ok, data }` / `{ ok, error }` envelope.
 - **State-changing routes are JSON-only.** `apiHandler` requires the
   `x-devmentor-request` header on every method other than `GET`/`HEAD`/`OPTIONS`
   (login CSRF defence), so a mutating route is called through `apiCall` or `CrudForm`,
@@ -263,12 +227,10 @@ the reference example every new concept copies. See
   tree in the node environment, with no DOM or renderer. *Client components* opt in
   with a per-file `// @vitest-environment jsdom` pragma and use
   `@testing-library/react` + `@testing-library/user-event`.
-- **Guarded pages have two mocking seams**, because `redirect()` throws a framework
-  control-flow error instead of returning. Page tests mock `app/src/lib/session.ts`,
-  assert the tree on the allowed path and a sentinel throw on the denied one;
-  `session.test.ts` mocks `next/navigation` and asserts the `redirect` arguments.
-  Never assert against Next internals. The cost: every guarded `page.tsx` is a
-  `coverage.include` entry that needs both the authorized and the redirected branch.
+- `redirect()` throws: guarded-page tests mock `app/src/lib/session.ts`, assert the
+  allowed tree and a denied sentinel throw. `session.test.ts` mocks `next/navigation`
+  and checks redirect arguments, never Next internals. Include every guarded
+  `page.tsx` in coverage and cover authorized and redirected branches.
 - Integration/browser tests **supplement but never replace unit tests** or the 100%
   unit-coverage requirement. Add integration coverage whenever behavior crosses the
   app/database/API/browser boundary.
@@ -280,11 +242,6 @@ the reference example every new concept copies. See
   live accessibility tree first, assert semantic roles/text rather than guessed CSS,
   capture screenshots at key assertions, and close each isolated session in
   `finally`.
-- The integration harness under `tests/integration/` is one of the two exceptions to
-  the direct-environment-access rule (the other is `scripts/setup/` — see
-  Configuration above): `environment.ts` may inherit the parent process environment
-  only to pass ephemeral test configuration to migration/build/app child processes.
-  Application and package source must still use the zod config modules.
 
 GitHub Actions runs Build, Lint, Unit tests, and Integration tests independently on
 every pull request. A workflow result becomes merge-blocking only when the repository
@@ -292,8 +249,7 @@ ruleset requires those four exact check names.
 
 ## Spec-Driven Development (SDD)
 
-Nontrivial work in this repo is defined by a spec before it's implemented. All SDD
-artifacts live under `.ai/`.
+All SDD artifacts live under `.ai/`:
 
 ```
 .ai/
@@ -307,8 +263,7 @@ artifacts live under `.ai/`.
 
 ### Specs — `.ai/specs/`
 
-- Naming: `YYYY-MM-DD-slug.md`, dated the day the spec was written, `slug` a short
-  kebab-case description (e.g. `2026-09-01-user-auth-refresh-tokens.md`).
+- Naming: `YYYY-MM-DD-slug.md`, dated when written; short kebab-case slug.
 - Lifecycle:
   1. New/active work: file lives directly in `.ai/specs/`.
   2. Once the implementation is complete, verified, and merged: `git mv` the file into
@@ -349,41 +304,27 @@ artifacts live under `.ai/`.
 
 - Use this `.ai/` structure for specs, run logs, and lessons — don't create ad hoc
   scratch docs elsewhere in the repo for these purposes.
-- Keep the `YYYY-MM-DD-slug.md` naming convention exactly as specified above.
 
 ## Working Rules
 
-Distilled from [Boris Cherny's Claude Code
-tips](https://ykdojo.github.io/claude-code-tips/content/boris-claude-code-tips).
-These govern *how* you work; the SDD section above governs *what artifacts* you leave
-behind.
+1. Plan first. If implementation goes sideways, stop and revise the plan/spec.
+   For high-stakes plans, get a skeptical staff-engineer subagent review before coding.
 
-1. **Plan first, and re-plan instead of patching.** Front-load the thinking: a
-   detailed spec beats an ambiguous prompt every time. When implementation goes
-   sideways, stop and revise the plan/spec rather than reactively troubleshooting on
-   top of a bad foundation. For high-stakes plans, get a second opinion — have a
-   subagent review the plan as a skeptical staff engineer before you write code.
-
-2. **Capture every correction the moment it happens.** When the user corrects your
-   approach, write the lesson to `.ai/lessons.md` (and update this file if it's a
-   standing rule) *before* continuing the task. Rules that only live in the current
-   conversation are lost; the point is that the same mistake never recurs.
+2. Before continuing after a user correction, write it to `.ai/lessons.md`; update
+   this file for a standing rule.
 
 3. **Promote anything repeated into a skill or command.** If you find yourself doing
    the same multi-step task more than a couple of times, propose codifying it as a
    project skill or slash command in `.claude/` instead of re-deriving the steps each
    run.
 
-4. **Don't ship the first draft — grill it.** Before declaring work done or moving a
-   spec to `implemented/`, check the diff against the spec's acceptance criteria and
-   actively try to break it. If the result is merely adequate, scrap it and implement
-   the elegant version rather than iterating on a mediocre base. Report failures
-   plainly; never self-report success you haven't verified.
+4. Before declaring work done or moving a spec to `implemented/`, check the diff
+   against acceptance criteria and actively try to break it. If the result is merely
+   adequate, scrap it and implement the elegant version rather than iterating on a
+   mediocre base. Report failures plainly; claim success only after verification.
 
-5. **Delegate breadth to subagents; keep the main context for judgment.** Push wide
-   searches, multi-file reads, and independent parallel work into subagents and keep
-   only their conclusions in the main thread. A clean context window is a
-   correctness feature, not just a cost saving.
+5. Delegate wide searches, multi-file reads and independent parallel work to
+   subagents; keep conclusions in the main thread for judgment.
 
 6. **Work locally; obtain explicit permission before any remote write.** Prepare
    and review changes locally. Never push commits, create or update remote PRs or
