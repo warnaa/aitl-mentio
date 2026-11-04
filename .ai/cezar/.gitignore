@@ -15,3 +15,15 @@ automation-receipts.ndjson.tmp
 automation-log.ndjson
 automation-log.ndjson.tmp
 automation-poll.lock
+dispatch/
+attachments/
+drafts/
+mcp.local.json
+mcp.local.json.cez-tmp-*
+tracker.json
+tracker.json.tmp
+tracker.json.*.tmp
+tracker-association.lock/
+automation-poll.lock.guard/
+automation-mutation.lock.guard/
+automation-mutation.lock

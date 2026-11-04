@@ -16,6 +16,7 @@
 /test-results
 
 # next.js
+/packages/app/next-env.d.ts
 /.next/
 **/.next/
 /out/
