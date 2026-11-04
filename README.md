@@ -202,6 +202,11 @@ Every pull request runs four independent GitHub checks: **Build**, **Lint**, **U
 tests**, and **Integration tests**. Configure those exact names as required checks in
 the GitHub branch ruleset if merges must be blocked until they pass.
 
+**Lint** first runs `node scripts/check-agent-routes.mjs` to validate agent
+instruction routes and line budgets (root ≤ 150 lines, units ≤ 120), then installs
+dependencies and runs ESLint. The agent check also runs locally without installing
+dependencies.
+
 The unit suite uses Vitest and V8 coverage:
 
 ```bash
