@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "eliminate-no-op": {
+      "source": "pat-lewczuk/skills",
+      "sourceType": "github",
+      "skillPath": "skills/eliminate-no-op/SKILL.md",
+      "computedHash": "9f6b46a55e5a8da2f72f7809fa309fa15568ac796bcfbcc3abf4345b1b404392"
+    },
     "om-apply-upgrade-notes": {
       "source": "open-mercato/skills",
       "sourceType": "github",
@@ -216,6 +222,18 @@
       "sourceType": "github",
       "skillPath": "skills/om-verify-in-repo/SKILL.md",
       "computedHash": "0151f3c61d7abac2d98e6fb5c9150d523b36e74ea32d10a5560b4df368aec50b"
+    },
+    "task-router": {
+      "source": "pat-lewczuk/skills",
+      "sourceType": "github",
+      "skillPath": "skills/task-router/SKILL.md",
+      "computedHash": "8208f1224a46e435398fce1f804d5ce2422aa65937415d80ca00572feb438fca"
+    },
+    "threat-model": {
+      "source": "pat-lewczuk/skills",
+      "sourceType": "github",
+      "skillPath": "skills/threat-model/SKILL.md",
+      "computedHash": "d01f1ff536273963b9bf77ce6fb39e8e9a0dd7a5e63a1e63b965b66ef48dba4c"
     }
   }
 }
