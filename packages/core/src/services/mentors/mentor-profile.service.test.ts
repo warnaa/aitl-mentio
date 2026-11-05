@@ -101,6 +101,7 @@ describe('MentorProfileService', () => {
     await expect(service().getMine()).rejects.toBeInstanceOf(NotFoundError);
   });
   it('locks updates, allows incomplete drafts, strips protected keys and enforces shape', async () => {
+    profile.bio = '';
     const result = await service().update({ stackTags: [] });
     expect(result.readiness.ready).toBe(false);
     expect(flush).toHaveBeenCalledOnce();
@@ -111,16 +112,22 @@ describe('MentorProfileService', () => {
     );
     await expect(service().update({ publicWorkUrl: 'javascript:x' })).rejects.toBeInstanceOf(ValidationError);
   });
-  it('keeps a published page complete: an update that breaks the gate is refused unsaved', async () => {
+  it('keeps a published page complete: an update that leaves the gate unmet is refused unsaved', async () => {
     profile.publishedAt = now;
     profile.slug = 'ada-lovelace';
-    const refused = service().update({ stackTags: [] });
+    profile.bio = '';
+    const refused = service().update({ stackTags: ['python'] });
     await expect(refused).rejects.toBeInstanceOf(ValidationError);
-    await expect(refused).rejects.toMatchObject({ fieldErrors: { stackTags: ['Choose at least one stack tag.'] } });
+    await expect(refused).rejects.toMatchObject({ fieldErrors: { bio: ['Describe your experience.'] } });
     expect(flush).not.toHaveBeenCalled();
-    // The real transaction discards its forked identity map; this fake shares one row.
-    profile.stackTags = ['react'];
     expect((await service().update({ bio: 'Still complete' })).bio).toBe('Still complete');
+  });
+  it('lets a published page drop every technology', async () => {
+    profile.publishedAt = now;
+    profile.slug = 'ada-lovelace';
+    const result = await service().update({ stackTags: [] });
+    expect(result).toMatchObject({ stackTags: [], readiness: { ready: true } });
+    expect(flush).toHaveBeenCalledOnce();
   });
   it('stores each stack tag once and keeps tags an update leaves out', async () => {
     expect((await service().update({ stackTags: ['python', 'react', 'python'] })).stackTags).toEqual([
@@ -184,6 +191,10 @@ describe('MentorProfileService', () => {
     });
     expect(flush).not.toHaveBeenCalled();
     expect(emit).not.toHaveBeenCalled();
+  });
+  it('publishes a page without any technology', async () => {
+    profile.stackTags = [];
+    expect(await service().publish()).toMatchObject({ stackTags: [], publishedAt: now.toISOString() });
   });
   it('publishes once; repeat publications preserve slug and timestamp', async () => {
     expect(await service().publish()).toMatchObject({ slug: 'ada-lovelace', publishedAt: now.toISOString() });
