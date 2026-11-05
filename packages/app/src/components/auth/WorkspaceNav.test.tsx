@@ -20,7 +20,7 @@ describe('WorkspaceNav', () => {
   it('renders one link per surface the roles allow, in order', () => {
     render(<WorkspaceNav roles={['mentor', 'operator']} />);
     expect(linkNames()).toEqual([
-      ['Admin dashboard', '/admin'],
+      ['Operator home', '/admin'],
       ['Users', '/admin/users'],
       ['Mentor workspace', '/mentor'],
       ['Edit profile', '/mentor/profile'],
@@ -34,7 +34,7 @@ describe('WorkspaceNav', () => {
 
     navigation.pathname = '/admin';
     rerender(<WorkspaceNav roles={['operator']} />);
-    expect(currentLinks()).toEqual(['Admin dashboard']);
+    expect(currentLinks()).toEqual(['Operator home']);
   });
 
   it('marks nothing outside the workspace', () => {

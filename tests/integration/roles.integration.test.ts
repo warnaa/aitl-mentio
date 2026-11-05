@@ -72,7 +72,7 @@ describe('TC-ROLES-001 a wrong-role screen sends the user to their own home', ()
         expect(snapshot).toContain('heading "My sessions"');
         expect(snapshot).not.toContain('heading "Mentor workspace"');
         expect(snapshot).not.toContain('heading "Get ready for your first session"');
-        expect(snapshot).not.toContain('heading "Dashboard"');
+        expect(snapshot).not.toContain('heading "Operator workspace"');
       }
       await screenshot(session, 'roles-mentee-sent-home');
     });
@@ -87,7 +87,7 @@ describe('TC-ROLES-001 a wrong-role screen sends the user to their own home', ()
       for (const path of ['/admin', '/admin/users']) {
         const { snapshot, url } = await visit(session, baseUrl, path, 'Get ready for your first session');
         expect(url.pathname, `opening ${path}`).toBe('/mentor');
-        expect(snapshot).not.toContain('heading "Dashboard"');
+        expect(snapshot).not.toContain('heading "Operator workspace"');
         expect(snapshot).not.toContain('heading "Users"');
         expect(snapshot).not.toContain('mock-mentee@devmentor.test');
       }
@@ -103,8 +103,8 @@ describe('TC-ROLES-002 navigation follows the union of roles, with no way to gai
     {
       login: 'mock-operator',
       home: '/admin',
-      heading: 'Dashboard',
-      links: ['Admin dashboard', 'Users', 'Mentor workspace', 'Edit profile'],
+      heading: 'Operator workspace',
+      links: ['Operator home', 'Users', 'Mentor workspace', 'Edit profile'],
     },
   ] as const;
 
@@ -141,7 +141,7 @@ describe('TC-ROLES-002 navigation follows the union of roles, with no way to gai
       expect((await currentUrl(session)).pathname).toBe('/mentor');
       const mentor = await runAgentBrowser(session, 'snapshot');
       expect(mentor).toContain('heading "Mentor workspace"');
-      expect(workspaceLinks(mentor)).toEqual(['Admin dashboard', 'Users', 'Mentor workspace', 'Edit profile']);
+      expect(workspaceLinks(mentor)).toEqual(['Operator home', 'Users', 'Mentor workspace', 'Edit profile']);
 
       await runAgentBrowser(session, 'find', 'role', 'link', 'click', '--name', 'Users');
       await runAgentBrowser(session, 'wait', '--text', 'Ada Lovelace');

@@ -21,9 +21,10 @@ describe('TC-ADMIN-001 admin panel basics', () => {
       await runAgentBrowser(session, 'wait', '--text', 'Connected');
       const dashboard = await runAgentBrowser(session, 'snapshot');
 
-      expect(dashboard).toContain('heading "Dashboard"');
+      expect(dashboard).toContain('heading "Operator workspace"');
       expect(dashboard).toContain('StaticText "Connected"');
       expect(dashboard).toContain('link "Users"');
+      expect(dashboard).toContain('link "View users"');
       expect(dashboard).toContain('button "Sign out"');
 
       await runAgentBrowser(
@@ -40,7 +41,7 @@ describe('TC-ADMIN-001 admin panel basics', () => {
       expect(users).toContain('heading "Users"');
       expect(users).toContain('cell "Ada Lovelace"');
       expect(users).toContain('cell "mock-mentor@devmentor.test"');
-      expect(users).toContain('cell "Systems & algorithms mentor"');
+      expect(users).toContain('list "Roles of Ada Lovelace"');
 
       await runAgentBrowser(
         session,

@@ -17,6 +17,12 @@
 .dm-product-title { font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: -.01em; }
 .dm-product-muted { color: var(--dm-text-sub-600); font-size: 14px; line-height: 22px; }
 .dm-product-caption { display: block; color: var(--dm-text-sub-600); font-size: 12px; line-height: 18px; }
+/* Page heading block for workspace pages (prototype `proto-page-heading`, s24 and s25). */
+.dm-page-heading { display: grid; gap: 16px; margin: 32px 0 16px; }
+.dm-page-heading :where(h1, p) { margin: 0; }
+.dm-page-heading h1 { font-size: 40px; line-height: 48px; font-weight: 500; letter-spacing: -.035em; }
+.dm-page-heading > p:last-child:not(.dm-page-eyebrow) { color: var(--muted-foreground); font-size: 16px; line-height: 28px; max-width: 65ch; }
+@media (max-width: 760px) { .dm-page-heading { margin: 24px 0 8px; } .dm-page-heading h1 { font-size: 32px; line-height: 40px; } }
 /* Page-level eyebrow above a page heading (prototype `proto-eyebrow`). */
 .dm-page-eyebrow { display: block; color: var(--dm-text-sub-600); font-size: 11px; line-height: 16px; letter-spacing: .1em; font-weight: 600; text-transform: uppercase; }
 .dm-product-eyebrow { display: block; color: var(--dm-text-sub-600); font-size: 12px; line-height: 16px; font-weight: 500; }

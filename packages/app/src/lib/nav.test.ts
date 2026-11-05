@@ -5,7 +5,7 @@ import { currentHref, navFor } from './nav';
 const links = (roles: RoleSet) => navFor(roles).map(({ href, label }) => [href, label]);
 
 const OPERATOR = [
-  ['/admin', 'Admin dashboard'],
+  ['/admin', 'Operator home'],
   ['/admin/users', 'Users'],
 ];
 const MENTEE = [['/home', 'My sessions']];

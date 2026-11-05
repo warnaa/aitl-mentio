@@ -148,7 +148,7 @@ describe('TC-AUTH-002 GitHub sign-in lands on the role home', () => {
       expect((await currentUrl(session)).pathname).toBe('/admin');
       await runAgentBrowser(session, 'wait', '--text', 'Connected');
       const dashboard = await runAgentBrowser(session, 'snapshot');
-      expect(dashboard).toContain('heading "Dashboard"');
+      expect(dashboard).toContain('heading "Operator workspace"');
       expect(dashboard).toContain('link "Users"');
       await screenshot(session, 'auth-operator-admin');
     });

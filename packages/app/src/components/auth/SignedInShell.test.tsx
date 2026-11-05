@@ -39,6 +39,7 @@ describe('RoleChips', () => {
 
     const list = findByType(tree, 'ul');
     expect(list.props['aria-label']).toBe('Your roles');
+    expect(findByType(RoleChips({ roles: ['mentee'], label: 'Roles of Ada' }), 'ul').props['aria-label']).toBe('Roles of Ada');
     const chips = findAllByType(tree, Badge);
     expect(chips.map((chip) => [chip.props.variant, textOf(chip)])).toEqual([
       ['outline', 'Mentee'],

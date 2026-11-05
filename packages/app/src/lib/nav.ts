@@ -16,7 +16,7 @@ export interface NavItem {
  */
 const NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
   operator: [
-    { href: '/admin', label: 'Admin dashboard', icon: ShieldCheck },
+    { href: '/admin', label: 'Operator home', icon: ShieldCheck },
     { href: '/admin/users', label: 'Users', icon: Users },
   ],
   mentee: [{ href: '/home', label: 'My sessions', icon: CalendarDays }],

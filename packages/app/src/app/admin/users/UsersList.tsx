@@ -1,29 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Role } from "@devmentor/core";
 import { apiCall, DataTable, type Column } from "@devmentor/ui/backend";
+import { RoleChips } from "../../../components/auth/SignedInShell";
 
 /**
- * Reference concept list: fetches through `apiCall` (never a raw `fetch`) and renders
- * with `DataTable`, which owns the loading / error / empty states. Every later concept
- * list screen copies this shape. Colocated with its only consumer, the server
- * `page.tsx` that guards the route before this client component renders; `/api/users`
- * checks the operator role again on its own.
+ * The operator user directory, composed as the prototype's s25 screen. Fetches through
+ * `apiCall` (never a raw `fetch`) and renders with `DataTable`, which owns the loading /
+ * error / empty states. Colocated with its only consumer, the server `page.tsx` that
+ * guards the route before this client component renders; `/api/users` checks the
+ * operator role again on its own. The prototype's payout column waits for Stripe Connect
+ * (spec A15).
  */
 export type UserRow = {
   id: string;
   email: string;
   displayName: string;
-  mentorProfile: { id: string; headline: string } | null;
+  roles: Role[];
 };
 
 const columns: Column<UserRow>[] = [
   { key: "displayName", header: "Name" },
   { key: "email", header: "Email" },
   {
-    key: "mentor",
-    header: "Mentor profile",
-    render: (row) => row.mentorProfile?.headline ?? "—",
+    key: "roles",
+    header: "Roles",
+    render: (row) => <RoleChips roles={row.roles} label={`Roles of ${row.displayName}`} />,
   },
 ];
 
@@ -49,16 +52,17 @@ export function UsersList() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
-        <p className="text-sm text-muted-foreground">
-          Fetched from <code>/api/users</code> (built with <code>makeCrudRoute</code>)
-          and rendered with <code>DataTable</code>.
+    <div className="dm-product-stack">
+      <div className="dm-page-heading">
+        <h1>Users</h1>
+        <p>
+          Accounts and the roles they hold. Mentors join by invitation and operators by configuration, so roles are
+          not edited here.
         </p>
       </div>
 
       <DataTable
+        caption="Users"
         columns={columns}
         rows={rows}
         getRowId={(row) => row.id}
