@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-05 — The full integration suite (TC-MIGRATION down/up) rewrites `packages/db/migrations/.snapshot-devmentor.json` cosmetically, and a `git add -A` after it swept that churn into a review-fix commit on #65 (reverted in the next commit). After any integration run, stage paths explicitly or check `git diff --cached --stat` before committing, and `git checkout` the snapshot unless the change adds a migration.
+
 - 2026-11-05 — User correction: E02 mentor screens matched the specs but not the designs. Plans had taken only behaviour specs as acceptance criteria, so pages were assembled from generic primitives (`ReadinessChecklist`, ad-hoc Tailwind) while the designed `MentorOnboarding` and `dm-product-panel` workspace went unused. Plan UI steps against the prototype screen named in the design handoff and compare screenshots before declaring done (rule in `packages/app/AGENTS.md`).
 
 - 2026-11-05 — To tamper a JWT in a test, flip a character inside the signature (e.g. the first), never the last: the final base64url character carries padding bits, so rewriting the end can decode to the same signature and the "tampered" token verifies intermittently.

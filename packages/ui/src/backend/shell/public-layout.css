@@ -1,0 +1,14 @@
+/* Public page frame, promoted from the prototype's `PublicPage` (`proto-public-*` in styles.css). */
+.dm-public { display: flex; flex-direction: column; min-height: 100vh; min-width: 0; background: var(--card); }
+.dm-public-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 32px max(32px, calc((100vw - 1200px) / 2)); border-bottom: 1px solid var(--border); }
+.dm-public-wordmark { display: inline-flex; align-items: center; gap: 8px; color: inherit; font-family: var(--dm-font-mono); font-size: 25px; font-weight: 500; letter-spacing: -.06em; line-height: 32px; text-decoration: none; }
+.dm-public-wordmark span { font-family: var(--dm-font-family); color: var(--dm-action-primary-label); font-size: 30px; }
+.dm-public-header nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dm-public-main { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 64px 32px 96px; min-width: 0; }
+.dm-public-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; width: 100%; max-width: 1160px; margin: 0 auto; padding: 24px 28px; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: 12px; }
+@media (max-width: 760px) {
+  .dm-public-header { padding: 20px 16px; gap: 8px; }
+  .dm-public-wordmark { font-size: 24px; }
+  .dm-public-main { padding: 40px 24px 64px; }
+  .dm-public-footer { padding: 24px 20px; }
+}

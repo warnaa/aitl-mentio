@@ -1,6 +1,11 @@
 import { expect, it, vi } from 'vitest';
+import type { ReactElement } from 'react';
 import { NotFoundError, withScope } from '@devmentor/core';
+import { ErrorMessage } from '@devmentor/ui/backend';
+import { MentorPageView } from '@devmentor/ui/components/mentors/MentorPageView';
 import { notFound } from 'next/navigation';
+import { PublicPage } from '../../../components/public/PublicPage';
+import { findByType } from '../../../test/element-tree';
 import Page, { dynamic } from './page';
 vi.mock('@devmentor/core', async (original) => ({
   ...(await original<typeof import('@devmentor/core')>()),
@@ -11,7 +16,9 @@ vi.mock('next/navigation', () => ({
     throw new Error('404');
   }),
 }));
-it('reads the signed-out public projection', async () => {
+const render = async (slug: string) => (await Page({ params: Promise.resolve({ slug }) })) as ReactElement;
+
+it('renders the signed-out public projection inside the public frame', async () => {
   const profile = {
     displayName: 'Ada',
     slug: 'ada',
@@ -24,16 +31,16 @@ it('reads the signed-out public projection', async () => {
     cb({ mentorProfileService: { getPublicBySlug: vi.fn().mockResolvedValue(profile) } } as never),
   );
   expect(dynamic).toBe('force-dynamic');
-  expect((await Page({ params: Promise.resolve({ slug: 'ada' }) })).props.profile).toEqual({
-    ...profile,
-    stackTags: ['React', 'AI agents'],
-  });
+  const tree = await render('ada');
+  expect(tree.type).toBe(PublicPage);
+  expect(findByType(tree, MentorPageView).props.profile).toEqual({ ...profile, stackTags: ['React', 'AI agents'] });
 });
-it('404s unpublished pages and renders infrastructure failure', async () => {
+
+it('404s unpublished pages and renders infrastructure failure in the public frame', async () => {
   vi.mocked(withScope).mockRejectedValueOnce(new NotFoundError()).mockRejectedValueOnce(new Error('down'));
-  await expect(Page({ params: Promise.resolve({ slug: 'hidden' }) })).rejects.toThrow('404');
+  await expect(render('hidden')).rejects.toThrow('404');
   expect(notFound).toHaveBeenCalledOnce();
-  expect((await Page({ params: Promise.resolve({ slug: 'ada' }) })).props.children.props.message).toContain(
-    'unavailable',
-  );
+  const tree = await render('ada');
+  expect(tree.type).toBe(PublicPage);
+  expect(findByType(tree, ErrorMessage).props.message).toContain('unavailable');
 });

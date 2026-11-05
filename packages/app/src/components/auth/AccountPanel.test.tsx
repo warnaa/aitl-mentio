@@ -27,7 +27,13 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const props = { githubHref: '/api/auth/github?returnTo=%2Fmentor', switchHref: '/register?returnTo=%2Fmentor' };
+const props = {
+  title: 'Welcome back',
+  description: 'Sign in to continue.',
+  footer: <a href="#home">Back to home</a>,
+  githubHref: '/api/auth/github?returnTo=%2Fmentor',
+  switchHref: '/register?returnTo=%2Fmentor',
+};
 
 async function signIn(user: ReturnType<typeof userEvent.setup>, password = 'correct horse battery') {
   await user.type(screen.getByLabelText(/Email address/), 'Grace@DevMentor.Test');
@@ -36,8 +42,11 @@ async function signIn(user: ReturnType<typeof userEvent.setup>, password = 'corr
 }
 
 describe('AccountPanel — sign-in', () => {
-  it('offers GitHub first, then the email form', () => {
+  it('renders the page layout and offers GitHub first, then the email form', () => {
     render(<AccountPanel mode="sign-in" {...props} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Welcome back' })).toBeTruthy();
+    expect(screen.getByText('Sign in to continue.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Back to home' })).toBeTruthy();
     const github = screen.getByRole('button', { name: 'Continue with GitHub' });
     const email = screen.getByRole('group', { name: 'Sign in with email' });
     expect(github.compareDocumentPosition(email) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -89,7 +98,7 @@ describe('AccountPanel — sign-in', () => {
 });
 
 describe('AccountPanel — register', () => {
-  it('posts the registration and replaces the form with "Check your inbox"', async () => {
+  it('posts the registration and turns the screen into "Check your inbox"', async () => {
     const user = userEvent.setup();
     answer({ ok: true, data: { email: 'grace@devmentor.test' } });
     render(<AccountPanel mode="register" returnTo="/mentor" {...props} switchHref="/sign-in?returnTo=%2Fmentor" />);
@@ -99,8 +108,11 @@ describe('AccountPanel — register', () => {
     await user.type(screen.getByLabelText(/^Password/), 'correct horse battery');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
-    expect(await screen.findByText('Check your inbox')).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Check your inbox' })).toBeTruthy();
+    expect(screen.getByText('Use the verification link for grace@devmentor.test to finish creating your account.')).toBeTruthy();
     expect(screen.getByText('We sent the link to grace@devmentor.test. It works for 24 hours.')).toBeTruthy();
+    expect(screen.getByText('Until you verify your email, your account cannot open private pages.')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Back to home' })).toBeNull();
     expect(screen.queryByRole('group', { name: /Create an account with email/ })).toBeNull();
     expect(fetchMock.mock.calls[0]![0]).toBe('/api/auth/register');
     expect(sentBody()).toEqual({
@@ -113,6 +125,11 @@ describe('AccountPanel — register', () => {
 
     await user.click(screen.getByRole('button', { name: 'Back to sign in' }));
     expect(assign).toHaveBeenCalledWith('/sign-in?returnTo=%2Fmentor');
+
+    // Back to the form, with the address kept, to correct it or request another link.
+    await user.click(screen.getByRole('button', { name: 'Use a different email or request a new link' }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Welcome back' })).toBeTruthy();
+    expect((screen.getByLabelText(/Email address/) as HTMLInputElement).value).toBe('grace@devmentor.test');
   });
 
   it('validates the password length in the browser before posting', async () => {

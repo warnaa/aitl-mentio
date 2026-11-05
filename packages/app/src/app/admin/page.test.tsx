@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
-import { CardContent } from '@devmentor/ui';
+import Link from 'next/link';
+import { Badge } from '@devmentor/ui';
 import { admit, deny, GuardRedirect, guards } from '../../test/page-guards';
-import { findAllByType, findByType, textOf } from '../../test/element-tree';
+import { findAll, findAllByType, findByType, textOf } from '../../test/element-tree';
 
 const core = vi.hoisted(() => ({
   checkDbConnection: vi.fn<() => Promise<{ ok: boolean }>>(),
@@ -15,6 +16,10 @@ vi.mock('@devmentor/core', () => core);
 const { default: AdminDashboard, dynamic } = await import('./page');
 
 const render = () => AdminDashboard() as Promise<ReactElement>;
+const status = (tree: ReactElement) => {
+  const [chip] = findAll(tree, (element) => element.props.className === 'dm-product-status');
+  return [textOf(chip), chip!.props['data-tone']];
+};
 
 beforeEach(() => {
   admit('operator');
@@ -32,18 +37,22 @@ describe('/admin', () => {
     expect(guards.requirePageRole).toHaveBeenCalledExactlyOnceWith('operator', '/admin');
   });
 
-  it('shows the instance, its environment and a connected database', async () => {
+  it('is the s24 operator home: account access first, then the service status', async () => {
     const tree = await render();
 
-    expect(textOf(findByType(tree, 'h1'))).toBe('Dashboard');
-    expect(findAllByType(tree, CardContent).map(textOf)).toEqual(['production', 'Connected']);
+    expect(textOf(findByType(tree, 'h1'))).toBe('Operator workspace');
+    expect(findAllByType(tree, 'h2').map(textOf)).toEqual(['Account access', 'Service status']);
+    expect(findByType(tree, Link).props.href).toBe('/admin/users');
+    expect(textOf(findByType(tree, Link))).toBe('View users');
+    expect(textOf(findByType(tree, Badge))).toBe('Environment: production');
+    expect(status(tree)).toEqual(['Connected', 'success']);
   });
 
   it('degrades to Unavailable when the database check fails', async () => {
     core.checkDbConnection.mockResolvedValue({ ok: false });
     const tree = await render();
 
-    expect(findAllByType(tree, CardContent).map(textOf)).toEqual(['production', 'Unavailable']);
+    expect(status(tree)).toEqual(['Unavailable', 'error']);
   });
 
   it('refuses before touching the environment or the database (edge case 20)', async () => {

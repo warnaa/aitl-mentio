@@ -61,8 +61,9 @@ describe('/sign-in', () => {
   it('renders the account panel in sign-in mode, GitHub first (the panel orders it), linking to registration', async () => {
     const tree = await render();
 
-    expect(findByType(tree, AuthLayout).props.title).toBe('Sign in to DevMentor');
     expect(panel(tree).props).toMatchObject({
+      title: 'Welcome back',
+      description: 'Sign in to see your sessions, written answers and private notes.',
       mode: 'sign-in',
       returnTo: undefined,
       githubHref: '/api/auth/github',
@@ -74,7 +75,7 @@ describe('/sign-in', () => {
   it('keeps a back-to-home link in the footer, separate from both sign-in methods', async () => {
     const tree = await render();
 
-    const footer = findByType(tree, AuthLayout).props.footer as ReactElement;
+    const footer = panel(tree).props.footer as ReactElement;
     const [back] = findAll(footer, (element) => element.props.href === '/');
     expect(textOf(back)).toBe('Back to home');
   });
@@ -85,7 +86,7 @@ describe('/sign-in', () => {
     expect(shown.props.message).toBe(SIGN_IN_CANCELLED_NOTICE);
   });
 
-  it.each(['unavailable', 'state', 'email', 'unverified', 'conflict', 'verification', 'verification-unavailable'] as const)(
+  it.each(['unavailable', 'state', 'email', 'unverified', 'conflict'] as const)(
     'explains ?error=%s in an alert above the form',
     async (reason) => {
       const shown = notice(await render({ error: reason }))!;
@@ -97,11 +98,35 @@ describe('/sign-in', () => {
   it('confirms an already-verified address as a status, not an error (edge case 16)', async () => {
     const shown = notice(await render({ verified: '1' }))!;
     expect(shown.type).toBe(AuthFeedback);
-    expect(shown.props).toEqual({ state: 'verified', detail: SIGN_IN_VERIFIED_NOTICE });
+    expect(shown.props).toEqual({ state: 'verified' });
+    const tree = await render({ verified: '1' });
+    // s22's heading; the link created no session, so the form stays (spec A10).
+    expect(panel(tree).props).toMatchObject({ title: 'Your email is verified', description: SIGN_IN_VERIFIED_NOTICE });
+  });
+
+  it.each([
+    ['verification', 'verification-invalid'],
+    ['verification-unavailable', 'service-unavailable'],
+  ] as const)('turns ?error=%s into the s22 recovery screen without the form', async (reason, state) => {
+    const tree = await render({ error: reason, verified: '1' });
+    expect(findAllByType(tree, AccountPanel)).toEqual([]);
+    expect(findByType(tree, AuthLayout).props.title).toBe('Check your verification link');
+    expect(findByType(tree, AuthFeedback).props).toEqual({ state, detail: SIGN_IN_NOTICES[reason] });
+    expect(findAll(tree, (element) => typeof element.props.href === 'string').map((link) => `${textOf(link)} ${String(link.props.href)}`)).toEqual([
+      'Request a new verification link /register',
+      'Back to sign in /sign-in',
+    ]);
+  });
+
+  it('titles the screen for an invitation and leads back to it', async () => {
+    const props = panel(await render({ returnTo: '/invitation/abc' })).props;
+    expect(props).toMatchObject({ title: 'Sign in to accept your invitation', description: 'After signing in, you will return to your mentor invitation.' });
+    const [back] = findAll(props.footer as ReactElement, (element) => element.props.href === '/invitation/abc');
+    expect(textOf(back)).toBe('Back to invitation');
   });
 
   it('lets an error win over verified', async () => {
-    expect(notice(await render({ verified: '1', error: 'verification' }))!.type).toBe(ErrorMessage);
+    expect(notice(await render({ verified: '1', error: 'state' }))!.type).toBe(ErrorMessage);
   });
 
   it('ignores an unknown reason, other verified values and a repeated query value', async () => {

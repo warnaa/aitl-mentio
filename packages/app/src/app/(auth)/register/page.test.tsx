@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
-import { AuthLayout } from '@devmentor/ui/backend';
 import type { RoleSet, Session } from '@devmentor/core';
 import { AccountPanel } from '../../../components/auth/AccountPanel';
 import { findAll, findByType, textOf } from '../../../test/element-tree';
@@ -58,19 +57,19 @@ describe('/register', () => {
   it('renders the account panel in register mode, linking back to sign-in', async () => {
     const tree = await render();
 
-    const layout = findByType(tree, AuthLayout);
-    expect(layout.props.title).toBe('Create your DevMentor account');
+    const layout = findByType(tree, AccountPanel);
+    expect(layout.props.title).toBe('Create your account');
     expect(layout.props.description).toMatch(/We email you a link to confirm the address/);
     expect(panel(tree).props).toMatchObject({ mode: 'register', githubHref: '/api/auth/github', switchHref: '/sign-in' });
   });
 
   it('offers no way to become a mentor (R07)', async () => {
-    const { title, description } = findByType(await render(), AuthLayout).props as { title: string; description: string };
+    const { title, description } = findByType(await render(), AccountPanel).props as { title: string; description: string };
     expect(`${title} ${description}`).not.toMatch(/become a mentor|apply to mentor|mentor application/i);
   });
 
   it('keeps a back-to-home link in the footer', async () => {
-    const footer = findByType(await render(), AuthLayout).props.footer as ReactElement;
+    const footer = findByType(await render(), AccountPanel).props.footer as ReactElement;
     const [back] = findAll(footer, (element) => element.props.href === '/');
     expect(textOf(back)).toBe('Back to home');
   });

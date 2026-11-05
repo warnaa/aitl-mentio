@@ -5,11 +5,11 @@ import { currentHref, navFor } from './nav';
 const links = (roles: RoleSet) => navFor(roles).map(({ href, label }) => [href, label]);
 
 const OPERATOR = [
-  ['/admin', 'Admin dashboard'],
+  ['/admin', 'Operator home'],
   ['/admin/users', 'Users'],
 ];
-const MENTEE = [['/home', 'Mentee home']];
-const MENTOR = [['/mentor', 'Mentor workspace'], ['/mentor/profile', 'Mentor profile']];
+const MENTEE = [['/home', 'My sessions']];
+const MENTOR = [['/mentor', 'Mentor workspace'], ['/mentor/profile', 'Edit profile']];
 
 const ROLE_SETS: RoleSet[] = [
   ['mentee'],

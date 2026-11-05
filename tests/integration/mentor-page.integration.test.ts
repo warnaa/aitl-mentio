@@ -72,32 +72,33 @@ describe('TC-MENTOR-PAGE-001 a mentor publishes a page a signed-out visitor can 
     await inBrowser('publish', async (session) => {
       const login = unique('author');
       await signInAs(session, baseUrl, login);
-      await visit(session, await seedPendingInvitation(`${login}@devmentor.test`), 'Your mentor invitation');
+      await visit(session, await seedPendingInvitation(`${login}@devmentor.test`), 'You are invited to mentor');
       await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Accept invitation');
       await runAgentBrowser(session, 'wait', '--text', 'Publish by ');
 
-      const empty = await visit(session, `${baseUrl}/mentor/profile`, 'Your mentor profile');
+      const empty = await visit(session, `${baseUrl}/mentor/profile`, 'Show mentees how you can help');
       expect(empty).toContain('Required: Add a link to your public work.');
       expectNoReputation(empty);
       // An incomplete page is refused, and the refusal names the missing pieces.
-      await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Publish page');
+      await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Publish profile');
       await runAgentBrowser(session, 'wait', '--text', 'Complete the required profile fields before publishing.');
       await screenshot(session, 'mentor-profile-refused');
 
-      await runAgentBrowser(session, 'find', 'label', 'Link to public work', 'fill', PUBLIC_WORK_URL);
-      await runAgentBrowser(session, 'find', 'label', 'About your experience', 'fill', 'I pair on React pull requests.');
+      await runAgentBrowser(session, 'find', 'label', 'Public work link', 'fill', PUBLIC_WORK_URL);
+      await runAgentBrowser(session, 'find', 'label', 'About your mentoring', 'fill', 'I pair on React pull requests.');
       await runAgentBrowser(session, 'find', 'label', 'React', 'check');
       await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Save profile');
       await runAgentBrowser(session, 'wait', '--text', 'Complete: Add a link to your public work.');
-      await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Publish page');
-      await runAgentBrowser(session, 'wait', '--text', 'Your share link');
+      await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Publish profile');
+      await runAgentBrowser(session, 'wait', '--text', 'Share your profile');
 
       const published = await runAgentBrowser(session, 'snapshot');
-      const match = new RegExp(`link "(${baseUrl.replaceAll('.', '\\.')}/m/[a-z0-9-]+)"`).exec(published);
+      // The share link is a read-only field; the snapshot shows its value.
+      const match = new RegExp(`textbox "Share link"[^\\n]*?(${baseUrl.replaceAll('.', '\\.')}/m/[a-z0-9-]+)`).exec(published);
       expect(match, 'the share link is shown').not.toBeNull();
       shareLink = match![1]!;
       expect(published).toContain('button "Unpublish page"');
-      expect(published).toContain('button "Copy share link"');
+      expect(published).toContain('button "Copy profile link"');
       expectNoReputation(published);
       await screenshot(session, 'mentor-profile-published');
       await expectFitsMobile(session, 'mentor-profile-published');
@@ -105,7 +106,8 @@ describe('TC-MENTOR-PAGE-001 a mentor publishes a page a signed-out visitor can 
 
     await inBrowser('visitor', async (session) => {
       const page = await visit(session, shareLink, 'I pair on React pull requests.');
-      expect(page).toContain('link "See public work"');
+      expect(page).toContain('link "View public work"');
+      expect(page).toContain('heading "About me"');
       expect(page).toContain('React');
       expectNoReputation(page);
       expectAbsent(page, { text: /@devmentor\.test/ });

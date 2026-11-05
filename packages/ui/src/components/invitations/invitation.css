@@ -1,0 +1,20 @@
+/* Mentor invitation layout, promoted from the prototype's s26 screen (`proto-invitation-*` in mentor-flow.css). */
+.dm-invitation { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, 1fr); gap: 80px; align-items: center; padding-block: 48px; }
+.dm-invitation :where(h1, h2, p) { margin: 0; }
+.dm-invitation > * { min-width: 0; }
+.dm-invitation-intro h1 { font-size: 44px; line-height: 54px; font-weight: 550; letter-spacing: -.04em; margin-block: 24px; }
+.dm-invitation-intro > p { font-size: 17px; line-height: 30px; color: var(--muted-foreground); max-width: 52ch; margin-bottom: 32px; }
+.dm-invitation-detail { display: flex; gap: 16px; align-items: start; margin-top: 48px; max-width: 50ch; font-size: 15px; line-height: 26px; color: var(--muted-foreground); }
+.dm-invitation-detail svg { flex: 0 0 24px; color: var(--dm-action-primary-label); }
+.dm-invitation .dm-invitation-card { padding: 40px; gap: 32px; }
+.dm-invitation-card > svg { width: 32px; height: 32px; color: var(--dm-action-primary-label); }
+.dm-invitation-card h2 { font-size: 26px; line-height: 34px; font-weight: 600; margin-bottom: 16px; }
+.dm-invitation-card p { line-height: 26px; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.dm-invitation-card .dm-product-caption { line-height: 18px; }
+/* Card actions span the card, as the prototype's do; WorkflowAction wraps its button. */
+.dm-invitation-card .dm-button { width: 100%; }
+@media (max-width: 760px) {
+  .dm-invitation { grid-template-columns: minmax(0, 1fr); gap: 40px; padding-block: 0; }
+  .dm-invitation-intro h1 { font-size: 34px; line-height: 42px; }
+  .dm-invitation .dm-invitation-card { padding: 24px; }
+}

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
-import { RoleChips } from '../../../components/auth/SignedInShell';
+import { EmptyState } from '@devmentor/ui/backend';
 import { admit, deny, GuardRedirect, guards } from '../../../test/page-guards';
-import { findAll, findByType, textOf } from '../../../test/element-tree';
+import { findByType, textOf } from '../../../test/element-tree';
 
 vi.mock('../../../lib/session', async () => (await import('../../../test/page-guards')).guards);
 
@@ -24,14 +24,14 @@ describe('/home', () => {
     expect(guards.requirePageAccount).toHaveBeenCalledExactlyOnceWith('mentee', '/home');
   });
 
-  it('says which account is signed in and which roles it holds', async () => {
-    const live = admit('mentee', 'mentor');
+  it('is the s6 My sessions workspace in its first-use state, without a link to an unbuilt catalogue', async () => {
     const tree = await render();
 
-    expect(textOf(findByType(tree, 'h1'))).toBe('Mentee home');
-    const [who] = findAll(tree, (element) => textOf(element).startsWith('You are signed in'));
-    expect(textOf(who)).toBe('You are signed in with mock-mentee@devmentor.test.');
-    expect(findByType(tree, RoleChips).props.roles).toBe(live.roles);
+    expect((tree.props as { className: string }).className).toBe('dm-product-stack');
+    expect(textOf(findByType(tree, 'h1'))).toBe('My sessions');
+    const empty = findByType(tree, EmptyState);
+    expect(empty.props.title).toBe('No sessions yet');
+    expect(empty.props.action).toBeUndefined();
   });
 
   it.each(['/sign-in?returnTo=%2Fhome', '/mentor'])('renders nothing when the guard redirects to %s', async (location) => {

@@ -2,7 +2,10 @@ import { notFound } from 'next/navigation';
 import { NotFoundError, StackTags, withScope } from '@devmentor/core';
 import { ErrorMessage } from '@devmentor/ui/backend';
 import { MentorPageView } from '@devmentor/ui/components/mentors/MentorPageView';
+import { PublicPage } from '../../../components/public/PublicPage';
 export const dynamic = 'force-dynamic';
+
+/** `/m/<slug>`, the public mentor page (prototype s1, with s2 when no time is bookable). */
 export default async function PublicMentorPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let profile;
@@ -11,10 +14,14 @@ export default async function PublicMentorPage({ params }: { params: Promise<{ s
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     return (
-      <main className="p-6">
+      <PublicPage>
         <ErrorMessage message="This mentor page is unavailable. Please try again later." />
-      </main>
+      </PublicPage>
     );
   }
-  return <MentorPageView profile={{ ...profile, stackTags: profile.stackTags.map(StackTags.labelOf) }} />;
+  return (
+    <PublicPage>
+      <MentorPageView profile={{ ...profile, stackTags: profile.stackTags.map(StackTags.labelOf) }} />
+    </PublicPage>
+  );
 }

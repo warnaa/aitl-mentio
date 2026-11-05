@@ -60,7 +60,7 @@ describe('TC-INVITATION-001 accepting an invitation makes a signed-in user a men
       const before = await sessionCookie(session);
       const link = await seedPendingInvitation(`${login}@devmentor.test`);
 
-      const invitation = await visit(session, link, 'Your mentor invitation');
+      const invitation = await visit(session, link, 'You are invited to mentor');
       expect(invitation).toContain(`${login}@devmentor.test`);
       await screenshot(session, 'invitation-pending');
       await expectFitsMobile(session, 'invitation-pending');
@@ -74,7 +74,7 @@ describe('TC-INVITATION-001 accepting an invitation makes a signed-in user a men
       expect(after?.value).not.toBe(before?.value);
       const home = await visit(session, `${baseUrl}/mentor`, 'Publish by ');
       expect((await currentUrl(session)).pathname).toBe('/mentor');
-      expect(home).toContain('link "Mentee home"');
+      expect(home).toContain('link "My sessions"');
       expect(home).toContain('link "Mentor workspace"');
       await screenshot(session, 'invitation-accepted-mentor-home');
       await expectFitsMobile(session, 'invitation-accepted-mentor-home');
@@ -154,7 +154,7 @@ describe('TC-INVITATION-003 a signed-in user finds no path to become a mentor (R
     const baseUrl = inject('integrationBaseUrl');
     await inBrowser('no-path', async (session) => {
       await signInAs(session, baseUrl, unique('mentee'));
-      const snapshot = await visit(session, `${baseUrl}/home`, 'Mentee home');
+      const snapshot = await visit(session, `${baseUrl}/home`, 'My sessions');
       expect(snapshot).toContain('navigation "Workspace navigation"');
       expectAbsent(snapshot, { role: 'link', text: /mentor|become|apply|invit/i });
       expectAbsent(snapshot, { role: 'button', text: /mentor|become|apply|invit/i });

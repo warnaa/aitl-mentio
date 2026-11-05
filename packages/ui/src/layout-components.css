@@ -52,6 +52,10 @@
 .dm-auth-layout { display: flex; min-height: 640px; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 32px 20px; background: var(--dm-bg-weak-25); }
 .dm-auth-brand { font-family: var(--dm-font-mono); font-size: 24px; font-weight: 500; letter-spacing: -.04em; }
 .dm-auth-panel { width: 100%; max-width: 440px; padding: 32px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); box-shadow: var(--dm-shadow-xs); }
+/* Stacked auth content outside a form (prototype s21/s22 `proto-stack`). */
+.dm-auth-stack { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.dm-auth-stack > p { margin: 0; font-size: 14px; line-height: 22px; }
+.dm-auth-stack > .dm-button { width: 100%; }
 .dm-auth-panel h1 { font-size: 24px; line-height: 32px; font-weight: 500; letter-spacing: -.02em; }
 .dm-auth-description, .dm-auth-panel footer, .dm-auth-tagline { color: var(--muted-foreground); font-size: 14px; line-height: 20px; }
 .dm-auth-description { margin-top: 8px; }

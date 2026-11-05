@@ -6,15 +6,15 @@ import { MentorProfileEditor, type MentorProfileEditorProps } from './MentorProf
 
 const filled = {
   displayName: 'Alex Laurent',
-  description: 'I help developers debug TypeScript APIs and plan gradual migrations. Bring a small code example and explain what you have already tried.',
-  publicWorkUrl: 'https://example.com/alex/work', stacks: ['TypeScript', 'React'],
+  bio: 'I help developers debug TypeScript APIs and plan gradual migrations. Bring a small code example and explain what you have already tried.',
+  publicWorkUrl: 'https://example.com/alex/work', stackTags: ['TypeScript', 'React'],
 };
-const empty = { displayName: '', description: '', publicWorkUrl: '', stacks: [] };
+const empty = { displayName: '', bio: '', publicWorkUrl: '', stackTags: [] };
 const endpoint = (state: string) => `/storybook-api/mentor-profile/${state}`;
 const handlers = [
   http.put(endpoint('pending'), async () => { await delay('infinite'); return HttpResponse.json({ ok: true, data: filled }); }),
   http.put(endpoint('failure'), () => HttpResponse.json({ ok: false, error: { code: 'unavailable', message: 'Your profile could not be saved. Try again; your entries are still here.' } }, { status: 503 })),
-  http.put(endpoint('technology-error'), () => HttpResponse.json({ ok: false, error: { code: 'validation_error', message: 'Check your technologies.', fieldErrors: { stacks: ['Choose a supported technology.'] } } }, { status: 422 })),
+  http.put(endpoint('technology-error'), () => HttpResponse.json({ ok: false, error: { code: 'validation_error', message: 'Check your technologies.', fieldErrors: { stackTags: ['Choose a supported technology.'] } } }, { status: 422 })),
   http.put('/storybook-api/mentor-profile/:state', async ({ request }) => HttpResponse.json({ ok: true, data: await request.json() })),
 ];
 
@@ -35,7 +35,7 @@ const meta = {
   render: args => <ProfileExample {...args} />,
   parameters: {
     msw: { handlers }, controls: { exclude: ['initialValues', 'endpoint'] },
-    docs: { description: { component: 'E02 #35 profile editor. All four fields are required to save. The description allows up to 2,000 characters, the work link must use HTTP or HTTPS, and technologies allow multiple selections with labelled decorative icons. CrudForm owns validation, pending requests, server errors and focus. The host saves the values and handles publication separately. Examples use local mock responses.' } },
+    docs: { description: { component: 'E02 #35 profile editor. Fields use the mentor profile API names (bio, publicWorkUrl, stackTags). Without a host schema all fields are required to save; the display name appears only when the host supplies one, and hosts pass their technology options and may pass a draft schema. The description allows up to 2,000 characters, the work link must use HTTP or HTTPS, and technologies allow multiple selections with labelled decorative icons. CrudForm owns validation, pending requests, server errors and focus. The host saves the values and handles publication separately. Examples use local mock responses.' } },
   },
 } satisfies Meta<typeof MentorProfileEditor>;
 export default meta;
@@ -63,7 +63,7 @@ export const RequiredFields: Story = {
   },
 };
 export const TechnologyRequired: Story = {
-  args: { initialValues: { ...filled, stacks: [] } },
+  args: { initialValues: { ...filled, stackTags: [] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Save profile' }));
@@ -85,7 +85,7 @@ export const SaveFailure: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Save profile' }));
     await expect(await canvas.findByRole('alert')).toHaveTextContent('your entries are still here.');
-    await expect(canvas.getByRole('textbox', { name: 'About your mentoring' })).toHaveValue(filled.description);
+    await expect(canvas.getByRole('textbox', { name: 'About your mentoring' })).toHaveValue(filled.bio);
   },
 };
 export const ServerTechnologyError: Story = {

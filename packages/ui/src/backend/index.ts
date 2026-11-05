@@ -19,6 +19,7 @@ export {
 export * from './forms/FormField';
 export * from './shell/AppShell';
 export * from './shell/AuthLayout';
+export * from './shell/PublicLayout';
 
 export * from './api/useApiResource';
 export * from './panels/ResourcePanel';

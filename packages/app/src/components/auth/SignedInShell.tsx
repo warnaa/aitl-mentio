@@ -35,10 +35,10 @@ export function SignedInShell({ user, roles, children }: SignedInShellProps) {
   );
 }
 
-/** The roles a session holds, one neutral, noninteractive chip each. */
-export function RoleChips({ roles }: { roles: Session['roles'] }) {
+/** Roles, one neutral, noninteractive chip each, in a list named by `label`. */
+export function RoleChips({ roles, label = 'Your roles' }: { roles: readonly Role[]; label?: string }) {
   return (
-    <ul aria-label="Your roles" className="m-0 flex list-none flex-wrap gap-2 p-0">
+    <ul aria-label={label} className="m-0 flex list-none flex-wrap gap-2 p-0">
       {roles.map((role) => (
         <li key={role}>
           <Badge variant="outline">{ROLE_LABELS[role]}</Badge>

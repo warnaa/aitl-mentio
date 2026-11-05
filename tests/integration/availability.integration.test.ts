@@ -55,7 +55,7 @@ it('TC-AVAILABILITY-002 publishes locally entered time and shows it signed out',
     const login = `slots-ui-${process.pid}`;
     await signInAs(session, base, login);
     await runAgentBrowser(session, 'open', await seedPendingInvitation(`${login}@devmentor.test`));
-    await runAgentBrowser(session, 'wait', '--text', 'Your mentor invitation');
+    await runAgentBrowser(session, 'wait', '--text', 'You are invited to mentor');
     await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Accept invitation');
     await runAgentBrowser(session, 'wait', '--text', 'Get ready for your first session');
     const cookies = cookieHeader((await sessionCookie(session))!);
