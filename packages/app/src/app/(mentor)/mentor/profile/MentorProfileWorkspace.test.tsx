@@ -20,7 +20,7 @@ const draft = {
     ready: false,
     items: [
       { key: 'publicWorkUrl', label: 'Add a link to your public work.', met: false },
-      { key: 'stackTags', label: 'Choose at least one technology.', met: true },
+      { key: 'bio', label: 'Describe your experience.', met: false },
     ],
   },
 };
@@ -53,7 +53,9 @@ it('composes the s27 heading, editor and draft aside with the unmet readiness it
   expect(screen.getByRole('heading', { name: 'Publish when you are ready' })).toBeTruthy();
   const checklist = screen.getByRole('list', { name: 'Before you publish' });
   expect(within(checklist).getByText(/Required: Add a link to your public work\./)).toBeTruthy();
-  expect(within(checklist).getByText(/Complete: Choose at least one technology\./)).toBeTruthy();
+  expect(within(checklist).getByText(/Required: Describe your experience\./)).toBeTruthy();
+  expect(within(checklist).queryByText(/technology/i)).toBeNull();
+  expect(screen.getByText(/technologies are optional\./)).toBeTruthy();
   expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'React' }).checked).toBe(true);
   expect(screen.queryByRole('textbox', { name: 'Display name' })).toBeNull();
   expect(screen.getByText('Session prices and availability are managed from your mentor workspace.')).toBeTruthy();

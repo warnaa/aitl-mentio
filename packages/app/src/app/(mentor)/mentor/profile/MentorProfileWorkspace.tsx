@@ -155,7 +155,7 @@ export function MentorProfileWorkspace({ appUrl, options }: { appUrl: string; op
                   <p className="dm-product-muted">
                     {published
                       ? 'Your share link stays the same if you change your name or unpublish and republish.'
-                      : 'Your profile stays private until you publish it. A public-work link, description and at least one technology are required.'}
+                      : 'Your profile stays private until you publish it. A public-work link and description are required; technologies are optional.'}
                   </p>
                   {!published && (
                     <ul className="dm-mentor-workspace-checklist" aria-label="Before you publish">
