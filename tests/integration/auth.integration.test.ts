@@ -85,7 +85,7 @@ describe('TC-AUTH-001 a cancelled GitHub authorisation', () => {
         const url = await currentUrl(session);
         expect(url.pathname).toBe('/sign-in');
         expect(url.searchParams.get('cancelled')).toBe('1');
-        expect(page).toContain('heading "Sign in to DevMentor"');
+        expect(page).toContain('heading "Welcome back"');
         expect(page).toMatch(/- alert\n\s+- paragraph\n\s+- StaticText "Sign-in was cancelled\. No account was created\."/);
         // GitHub first, then the email form (D07), which is live from Slice 4.
         expect(page.indexOf('button "Continue with GitHub"')).toBeGreaterThan(-1);
@@ -181,7 +181,7 @@ describe('TC-AUTH-003 an invalid session on a signed-in screen', () => {
       expect((await sessionCookie(session))?.value).toBe(tampered);
 
       await runAgentBrowser(session, 'open', `${baseUrl}/home`);
-      await runAgentBrowser(session, 'wait', '--text', 'Sign in to DevMentor');
+      await runAgentBrowser(session, 'wait', '--text', 'Welcome back');
       const page = await runAgentBrowser(session, 'snapshot');
 
       const url = await currentUrl(session);
@@ -202,7 +202,7 @@ describe('TC-AUTH-004 a signed-out deep link survives sign-in', () => {
 
     await inBrowser('deep-link', async (session) => {
       await runAgentBrowser(session, 'open', `${baseUrl}/admin/users`);
-      await runAgentBrowser(session, 'wait', '--text', 'Sign in to DevMentor');
+      await runAgentBrowser(session, 'wait', '--text', 'Welcome back');
 
       const signIn = await currentUrl(session);
       expect(signIn.pathname).toBe('/sign-in');
@@ -277,7 +277,7 @@ describe('TC-AUTH-006 a failed email sign-in says nothing about which part was w
         ['nobody-here@devmentor.test', SEED_PASSWORD],
       ] as const) {
         await runAgentBrowser(session, 'open', `${baseUrl}/sign-in`);
-        await runAgentBrowser(session, 'wait', '--text', 'Sign in to DevMentor');
+        await runAgentBrowser(session, 'wait', '--text', 'Welcome back');
         await signInWithEmail(session, email, password);
         await runAgentBrowser(session, 'wait', '--text', 'Email or password is incorrect.');
 
@@ -317,7 +317,7 @@ describe('TC-AUTH-007 email registration, end to end', () => {
 
     await inBrowser('register', async (session) => {
       await runAgentBrowser(session, 'open', `${baseUrl}/register`);
-      await runAgentBrowser(session, 'wait', '--text', 'Create your DevMentor account');
+      await runAgentBrowser(session, 'wait', '--text', 'Create your account');
       const form = await runAgentBrowser(session, 'snapshot');
       expect(form.indexOf('button "Continue with GitHub"')).toBeLessThan(form.indexOf('group "Create an account with email"'));
       await screenshot(session, 'auth-register-form');
@@ -399,7 +399,7 @@ describe('TC-AUTH-008 GitHub and email accounts for the same address', () => {
 
     await inBrowser('github-only-register', async (session) => {
       await runAgentBrowser(session, 'open', `${baseUrl}/register`);
-      await runAgentBrowser(session, 'wait', '--text', 'Create your DevMentor account');
+      await runAgentBrowser(session, 'wait', '--text', 'Create your account');
       await runAgentBrowser(session, 'find', 'label', 'Display name', 'fill', 'Someone Else');
       await runAgentBrowser(session, 'find', 'label', 'Email address', 'fill', `${login}@devmentor.test`);
       await runAgentBrowser(session, 'find', 'label', 'Password', 'fill', 'a long enough password');
