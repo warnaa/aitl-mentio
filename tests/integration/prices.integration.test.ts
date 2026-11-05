@@ -44,11 +44,11 @@ it('TC-PRICES-002 edits raw decimals, shows readiness and exposes prices signed 
     await runAgentBrowser(session, 'open', await seedPendingInvitation(`${login}@devmentor.test`));
     await runAgentBrowser(session, 'wait', '--text', 'Your mentor invitation');
     await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Accept invitation');
-    await runAgentBrowser(session, 'wait', '--text', 'Publish at least one bookable session by');
+    await runAgentBrowser(session, 'wait', '--text', 'Get ready for your first session');
     const { slug } = await seedOfferReadyMentor(base, cookieHeader((await sessionCookie(session))!));
-    await runAgentBrowser(session, 'open', `${base}/mentor/prices`);
+    await runAgentBrowser(session, 'open', `${base}/mentor`);
     await runAgentBrowser(session, 'wait', '--text', 'Save prices');
-    const tree = await runAgentBrowser(session, 'snapshot'); expect(tree).toContain('25-minute price'); expect(tree).toContain('50-minute price'); expect(tree).toContain('PLN 80.00');
+    const tree = await runAgentBrowser(session, 'snapshot'); expect(tree).toContain('25-minute price'); expect(tree).toContain('50-minute price'); expect(tree).toContain('25 min: PLN 80–600'); expect(tree).toContain('50 min: PLN 160–1,200');
     await runAgentBrowser(session, 'find', 'label', '25-minute price', 'fill', '80.001');
     await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Save prices');
     await runAgentBrowser(session, 'wait', '--text', 'Enter an amount with at most two decimal places.');
@@ -57,7 +57,7 @@ it('TC-PRICES-002 edits raw decimals, shows readiness and exposes prices signed 
     await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Save prices');
     await runAgentBrowser(session, 'wait', '--text', 'Both session prices were saved.');
     await runAgentBrowser(session, 'screenshot', resolve(integrationArtifactsDirectory, 'mentor-prices.png'), '--full'); await expectFitsMobile(session, 'mentor-prices');
-    await runAgentBrowser(session, 'open', `${base}/mentor`); await runAgentBrowser(session, 'wait', '--text', 'Your profile, prices and availability are ready.');
+    await runAgentBrowser(session, 'wait', '--text', 'Your profile is ready to share'); expect(await runAgentBrowser(session, 'snapshot')).toContain('heading "Your mentor workspace"');
     await runAgentBrowser(session, 'screenshot', resolve(integrationArtifactsDirectory, 'mentor-ready.png'), '--full');
     await runAgentBrowser(visitor, 'open', `${base}/m/${slug}`); await runAgentBrowser(visitor, 'wait', '--text', '25 min: PLN 80.00');
     await runAgentBrowser(visitor, 'wait', '--text', '50 min: PLN 160.00');

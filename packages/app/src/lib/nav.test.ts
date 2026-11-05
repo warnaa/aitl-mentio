@@ -9,7 +9,7 @@ const OPERATOR = [
   ['/admin/users', 'Users'],
 ];
 const MENTEE = [['/home', 'Mentee home']];
-const MENTOR = [['/mentor', 'Mentor home'], ['/mentor/profile', 'Mentor profile'], ['/mentor/prices', 'Session prices'], ['/mentor/slots', 'Availability']];
+const MENTOR = [['/mentor', 'Mentor workspace'], ['/mentor/profile', 'Mentor profile']];
 
 const ROLE_SETS: RoleSet[] = [
   ['mentee'],
@@ -51,7 +51,7 @@ describe('navFor', () => {
   it.each(ROLE_SETS)('offers no way to gain a role for %j (R07)', (...roles) => {
     for (const { href, label } of navFor(roles as unknown as RoleSet)) {
       expect(label).not.toMatch(/become|apply|join|upgrade|invite/i);
-      expect(['/admin', '/admin/users', '/home', '/mentor', '/mentor/profile', '/mentor/slots', '/mentor/prices']).toContain(href);
+      expect(['/admin', '/admin/users', '/home', '/mentor', '/mentor/profile']).toContain(href);
     }
   });
 
@@ -72,7 +72,7 @@ describe('currentHref', () => {
     ['/admin/settings', '/admin'],
     ['/home', '/home'],
     ['/mentor', '/mentor'],
-    ['/mentor/slots', '/mentor/slots'],
+    ['/mentor/slots', '/mentor'],
   ])('marks %s as %s', (pathname, expected) => {
     expect(currentHref(items, pathname)).toBe(expected);
   });

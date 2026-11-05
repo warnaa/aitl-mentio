@@ -1,0 +1,21 @@
+/* Mentor workspace layout, promoted from the prototype's s11 screen (`mentor-flow.css`). */
+.dm-mentor-workspace { display: grid; gap: var(--dm-space-component-gap, 32px); max-width: 1160px; min-width: 0; }
+.dm-mentor-workspace-heading { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 24px; }
+.dm-mentor-workspace-heading > div { flex: 1; min-width: 240px; }
+.dm-mentor-workspace-heading h1 { margin: 12px 0 16px; font-size: 32px; line-height: 40px; font-weight: 550; letter-spacing: -.035em; }
+.dm-mentor-workspace-heading p { max-width: 65ch; margin: 0; color: var(--dm-text-sub-600); font-size: 16px; line-height: 28px; }
+.dm-mentor-workspace h2 { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -.02em; }
+.dm-mentor-workspace .dm-product-panel { padding: 32px; gap: 24px; }
+.dm-mentor-workspace .dm-product-panel p { max-width: 65ch; line-height: 26px; }
+.dm-mentor-workspace-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: start; }
+.dm-mentor-workspace-footer { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.dm-mentor-workspace-footer > div:first-child { flex: 1; min-width: 220px; }
+.dm-mentor-workspace-link { display: inline-flex; padding-block: 10px; color: var(--dm-action-primary-label); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+@container dm-shell (max-width: 1100px) { .dm-mentor-workspace-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .dm-mentor-workspace .dm-product-panel { padding: 24px; }
+  .dm-mentor-workspace-heading > div { min-width: 0; flex-basis: 100%; }
+  .dm-mentor-workspace-heading h1 { font-size: 28px; line-height: 36px; }
+  .dm-mentor-workspace-footer > div:first-child { min-width: 0; flex-basis: 100%; }
+  .dm-mentor-workspace-grid { grid-template-columns: minmax(0, 1fr); }
+}

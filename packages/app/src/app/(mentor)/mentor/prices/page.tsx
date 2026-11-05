@@ -1,7 +1,10 @@
+import { redirect } from 'next/navigation';
 import { requirePageRole } from '../../../../lib/session';
-import { MentorPrices } from './MentorPrices';
+
 export const dynamic = 'force-dynamic';
+
+/** Session prices live in the mentor workspace (design s11); this route keeps the spec's deep link. */
 export default async function MentorPricesPage() {
   await requirePageRole('mentor', '/mentor/prices');
-  return <MentorPrices />;
+  redirect('/mentor#mentor-prices');
 }

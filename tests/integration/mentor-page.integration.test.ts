@@ -74,7 +74,7 @@ describe('TC-MENTOR-PAGE-001 a mentor publishes a page a signed-out visitor can 
       await signInAs(session, baseUrl, login);
       await visit(session, await seedPendingInvitation(`${login}@devmentor.test`), 'Your mentor invitation');
       await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Accept invitation');
-      await runAgentBrowser(session, 'wait', '--text', 'Publish at least one bookable session by');
+      await runAgentBrowser(session, 'wait', '--text', 'Publish by ');
 
       const empty = await visit(session, `${baseUrl}/mentor/profile`, 'Your mentor profile');
       expect(empty).toContain('Required: Add a link to your public work.');

@@ -70,7 +70,8 @@ describe('TC-ROLES-001 a wrong-role screen sends the user to their own home', ()
         const { snapshot, url } = await visit(session, baseUrl, path, 'Mentee home');
         expect(url.pathname, `opening ${path}`).toBe('/home');
         expect(snapshot).toContain('heading "Mentee home"');
-        expect(snapshot).not.toContain('heading "Mentor home"');
+        expect(snapshot).not.toContain('heading "Mentor workspace"');
+        expect(snapshot).not.toContain('heading "Get ready for your first session"');
         expect(snapshot).not.toContain('heading "Dashboard"');
       }
       await screenshot(session, 'roles-mentee-sent-home');
@@ -84,7 +85,7 @@ describe('TC-ROLES-001 a wrong-role screen sends the user to their own home', ()
       await signInAs(session, baseUrl, 'mock-mentor');
 
       for (const path of ['/admin', '/admin/users']) {
-        const { snapshot, url } = await visit(session, baseUrl, path, 'Mentor home');
+        const { snapshot, url } = await visit(session, baseUrl, path, 'Get ready for your first session');
         expect(url.pathname, `opening ${path}`).toBe('/mentor');
         expect(snapshot).not.toContain('heading "Dashboard"');
         expect(snapshot).not.toContain('heading "Users"');
@@ -98,12 +99,12 @@ describe('TC-ROLES-001 a wrong-role screen sends the user to their own home', ()
 describe('TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07)', () => {
   const personas = [
     { login: 'mock-mentee', home: '/home', heading: 'Mentee home', links: ['Mentee home'] },
-    { login: 'mock-mentor', home: '/mentor', heading: 'Mentor home', links: ['Mentor home', 'Mentor profile', 'Session prices', 'Availability'] },
+    { login: 'mock-mentor', home: '/mentor', heading: 'Get ready for your first session', links: ['Mentor workspace', 'Mentor profile'] },
     {
       login: 'mock-operator',
       home: '/admin',
       heading: 'Dashboard',
-      links: ['Admin dashboard', 'Users', 'Mentor home', 'Mentor profile', 'Session prices', 'Availability'],
+      links: ['Admin dashboard', 'Users', 'Mentor workspace', 'Mentor profile'],
     },
   ] as const;
 
@@ -134,12 +135,13 @@ describe('TC-ROLES-002 navigation follows the union of roles, with no way to gai
     await inBrowser('combined', async (session) => {
       await signInAs(session, baseUrl, 'mock-operator');
 
-      await runAgentBrowser(session, 'find', 'role', 'link', 'click', '--name', 'Mentor home');
-      await runAgentBrowser(session, 'wait', '--text', 'Mentor home');
+      await runAgentBrowser(session, 'find', 'role', 'link', 'click', '--name', 'Mentor workspace');
+      // The seeded operator holds the mentor role without an invitation, so it has no profile.
+      await runAgentBrowser(session, 'wait', '--text', 'Mentor profile not found');
       expect((await currentUrl(session)).pathname).toBe('/mentor');
       const mentor = await runAgentBrowser(session, 'snapshot');
-      expect(mentor).toContain('heading "Mentor home"');
-      expect(workspaceLinks(mentor)).toEqual(['Admin dashboard', 'Users', 'Mentor home', 'Mentor profile', 'Session prices', 'Availability']);
+      expect(mentor).toContain('heading "Mentor workspace"');
+      expect(workspaceLinks(mentor)).toEqual(['Admin dashboard', 'Users', 'Mentor workspace', 'Mentor profile']);
 
       await runAgentBrowser(session, 'find', 'role', 'link', 'click', '--name', 'Users');
       await runAgentBrowser(session, 'wait', '--text', 'Ada Lovelace');

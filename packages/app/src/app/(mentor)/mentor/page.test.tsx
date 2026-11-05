@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
-import { RoleChips } from '../../../components/auth/SignedInShell';
+import { MentorWorkspace } from './MentorWorkspace';
 import { admit, deny, GuardRedirect, guards } from '../../../test/page-guards';
-import { findAll, findByType, textOf } from '../../../test/element-tree';
 
 vi.mock('../../../lib/session', async () => (await import('../../../test/page-guards')).guards);
 
@@ -24,14 +23,8 @@ describe('/mentor', () => {
     expect(guards.requirePageAccount).toHaveBeenCalledExactlyOnceWith('mentor', '/mentor');
   });
 
-  it('says which account is signed in and which roles it holds', async () => {
-    const live = admit('mentor', 'operator');
-    const tree = await render();
-
-    expect(textOf(findByType(tree, 'h1'))).toBe('Mentor home');
-    const [who] = findAll(tree, (element) => textOf(element).startsWith('You are signed in'));
-    expect(textOf(who)).toBe('You are signed in with mock-mentee@devmentor.test.');
-    expect(findByType(tree, RoleChips).props.roles).toBe(live.roles);
+  it('renders the mentor workspace', async () => {
+    expect((await render()).type).toBe(MentorWorkspace);
   });
 
   it.each(['/sign-in?returnTo=%2Fmentor', '/home'])('renders nothing when the guard redirects to %s (edge case 19)', async (location) => {

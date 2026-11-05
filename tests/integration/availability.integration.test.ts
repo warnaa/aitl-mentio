@@ -57,17 +57,17 @@ it('TC-AVAILABILITY-002 publishes locally entered time and shows it signed out',
     await runAgentBrowser(session, 'open', await seedPendingInvitation(`${login}@devmentor.test`));
     await runAgentBrowser(session, 'wait', '--text', 'Your mentor invitation');
     await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Accept invitation');
-    await runAgentBrowser(session, 'wait', '--text', 'Publish at least one bookable session by');
+    await runAgentBrowser(session, 'wait', '--text', 'Get ready for your first session');
     const cookies = cookieHeader((await sessionCookie(session))!);
     const slug = await seedPublishedMentorProfile(base, cookies);
-    await runAgentBrowser(session, 'open', `${base}/mentor/slots`);
-    await runAgentBrowser(session, 'wait', '--text', 'Publish time');
+    await runAgentBrowser(session, 'open', `${base}/mentor`);
+    await runAgentBrowser(session, 'wait', '--text', 'Publish available time');
     const tree = await runAgentBrowser(session, 'snapshot');
-    expect(tree).toContain('Start time'); expect(tree).toContain('Publish time');
+    expect(tree).toContain('Session starts at'); expect(tree).toContain('Publish available time');
     // Native date controls expose locale-dependent spinbuttons; use their observed label's control.
-    const filled = await runAgentBrowser(session, 'eval', `(() => { const field = Array.from(document.querySelectorAll('label')).find(label => label.textContent.startsWith('Start time')).control; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(field, '2099-11-06T14:30'); field.dispatchEvent(new Event('input', { bubbles: true })); field.dispatchEvent(new Event('change', { bubbles: true })); return field.value; })()`);
+    const filled = await runAgentBrowser(session, 'eval', `(() => { const field = Array.from(document.querySelectorAll('label')).find(label => label.textContent.startsWith('Session starts at')).control; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(field, '2099-11-06T14:30'); field.dispatchEvent(new Event('input', { bubbles: true })); field.dispatchEvent(new Event('change', { bubbles: true })); return field.value; })()`);
     expect(filled).toContain('2099-11-06T14:30');
-    await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Publish time');
+    await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Publish available time');
     await runAgentBrowser(session, 'wait', '--text', 'Your time is published.');
     const timing = await runAgentBrowser(session, 'eval', `JSON.stringify({ domContentLoadedMs: performance.getEntriesByType('navigation')[0].domContentLoadedEventEnd, responseStartMs: performance.getEntriesByType('navigation')[0].responseStart })`);
     await writeFile(resolve(integrationArtifactsDirectory, 'availability-navigation.json'), timing);
@@ -78,6 +78,9 @@ it('TC-AVAILABILITY-002 publishes locally entered time and shows it signed out',
     expect(await runAgentBrowser(visitor, 'snapshot')).not.toMatch(/rating|ranking|review|score/i);
     await runAgentBrowser(visitor, 'screenshot', resolve(integrationArtifactsDirectory, 'public-slots.png'), '--full');
     await expectFitsMobile(visitor, 'public-slots');
+    await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Remove time');
+    await runAgentBrowser(session, 'wait', '--text', 'Remove this available time?');
+    // The modal hides the page behind it, so the accessible name now resolves to the dialog's button.
     await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Remove time');
     await runAgentBrowser(session, 'wait', '--text', 'Your time was removed.');
   } catch (error) { await captureBrowserFailure(session, 'slots'); throw error; }
