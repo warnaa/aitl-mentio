@@ -1,4 +1,5 @@
 import { MentorDeadline } from './MentorDeadline';
+import { MentorOfferStatus } from './MentorOfferStatus';
 import { RoleChips } from '../../../components/auth/SignedInShell';
 import { requirePageAccount } from '../../../lib/session';
 
@@ -17,6 +18,7 @@ export default async function MentorHomePage() {
       </div>
       <RoleChips roles={session.roles} />
       <MentorDeadline />
+      <MentorOfferStatus />
     </section>
   );
 }

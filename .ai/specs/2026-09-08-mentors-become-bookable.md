@@ -341,8 +341,7 @@ no product value in E02 (#35's open question, answered: keep).
 
 **The two prices move together.** An `updatePrices` call always carries both values and validates them
 against the single configured platform currency's bounds in one transaction. Currency is not stored
-per mentor in 1.0. The initial currency remains a founder-owned product choice; the implementation is
-blocked until founder A confirms the proposed `USD` default or records another two-decimal currency.
+per mentor in 1.0. Founder/operator approval on 2026-11-05 selects PLN with two decimal minor units and inclusive bounds of PLN 80–600 / PLN 160–1,200 for 25 / 50 minutes.
 
 ### `slots` — Slice 3 (new)
 
@@ -558,10 +557,7 @@ a div listening for clicks.
    bounded in the single platform currency. The client never supplies the amount charged by E03.
    `risk-high` on Slice 4, second reviewer.
 
-**Currency remains a product confirmation, not hidden framework scope.** The smallest 1.0 design is
-one platform currency with a proposed `USD` default; there is no per-mentor currency column or picker.
-Founder A must confirm the currency and initial bounds before Slice 4 starts. Changing platform
-currency after stored prices or bookings exist is a migration, not a config-only change.
+**Currency is a recorded product decision.** Approval on 2026-11-05 selects PLN with inclusive bounds of PLN 80–600 for 25 minutes and PLN 160–1,200 for 50 minutes. There is no per-mentor currency picker. Changing currency after stored prices or bookings exist requires a migration, not a config-only change.
 
 **The framework risk.** Seventeen catalogued entries is an invitation to build seventeen abstractions.
 The ship gate is the control and it was exercised: three candidates were rejected in review for
@@ -604,7 +600,7 @@ the implementation may defer until money is already owed.
   `Booking.slotId` and no overlapping active session. E03 owns the mechanism. E02 carries no fake
   booking relation or booking-dependent acceptance.
 - **Currency shape** → one platform currency and one bounds set, with no per-mentor currency column.
-  The proposed initial currency and bound values remain blocking founder decisions.
+  The initial values were approved on 2026-11-05: PLN 80–600 / PLN 160–1,200 for 25 / 50 minutes.
 - **Frontend depth** → the three field types E02 collects, `LocalTime`, `ReadinessChecklist`, plus
   `useApiResource` + `ResourcePanel`. No declarative screen descriptor.
 - **Invitation-validity mechanism** → a provisional 14-day `INVITATION_TTL_DAYS`, snapshotted per
@@ -654,7 +650,7 @@ spec and lifecycle; it is not Slice 5 of this epic.
 - **Slice 3 — Slots (#36).** `risk-high` (schema migration, `SDLC.md:97`), `needs-qa`, second reviewer.
   Ships B23's collection callback, B26 and F5′ `datetime`; booking occupancy remains E03.
 - **Slice 4 — Prices and offer readiness (#37).** `risk-high` (money), `needs-qa`, second reviewer. Ships
-  B12′, B16′, F5′ `money`. Unblocked by founder/operator approval2026-11-05: PLN,25min80–600PLN,50min160–1200PLN.
+  B12′, B16′, F5′ `money`. Unblocked by founder/operator approval on 2026-11-05: PLN, 25 min PLN 80–600, 50 min PLN 160–1,200.
 
 ## 📋 Implementation Plan
 
@@ -798,9 +794,7 @@ across the whole epic:
   simultaneously implementable as written. **This blocks production launch of Checkout and collection
   of money**, not the four E02 preparation slices. The founders must either bring Connect + settlement
   into the iteration or approve a superseding payment decision.
-- **Initial platform currency and price bounds** (owner: founder A). Proposed smallest scope: USD and
-  one approved bounds object. Both values are **approved2026-11-05: PLN,25min80–600,50min160–1200**; placeholder
-  money policy must not become a production default.
+- **Initial platform currency and price bounds — resolved 2026-11-05.** The founder/operator approved PLN, 25-minute bounds PLN 80–600, and 50-minute bounds PLN 160–1,200. Defaults implement this approved policy; currency changes after stored prices require migration.
 - **Whether the mentor's publish-by report is needed before #49** (owner: both founders). D18's check
   is "5 of the first 20 within two weeks", and until #49 the operator counts by hand from
   `publish_due_at` (R18). Non-blocking; the column makes the query one line.
@@ -812,7 +806,8 @@ across the whole epic:
   `Migration20260901142829.ts`, has no `down()`. Every migration in this spec ships both directions;
   the existing one should be fixed under its own issue.
 
-## Founder/operator approval2026-11-05
+## Founder/operator approval on 2026-11-05
 
-Slice4 currency and initial bounds are resolved: PLN with two decimal minor units; p25 minCents8000/maxCents60000; p50 minCents16000/maxCents120000. This supersedes USD proposals and historical minimums in D28. All other Slice4 contract requirements remain binding.
+Slice 4 currency and initial bounds are resolved: PLN with two decimal minor units; p25 minCents 8000 / maxCents 60000; p50 minCents 16000 / maxCents 120000. This supersedes USD proposals and historical minimums in D28. All other Slice4 contract requirements remain binding.
+
 

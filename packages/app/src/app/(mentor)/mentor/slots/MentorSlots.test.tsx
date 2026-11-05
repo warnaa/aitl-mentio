@@ -1,5 +1,6 @@
 ﻿// @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 const state = vi.hoisted(() => ({ data: null as null | { id: string; startsAt: string }[], loading: false, error: null as string | null, reload: vi.fn() }));
 vi.mock('@devmentor/ui/backend', async original => ({ ...await original<typeof import('@devmentor/ui/backend')>(), useApiResource: () => state }));
@@ -33,3 +34,17 @@ it('shows load/error/empty recovery without inventing rows', () => {
 });
 
 
+
+it('renders a stable UTC server shell and refreshes elapsed times while mounted', () => {
+  state.data = []; state.loading = false; state.error = null;
+  expect(renderToString(<MentorSlots />)).toContain('UTC');
+  vi.useFakeTimers();
+  try {
+    vi.setSystemTime(new Date('2026-11-05T12:00:00Z'));
+    state.data = [{ id: 'soon', startsAt: '2026-11-05T12:00:30Z' }];
+    render(<MentorSlots />);
+    expect(screen.getByRole('button', { name: 'Remove time' })).toBeTruthy();
+    act(() => vi.advanceTimersByTime(60_000));
+    expect(screen.getByText('No published times yet.')).toBeTruthy();
+  } finally { cleanup(); vi.useRealTimers(); }
+});

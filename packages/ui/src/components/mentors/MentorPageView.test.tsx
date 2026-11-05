@@ -32,3 +32,13 @@ it('shows public start instants with both lead-time states and empty availabilit
   rerender(<MentorPageView profile={{ ...profile, slots: [] }} />);
   expect(screen.getByText('No published times yet. Check back later.')).toBeTruthy();
 });
+
+it('shows both integer-minor-unit prices and the offer state without booking actions', () => {
+  const profile = { slug: 'ada', displayName: 'Ada', avatarUrl: null, publicWorkUrl: null, bio: 'Work', stackTags: [], prices: { price25Cents: 8000, price50Cents: 16000, currency: 'PLN' }, offerReady: true };
+  const { rerender } = render(<MentorPageView profile={profile} />);
+  expect(screen.getByText('25 min: PLN 80.00')).toBeTruthy(); expect(screen.getByText('50 min: PLN 160.00')).toBeTruthy();
+  expect(screen.getByText('This mentor has published their profile, prices and availability.')).toBeTruthy();
+  expect(screen.queryByRole('button')).toBeNull();
+  rerender(<MentorPageView profile={{ ...profile, prices: null, offerReady: false }} />);
+  expect(screen.getByText(/Not bookable yet/)).toBeTruthy();
+});

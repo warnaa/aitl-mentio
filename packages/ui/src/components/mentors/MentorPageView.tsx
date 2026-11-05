@@ -1,5 +1,6 @@
 ﻿import { TechnologyChips } from './TechnologyChips';
 import { LocalTime } from '../../time/LocalTime';
+import { Badge } from '../ui/badge';
 export interface MentorPageData {
   slug: string | null;
   displayName: string;
@@ -8,6 +9,8 @@ export interface MentorPageData {
   bio: string | null;
   stackTags: string[];
   slots?: { id: string; startsAt: string; meetsLeadTime: boolean }[];
+  prices?: { price25Cents: number; price50Cents: number; currency: string } | null;
+  offerReady?: boolean;
 }
 export function MentorPageView({ profile }: { profile: MentorPageData }) {
   return (
@@ -28,6 +31,15 @@ export function MentorPageView({ profile }: { profile: MentorPageData }) {
           See public work
         </a>
       )}
+      <section className="space-y-4" aria-label="Session prices">
+        <h2 className="text-xl font-medium">Session prices</h2>
+        {profile.prices && <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">25 min: {profile.prices.currency} {(profile.prices.price25Cents / 100).toFixed(2)}</Badge>
+          <Badge variant="outline">50 min: {profile.prices.currency} {(profile.prices.price50Cents / 100).toFixed(2)}</Badge>
+        </div>}
+        {!profile.offerReady && <p>Not bookable yet. This mentor is still preparing their offer.</p>}
+        {profile.offerReady && <p>This mentor has published their profile, prices and availability.</p>}
+      </section>
       <section className="space-y-4" aria-label="Published times">
         <h2 className="text-xl font-medium">Availability</h2>
         {profile.slots?.length ? <ul className="space-y-4">{profile.slots.map(slot => <li key={slot.id}>

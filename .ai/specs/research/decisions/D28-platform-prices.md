@@ -13,4 +13,5 @@
 
 ## Superseding founder/operator approval — 2026-11-05
 
-Source: direct user approval relayed to the implementation agent in this repository on2026-11-05. Currency PLN remains fixed. Approved bounds:25minutes80–600PLN (8000–60000groszy),50minutes160–1200PLN (16000–120000groszy). This supersedes the historical90/180minimums above; the external repository links remain historical provenance and are not evidence of these new values. Status: active. D09/R08 and R21 use these approved bounds. No fee or payment-launch decision changes.
+Source: direct user approval relayed to the implementation agent in this repository on 2026-11-05. Currency PLN remains fixed. Approved bounds: 25 minutes PLN 80–600 (8000–60000 groszy), 50 minutes PLN 160–1,200 (16000–120000 groszy). This supersedes the historical 90/180 minimums above; the external repository links remain historical provenance and are not evidence of these new values. Status: active. D09/R08 and R21 use these approved bounds. No fee or payment-launch decision changes.
+

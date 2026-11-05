@@ -1,4 +1,4 @@
-# DevMentor — Platform Primitives II (the domain floor)
+﻿# DevMentor — Platform Primitives II (the domain floor)
 
 Date: 2026-09-08
 Status: active reference spec — moves to `implemented/` with E02 after every `SHIP` entry is verified and merged
@@ -205,8 +205,7 @@ stays pure; persistence and transaction retries remain service responsibilities.
 
 #### B12′ · Money — `core/src/money/money.ts` · **SHIP**
 
-One platform currency in 1.0. The brief does not choose its value, so founder A must confirm the
-proposed `USD` default before the pricing story starts. Currency is displayed and snapshotted by later
+One platform currency in 1.0: founder/operator approval on 2026-11-05 selects PLN, with bounds owned by the E02 epic and D28. Currency is displayed and snapshotted by later
 bookings but is not stored per mentor. The E02 epic owns the exact cents, bounds and parser contracts.
 
 **Fee calculation is deferred to #44.** E02 sets prices and never divides one, so no fee helper or fee
@@ -622,3 +621,4 @@ Three documentation steps are owed by whichever PR first ships a primitive from 
 - **Slug redirect aliases** — needed the first time a mentor must be renamed without breaking a
   printed link; until then renaming is an operator action under R18.
 - **Zero- and three-decimal currencies** (B12′) — an arithmetic and data-migration change, not configuration.
+

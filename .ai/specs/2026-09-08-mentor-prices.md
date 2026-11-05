@@ -29,8 +29,7 @@ consumer reads them through one service now, so #50 changes the storage and not 
 service; exact decimal-to-cents parsing; the refusal that names the breached bound; the
 `mentorOfferReady` gate the public page and E03-S02 both read.
 
-**Out:** choosing the platform currency or initial values (founder decisions required before
-implementation); the operator settings screen (#50); the platform fee, fee split and payouts (#44);
+**Out:** changing the approved platform currency or initial values; the operator settings screen (#50); the platform fee, fee split and payouts (#44);
 the booking's own price snapshot (#40, #41).
 
 ## 📝 UI/UX
@@ -83,11 +82,9 @@ D09/R08, R01/D01, D11/R10, D19/R18.
 
 ## 📝 Open questions
 
-- **Platform currency** (owner: founders). The smallest design is one platform currency, proposed as
-  USD, but money-affecting behavior cannot be selected silently. Resolved by explicit founder/operator approval on 2026-11-05.
-- **Initial 25- and 50-minute bounds** (owner: founder A with founder B). Blocking before Slice 4
-  starts; no placeholder production defaults.
+- **Resolved 2026-11-05:** founder/operator approved PLN, 25-minute bounds PLN 80–600 and 50-minute bounds PLN 160–1,200. No currency or initial-bounds question remains for Slice 4.
 
 ## Approved currency and bounds — 2026-11-05
 
-The founder/operator explicitly approved in the implementation session: Polish złoty (PLN), two decimal minor units; 25-minute minimum80PLN and maximum600PLN; 50-minute minimum160PLN and maximum1200PLN. Server defaults use {p25:{minCents:8000,maxCents:60000},p50:{minCents:16000,maxCents:120000}}. Both blocking questions above are resolved; proposed USD and historical PLN90/180 minimums are superseded. See research/decisions/D28-platform-prices.md for provenance. Currency changes after stored prices require migration, never an environment-only switch.
+The founder/operator explicitly approved in the implementation session: Polish złoty (PLN), two decimal minor units; 25-minute minimum 80 PLN and maximum 600 PLN; 50-minute minimum 160 PLN and maximum 1,200 PLN. Server defaults use {p25:{minCents:8000,maxCents:60000},p50:{minCents:16000,maxCents:120000}}. Both blocking questions above are resolved; proposed USD and historical PLN 90/180 minimums are superseded. See research/decisions/D28-platform-prices.md for provenance. Currency changes after stored prices require migration, never an environment-only switch.
+

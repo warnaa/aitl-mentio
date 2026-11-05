@@ -22,7 +22,7 @@ flowchart LR
   subgraph data [Trusted storage]
     DB[(PostgreSQL)]
   end
-  Mentor -->|"cookie, CSRF header, instant, slot ID (T01-T04)"| API
+  Mentor -->|"cookie, CSRF header, instant, slot ID (T01-T04,T09-T11)"| API
   API -->|"owner-scoped queries and transactional publication (T02,T05,T06)"| DB
   Visitor -->|"slug (T07,T08)"| Public
   Public -->|"published profile and future slots (T07,T08)"| DB
@@ -50,5 +50,6 @@ Synthetic local ephemeral PostgreSQL and browser only. Unit: authorization, inva
 
 Changelog: 2026-11-05 initial preimplementation model; mitigations above are planned until verified by the run gate.
 
-## Slice 4 extension — approved and reviewed2026-11-05
+## Slice 4 extension — approved and reviewed on 2026-11-05
 Money assets: exact minor-unit amounts, authoritative policy, truthful offer readiness. Entry PUT prices plus owner/public reads. T09 (T/E, H/H, A06:2025 CWE-602): client supplies price/currency/bounds/storage fields; mitigate with decimal-only schema, exact bounded integer parsing, session-owned profile and server-only settings. Test extra keys, role/scope/CSRF denial and one-invalid rollback. T10 (T, M/H, CWE-362): partial/concurrent two-price save; validate both before any mutation inside the profile row transaction, test persisted atomicity. T11 (T/I, M/H, A02:2025): missing/malformed policy or stale stored price masquerades as ready; settings validates complete positive integer PLN bounds, readiness rechecks current bounds, public projection excludes bounds. Test malformed JSON, missing settings, inverted/zero/overflow bounds and subsequent policy changes. No charge, fee, booking snapshot or payout is introduced. The same application/storage boundaries apply. These mitigations remain planned until the full gate passes.
+
