@@ -5,6 +5,7 @@
 @import './supporting-components.css';
 @import './layout-components.css';
 @import './backend/shell/public-layout.css';
+@import './landing.css';
 @import './product-patterns.css';
 @import './session-transcript.css';
 @import './mentor-reviews.css';

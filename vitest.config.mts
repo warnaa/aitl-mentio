@@ -78,6 +78,7 @@ export default defineConfig({
         'packages/app/src/app/invitation/\\[token\\]/AcceptInvitation.tsx',
         'packages/app/src/app/invitation/\\[token\\]/page.tsx',
         'packages/app/src/app/m/\\[slug\\]/page.tsx',
+        'packages/app/src/app/page.tsx',
         'packages/app/src/components/auth/AccountPanel.tsx',
         'packages/app/src/components/auth/SignedInShell.tsx',
         'packages/app/src/components/auth/SignOutButton.tsx',
