@@ -103,7 +103,9 @@ export default async function Home() {
               height={1024}
               sizes="(max-width: 704px) 100vw, 640px"
               alt=""
-              priority
+              // Next 16 deprecates `priority`; the hero loads eagerly at high priority instead.
+              loading="eager"
+              fetchPriority="high"
             />
           </div>
         </section>

@@ -321,11 +321,23 @@ by the entry's owner. `SDLC.md` describes the mechanism.
 ## What is not protected
 
 Internal, unexported helpers; the markup of the admin and public pages beyond the
-semantics the integration tests assert on (the headings `Dashboard` and `Users`, the
-link `Users`, the text `Connected`, the seeded table cells, and the landing heading
-`Grow faster with the right mentor.`); Tailwind class choices; and the placeholder
+semantics the integration tests assert on (the headings `Operator workspace` and
+`Users`, the links `Users` and `View users`, the text `Connected`, the seeded table
+cells and role lists, and the landing heading `Work through your code with a mentor.`);
+Tailwind class choices and `dm-*` layout classes; and the placeholder
 `User` and `MentorProfile` fields, which `README.md` describes as a demo model. Even
 those change through migrations and tests, only without the breaking-change paperwork.
+
+## Screen alignment with the prototype (#65)
+
+The E01/E02 screens follow their prototype screens; routes, guards and API contracts
+are unchanged. One component prop changed shape: `MentorProfileEditor`
+(`@devmentor/ui`) now names its values like the mentor profile API (`bio` for
+`description`, `stackTags` for `stacks`), makes `displayName` optional, and adds
+`stackOptions`, `schema` and `externalFieldErrors`. Its in-repo consumers (the app
+profile page, the prototype and the stories) were updated in the same PR. `PublicLayout`
+(`./backend`), `PublishedDays`, `useViewerTimeZone` and the `RoleChips` `label` prop are
+additive.
 
 ## E02 availability and pricing add new contracts
 
