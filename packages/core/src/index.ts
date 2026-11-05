@@ -71,6 +71,7 @@ export * from './http/index';
 export { checkDbConnection } from '@devmentor/db';
 
 export { InvitationService } from './services/invitations/invitation.service';
+export { BookingService, type BookingDto } from './services/bookings/booking.service';
 export * from './services/mentors/mentor-profile.service';
 export * from './domain/vocabulary';
 export * from './domain/vocabularies/stack-tags';
