@@ -100,18 +100,21 @@ export class MentorProfileService {
     return this.deps.em.fork().transactional(async em => {
       const profile = await this.profile(em, userId, true);
       const settings = this.deps.platformSettingsService.get();
-      const price25Cents = parseMajorAmount(data.price25);
-      const price50Cents = parseMajorAmount(data.price50);
       const fieldErrors: Record<string, string[]> = {};
-      for (const [key, value, bounds] of [
-        ['price25', price25Cents, settings.priceBounds.p25],
-        ['price50', price50Cents, settings.priceBounds.p50],
+      const cents: Partial<Record<'price25' | 'price50', number>> = {};
+      for (const [key, raw, bounds] of [
+        ['price25', data.price25, settings.priceBounds.p25],
+        ['price50', data.price50, settings.priceBounds.p50],
       ] as const) {
-        if (!withinBounds(value, bounds)) fieldErrors[key] = [`Enter ${settings.currency} ${(bounds.minCents / 100).toFixed(2)}–${(bounds.maxCents / 100).toFixed(2)}.`];
+        // An amount too large to store is out of bounds for that field, not a form-level error.
+        let value: number | undefined;
+        try { value = parseMajorAmount(raw); } catch { value = undefined; }
+        if (value === undefined || !withinBounds(value, bounds)) fieldErrors[key] = [`Enter ${settings.currency} ${(bounds.minCents / 100).toFixed(2)}–${(bounds.maxCents / 100).toFixed(2)}.`];
+        else cents[key] = value;
       }
       if (Object.keys(fieldErrors).length) throw new ValidationError('Prices must be within the platform bounds.', fieldErrors);
-      profile.price25Cents = price25Cents;
-      profile.price50Cents = price50Cents;
+      profile.price25Cents = cents.price25!;
+      profile.price50Cents = cents.price50!;
       profile.updatedAt = this.deps.clock.now();
       await em.flush();
       return this.ownerDto(em, profile);

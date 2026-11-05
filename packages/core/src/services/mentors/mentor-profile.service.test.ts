@@ -262,6 +262,12 @@ describe('MentorProfileService', () => {
     }
     expect(flush).not.toHaveBeenCalled();
   });
+  it('reports an unstorable amount as a bound error on its own field', async () => {
+    await expect(service().updatePrices({ price25: '99999999.99', price50: '160' })).rejects.toMatchObject({
+      status: 422,
+      fieldErrors: { price25: ['Enter PLN 80.00–600.00.'] },
+    });
+  });
   it('projects prices only when both exist and remain within current policy', () => {
     const entity = profile as unknown as IMentorProfile;
     expect(toPublicDto(entity)).not.toHaveProperty('prices'); expect(toOwnerDto(entity)).not.toHaveProperty('priceBounds');
