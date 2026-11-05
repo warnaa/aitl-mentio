@@ -326,3 +326,9 @@ link `Users`, the text `Connected`, the seeded table cells, and the landing head
 `Grow faster with the right mentor.`); Tailwind class choices; and the placeholder
 `User` and `MentorProfile` fields, which `README.md` describes as a demo model. Even
 those change through migrations and tests, only without the breaking-change paperwork.
+
+## E02 availability and pricing add new contracts
+
+Slices 3 and 4 add protected slot collection/removal and mentor-price routes, explicit price/readiness/availability DTO fields, the typed availability publication event, approved PLN configuration defaults, and two reversible additive migrations. The new owner slot collection returns bounded `{ items, page, pageCount }` pages; public availability is capped at the next 50 times.
+
+`MentorProfileServiceDeps` and `Cradle` now require `platformSettingsService`. All in-repository constructors and DI registrations are updated in the same change; these private workspaces are not published. Existing one-argument `toPublicDto(profile)` and `toOwnerDto(profile)` calls retain their legacy shape through overloads. HTTP reads supply authoritative settings to the additive projections. Currency changes after stored money exists require a data migration, not an environment-only change.

@@ -8,6 +8,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Label } from '../../components/ui/label';
 import { apiCall } from '../api/apiCall';
 import type { FieldErrors } from '../api/types';
+import { localDatetimeToInstant } from './local-datetime';
 
 export type CrudFieldType =
   | 'text'
@@ -16,6 +17,8 @@ export type CrudFieldType =
   | 'number'
   | 'date'
   | 'datetime-local'
+  | 'datetime'
+  | 'money'
   | 'textarea'
   | 'checkbox'
   | 'select'
@@ -146,6 +149,7 @@ export function CrudForm<T>({
     for (const field of fields) {
       const raw = values[field.name];
       candidate[field.name] =
+        field.type === 'datetime' ? localDatetimeToInstant(String(raw)) :
         (field.type === 'number' || field.omitEmpty) && raw === '' ? undefined : raw;
     }
 
@@ -296,7 +300,8 @@ export function CrudForm<T>({
             ) : (
               <Input
                 {...inputProps}
-                type={field.type === 'number' ? 'number' : field.type ?? 'text'}
+                type={field.type === 'money' ? 'text' : field.type === 'datetime' ? 'datetime-local' : field.type === 'number' ? 'number' : field.type ?? 'text'}
+                inputMode={field.type === 'money' ? 'decimal' : undefined}
                 className="w-full"
                 placeholder={field.placeholder}
                 value={String(value ?? '')}

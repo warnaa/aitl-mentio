@@ -9,4 +9,8 @@
 - Scope: adds detail to D09/R08; does not supersede them, choose a fee or resolve payout timing.
 - Review by: 2026-11-28 under D23 unless the founders replace the bounds earlier.
 - Required path to change: a superseding decision approved by the founders.
-- Status: active.
+- Historical policy status: superseded by explicit approval below.
+
+## Superseding founder/operator approval — 2026-11-05
+
+Source: direct user approval relayed to the implementation agent in this repository on 2026-11-05. Currency PLN remains fixed. Approved bounds: 25 minutes PLN 80–600 (8000–60000 groszy), 50 minutes PLN 160–1,200 (16000–120000 groszy). This supersedes the historical 90/180 minimums above; the external repository links remain historical provenance and are not evidence of these new values. Status: active. D09/R08 and R21 use these approved bounds. No fee or payment-launch decision changes.

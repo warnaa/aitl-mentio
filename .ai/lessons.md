@@ -9,6 +9,16 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-05 — User correction: E02 mentor screens matched the specs but not the designs. Plans had taken only behaviour specs as acceptance criteria, so pages were assembled from generic primitives (`ReadinessChecklist`, ad-hoc Tailwind) while the designed `MentorOnboarding` and `dm-product-panel` workspace went unused. Plan UI steps against the prototype screen named in the design handoff and compare screenshots before declaring done (rule in `packages/app/AGENTS.md`).
+
+- 2026-11-05 — To tamper a JWT in a test, flip a character inside the signature (e.g. the first), never the last: the final base64url character carries padding bits, so rewriting the end can decode to the same signature and the "tampered" token verifies intermittently.
+
+- 2026-11-05 — Windows PowerShell `Set-Content`/`Out-File` write a UTF-8 BOM and can append blank lines; the repository has no BOM files. Write files with the editor tools or Node, and before committing check that no file starts with the bytes EF BB BF. Visitor-facing views never render a mentor setup checklist; use `EmptyState` with visitor copy.
+
+- 2026-11-05 — Shared mentor views receive both owner previews and public DTOs: use the shared readiness gate when present, and distinguish an omitted availability projection from an empty list. Add a preview regression whenever the public view gains a new state.
+
+- 2026-11-05 — Next statically parses route configuration: declare dynamic locally rather than re-exporting it. Handler re-exports are supported; keep shared callbacks in a sibling module and verify new routes with the production build. Native datetime-local controls expose locale-dependent spinbuttons to agent-browser; assert the control value after automation fills it.
+
 - 2026-11-05 — **`instanceof AppError` failed across Next bundles, so a service's 404 became a logged 500.** Next compiles `core` separately for route handlers and server components, while the container is cached on `globalThis`; whichever bundle builds it first supplies the service classes, so the other bundle's `NotFoundError` check misses. Pages fell into their "unavailable" branch instead of not-found, and `apiHandler` logged a 404 as `unhandled route error`. Unit tests import one copy and cannot see it; the integration suite did. Fix: `AppError` carries a `Symbol.for` brand and `Symbol.hasInstance` matches by each class's own static `code`. Every `AppError` subclass declares `static override readonly code`.
 
 - 2026-11-05 — **A `'use client'` component must import a shared schema from `@devmentor/core/validators/*`, never the `@devmentor/core` barrel.** The barrel re-exports `@devmentor/db`, so `next build` failed resolving `pg`'s `dns` for the browser bundle while typecheck, lint and 100% unit coverage all passed. Only the production build (or the integration suite, which builds first) catches it: run `npm run build` before declaring UI work done, and keep validator modules free of db imports.

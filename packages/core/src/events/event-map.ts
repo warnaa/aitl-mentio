@@ -9,6 +9,7 @@ import type { Role } from '../services/auth/roles';
  * cache invalidation). There is no queue or background worker in this project.
  */
 export interface EventMap {
+  'availability.slot.published': { mentorProfileId: string; slotId: string; startsAt: string };
   'auth.user.created': { userId: string; email: string };
   /**
    * A user's stored role set changed membership: `grantRole`/`revokeRole`, or the

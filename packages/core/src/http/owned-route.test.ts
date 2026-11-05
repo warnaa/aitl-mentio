@@ -74,3 +74,17 @@ describe('owned routes', () => {
     expect((await withoutSchema.PUT(req('PUT', '{}'), context)).status).toBe(400);
   });
 });
+
+it('validates owned collections and passes path params to remove', async () => {
+  const { makeOwnedCollectionRoute } = await import('./owned-route');
+  const list = vi.fn(async () => []);
+  const create = vi.fn(async (_c, input) => input);
+  const remove = vi.fn(async (_c, params) => params);
+  const handlers = makeOwnedCollectionRoute({ role: 'mentor', list, create, remove, createSchema: z.object({ name: z.string() }) });
+  expect((await handlers.GET(req(), context)).status).toBe(200);
+  expect(await (await handlers.POST(req('POST', '{"name":"new"}'), context)).json()).toMatchObject({ data: { name: 'new' } });
+  expect((await handlers.POST(req('POST', '{}'), context)).status).toBe(422);
+  expect((await handlers.DELETE(req('DELETE'), context)).status).toBe(200);
+  expect(remove).toHaveBeenCalledWith(scope.cradle, { token: 'token' });
+  expect((await handlers.DELETE(req('DELETE', undefined, false), context)).status).toBe(403);
+});

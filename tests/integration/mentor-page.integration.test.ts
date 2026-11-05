@@ -74,7 +74,7 @@ describe('TC-MENTOR-PAGE-001 a mentor publishes a page a signed-out visitor can 
       await signInAs(session, baseUrl, login);
       await visit(session, await seedPendingInvitation(`${login}@devmentor.test`), 'Your mentor invitation');
       await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Accept invitation');
-      await runAgentBrowser(session, 'wait', '--text', 'Publish at least one bookable session by');
+      await runAgentBrowser(session, 'wait', '--text', 'Publish by ');
 
       const empty = await visit(session, `${baseUrl}/mentor/profile`, 'Your mentor profile');
       expect(empty).toContain('Required: Add a link to your public work.');
@@ -130,7 +130,7 @@ describe('TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary',
       expect(page.status).toBe(200);
       const body = (await page.json()) as { data: Record<string, unknown> };
       // The projection boundary: exactly the public keys, nothing private.
-      expect(Object.keys(body.data).sort()).toEqual(['avatarUrl', 'bio', 'displayName', 'publicWorkUrl', 'slug', 'stackTags']);
+      expect(Object.keys(body.data).sort()).toEqual(['avatarUrl', 'bio', 'displayName', 'offerReadiness', 'offerReady', 'prices', 'publicWorkUrl', 'slots', 'slug', 'stackTags']);
       expect(JSON.stringify(body)).not.toMatch(/@|publishDueAt|initialPublishDueAt|publishedAt/);
 
       const hidden = await transition(baseUrl, mentor, 'unpublish');

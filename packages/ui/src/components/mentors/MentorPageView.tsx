@@ -1,4 +1,8 @@
 import { TechnologyChips } from './TechnologyChips';
+import { LocalTime } from '../../time/LocalTime';
+import { Badge } from '../ui/badge';
+import { EmptyState } from '../../backend/feedback/EmptyState';
+import type { ReadinessItem } from '../../backend/feedback/ReadinessChecklist';
 export interface MentorPageData {
   slug: string | null;
   displayName: string;
@@ -6,8 +10,13 @@ export interface MentorPageData {
   publicWorkUrl: string | null;
   bio: string | null;
   stackTags: string[];
+  slots?: { id: string; startsAt: string; meetsLeadTime: boolean }[];
+  prices?: { price25Cents: number; price50Cents: number; currency: string } | null;
+  offerReady?: boolean;
+  offerReadiness?: { ready: boolean; items: ReadinessItem[] };
 }
 export function MentorPageView({ profile }: { profile: MentorPageData }) {
+  const ready = profile.offerReadiness?.ready ?? profile.offerReady;
   return (
     <article className="mx-auto flex max-w-[65ch] flex-col gap-8 px-6 py-12">
       <header>
@@ -26,6 +35,23 @@ export function MentorPageView({ profile }: { profile: MentorPageData }) {
           See public work
         </a>
       )}
+      <section className="space-y-4" aria-label="Session prices">
+        <h2 className="text-xl font-medium">Session prices</h2>
+        {profile.prices && <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">25 min: {profile.prices.currency} {(profile.prices.price25Cents / 100).toFixed(2)}</Badge>
+          <Badge variant="outline">50 min: {profile.prices.currency} {(profile.prices.price50Cents / 100).toFixed(2)}</Badge>
+        </div>}
+        {!ready && <EmptyState title="Not bookable yet" description="This mentor is still preparing their offer. Check back once their setup is complete." />}
+        {ready && <p>This mentor has published their profile, prices and availability.</p>}
+      </section>
+      {profile.slots !== undefined && <section className="space-y-4" aria-label="Published times">
+        <h2 className="text-xl font-medium">Availability</h2>
+        <p className="text-sm text-muted-foreground">The next 50 published times are shown. Eligibility is checked when this page loads.</p>
+        {profile.slots.length ? <ul className="space-y-4">{profile.slots.map(slot => <li key={slot.id}>
+          <LocalTime value={slot.startsAt} />
+          <p className="text-sm text-muted-foreground">{slot.meetsLeadTime ? 'Meets the two-hour notice period.' : 'Unavailable: less than two hours before the start.'}</p>
+        </li>)}</ul> : <p>No published times yet. Check back later.</p>}
+      </section>}
     </article>
   );
 }

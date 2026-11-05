@@ -1,0 +1,18 @@
+flowchart LR
+  subgraph internet [Untrusted browser]
+    Mentor[Mentor or attacker]
+    Visitor[Anonymous visitor]
+  end
+  subgraph app [Trusted application]
+    API(Owned routes and SlotService)
+    Public(Published mentor projection)
+  end
+  subgraph data [Trusted storage]
+    DB[(PostgreSQL)]
+  end
+  Mentor -->|"cookie, CSRF header, instant, slot ID (T01-T04,T09-T11)"| API
+  API -->|"owner-scoped queries and transactional publication (T02,T05,T06)"| DB
+  Visitor -->|"slug (T07,T08)"| Public
+  Public -->|"published profile and future slots (T07,T08)"| DB
+  classDef boundary stroke-dasharray: 5 5
+  class internet,app,data boundary

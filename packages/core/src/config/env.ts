@@ -33,6 +33,8 @@ const sessionSecret = z.string().min(32, 'must be at least 32 characters');
  */
 const appEnvSchema = z
   .object({
+    PLATFORM_CURRENCY: z.literal('PLN').default('PLN'),
+    PLATFORM_PRICE_BOUNDS: z.string().min(1).default('{"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}'),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     APP_NAME: z.string().default('DevMentor'),
     LOG_LEVEL: z

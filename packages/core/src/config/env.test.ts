@@ -229,3 +229,11 @@ describe('invitation policy configuration', () => {
     for (const key of ['INVITATION_TTL_DAYS', 'MENTOR_PUBLISH_WINDOW_DAYS']) await expect(parse({ [key]: value })).rejects.toThrow();
   });
 });
+
+it('uses only the founder-approved PLN defaults and rejects blank commercial configuration', async () => {
+  const env = await parse({});
+  expect(env.PLATFORM_CURRENCY).toBe('PLN');
+  expect(JSON.parse(env.PLATFORM_PRICE_BOUNDS)).toEqual({ p25: { minCents: 8000, maxCents: 60000 }, p50: { minCents: 16000, maxCents: 120000 } });
+  await expect(parse({ PLATFORM_CURRENCY: 'USD' })).rejects.toThrow();
+  await expect(parse({ PLATFORM_PRICE_BOUNDS: '' })).rejects.toThrow();
+});

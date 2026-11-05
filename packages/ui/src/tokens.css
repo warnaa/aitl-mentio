@@ -9,6 +9,7 @@
 @import './mentor-reviews.css';
 @import './components/mentors/mentor-search.css';
 @import './components/mentors/mentor-onboarding.css';
+@import './components/mentors/mentor-workspace.css';
 @import './components/auth/auth.css';
 @import './overlays.css';
 @import './foundations.css';

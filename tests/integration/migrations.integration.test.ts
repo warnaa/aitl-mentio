@@ -441,3 +441,43 @@ describe('TC-MIGRATION-005 mentor-page migration round trip', () => {
     expect(await columnsOf('mentor_profiles', PAGE_COLUMNS)).toEqual(PAGE_COLUMNS);
   }, 300_000);
 });
+
+const AVAILABILITY = 'Migration20261105065903_availability_slots';
+describe('TC-MIGRATION-006 availability migration round trip', () => {
+  ownPostgres();
+  it('preserves history, permits republishing removed starts and reverses the schema', async () => {
+    await migrateTo(AVAILABILITY);
+    expect((await insertUser('slots@devmentor.test')).exitCode).toBe(0);
+    expect((await psql(`insert into mentor_profiles (id, created_at, updated_at, user_id, headline) values (gen_random_uuid(), now(), now(), ${userId('slots@devmentor.test')}, 'Kept')`)).exitCode).toBe(0);
+    const insert = `insert into slots (id, created_at, updated_at, mentor_profile_id, starts_at) select gen_random_uuid(), now(), now(), id, '2099-11-06T12:00:00Z' from mentor_profiles`;
+    expect((await psql(insert)).exitCode).toBe(0);
+    expect((await psql(insert)).exitCode).not.toBe(0);
+    expect((await psql('update slots set removed_at = now()')).exitCode).toBe(0);
+    expect((await psql(insert)).exitCode).toBe(0);
+    expect(await queryJson('select count(*) from slots')).toBe(2);
+    await runNpm(['run', 'db:migrate:down'], environment);
+    expect(await queryJson(`select to_regclass('public.slots')`)).toBeNull();
+    expect(await columnsOf('mentor_profiles', ['last_published_availability_at'])).toEqual([]);
+    await migrateTo(AVAILABILITY);
+    expect(await columnsOf('mentor_profiles', ['last_published_availability_at'])).toEqual(['last_published_availability_at']);
+  });
+});
+
+const PRICES = 'Migration20261105072042_mentor_prices';
+describe('TC-MIGRATION-007 mentor-prices migration round trip', () => {
+  ownPostgres();
+  it('adds nullable positive integer prices, rejects nonpositive values, and reverses cleanly', async () => {
+    await migrateTo(PRICES);
+    expect((await insertUser('prices@devmentor.test')).exitCode).toBe(0);
+    expect((await psql(`insert into mentor_profiles (id, created_at, updated_at, user_id, headline) values (gen_random_uuid(), now(), now(), ${userId('prices@devmentor.test')}, 'Kept')`)).exitCode).toBe(0);
+    expect(await columnsOf('mentor_profiles', ['price_25_cents', 'price_50_cents'])).toEqual(['price_25_cents', 'price_50_cents']);
+    expect((await psql('update mentor_profiles set price_25_cents = 0')).exitCode).not.toBe(0);
+    expect((await psql('update mentor_profiles set price_50_cents = -1')).exitCode).not.toBe(0);
+    expect((await psql('update mentor_profiles set price_25_cents = 8000, price_50_cents = 16000')).exitCode).toBe(0);
+    await runNpm(['run', 'db:migrate:down'], environment);
+    expect(await columnsOf('mentor_profiles', ['price_25_cents', 'price_50_cents'])).toEqual([]);
+    expect(await queryJson(`select json_agg(headline) from mentor_profiles`)).toEqual(['Kept']);
+    await migrateTo(PRICES);
+    expect(await columnsOf('mentor_profiles', ['price_25_cents', 'price_50_cents'])).toHaveLength(2);
+  });
+});

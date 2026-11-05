@@ -7,6 +7,8 @@ import type { DbEnv } from './env';
  * about what `createOrmConfig` builds from an already-validated env.
  */
 const BASE_ENV: DbEnv = {
+  PLATFORM_CURRENCY: 'PLN',
+  PLATFORM_PRICE_BOUNDS: '{}',
   DATABASE_URL: undefined,
   DB_HOST: '127.0.0.1',
   DB_PORT: 5432,
@@ -43,7 +45,9 @@ function ormConfig(overrides: Partial<DbEnv> = {}) {
 describe('createOrmConfig', () => {
   it('connects through DATABASE_URL when one is configured', () => {
     const config = ormConfig({
-      DATABASE_URL: 'postgres://user:secret@db.example.com:6543/devmentor',
+      PLATFORM_CURRENCY: 'PLN',
+  PLATFORM_PRICE_BOUNDS: '{}',
+  DATABASE_URL: 'postgres://user:secret@db.example.com:6543/devmentor',
     });
 
     expect(config.clientUrl).toBe('postgres://user:secret@db.example.com:6543/devmentor');

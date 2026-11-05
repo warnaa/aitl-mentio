@@ -17,17 +17,18 @@ import {
 import type { EventBus } from '../../events/event-bus';
 
 vi.mock('@devmentor/db', () => ({
-  MentorProfile: 'MentorProfile',
+  MentorProfile: 'MentorProfile', Slot: 'Slot',
   LockMode: { PESSIMISTIC_WRITE: 'write' },
   UniqueConstraintViolationException: class extends Error {
     constraint?: string;
   },
 }));
 
+const settings = { currency: 'PLN' as const, priceBounds: { p25: { minCents: 8000, maxCents: 60000 }, p50: { minCents: 16000, maxCents: 120000 } } };
 const now = new Date('2026-11-04T12:00:00Z');
 function row() {
   return {
-    id: 'profile-1',
+    id: 'profile-1', price25Cents: null as number | null, price50Cents: null as number | null,
     user: { id: 'owner', displayName: 'Ada Lovelace', avatarUrl: null, email: 'private@example.test' },
     slug: null as string | null,
     publicWorkUrl: 'https://example.test',
@@ -52,7 +53,7 @@ describe('MentorProfileService', () => {
       em,
       session: Promise.resolve(session),
       clock: { now: () => now },
-      eventBus: { emit },
+      eventBus: { emit }, platformSettingsService: { get: () => settings },
     });
 
   beforeEach(() => {
@@ -63,10 +64,11 @@ describe('MentorProfileService', () => {
     findOne = vi.fn(async (_entity, query) => ('slug' in query ? null : profile));
     transactions = [];
     em = {
+      count: vi.fn().mockResolvedValue(0), find: vi.fn().mockResolvedValue([{ id: 'future', startsAt: new Date('2026-11-04T14:00:00Z') }, { id: 'near', startsAt: new Date('2026-11-04T13:59:59.999Z') }]),
       findOne,
       fork: vi.fn(() => ({
         transactional: vi.fn(async (fn) => {
-          const child = { findOne, flush };
+          const child = { findOne, flush, count: vi.fn().mockResolvedValue(0) };
           transactions.push(child);
           return fn(child);
         }),
@@ -78,7 +80,7 @@ describe('MentorProfileService', () => {
     for (const current of [null, { userId: 'owner', roles: ['mentee'] } as Session]) {
       session = current;
       for (const call of [
-        () => service().getMine(),
+        () => service().getMine(), () => service().updatePrices({ price25: '80', price50: '160' }),
         () => service().update({}),
         () => service().publish(),
         () => service().unpublish(),
@@ -129,12 +131,13 @@ describe('MentorProfileService', () => {
   });
   it('projects exact audience keys and snapshots instant labels', () => {
     const entity = profile as unknown as IMentorProfile;
-    expect(Object.keys(toPublicDto(entity)).sort()).toEqual(
-      ['slug', 'displayName', 'avatarUrl', 'publicWorkUrl', 'bio', 'stackTags'].sort(),
+    expect(toPublicDto(entity)).not.toHaveProperty('prices'); expect(toOwnerDto(entity)).not.toHaveProperty('priceBounds');
+    expect(Object.keys(toPublicDto(entity, settings)).sort()).toEqual(
+      ['prices', 'slug', 'displayName', 'avatarUrl', 'publicWorkUrl', 'bio', 'stackTags'].sort(),
     );
-    expect(Object.keys(toOwnerDto(entity)).sort()).toEqual(
+    expect(Object.keys(toOwnerDto(entity, settings)).sort()).toEqual(
       [
-        'id',
+        'prices', 'priceBounds', 'id',
         'slug',
         'displayName',
         'avatarUrl',
@@ -148,11 +151,11 @@ describe('MentorProfileService', () => {
     );
     profile.initialPublishDueAt = now;
     profile.publishedAt = now;
-    expect(toOwnerDto(entity)).toMatchObject({
+    expect(toOwnerDto(entity, settings)).toMatchObject({
       initialPublishDueAt: now.toISOString(),
       publishedAt: now.toISOString(),
     });
-    toPublicDto(entity).stackTags.push('python');
+    toPublicDto(entity, settings).stackTags.push('python');
     expect(profile.stackTags).toEqual(['react']);
     const empty = {
       ...profile,
@@ -161,13 +164,13 @@ describe('MentorProfileService', () => {
       publicWorkUrl: undefined,
       user: { ...profile.user, avatarUrl: 'https://example.test/avatar.png' },
     } as unknown as IMentorProfile;
-    expect(toPublicDto(empty)).toMatchObject({
+    expect(toPublicDto(empty, settings)).toMatchObject({
       slug: null,
       bio: null,
       publicWorkUrl: null,
       avatarUrl: 'https://example.test/avatar.png',
     });
-    expect(toOwnerDto(empty)).toMatchObject({
+    expect(toOwnerDto(empty, settings)).toMatchObject({
       slug: null,
       bio: null,
       publicWorkUrl: null,
@@ -235,7 +238,7 @@ describe('MentorProfileService', () => {
   it('public reads need no session, require publication, and hide missing/unpublished pages', async () => {
     session = null;
     findOne.mockResolvedValue(profile);
-    expect(await service().getPublicBySlug('ada')).toMatchObject({ displayName: 'Ada Lovelace' });
+    expect(await service().getPublicBySlug('ada')).toMatchObject({ displayName: 'Ada Lovelace', slots: [{ id: 'future', meetsLeadTime: true }, { id: 'near', meetsLeadTime: false }] });
     expect(findOne).toHaveBeenCalledWith(
       'MentorProfile',
       { slug: 'ada', publishedAt: { $ne: null } },
@@ -244,4 +247,36 @@ describe('MentorProfileService', () => {
     findOne.mockResolvedValue(null);
     await expect(service().getPublicBySlug('private')).rejects.toBeInstanceOf(NotFoundError);
   });
-});
+  it('saves both inclusive-bound prices together under the owner lock', async () => {
+    for (const [price25, price50] of [['80', '160'], ['600.00', '1200.00']]) {
+      expect(await service().updatePrices({ price25: price25!, price50: price50! })).toMatchObject({ prices: { price25Cents: Number(price25) * 100, price50Cents: Number(price50) * 100, currency: 'PLN' } });
+    }
+    expect(profile.price25Cents).toBe(60000); expect(profile.price50Cents).toBe(120000);
+    expect(findOne).toHaveBeenCalledWith('MentorProfile', { user: 'owner' }, expect.objectContaining({ lockMode: LockMode.PESSIMISTIC_WRITE }));
+  });
+  it('validates both before mutating either and names every breached bound', async () => {
+    profile.price25Cents = 10000; profile.price50Cents = 20000;
+    for (const input of [{ price25: '79.99', price50: '160' }, { price25: '600.01', price50: '160' }, { price25: '80', price50: '159.99' }, { price25: '80', price50: '1200.01' }, { price25: '0', price50: '0' }, { price25: '80.001', price50: '160' }]) {
+      await expect(service().updatePrices(input)).rejects.toMatchObject({ status: 422 });
+      expect(profile.price25Cents).toBe(10000); expect(profile.price50Cents).toBe(20000);
+    }
+    expect(flush).not.toHaveBeenCalled();
+  });
+  it('reports an unstorable amount as a bound error on its own field', async () => {
+    await expect(service().updatePrices({ price25: '99999999.99', price50: '160' })).rejects.toMatchObject({
+      status: 422,
+      fieldErrors: { price25: ['Enter PLN 80.00–600.00.'] },
+    });
+  });
+  it('projects prices only when both exist and remain within current policy', () => {
+    const entity = profile as unknown as IMentorProfile;
+    expect(toPublicDto(entity)).not.toHaveProperty('prices'); expect(toOwnerDto(entity)).not.toHaveProperty('priceBounds');
+    expect(toPublicDto(entity, settings).prices).toBeNull();
+    profile.price25Cents = 8000; expect(toPublicDto(entity, settings).prices).toBeNull();
+    profile.price50Cents = 16000;
+    expect(toPublicDto(entity, settings).prices).toEqual({ price25Cents: 8000, price50Cents: 16000, currency: 'PLN' });
+    expect(toOwnerDto(entity, settings).priceBounds).toEqual(settings.priceBounds);
+    profile.price25Cents = 1; expect(toPublicDto(entity, settings).prices).toBeNull(); expect(toOwnerDto(entity, settings).prices).toBeNull();
+    profile.price25Cents = 8000; profile.price50Cents = 1;
+    expect(toPublicDto(entity, settings).prices).toBeNull(); expect(toOwnerDto(entity, settings).prices).toBeNull();
+  });});

@@ -131,9 +131,9 @@ describe('TC-AUTH-002 GitHub sign-in lands on the role home', () => {
       await signInAs(session, baseUrl, 'mock-mentor');
 
       expect((await currentUrl(session)).pathname).toBe('/mentor');
-      await runAgentBrowser(session, 'wait', '--text', 'Mentor home');
+      await runAgentBrowser(session, 'wait', '--text', 'Get ready for your first session');
       const home = await runAgentBrowser(session, 'snapshot');
-      expect(home).toContain('heading "Mentor home"');
+      expect(home).toContain('heading "Get ready for your first session"');
       expect(home).toContain('StaticText "Ada Lovelace"');
       await screenshot(session, 'auth-mentor-home');
     });

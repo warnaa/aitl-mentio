@@ -65,17 +65,17 @@ describe('TC-INVITATION-001 accepting an invitation makes a signed-in user a men
       await screenshot(session, 'invitation-pending');
       await expectFitsMobile(session, 'invitation-pending');
       await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Accept invitation');
-      await runAgentBrowser(session, 'wait', '--text', 'Publish at least one bookable session by');
+      await runAgentBrowser(session, 'wait', '--text', 'Publish by ');
       expect((await currentUrl(session)).pathname).toBe('/mentor');
 
       // The C1 regression: the grant bumps session_version, so without the re-issued
       // cookie the next navigation would land on sign-in.
       const after = await sessionCookie(session);
       expect(after?.value).not.toBe(before?.value);
-      const home = await visit(session, `${baseUrl}/mentor`, 'Publish at least one bookable session by');
+      const home = await visit(session, `${baseUrl}/mentor`, 'Publish by ');
       expect((await currentUrl(session)).pathname).toBe('/mentor');
       expect(home).toContain('link "Mentee home"');
-      expect(home).toContain('link "Mentor home"');
+      expect(home).toContain('link "Mentor workspace"');
       await screenshot(session, 'invitation-accepted-mentor-home');
       await expectFitsMobile(session, 'invitation-accepted-mentor-home');
 
