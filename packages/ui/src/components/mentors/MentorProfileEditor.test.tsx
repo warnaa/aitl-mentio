@@ -22,7 +22,7 @@ it('labels the fields and submits edited values through CrudForm', async () => {
   const callbacks = props();
   render(<MentorProfileEditor {...callbacks} />);
   const group = screen.getByRole('group', { name: 'Technologies and topics' });
-  expect(document.getElementById(group.getAttribute('aria-describedby')!)?.textContent).toContain('Choose at least one.');
+  expect(document.getElementById(group.getAttribute('aria-describedby')!)?.textContent).toContain('Optional.');
   for (const label of ['TypeScript', 'React', 'Python', 'AI agents']) {
     const checkbox = screen.getByRole('checkbox', { name: label });
     expect(checkbox.parentElement?.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
@@ -45,22 +45,17 @@ it('validates all empty required fields and focuses the first input', () => {
   expect(screen.getByText('Enter the name people should see.')).toBeTruthy();
   expect(screen.getByText('Describe the problems you can help with.')).toBeTruthy();
   expect(screen.getByText('Add a full public link starting with https:// or http://.')).toBeTruthy();
-  expect(screen.getByText('Choose at least one technology or topic.')).toBeTruthy();
+  expect(screen.getByRole('group', { name: 'Technologies and topics' }).getAttribute('aria-invalid')).toBe('false');
   expect(request).not.toHaveBeenCalled();
 });
 
-it('focuses the required technology group on Ctrl+Enter and clears the error on a valid submission', async () => {
+it('saves on Ctrl+Enter without any technology selected', async () => {
   const callbacks = props({ initialValues: { ...filled, stackTags: [] } });
   render(<MentorProfileEditor {...callbacks} />);
   const group = screen.getByRole('group', { name: 'Technologies and topics' });
   fireEvent.keyDown(screen.getByRole('textbox', { name: 'Public work link' }), { key: 'Enter', ctrlKey: true });
-  expect(group.getAttribute('aria-invalid')).toBe('true');
-  expect(document.activeElement).toBe(group);
-  expect(group.getAttribute('aria-describedby')).toContain(screen.getByRole('alert').id);
-  expect(request).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('checkbox', { name: 'React' }));
-  fireEvent.keyDown(screen.getByRole('checkbox', { name: 'React' }), { key: 'Enter', metaKey: true });
   await waitFor(() => expect(callbacks.onSaved).toHaveBeenCalledOnce());
+  expect(request.mock.calls[0]![1]?.body).toMatchObject({ stackTags: [] });
   expect(group.getAttribute('aria-invalid')).toBe('false');
 });
 

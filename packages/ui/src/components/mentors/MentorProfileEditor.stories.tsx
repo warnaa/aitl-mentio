@@ -59,15 +59,15 @@ export const RequiredFields: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Save profile' }));
     await expect(canvas.getByRole('textbox', { name: 'Display name' })).toHaveFocus();
-    await expect(canvas.getByText('Choose at least one technology or topic.')).toBeVisible();
+    await expect(canvas.getByText('Describe the problems you can help with.')).toBeVisible();
   },
 };
-export const TechnologyRequired: Story = {
+export const TechnologyOptional: Story = {
   args: { initialValues: { ...filled, stackTags: [] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Save profile' }));
-    await expect(canvas.getByRole('group', { name: 'Technologies and topics' })).toHaveFocus();
+    await expect(canvas.getByRole('group', { name: 'Technologies and topics' })).toHaveAttribute('aria-invalid', 'false');
   },
 };
 export const InvalidWorkLink: Story = {

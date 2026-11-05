@@ -39,7 +39,6 @@ export const mentorProfileMessages = {
   bio: 'Describe the problems you can help with.',
   bioLength: 'Keep your description within 2,000 characters.',
   publicWorkUrl: 'Add a full public link starting with https:// or http://.',
-  stackTags: 'Choose at least one technology or topic.',
 } as const;
 
 /** A web link: `http` or `https` only. */
@@ -52,8 +51,7 @@ export function mentorProfileSchema(options: readonly MentorStackOption[] = offe
   const base = z.object({
     publicWorkUrl: publicWorkUrlSchema,
     bio: z.string().trim().min(1, mentorProfileMessages.bio).max(2000, mentorProfileMessages.bioLength),
-    stackTags: z.array(z.string()).min(1, mentorProfileMessages.stackTags)
-      .refine(stacks => stacks.every(stack => values.has(stack)), `Choose ${labels}.`),
+    stackTags: z.array(z.string()).refine(stacks => stacks.every(stack => values.has(stack)), `Choose ${labels}.`),
   });
   return withName ? base.extend({ displayName: z.string().trim().min(1, mentorProfileMessages.displayName).max(120, mentorProfileMessages.displayNameLength) }) : base;
 }
@@ -88,7 +86,7 @@ export function MentorProfileEditor({ initialValues, endpoint, onSaved, onCancel
     ...(withName ? [nameField] : []),
     { name: 'bio', label: 'About your mentoring', type: 'textarea', required: true, placeholder: 'Describe a problem you can help someone solve.', description: 'Share the topics you know and the kind of help people can expect. Up to 2,000 characters.' },
     { name: 'publicWorkUrl', label: 'Public work link', required: true, autoComplete: 'url', placeholder: 'https://github.com/your-name', description: 'Link to a public repository, portfolio or technical article that shows your work.' },
-    { name: 'stackTags', label: 'Technologies and topics', required: true, description: 'Choose at least one. People will see these on your profile.', render: props => <StackPicker {...props} options={stackOptions} /> },
+    { name: 'stackTags', label: 'Technologies and topics', description: 'Optional. People will see these on your profile.', render: props => <StackPicker {...props} options={stackOptions} /> },
   ];
   return <div className="dm-mentor-profile-editor">
     <CrudForm schema={schema ?? mentorProfileSchema(stackOptions, withName)} fields={fields} endpoint={endpoint} method="PUT" initialValues={{ ...initialValues }}
