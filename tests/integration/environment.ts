@@ -43,6 +43,8 @@ export function integrationChildEnvironment(databaseUrl: string, appUrl?: string
     TRUSTED_PROXY_HOPS: '',
     PASSWORD_HASH_CONCURRENCY: '',
     PASSWORD_HASH_WAIT_MS: '',
+    INVITATION_TTL_DAYS: '14',
+    MENTOR_PUBLISH_WINDOW_DAYS: '14',
     MAIL_API_KEY: '',
     MAIL_FROM: '',
     // Obviously fake on purpose (mirrored in .github/workflows/ci.yml); the real founder

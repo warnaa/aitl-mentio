@@ -15,6 +15,16 @@ export type ApiFailure = {
 };
 export type ApiResponseBody<T> = ApiSuccess<T> | ApiFailure;
 
+/**
+ * The request URL as it may appear in a log: without the query (an OAuth `code` or
+ * `state`) and with an invitation's bearer token masked, which is a credential until
+ * it is accepted.
+ */
+export function loggablePath(url: string): string {
+  const { origin, pathname } = new URL(url);
+  return origin + pathname.replace(/\/invitations?\/[^/]+/, (segment) => segment.replace(/[^/]+$/, '[token]'));
+}
+
 /** Next passes `params` as a promise in the route context (App Router). */
 export type ApiRouteContext = { params: Promise<Record<string, string | string[]>> };
 
@@ -110,7 +120,7 @@ export function apiHandler(logic: RouteLogic, options: ApiHandlerOptions = {}): 
           error.retryAfterSeconds,
         );
       }
-      logger().error({ err: error, path: req.url }, 'unhandled route error');
+      logger().error({ err: error, path: loggablePath(req.url) }, 'unhandled route error');
       return jsonError(500, 'internal_error', 'Something went wrong');
     }
   };

@@ -218,3 +218,14 @@ describe('getEnv', () => {
     }
   });
 });
+
+describe('invitation policy configuration', () => {
+  it('defaults both snapshotted day policies and accepts explicit overrides', async () => {
+    expect(await parse({})).toMatchObject({ INVITATION_TTL_DAYS: 14, MENTOR_PUBLISH_WINDOW_DAYS: 14 });
+    expect(await parse({ INVITATION_TTL_DAYS: '30', MENTOR_PUBLISH_WINDOW_DAYS: '7' })).toMatchObject({ INVITATION_TTL_DAYS: 30, MENTOR_PUBLISH_WINDOW_DAYS: 7 });
+    expect(await parse({ INVITATION_TTL_DAYS: '', MENTOR_PUBLISH_WINDOW_DAYS: '' })).toMatchObject({ INVITATION_TTL_DAYS: 14, MENTOR_PUBLISH_WINDOW_DAYS: 14 });
+  });
+  it.each(['0', '-1', '1.5', '366', 'invalid'])('rejects invalid policy value %s', async value => {
+    for (const key of ['INVITATION_TTL_DAYS', 'MENTOR_PUBLISH_WINDOW_DAYS']) await expect(parse({ [key]: value })).rejects.toThrow();
+  });
+});

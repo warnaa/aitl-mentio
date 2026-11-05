@@ -7,6 +7,7 @@ export { getDbEnv, type DbEnv } from './env';
 // Re-export the MikroORM primitives the rest of the monorepo needs so that only
 // `db` depends on `@mikro-orm/*` directly.
 export {
+  LockMode,
   EntityRepository,
   UniqueConstraintViolationException,
   type FilterQuery,

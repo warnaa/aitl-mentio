@@ -292,3 +292,28 @@ populated 1:1 relation.
 
 Nontrivial work is specified before it's built. Specs, autonomous-run logs, and
 lessons live under `.ai/` — see [AGENTS.md](./AGENTS.md) for the full workflow.
+
+### Invite a mentor locally
+
+An operator with repository/database access runs the invitation command by hand (R18).
+It never sends mail: deliver the returned link to the invited address through the
+agreed channel. Keep the bearer link private; copy only the separate token-free
+JSON audit line into the shared operator note. `--operator` identifies the human
+performing the action; it does not grant an application role.
+
+```powershell
+npm run invite -- create --operator "Founder A" --email engineer@example.com --tags typescript,react --batch first-20
+npm run invite -- resend --operator "Founder A" --id <invitation-uuid>
+npm run invite -- revoke --operator "Founder A" --id <invitation-uuid>
+```
+
+Allowed tag keys: `typescript`, `react`, `python`, `ai-agents`. Resend rotates the
+secret and expiry; the previous link stops working. Revoke/resend only apply to
+pending invitations. An expired unresolved invitation must be resent or revoked
+before creating another for that address. Accepted invitations never remove roles.
+
+`INVITATION_TTL_DAYS` and `MENTOR_PUBLISH_WINDOW_DAYS` default to 14 whole days
+(valid range 1–365). Expiry is stored when created or
+resent; the publication deadline is stored at acceptance and the first deadline
+is retained on the mentor profile. Later configuration changes never move them.
+The root `.env` is loaded without overriding real environment values.

@@ -207,3 +207,19 @@ describe('TokenService.verifyPurposeToken', () => {
     );
   });
 });
+
+describe('TokenService opaque single-use pairs', () => {
+  it('mints independent 32-byte URL-safe secrets and stable SHA-256 hashes without signing config', () => {
+    const service = tokens({});
+    const first = service.mintOpaqueToken();
+    const second = service.mintOpaqueToken();
+    expect(Object.keys(first).sort()).toEqual(['hash', 'token']);
+    expect(first.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(Buffer.from(first.token, 'base64url')).toHaveLength(32);
+    expect(first.hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(service.hashToken(first.token)).toBe(first.hash);
+    expect(service.hashToken('')).toBe('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+    expect(second.token).not.toBe(first.token);
+    expect(second.hash).not.toBe(first.hash);
+  });
+});

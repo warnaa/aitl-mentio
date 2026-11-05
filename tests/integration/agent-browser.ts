@@ -72,6 +72,29 @@ export async function closeAgentBrowser(session: string): Promise<void> {
   }
 }
 
+/** The smallest supported width (design handoff AC 7) and the viewport to return to. */
+const MOBILE_VIEWPORT = ['320', '720'] as const;
+const DESKTOP_VIEWPORT = ['1280', '720'] as const;
+
+/**
+ * Re-render the current page at 320px, assert the document does not scroll sideways,
+ * save a `<name>-mobile.png` screenshot and restore the desktop viewport.
+ */
+export async function expectFitsMobile(session: string, name: string): Promise<void> {
+  await runAgentBrowser(session, 'set', 'viewport', ...MOBILE_VIEWPORT);
+  try {
+    const overflow = await runAgentBrowser(
+      session,
+      'eval',
+      'document.documentElement.scrollWidth - document.documentElement.clientWidth',
+    );
+    if (Number(overflow) > 0) throw new Error(`${name} overflows a 320px viewport by ${overflow}px`);
+    await runAgentBrowser(session, 'screenshot', resolve(integrationArtifactsDirectory, `${name}-mobile.png`), '--full');
+  } finally {
+    await runAgentBrowser(session, 'set', 'viewport', ...DESKTOP_VIEWPORT);
+  }
+}
+
 export async function captureBrowserFailure(
   session: string,
   artifactPrefix: string,

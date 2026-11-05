@@ -19,3 +19,5 @@ export {
 export * from './forms/FormField';
 export * from './shell/AppShell';
 export * from './shell/AuthLayout';
+
+export * from './api/useApiResource';

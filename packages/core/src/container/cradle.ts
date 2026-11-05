@@ -10,6 +10,7 @@ import type { PasswordService } from '../services/auth/password.service';
 import type { SessionService } from '../services/auth/session.service';
 import type { TokenService } from '../services/auth/token.service';
 import type { UserService } from '../services/auth/user.service';
+import type { InvitationService } from '../services/invitations/invitation.service';
 import type { Mailer } from '../services/notifications/mailer.port';
 import type { Clock } from '../time/clock';
 
@@ -24,7 +25,7 @@ import type { Clock } from '../time/clock';
  *   service's hashing gate must be process-wide). `identity` is the real GitHub
  *   adapter unless `AUTH_IDENTITY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`;
  *   `mailer` is Resend unless a log mailer is selected (`container.ts`, `mailerChoice`).
- * - `em`, `userService`, `rateLimiter` — SCOPED (created fresh per request scope).
+ * - `em`, `userService`, `invitationService`, `rateLimiter` — SCOPED (created fresh per request scope).
  * - `session` — SCOPED and lazy, registered only by `withRequestScope` /
  *   `withSessionCookieScope`: the caller's live `Session`, or `null` when signed out.
  *   A promise, because resolving it verifies the cookie and loads the user; awilix
@@ -49,6 +50,7 @@ export interface Cradle {
   mailer: Mailer;
   em: EntityManager;
   userService: UserService;
+  invitationService: InvitationService;
   rateLimiter: RateLimiter;
   session: Promise<Session | null>;
 }

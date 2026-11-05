@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from 'node:crypto';
 import { BadRequestError } from '../../http/errors';
 import type { Clock } from '../../time/clock';
 import { signingKeys, signJwt, verifyJwt, type SigningEnv } from './jwt';
@@ -31,6 +32,16 @@ export class TokenService {
   constructor({ env, clock }: { env: SigningEnv; clock: Clock }) {
     this.env = env;
     this.clock = clock;
+  }
+
+  /** Single-use secrets are persisted only as SHA-256 hashes, never as bearer tokens. */
+  mintOpaqueToken(): { token: string; hash: string } {
+    const token = randomBytes(32).toString('base64url');
+    return { token, hash: this.hashToken(token) };
+  }
+
+  hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   /**

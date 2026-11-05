@@ -69,3 +69,7 @@ export * from './http/index';
 
 // Convenience re-export so the app can report DB health without importing `db`.
 export { checkDbConnection } from '@devmentor/db';
+
+export { InvitationService } from './services/invitations/invitation.service';
+export * from './domain/vocabulary';
+export * from './domain/vocabularies/stack-tags';

@@ -56,6 +56,9 @@ const appEnvSchema = z
     // Sessions and signed tokens. `_PREVIOUS` is accepted on verify only (rotation).
     SESSION_SECRET: optional(sessionSecret),
     SESSION_SECRET_PREVIOUS: optional(sessionSecret),
+    // Snapshotted at invitation creation/acceptance; later policy never moves a deadline.
+    INVITATION_TTL_DAYS: z.preprocess(blankAsUnset, z.coerce.number().int().min(1).max(365).default(14)),
+    MENTOR_PUBLISH_WINDOW_DAYS: z.preprocess(blankAsUnset, z.coerce.number().int().min(1).max(365).default(14)),
 
     // GitHub OAuth app credentials; checked by the sign-in route, not at boot.
     GITHUB_CLIENT_ID: optional(z.string()),
