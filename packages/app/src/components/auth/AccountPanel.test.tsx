@@ -30,7 +30,7 @@ afterEach(() => {
 const props = {
   title: 'Welcome back',
   description: 'Sign in to continue.',
-  footer: <a href="/">Back to home</a>,
+  footer: <a href="#home">Back to home</a>,
   githubHref: '/api/auth/github?returnTo=%2Fmentor',
   switchHref: '/register?returnTo=%2Fmentor',
 };
