@@ -12,6 +12,7 @@ import type { TokenService } from '../services/auth/token.service';
 import type { UserService } from '../services/auth/user.service';
 import type { InvitationService } from '../services/invitations/invitation.service';
 import type { MentorProfileService } from '../services/mentors/mentor-profile.service';
+import type { SlotService } from '../services/availability/slot.service';
 import type { Mailer } from '../services/notifications/mailer.port';
 import type { Clock } from '../time/clock';
 
@@ -53,6 +54,7 @@ export interface Cradle {
   userService: UserService;
   invitationService: InvitationService;
   mentorProfileService: MentorProfileService;
+  slotService: SlotService;
   rateLimiter: RateLimiter;
   session: Promise<Session | null>;
 }

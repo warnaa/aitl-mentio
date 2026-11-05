@@ -26,6 +26,7 @@ import { TokenService } from '../services/auth/token.service';
 import { UserService } from '../services/auth/user.service';
 import { InvitationService } from '../services/invitations/invitation.service';
 import { MentorProfileService } from '../services/mentors/mentor-profile.service';
+import { SlotService } from '../services/availability/slot.service';
 import { systemClock } from '../time/clock';
 import type { Cradle } from './cradle';
 
@@ -130,6 +131,7 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     userService: asClass(UserService).scoped(),
     invitationService: asClass(InvitationService).scoped(),
     mentorProfileService: asClass(MentorProfileService).scoped(),
+    slotService: asClass(SlotService).scoped(),
     // Scoped: it counts through the request's `em`.
     rateLimiter: asClass(RateLimiter).scoped(),
   });

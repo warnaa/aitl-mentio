@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LockMode,
   UniqueConstraintViolationException,
@@ -17,7 +17,7 @@ import {
 import type { EventBus } from '../../events/event-bus';
 
 vi.mock('@devmentor/db', () => ({
-  MentorProfile: 'MentorProfile',
+  MentorProfile: 'MentorProfile', Slot: 'Slot',
   LockMode: { PESSIMISTIC_WRITE: 'write' },
   UniqueConstraintViolationException: class extends Error {
     constraint?: string;
@@ -63,6 +63,7 @@ describe('MentorProfileService', () => {
     findOne = vi.fn(async (_entity, query) => ('slug' in query ? null : profile));
     transactions = [];
     em = {
+      find: vi.fn().mockResolvedValue([{ id: 'future', startsAt: new Date('2026-11-04T14:00:00Z') }, { id: 'near', startsAt: new Date('2026-11-04T13:59:59.999Z') }]),
       findOne,
       fork: vi.fn(() => ({
         transactional: vi.fn(async (fn) => {
@@ -235,7 +236,7 @@ describe('MentorProfileService', () => {
   it('public reads need no session, require publication, and hide missing/unpublished pages', async () => {
     session = null;
     findOne.mockResolvedValue(profile);
-    expect(await service().getPublicBySlug('ada')).toMatchObject({ displayName: 'Ada Lovelace' });
+    expect(await service().getPublicBySlug('ada')).toMatchObject({ displayName: 'Ada Lovelace', slots: [{ id: 'future', meetsLeadTime: true }, { id: 'near', meetsLeadTime: false }] });
     expect(findOne).toHaveBeenCalledWith(
       'MentorProfile',
       { slug: 'ada', publishedAt: { $ne: null } },
@@ -245,3 +246,4 @@ describe('MentorProfileService', () => {
     await expect(service().getPublicBySlug('private')).rejects.toBeInstanceOf(NotFoundError);
   });
 });
+

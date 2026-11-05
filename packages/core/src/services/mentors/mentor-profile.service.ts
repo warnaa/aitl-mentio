@@ -1,6 +1,7 @@
 import {
   LockMode,
   MentorProfile,
+  Slot,
   UniqueConstraintViolationException,
   type EntityManager,
   type IMentorProfile,
@@ -42,7 +43,7 @@ export function toOwnerDto(profile: IMentorProfile) {
     readiness: mentorPagePublishable.evaluate(profile),
   };
 }
-export type MentorPublicDto = ReturnType<typeof toPublicDto>;
+export type MentorPublicDto = ReturnType<typeof toPublicDto> & { slots: { id: string; startsAt: string; meetsLeadTime: boolean }[] };
 export type MentorOwnerDto = ReturnType<typeof toOwnerDto>;
 
 export interface MentorProfileServiceDeps {
@@ -162,6 +163,12 @@ export class MentorProfileService {
       { populate: ['user'], refresh: true },
     );
     if (!profile) throw new NotFoundError('Mentor page not found');
-    return toPublicDto(profile);
+    const now = this.deps.clock.now();
+    const slots = await this.deps.em.find(Slot, { mentorProfile: profile.id, removedAt: null, startsAt: { $gt: now } }, { orderBy: { startsAt: 'asc' } });
+    return { ...toPublicDto(profile), slots: slots.map(slot => ({
+      id: slot.id,
+      startsAt: slot.startsAt.toISOString(),
+      meetsLeadTime: slot.startsAt.getTime() >= now.getTime() + 2 * 60 * 60 * 1000,
+    })) };
   }
 }
