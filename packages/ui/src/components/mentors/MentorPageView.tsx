@@ -1,7 +1,8 @@
 ﻿import { TechnologyChips } from './TechnologyChips';
 import { LocalTime } from '../../time/LocalTime';
 import { Badge } from '../ui/badge';
-import { ReadinessChecklist, type ReadinessItem } from '../../backend/feedback/ReadinessChecklist';
+import { EmptyState } from '../../backend/feedback/EmptyState';
+import type { ReadinessItem } from '../../backend/feedback/ReadinessChecklist';
 export interface MentorPageData {
   slug: string | null;
   displayName: string;
@@ -40,8 +41,7 @@ export function MentorPageView({ profile }: { profile: MentorPageData }) {
           <Badge variant="outline">25 min: {profile.prices.currency} {(profile.prices.price25Cents / 100).toFixed(2)}</Badge>
           <Badge variant="outline">50 min: {profile.prices.currency} {(profile.prices.price50Cents / 100).toFixed(2)}</Badge>
         </div>}
-        {!ready && <p>Not bookable yet. This mentor is still preparing their offer.</p>}
-        {profile.offerReadiness && <ReadinessChecklist title="Offer preparation" items={profile.offerReadiness.items} />}
+        {!ready && <EmptyState title="Not bookable yet" description="This mentor is still preparing their offer. Check back once their setup is complete." />}
         {ready && <p>This mentor has published their profile, prices and availability.</p>}
       </section>
       {profile.slots !== undefined && <section className="space-y-4" aria-label="Published times">

@@ -39,8 +39,10 @@ it('shows both integer-minor-unit prices and the offer state without booking act
   expect(screen.getByText('25 min: PLN 80.00')).toBeTruthy(); expect(screen.getByText('50 min: PLN 160.00')).toBeTruthy();
   expect(screen.getByText('This mentor has published their profile, prices and availability.')).toBeTruthy();
   expect(screen.queryByRole('button')).toBeNull();
-  rerender(<MentorPageView profile={{ ...profile, prices: null, offerReady: false, offerReadiness: { ready: false, items: [] } }} />);
-  expect(screen.getByText(/Not bookable yet/)).toBeTruthy();
+  rerender(<MentorPageView profile={{ ...profile, prices: null, offerReady: false, offerReadiness: { ready: false, items: [{ key: 'price25', label: 'Set a valid 25-minute price.', met: false }] } }} />);
+  expect(screen.getByText('Not bookable yet')).toBeTruthy();
+  // Visitors never see the mentor's setup to-do list.
+  expect(screen.queryByText('Set a valid 25-minute price.')).toBeNull();
 });
 
 
