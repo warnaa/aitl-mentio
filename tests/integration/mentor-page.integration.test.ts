@@ -72,7 +72,7 @@ describe('TC-MENTOR-PAGE-001 a mentor publishes a page a signed-out visitor can 
     await inBrowser('publish', async (session) => {
       const login = unique('author');
       await signInAs(session, baseUrl, login);
-      await visit(session, await seedPendingInvitation(`${login}@devmentor.test`), 'Your mentor invitation');
+      await visit(session, await seedPendingInvitation(`${login}@devmentor.test`), 'You are invited to mentor');
       await runAgentBrowser(session, 'find', 'role', 'button', 'click', '--name', 'Accept invitation');
       await runAgentBrowser(session, 'wait', '--text', 'Publish by ');
 

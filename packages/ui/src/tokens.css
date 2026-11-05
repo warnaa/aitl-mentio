@@ -12,6 +12,7 @@
 @import './components/mentors/mentor-onboarding.css';
 @import './components/mentors/mentor-workspace.css';
 @import './components/mentors/mentor-profile.css';
+@import './components/invitations/invitation.css';
 @import './components/auth/auth.css';
 @import './overlays.css';
 @import './foundations.css';

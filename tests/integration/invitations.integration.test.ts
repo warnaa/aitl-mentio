@@ -60,7 +60,7 @@ describe('TC-INVITATION-001 accepting an invitation makes a signed-in user a men
       const before = await sessionCookie(session);
       const link = await seedPendingInvitation(`${login}@devmentor.test`);
 
-      const invitation = await visit(session, link, 'Your mentor invitation');
+      const invitation = await visit(session, link, 'You are invited to mentor');
       expect(invitation).toContain(`${login}@devmentor.test`);
       await screenshot(session, 'invitation-pending');
       await expectFitsMobile(session, 'invitation-pending');
