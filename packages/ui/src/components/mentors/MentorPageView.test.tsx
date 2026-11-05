@@ -39,7 +39,16 @@ it('shows both integer-minor-unit prices and the offer state without booking act
   expect(screen.getByText('25 min: PLN 80.00')).toBeTruthy(); expect(screen.getByText('50 min: PLN 160.00')).toBeTruthy();
   expect(screen.getByText('This mentor has published their profile, prices and availability.')).toBeTruthy();
   expect(screen.queryByRole('button')).toBeNull();
-  rerender(<MentorPageView profile={{ ...profile, prices: null, offerReady: false }} />);
+  rerender(<MentorPageView profile={{ ...profile, prices: null, offerReady: false, offerReadiness: { ready: false, items: [] } }} />);
   expect(screen.getByText(/Not bookable yet/)).toBeTruthy();
+});
+
+
+it('uses the owner readiness gate and leaves unprovided availability out of the profile preview', () => {
+  render(<MentorPageView profile={{ slug: 'ada', displayName: 'Ada', avatarUrl: null, publicWorkUrl: null, bio: 'Work', stackTags: [], offerReady: false, offerReadiness: { ready: true, items: [{ key: 'availability', label: 'Publish at least one future time.', met: true }] } }} />);
+  expect(screen.queryByText(/Not bookable yet/)).toBeNull();
+  expect(screen.queryByText(/No published times yet/)).toBeNull();
+  expect(screen.queryByRole('region', { name: 'Published times' })).toBeNull();
+  expect(screen.getByText('This mentor has published their profile, prices and availability.')).toBeTruthy();
 });
 

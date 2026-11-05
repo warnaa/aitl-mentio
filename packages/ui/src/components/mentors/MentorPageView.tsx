@@ -15,6 +15,7 @@ export interface MentorPageData {
   offerReadiness?: { ready: boolean; items: ReadinessItem[] };
 }
 export function MentorPageView({ profile }: { profile: MentorPageData }) {
+  const ready = profile.offerReadiness?.ready ?? profile.offerReady;
   return (
     <article className="mx-auto flex max-w-[65ch] flex-col gap-8 px-6 py-12">
       <header>
@@ -39,19 +40,20 @@ export function MentorPageView({ profile }: { profile: MentorPageData }) {
           <Badge variant="outline">25 min: {profile.prices.currency} {(profile.prices.price25Cents / 100).toFixed(2)}</Badge>
           <Badge variant="outline">50 min: {profile.prices.currency} {(profile.prices.price50Cents / 100).toFixed(2)}</Badge>
         </div>}
-        {!profile.offerReady && <p>Not bookable yet. This mentor is still preparing their offer.</p>}
+        {!ready && <p>Not bookable yet. This mentor is still preparing their offer.</p>}
         {profile.offerReadiness && <ReadinessChecklist title="Offer preparation" items={profile.offerReadiness.items} />}
-        {profile.offerReady && <p>This mentor has published their profile, prices and availability.</p>}
+        {ready && <p>This mentor has published their profile, prices and availability.</p>}
       </section>
-      <section className="space-y-4" aria-label="Published times">
+      {profile.slots !== undefined && <section className="space-y-4" aria-label="Published times">
         <h2 className="text-xl font-medium">Availability</h2>
         <p className="text-sm text-muted-foreground">The next 50 published times are shown. Eligibility is checked when this page loads.</p>
-        {profile.slots?.length ? <ul className="space-y-4">{profile.slots.map(slot => <li key={slot.id}>
+        {profile.slots.length ? <ul className="space-y-4">{profile.slots.map(slot => <li key={slot.id}>
           <LocalTime value={slot.startsAt} />
           <p className="text-sm text-muted-foreground">{slot.meetsLeadTime ? 'Meets the two-hour notice period.' : 'Unavailable: less than two hours before the start.'}</p>
         </li>)}</ul> : <p>No published times yet. Check back later.</p>}
-      </section>
+      </section>}
     </article>
   );
 }
+
 
