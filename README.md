@@ -317,3 +317,7 @@ before creating another for that address. Accepted invitations never remove role
 resent; the publication deadline is stored at acceptance and the first deadline
 is retained on the mentor profile. Later configuration changes never move them.
 The root `.env` is loaded without overriding real environment values.
+
+### Mentor prices
+
+Founder/operator approval2026-11-05 sets PLN with two decimal minor units. `PLATFORM_CURRENCY=PLN`; `PLATFORM_PRICE_BOUNDS={"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}`. These approved defaults mean25min80–600PLN and50min160–1200PLN. Bounds are inclusive positive integer minor units; malformed/missing injected policy fails closed in the settings service. Changing currency after stored prices requires a migration; zero/three-decimal or other currencies are unsupported. Both prices save atomically. Booking, fees and payouts are separate capabilities.

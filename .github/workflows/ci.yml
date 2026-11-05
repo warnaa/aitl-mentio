@@ -1,4 +1,4 @@
-name: Pull request checks
+﻿name: Pull request checks
 
 on:
   pull_request:
@@ -81,6 +81,8 @@ jobs:
     # a production build must not need any.
     env:
       OPERATOR_EMAILS: mock-operator@devmentor.test
+      PLATFORM_CURRENCY: 'PLN'
+      PLATFORM_PRICE_BOUNDS: '{"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}'
       INVITATION_TTL_DAYS: '14'
       MENTOR_PUBLISH_WINDOW_DAYS: '14'
     steps:
@@ -115,3 +117,4 @@ jobs:
           path: test-results/integration/
           if-no-files-found: ignore
           retention-days: 7
+

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 /**
  * Database environment schema. This is the *only* place in the `db` package that
@@ -7,6 +7,8 @@ import { z } from 'zod';
  * in `core`.
  */
 const dbEnvSchema = z.object({
+  PLATFORM_CURRENCY: z.literal('PLN').default('PLN'),
+  PLATFORM_PRICE_BOUNDS: z.string().min(1).default('{"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}'),
   DATABASE_URL: z.string().url().optional(),
   DB_HOST: z.string().default('127.0.0.1'),
   DB_PORT: z.coerce.number().int().positive().default(5432),
@@ -33,3 +35,4 @@ export function getDbEnv(env: NodeJS.ProcessEnv = process.env): DbEnv {
   }
   return cached;
 }
+

@@ -26,6 +26,8 @@ export default defineConfig({
       // Entries are globs: escape the parentheses of a Next route group (`\\(auth\\)`),
       // or `(auth)` is read as a group matching `auth` and the file silently drops out.
       include: [
+        'packages/core/src/services/operator/platform-settings.service.ts',
+        'packages/db/src/env.ts',
         'packages/core/src/money/money.ts',
         'packages/core/src/domain/vocabularies/session-lengths.ts',
         'packages/app/src/app/\\(mentor\\)/mentor/slots/MentorSlots.tsx',

@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+﻿import { randomBytes } from 'node:crypto';
 
 /**
  * Test infrastructure is the sole exception to the application's config rule: it
@@ -43,6 +43,8 @@ export function integrationChildEnvironment(databaseUrl: string, appUrl?: string
     TRUSTED_PROXY_HOPS: '',
     PASSWORD_HASH_CONCURRENCY: '',
     PASSWORD_HASH_WAIT_MS: '',
+    PLATFORM_CURRENCY: 'PLN',
+    PLATFORM_PRICE_BOUNDS: '{"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}',
     INVITATION_TTL_DAYS: '14',
     MENTOR_PUBLISH_WINDOW_DAYS: '14',
     MAIL_API_KEY: '',
@@ -53,3 +55,4 @@ export function integrationChildEnvironment(databaseUrl: string, appUrl?: string
     OPERATOR_EMAILS: 'mock-operator@devmentor.test',
   };
 }
+
