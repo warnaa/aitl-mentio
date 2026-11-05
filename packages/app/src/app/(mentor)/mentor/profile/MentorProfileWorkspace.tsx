@@ -162,10 +162,7 @@ export function MentorProfileWorkspace({ appUrl, options }: { appUrl: string; op
                       {profile.readiness.items.map((item) => (
                         <li key={item.key} data-met={item.met}>
                           {item.met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
-                          <span>
-                            {item.met ? 'Complete: ' : 'Required: '}
-                            {item.label}
-                          </span>
+                          <span>{`${item.met ? 'Complete' : 'Required'}: ${item.label}`}</span>
                         </li>
                       ))}
                     </ul>

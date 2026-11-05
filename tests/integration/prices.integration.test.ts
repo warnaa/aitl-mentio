@@ -61,7 +61,7 @@ it('TC-PRICES-002 edits raw decimals, shows readiness and exposes prices signed 
     await runAgentBrowser(session, 'screenshot', resolve(integrationArtifactsDirectory, 'mentor-ready.png'), '--full');
     await runAgentBrowser(visitor, 'open', `${base}/m/${slug}`); await runAgentBrowser(visitor, 'wait', '--text', '25 minutes');
     await runAgentBrowser(visitor, 'wait', '--text', '50 minutes');
-    const publicTree = await runAgentBrowser(visitor, 'snapshot'); expect(publicTree).toContain('heading "Session prices"'); expect(publicTree).toMatch(/PLN\s80\b/); expect(publicTree).toMatch(/PLN\s160\b/); expect(publicTree).not.toMatch(/button.*(book|pay)|rating|score|ranking|review/i);
+    const publicTree = await runAgentBrowser(visitor, 'snapshot'); expect(publicTree).toContain('heading "Session prices"'); expect(publicTree).toMatch(/PLN\s?80\b/); expect(publicTree).toMatch(/PLN\s?160\b/); // the snapshot drops the non-breaking space expect(publicTree).not.toMatch(/button.*(book|pay)|rating|score|ranking|review/i);
     await runAgentBrowser(visitor, 'screenshot', resolve(integrationArtifactsDirectory, 'public-priced-offer.png'), '--full'); await expectFitsMobile(visitor, 'public-priced-offer');
   } catch (error) { await captureBrowserFailure(session, 'prices'); throw error; }
   finally { await closeAgentBrowser(session); await closeAgentBrowser(visitor); }
