@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-05 — Windows PowerShell `Set-Content`/`Out-File` write a UTF-8 BOM and can append blank lines; the repository has no BOM files. Write files with the editor tools or Node, and before committing check that no file starts with the bytes EF BB BF. Visitor-facing views never render a mentor setup checklist; use `EmptyState` with visitor copy.
+
 - 2026-11-05 — Shared mentor views receive both owner previews and public DTOs: use the shared readiness gate when present, and distinguish an omitted availability projection from an empty list. Add a preview regression whenever the public view gains a new state.
 
 - 2026-11-05 — Next statically parses route configuration: declare dynamic locally rather than re-exporting it. Handler re-exports are supported; keep shared callbacks in a sibling module and verify new routes with the production build. Native datetime-local controls expose locale-dependent spinbuttons to agent-browser; assert the control value after automation fills it.
