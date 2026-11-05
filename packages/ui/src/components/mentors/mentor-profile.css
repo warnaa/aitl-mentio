@@ -1,0 +1,77 @@
+/* Public mentor profile, promoted from the prototype's s1 screen (`mentor-profile.css`).
+   Container queries replace its viewport breakpoints (minus the public page padding), so the
+   owner preview inside the workspace shell collapses with its own width. */
+.dm-mentor-profile { container: dm-mentor-profile / inline-size; min-width: 0; }
+.dm-public-main:has(> .dm-mentor-profile) { padding-top: 48px; }
+.dm-mentor-profile-layout { display: grid; grid-template-columns: minmax(0, 1fr) 352px; column-gap: 64px; row-gap: 48px; align-items: start; }
+.dm-mentor-profile-layout :where(h1, h2, h3, p, ul, ol, dl, dd) { margin: 0; }
+.dm-mentor-profile-layout :where(ul, ol) { padding: 0; list-style: none; }
+.dm-mentor-profile-layout > * { min-width: 0; }
+.dm-mentor-profile-header { display: grid; gap: 24px; grid-column: 1; grid-row: 1; }
+.dm-mentor-profile-identity { display: flex; align-items: flex-start; gap: 24px; }
+.dm-mentor-profile-avatar { display: grid; place-items: center; width: 72px; height: 72px; flex: 0 0 72px; border-radius: var(--dm-radius-16); border: 1px solid var(--border); background: var(--muted); color: var(--dm-text-sub-600); font: 500 24px/32px var(--dm-font-mono); }
+.dm-mentor-profile-identity > div { display: grid; gap: 8px; min-width: 0; }
+.dm-mentor-profile-eyebrow { color: var(--muted-foreground); font-size: 12px; line-height: 16px; font-weight: 500; }
+.dm-mentor-profile-header h1 { font-size: 40px; line-height: 48px; font-weight: 550; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.dm-mentor-profile-role { color: var(--dm-text-sub-600); font-size: 16px; line-height: 24px; }
+.dm-mentor-profile-intro { max-width: 60ch; font-size: 18px; line-height: 28px; color: var(--foreground); overflow-wrap: anywhere; }
+.dm-mentor-profile-booking { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 96px; }
+.dm-mentor-profile-booking-card { display: flex; flex-direction: column; gap: 24px; padding: 32px; border: 1px solid var(--border); border-radius: var(--dm-radius-16); background: var(--dm-bg-weak-25); box-shadow: none; }
+.dm-mentor-profile-booking-intro { display: grid; gap: 16px; }
+.dm-mentor-profile-booking-intro h2 { font-size: 28px; line-height: 36px; font-weight: 500; letter-spacing: -.035em; }
+.dm-mentor-profile-booking-intro > p:last-child { font-size: 14px; line-height: 24px; color: var(--muted-foreground); }
+.dm-mentor-profile-prices { display: grid; }
+.dm-mentor-profile-prices > div { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding-block: 24px; border-top: 1px solid var(--border); }
+.dm-mentor-profile-prices > div:last-child { border-bottom: 1px solid var(--border); }
+.dm-mentor-profile-prices dt { display: grid; gap: 4px; }
+.dm-mentor-profile-prices dt strong { font-size: 14px; line-height: 20px; font-weight: 500; }
+.dm-mentor-profile-prices dt span { font-size: 12px; line-height: 16px; color: var(--muted-foreground); }
+.dm-mentor-profile-prices dd { font: 500 24px/32px var(--dm-font-mono); font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+.dm-mentor-profile-availability { display: grid; gap: 8px; }
+.dm-mentor-profile-availability > p { display: flex; align-items: center; gap: 8px; color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
+.dm-mentor-profile-availability svg { width: 16px; height: 16px; }
+.dm-mentor-profile-included { display: grid; gap: 16px; padding-top: 24px !important; border-top: 1px solid var(--border); }
+.dm-mentor-profile-included li { display: flex; align-items: flex-start; gap: 8px; color: var(--dm-text-sub-600); font-size: 12px; line-height: 20px; }
+.dm-mentor-profile-included svg { width: 16px; height: 20px; flex-shrink: 0; }
+.dm-mentor-profile-content { display: grid; gap: 48px; grid-column: 1; grid-row: 2; }
+.dm-mentor-profile-section { display: grid; gap: 24px; padding-top: 48px; border-top: 1px solid var(--border); }
+.dm-mentor-profile-section h2 { font-size: 24px; line-height: 32px; font-weight: 500; letter-spacing: -.025em; }
+.dm-mentor-profile-section-heading { display: grid; gap: 8px; }
+.dm-mentor-profile-section-heading > p { color: var(--muted-foreground); font-size: 14px; line-height: 24px; }
+.dm-mentor-profile-prose { max-width: 65ch; color: var(--dm-text-sub-600); font-size: 16px; line-height: 28px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dm-mentor-profile-link { justify-self: start; color: var(--dm-action-primary-label); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; display: inline-flex; padding-block: 10px; }
+.dm-mentor-profile-times { display: grid; }
+.dm-mentor-profile-times li { display: grid; gap: 4px; padding-block: 16px; border-top: 1px solid var(--border); }
+.dm-mentor-profile-times li:last-child { border-bottom: 1px solid var(--border); }
+.dm-mentor-profile-times time { font-size: 16px; line-height: 24px; font-weight: 500; }
+.dm-mentor-profile-times p { color: var(--muted-foreground); font-size: 14px; line-height: 22px; }
+.dm-mentor-profile-times li[data-eligible="false"] time { color: var(--muted-foreground); }
+@container dm-mentor-profile (max-width: 1036px) {
+  .dm-mentor-profile-layout { grid-template-columns: minmax(0, 1fr) 320px; column-gap: 32px; }
+  .dm-mentor-profile-booking-card { padding: 24px; }
+  .dm-mentor-profile-identity { gap: 16px; }
+  .dm-mentor-profile-header h1 { font-size: 32px; line-height: 40px; }
+}
+@container dm-mentor-profile (max-width: 776px) {
+  .dm-mentor-profile-layout { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+  .dm-mentor-profile-header { grid-column: 1; grid-row: 1; }
+  .dm-mentor-profile-booking { grid-column: 1; grid-row: 2; position: static; }
+  .dm-mentor-profile-content { grid-column: 1; grid-row: 3; }
+  .dm-mentor-profile-booking-card { padding: 32px; }
+  .dm-mentor-profile-prices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+  .dm-mentor-profile-prices > div { align-items: flex-start; flex-direction: column; border-bottom: 1px solid var(--border); }
+}
+@container dm-mentor-profile (max-width: 512px) {
+  .dm-mentor-profile-avatar { width: 56px; height: 56px; flex-basis: 56px; border-radius: var(--dm-radius-12); font-size: 20px; line-height: 28px; }
+  .dm-mentor-profile-eyebrow { font-size: 11px; line-height: 16px; }
+  .dm-mentor-profile-header h1 { font-size: 28px; line-height: 36px; }
+  .dm-mentor-profile-role { font-size: 14px; line-height: 24px; }
+  .dm-mentor-profile-intro { font-size: 16px; line-height: 28px; }
+  .dm-mentor-profile-booking-card { padding: 24px; }
+  .dm-mentor-profile-prices { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .dm-mentor-profile-prices > div { flex-direction: row; align-items: center; border-bottom: 0; }
+  .dm-mentor-profile-prices > div:last-child { border-bottom: 1px solid var(--border); }
+  .dm-mentor-profile-section { padding-top: 32px; }
+  .dm-mentor-profile-content { gap: 32px; }
+}
+@media (max-width: 560px) { .dm-public-main:has(> .dm-mentor-profile) { padding-top: 32px; } }

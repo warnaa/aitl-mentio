@@ -22,3 +22,15 @@ it('gives authentication a heading, descriptive copy and form/footer slots', () 
   rerender(<AuthLayout title="Check your inbox" description="Open your verification email."><p>Verification sent</p></AuthLayout>);
   expect(screen.getByText('Verification sent')).toBeTruthy();
 });
+it('frames public pages with a home wordmark, supplied navigation and a default or custom footer', async () => {
+  const { PublicLayout } = await import('./PublicLayout');
+  const { container, rerender } = render(<PublicLayout navigation={<a href="/sign-in">Sign in</a>}><h1>Mentor</h1></PublicLayout>);
+  expect(screen.getByRole('link', { name: 'DevMentor' }).getAttribute('href')).toBe('/');
+  expect(screen.getByRole('navigation', { name: 'Main navigation' }).textContent).toBe('Sign in');
+  expect(screen.getByRole('main').textContent).toBe('Mentor');
+  expect(screen.getByRole('contentinfo').textContent).toContain('Get coding help from a mentor.');
+  rerender(<PublicLayout className="dm-public-landing" homeHref="/start" navigation={null} footer={<p>Custom footer</p>}>Body</PublicLayout>);
+  expect(container.firstElementChild!.className).toBe('dm-public dm-public-landing');
+  expect(screen.getByRole('link', { name: 'DevMentor' }).getAttribute('href')).toBe('/start');
+  expect(screen.getByRole('contentinfo').textContent).toBe('Custom footer');
+});

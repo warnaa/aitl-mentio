@@ -105,7 +105,8 @@ describe('TC-MENTOR-PAGE-001 a mentor publishes a page a signed-out visitor can 
 
     await inBrowser('visitor', async (session) => {
       const page = await visit(session, shareLink, 'I pair on React pull requests.');
-      expect(page).toContain('link "See public work"');
+      expect(page).toContain('link "View public work"');
+      expect(page).toContain('heading "About me"');
       expect(page).toContain('React');
       expectNoReputation(page);
       expectAbsent(page, { text: /@devmentor\.test/ });

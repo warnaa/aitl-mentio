@@ -14,3 +14,10 @@ it('renders deterministic UTC before hydration then the viewer zone after mount'
       .getAttribute('datetime'),
   ).toBe(value);
 });
+it('exposes the viewer timezone with UTC before hydration', async () => {
+  const { useViewerTimeZone } = await import('./LocalTime');
+  function Zone() { return <span>{useViewerTimeZone()}</span>; }
+  expect(renderToString(<Zone />)).toContain('UTC');
+  render(<Zone />);
+  expect(screen.getByText(Intl.DateTimeFormat().resolvedOptions().timeZone)).toBeTruthy();
+});
