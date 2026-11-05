@@ -455,4 +455,46 @@ describe('CrudForm', () => {
     submitForm();
     await waitFor(() => expect(request).toHaveBeenCalledWith('/api/login', { method: 'POST', body: { password: 'sample-credential' } }));
   });
+
+  it('submits a blank optional field as absent, toggles multiselect options and shows external errors', async () => {
+    request.mockResolvedValue({ ok: true, data: {} });
+    const schema = z.object({ bio: z.string().optional(), tags: z.array(z.string()) });
+    const { rerender } = render(
+      <CrudForm
+        schema={schema}
+        fields={[
+          { name: 'bio', label: 'Bio', omitEmpty: true },
+          {
+            name: 'tags',
+            label: 'Tags',
+            type: 'multiselect',
+            options: [
+              { label: 'React', value: 'react' },
+              { label: 'Python', value: 'python' },
+            ],
+          },
+        ]}
+        endpoint="/profile"
+        externalFieldErrors={{ bio: ['Add a description before publishing'] }}
+      />,
+    );
+    expect(screen.getByRole('alert').textContent).toContain('Add a description');
+
+    fireEvent.click(screen.getByLabelText('React'));
+    fireEvent.click(screen.getByLabelText('Python'));
+    fireEvent.click(screen.getByLabelText('React'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(request).toHaveBeenCalledWith(
+        '/profile',
+        expect.objectContaining({ body: { bio: undefined, tags: ['python'] } }),
+      ),
+    );
+
+    // A multiselect without options renders an empty group rather than failing.
+    rerender(
+      <CrudForm schema={z.object({ tags: z.array(z.string()) })} fields={[{ name: 'tags', label: 'Tags', type: 'multiselect' }]} endpoint="/profile" />,
+    );
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+  });
 });

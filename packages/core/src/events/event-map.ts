@@ -18,6 +18,7 @@ export interface EventMap {
   'auth.user.roles_changed': { userId: string; added: Role[]; removed: Role[] };
   /** The first role grant path (E02-S01); the durable deadline lives on the profile. */
   'invitations.invitation.accepted': { invitationId: string; userId: string; publishDueAt: string };
+  'mentors.profile.published': { mentorProfileId: string; slug: string };
 }
 
 export type EventId = keyof EventMap;

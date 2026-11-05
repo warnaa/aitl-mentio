@@ -9,7 +9,7 @@ const OPERATOR = [
   ['/admin/users', 'Users'],
 ];
 const MENTEE = [['/home', 'Mentee home']];
-const MENTOR = [['/mentor', 'Mentor home']];
+const MENTOR = [['/mentor', 'Mentor home'], ['/mentor/profile', 'Mentor profile']];
 
 const ROLE_SETS: RoleSet[] = [
   ['mentee'],
@@ -51,7 +51,7 @@ describe('navFor', () => {
   it.each(ROLE_SETS)('offers no way to gain a role for %j (R07)', (...roles) => {
     for (const { href, label } of navFor(roles as unknown as RoleSet)) {
       expect(label).not.toMatch(/become|apply|join|upgrade|invite/i);
-      expect(['/admin', '/admin/users', '/home', '/mentor']).toContain(href);
+      expect(['/admin', '/admin/users', '/home', '/mentor', '/mentor/profile']).toContain(href);
     }
   });
 

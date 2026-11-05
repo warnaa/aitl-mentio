@@ -448,6 +448,74 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
+        "public_work_url": {
+          "name": "public_work_url",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(60)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": 60,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "stack_tags": {
+          "name": "stack_tags",
+          "type": "text[]",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'{}'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "array"
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamptz(6)",
@@ -513,6 +581,16 @@
         },
         {
           "columnNames": [
+            "slug"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "mentor_profiles_slug_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
             "user_id"
           ],
           "composite": false,
@@ -522,7 +600,20 @@
           "unique": true
         }
       ],
-      "checks": [],
+      "checks": [
+        {
+          "name": "mentor_profiles_published_slug_check",
+          "expression": "(published_at IS NULL) OR (slug IS NOT NULL)",
+          "definition": "CHECK (((published_at IS NULL) OR (slug IS NOT NULL)))",
+          "columnName": "published_at"
+        },
+        {
+          "name": "mentor_profiles_stack_tags_check",
+          "expression": "(stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text]) AND (array_position(stack_tags, NULL::text) IS NULL)",
+          "definition": "CHECK (((stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text]) AND (array_position(stack_tags, NULL::text) IS NULL)))",
+          "columnName": "stack_tags"
+        }
+      ],
       "triggers": [],
       "foreignKeys": {
         "mentor_profiles_user_id_foreign": {

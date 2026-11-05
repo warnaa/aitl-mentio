@@ -98,12 +98,12 @@ describe('TC-ROLES-001 a wrong-role screen sends the user to their own home', ()
 describe('TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07)', () => {
   const personas = [
     { login: 'mock-mentee', home: '/home', heading: 'Mentee home', links: ['Mentee home'] },
-    { login: 'mock-mentor', home: '/mentor', heading: 'Mentor home', links: ['Mentor home'] },
+    { login: 'mock-mentor', home: '/mentor', heading: 'Mentor home', links: ['Mentor home', 'Mentor profile'] },
     {
       login: 'mock-operator',
       home: '/admin',
       heading: 'Dashboard',
-      links: ['Admin dashboard', 'Users', 'Mentor home'],
+      links: ['Admin dashboard', 'Users', 'Mentor home', 'Mentor profile'],
     },
   ] as const;
 
@@ -139,7 +139,7 @@ describe('TC-ROLES-002 navigation follows the union of roles, with no way to gai
       expect((await currentUrl(session)).pathname).toBe('/mentor');
       const mentor = await runAgentBrowser(session, 'snapshot');
       expect(mentor).toContain('heading "Mentor home"');
-      expect(workspaceLinks(mentor)).toEqual(['Admin dashboard', 'Users', 'Mentor home']);
+      expect(workspaceLinks(mentor)).toEqual(['Admin dashboard', 'Users', 'Mentor home', 'Mentor profile']);
 
       await runAgentBrowser(session, 'find', 'role', 'link', 'click', '--name', 'Users');
       await runAgentBrowser(session, 'wait', '--text', 'Ada Lovelace');

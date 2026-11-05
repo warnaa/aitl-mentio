@@ -26,7 +26,9 @@ describe('StackTags', () => {
   // carry a hand-written copy (B25). Changing one side without the other fails here.
   it.each([
     'src/entities/invitations/invitation.entity.ts',
+    'src/entities/mentors/mentor-profile.entity.ts',
     'migrations/Migration20261104000100_invitations.ts',
+    'migrations/Migration20261104225821_mentor_page.ts',
   ])('matches the stack_tags CHECK literal in %s', (path) => {
     const literals = checkLiterals(path);
     expect(literals.length).toBeGreaterThan(0);
