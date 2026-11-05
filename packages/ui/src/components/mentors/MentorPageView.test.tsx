@@ -22,3 +22,13 @@ it('renders only public work and description with technologies, never private or
   rerender(<MentorPageView profile={{ ...profile, publicWorkUrl: null }} />);
   expect(screen.queryByRole('link')).toBeNull();
 });
+
+it('shows public start instants with both lead-time states and empty availability', () => {
+  const profile = { slug: 'ada', displayName: 'Ada', avatarUrl: null, publicWorkUrl: null, bio: 'Work', stackTags: [], slots: [{ id: 'a', startsAt: '2099-11-05T14:30:00Z', meetsLeadTime: true }, { id: 'b', startsAt: '2099-11-05T13:00:00Z', meetsLeadTime: false }] };
+  const { rerender } = render(<MentorPageView profile={profile} />);
+  expect(screen.getByText('Meets the two-hour notice period.')).toBeTruthy();
+  expect(screen.getByText('Unavailable: less than two hours before the start.')).toBeTruthy();
+  expect(screen.queryByRole('button')).toBeNull();
+  rerender(<MentorPageView profile={{ ...profile, slots: [] }} />);
+  expect(screen.getByText('No published times yet. Check back later.')).toBeTruthy();
+});

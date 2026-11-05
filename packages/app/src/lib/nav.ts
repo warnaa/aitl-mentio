@@ -23,6 +23,7 @@ const NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
   mentor: [
     { href: '/mentor', label: 'Mentor home', icon: SlidersHorizontal },
     { href: '/mentor/profile', label: 'Mentor profile', icon: UserRound },
+    { href: '/mentor/slots', label: 'Availability', icon: SlidersHorizontal },
   ],
 };
 

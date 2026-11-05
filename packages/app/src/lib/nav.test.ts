@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { ROLE_HOMES, homeFor, type Role, type RoleSet } from '@devmentor/core';
 import { currentHref, navFor } from './nav';
 
@@ -9,7 +9,7 @@ const OPERATOR = [
   ['/admin/users', 'Users'],
 ];
 const MENTEE = [['/home', 'Mentee home']];
-const MENTOR = [['/mentor', 'Mentor home'], ['/mentor/profile', 'Mentor profile']];
+const MENTOR = [['/mentor', 'Mentor home'], ['/mentor/profile', 'Mentor profile'], ['/mentor/slots', 'Availability']];
 
 const ROLE_SETS: RoleSet[] = [
   ['mentee'],
@@ -51,7 +51,7 @@ describe('navFor', () => {
   it.each(ROLE_SETS)('offers no way to gain a role for %j (R07)', (...roles) => {
     for (const { href, label } of navFor(roles as unknown as RoleSet)) {
       expect(label).not.toMatch(/become|apply|join|upgrade|invite/i);
-      expect(['/admin', '/admin/users', '/home', '/mentor', '/mentor/profile']).toContain(href);
+      expect(['/admin', '/admin/users', '/home', '/mentor', '/mentor/profile', '/mentor/slots']).toContain(href);
     }
   });
 
@@ -72,7 +72,7 @@ describe('currentHref', () => {
     ['/admin/settings', '/admin'],
     ['/home', '/home'],
     ['/mentor', '/mentor'],
-    ['/mentor/slots', '/mentor'],
+    ['/mentor/slots', '/mentor/slots'],
   ])('marks %s as %s', (pathname, expected) => {
     expect(currentHref(items, pathname)).toBe(expected);
   });
@@ -85,3 +85,4 @@ describe('currentHref', () => {
     expect(currentHref([...items].reverse(), '/admin/users')).toBe('/admin/users');
   });
 });
+
