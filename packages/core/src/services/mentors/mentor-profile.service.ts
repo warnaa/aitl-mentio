@@ -1,5 +1,6 @@
 import {
   LockMode,
+  Booking,
   MentorProfile,
   Slot,
   UniqueConstraintViolationException,
@@ -20,6 +21,7 @@ import { mentorOfferReady, mentorPagePublishable } from './readiness';
 import { parseMajorAmount, withinBounds } from '../../money/money';
 import type { PlatformSettings, PlatformSettingsService } from '../operator/platform-settings.service';
 import { mentorPricesUpdateSchema, type MentorPricesUpdate } from '../../validators/mentors/mentor-prices-update.schema';
+import { activeOccupancy, MIN_LEAD_MINUTES, MINUTE_MS, overlappingInterval, viableLengths } from '../bookings/occupancy';
 
 /** Explicit audience allowlists: adding a private entity field cannot widen these. */
 function publicFields(profile: IMentorProfile) {
@@ -54,7 +56,7 @@ export function toOwnerDto(profile: IMentorProfile, settings?: PlatformSettings)
   const fields = ownerFields(profile);
   return settings ? { ...fields, prices: pricesDto(profile, settings), priceBounds: settings.priceBounds } : fields;
 }
-export type MentorPublicDto = ReturnType<typeof toPublicDto> & { offerReady: boolean; offerReadiness: ReturnType<typeof mentorOfferReady.evaluate>; slots: { id: string; startsAt: string; meetsLeadTime: boolean }[] };
+export type MentorPublicDto = ReturnType<typeof toPublicDto> & { offerReady: boolean; offerReadiness: ReturnType<typeof mentorOfferReady.evaluate>; slots: { id: string; startsAt: string; meetsLeadTime: boolean; viableLengths: (25 | 50)[] }[] };
 export type MentorOwnerDto = ReturnType<typeof toOwnerDto> & { offerReadiness: ReturnType<typeof mentorOfferReady.evaluate> };
 
 export interface MentorProfileServiceDeps {
@@ -211,10 +213,15 @@ export class MentorProfileService {
     const slots = await this.deps.em.find(Slot, { mentorProfile: profile.id, removedAt: null, startsAt: { $gt: now } }, { orderBy: { startsAt: 'asc' }, limit: 50 });
     const settings = this.deps.platformSettingsService.get();
     const offerReadiness = mentorOfferReady.evaluate({ ...profile, settings, hasFutureSlots: slots.length > 0 });
+    const occupied = slots.length ? await this.deps.em.find(Booking, {
+      mentorProfile: profile.id,
+      $and: [activeOccupancy(now), { $or: slots.map(slot => overlappingInterval(slot.startsAt, 50)) }],
+    }) : [];
     return { ...toPublicDto(profile, settings), offerReady: offerReadiness.ready, offerReadiness, slots: slots.map(slot => ({
       id: slot.id,
       startsAt: slot.startsAt.toISOString(),
-      meetsLeadTime: slot.startsAt.getTime() >= now.getTime() + 2 * 60 * 60 * 1000,
+      meetsLeadTime: slot.startsAt.getTime() >= now.getTime() + MIN_LEAD_MINUTES * MINUTE_MS,
+      viableLengths: viableLengths(slot.startsAt, occupied),
     })) };
   }
 }

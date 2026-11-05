@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { LockMode, MentorProfile, Slot, UniqueConstraintViolationException, type EntityManager, type ISlot } from '@devmentor/db';
+import { Booking, LockMode, MentorProfile, Slot, UniqueConstraintViolationException, type EntityManager, type ISlot } from '@devmentor/db';
+import { activeOccupancy } from '../bookings/occupancy';
 import { requireRole, type Session } from '../../http/auth';
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from '../../http/errors';
 import { parseWith } from '../../http/body';
@@ -72,7 +73,10 @@ export class SlotService {
     return this.deps.em.fork().transactional(async em => {
       const slot = await em.findOne(Slot, { id, mentorProfile: { user: userId }, removedAt: null }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
       if (!slot) throw new NotFoundError('Slot not found');
-      slot.removedAt = this.deps.clock.now();
+      const now = this.deps.clock.now();
+      const occupant = await em.findOne(Booking, { slot: slot.id, ...activeOccupancy(now) });
+      if (occupant) throw new ConflictError('A reserved time cannot be removed.');
+      slot.removedAt = now;
       slot.updatedAt = slot.removedAt;
       await em.flush();
       return { id: slot.id };
