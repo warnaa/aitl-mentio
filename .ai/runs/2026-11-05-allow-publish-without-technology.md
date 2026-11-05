@@ -59,6 +59,8 @@ and description stay required.
 
 ## Progress
 
+PR: #66
+
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.
 
 ### Phase 1: Relax the publish gate
@@ -74,9 +76,12 @@ and description stay required.
 
 - Validation gate (`typecheck`, `lint`, `test`, `build`): green; 152 files /
   1468 unit tests passed; lint shows 2 pre-existing warnings in untouched files.
-- `tests/integration/mentor-page.integration.test.ts`: 3 passed, 1 failed, as
-  intended — TC-MENTOR-PAGE-002 receives `['bio', 'publicWorkUrl']` where it
-  expects `['bio', 'publicWorkUrl', 'stackTags']`.
+- Full integration suite: 52 passed, 1 failed, as intended — TC-MENTOR-PAGE-002
+  receives `['bio', 'publicWorkUrl']` where it expects
+  `['bio', 'publicWorkUrl', 'stackTags']`.
+- `om-auto-review-pr --autofix`: CHANGES REQUESTED on that one blocker (left
+  unfixed by operator constraint); fixed a minor in d8fe3bf — `TechnologyChips`
+  rendered an empty labelled list for a mentor without technologies.
 
 ## Follow-ups
 
