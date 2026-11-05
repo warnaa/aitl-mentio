@@ -38,6 +38,7 @@ export const MentorProfile = defineSingletonEntity('MentorProfile', () =>
       bio: p.text().nullable(),
       yearsOfExperience: p.integer().default(0),
       initialPublishDueAt: p.datetime().nullable(),
+      lastPublishedAvailabilityAt: p.datetime().nullable(),
     },
   }),
 );

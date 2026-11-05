@@ -26,6 +26,8 @@ export default defineConfig({
       // Entries are globs: escape the parentheses of a Next route group (`\\(auth\\)`),
       // or `(auth)` is read as a group matching `auth` and the file silently drops out.
       include: [
+        'packages/db/src/entities/availability/slot.entity.ts',
+        'packages/db/migrations/Migration20261105065903_availability_slots.ts',
         'packages/app/src/app/\\(auth\\)/register/page.tsx',
         'packages/app/src/app/\\(auth\\)/sign-in/page.tsx',
         'packages/app/src/app/\\(mentee\\)/home/page.tsx',
