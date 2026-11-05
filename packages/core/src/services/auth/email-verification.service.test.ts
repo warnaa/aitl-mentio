@@ -53,8 +53,11 @@ describe('EmailVerificationService', () => {
     const state = await tokens.signPurposeToken({ purpose: 'oauth-state', subject: JSON.stringify({ userId: 'u', version: 0 }), ttlSeconds: 600 });
     await expect(service.read(state)).rejects.toBeInstanceOf(BadRequestError);
 
-    const token = tokenOf(await service.link(user));
-    await expect(service.read(`${token.slice(0, -2)}xx`)).rejects.toBeInstanceOf(BadRequestError);
+    // Flip the signature's first character: the trailing base64url character carries padding
+    // bits, so rewriting the end can decode to the same signature and pass verification.
+    const [header, payload, signature] = tokenOf(await service.link(user)).split('.');
+    const flipped = `${signature![0] === 'A' ? 'B' : 'A'}${signature!.slice(1)}`;
+    await expect(service.read(`${header}.${payload}.${flipped}`)).rejects.toBeInstanceOf(BadRequestError);
   });
 
   it.each([
