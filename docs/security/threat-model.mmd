@@ -16,3 +16,8 @@ flowchart LR
   Public -->|"published profile and future slots (T07,T08)"| DB
   classDef boundary stroke-dasharray: 5 5
   class internet,app,data boundary
+
+%% Booking extension: same application/storage boundaries, issue 40.
+%% Browser -> Booking: cookie, CSRF, slot and duration (T12,T13,T17).
+%% Booking -> DB: mentor/slot locks, price snapshot, expiry (T14,T15,T18).
+%% Booking -> Browser: own pending DTO (T16,T18).

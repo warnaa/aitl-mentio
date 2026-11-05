@@ -344,3 +344,9 @@ additive.
 Slices 3 and 4 add protected slot collection/removal and mentor-price routes, explicit price/readiness/availability DTO fields, the typed availability publication event, approved PLN configuration defaults, and two reversible additive migrations. The new owner slot collection returns bounded `{ items, page, pageCount }` pages; public availability is capped at the next 50 times.
 
 `MentorProfileServiceDeps` and `Cradle` now require `platformSettingsService`. All in-repository constructors and DI registrations are updated in the same change; these private workspaces are not published. Existing one-argument `toPublicDto(profile)` and `toOwnerDto(profile)` calls retain their legacy shape through overloads. HTTP reads supply authoritative settings to the additive projections. Currency changes after stored money exists require a data migration, not an environment-only change.
+
+## E03 pending reservation contract
+
+Issue #40 adds POST /api/bookings with the existing envelope, live mentee authorization and central CSRF convention. New reservations return 201; matching-owner retries recover the same pending hold with 200 without extending it. Duration and slot are the only accepted client inputs; prices and identities come from stored server state. Existing error codes are reused. Public slot DTOs add viableLengths while retaining existing fields.
+
+The additive bookings migration has up/down. A partial unique slot index reserves only pending/confirmed rows; expired/cancelled rows remain history. Mentor locking prevents overlapping active intervals across different start times. Slot removal now answers 409 while an active booking occupies that exact slot. Rollback requires stopping booking writes and exporting history before dropping the new table; there are no existing-row rewrites. Payment and cancellation APIs remain out of scope.
