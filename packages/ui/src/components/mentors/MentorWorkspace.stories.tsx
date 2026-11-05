@@ -21,7 +21,7 @@ function WorkspaceForm({ title, description, form }: { title: string; descriptio
 function ProfileExample() {
   const [notice, setNotice] = useState('');
   return <div className="dm-product-panel"><div><h2 className="dm-product-heading">Your mentor profile</h2><p className="dm-product-muted">Describe the help you offer and add a link to your public work. Review the saved profile before publishing.</p></div>
-    <MentorProfileEditor initialValues={{ displayName: 'Alex Laurent', publicWorkUrl: 'https://example.com/alex/work', description: 'I help developers work through TypeScript API questions and decide where to test.', stacks: ['TypeScript', 'React'] }}
+    <MentorProfileEditor initialValues={{ displayName: 'Alex Laurent', publicWorkUrl: 'https://example.com/alex/work', bio: 'I help developers work through TypeScript API questions and decide where to test.', stackTags: ['TypeScript', 'React'] }}
       endpoint="/storybook-api/mentor-workspace/profile" onSaved={() => setNotice('Profile saved in this example. Publication is a separate step.')} onCancel={() => setNotice('The host would return to your mentor home.')} />
     {notice && <p role="status" className="dm-product-callout">{notice}</p>}
   </div>;

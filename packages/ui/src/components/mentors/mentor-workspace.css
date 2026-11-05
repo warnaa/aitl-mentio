@@ -1,4 +1,4 @@
-/* Mentor workspace layout, promoted from the prototype's s11 screen (`mentor-flow.css`). */
+/* Mentor workspace layout, promoted from the prototype's s11 and s27 screens (`mentor-flow.css`). */
 .dm-mentor-workspace { display: grid; gap: var(--dm-space-component-gap, 32px); max-width: 1160px; min-width: 0; }
 .dm-mentor-workspace-heading { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 24px; }
 .dm-mentor-workspace-heading > div { flex: 1; min-width: 240px; }
@@ -7,15 +7,23 @@
 .dm-mentor-workspace h2 { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -.02em; }
 .dm-mentor-workspace .dm-product-panel { padding: 32px; gap: 24px; }
 .dm-mentor-workspace .dm-product-panel p { max-width: 65ch; line-height: 26px; }
+.dm-mentor-workspace .dm-product-panel > svg { width: 24px; height: 24px; color: var(--dm-action-primary-label); }
 .dm-mentor-workspace-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: start; }
+.dm-mentor-workspace-editor-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); gap: 32px; align-items: start; }
+.dm-mentor-workspace-aside, .dm-mentor-workspace-aside-actions { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+.dm-mentor-workspace-checklist { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.dm-mentor-workspace-checklist li { display: flex; align-items: flex-start; gap: 8px; color: var(--dm-text-sub-600); font-size: 14px; line-height: 22px; }
+.dm-mentor-workspace-checklist svg { width: 16px; height: 22px; flex-shrink: 0; }
+.dm-mentor-workspace-checklist li[data-met="true"] svg { color: var(--dm-action-primary-label); }
+.dm-mentor-workspace-preview { display: grid; gap: 32px; padding-top: 32px; border-top: 1px solid var(--border); }
 .dm-mentor-workspace-footer { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 .dm-mentor-workspace-footer > div:first-child { flex: 1; min-width: 220px; }
 .dm-mentor-workspace-link { display: inline-flex; padding-block: 10px; color: var(--dm-action-primary-label); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
-@container dm-shell (max-width: 1100px) { .dm-mentor-workspace-grid { grid-template-columns: minmax(0, 1fr); } }
+@container dm-shell (max-width: 1100px) { .dm-mentor-workspace-grid, .dm-mentor-workspace-editor-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) {
   .dm-mentor-workspace .dm-product-panel { padding: 24px; }
   .dm-mentor-workspace-heading > div { min-width: 0; flex-basis: 100%; }
   .dm-mentor-workspace-heading h1 { font-size: 28px; line-height: 36px; }
   .dm-mentor-workspace-footer > div:first-child { min-width: 0; flex-basis: 100%; }
-  .dm-mentor-workspace-grid { grid-template-columns: minmax(0, 1fr); }
+  .dm-mentor-workspace-grid, .dm-mentor-workspace-editor-grid { grid-template-columns: minmax(0, 1fr); }
 }

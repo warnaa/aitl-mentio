@@ -23,7 +23,7 @@ describe('WorkspaceNav', () => {
       ['Admin dashboard', '/admin'],
       ['Users', '/admin/users'],
       ['Mentor workspace', '/mentor'],
-      ['Mentor profile', '/mentor/profile'],
+      ['Edit profile', '/mentor/profile'],
     ]);
   });
 

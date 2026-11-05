@@ -55,7 +55,7 @@ export default defineConfig({
         'packages/app/src/app/\\(mentee\\)/layout.tsx',
         'packages/app/src/app/\\(mentor\\)/layout.tsx',
         'packages/app/src/app/\\(mentor\\)/mentor/page.tsx',
-        'packages/app/src/app/\\(mentor\\)/mentor/profile/MentorProfileEditor.tsx',
+        'packages/app/src/app/\\(mentor\\)/mentor/profile/MentorProfileWorkspace.tsx',
         'packages/app/src/app/\\(mentor\\)/mentor/profile/page.tsx',
         'packages/app/src/app/admin/layout.tsx',
         'packages/app/src/app/admin/page.tsx',
