@@ -22,37 +22,39 @@ import type { PlatformSettings, PlatformSettingsService } from '../operator/plat
 import { mentorPricesUpdateSchema, type MentorPricesUpdate } from '../../validators/mentors/mentor-prices-update.schema';
 
 /** Explicit audience allowlists: adding a private entity field cannot widen these. */
-export function toPublicDto(profile: IMentorProfile, settings: PlatformSettings) {
+function publicFields(profile: IMentorProfile) {
   return {
-    prices: profile.price25Cents != null && profile.price50Cents != null && withinBounds(profile.price25Cents, settings.priceBounds.p25) && withinBounds(profile.price50Cents, settings.priceBounds.p50)
-      ? { price25Cents: profile.price25Cents, price50Cents: profile.price50Cents, currency: settings.currency }
-      : null,
-    slug: profile.slug ?? null,
-    displayName: profile.user.displayName,
-    avatarUrl: profile.user.avatarUrl ?? null,
-    publicWorkUrl: profile.publicWorkUrl ?? null,
-    bio: profile.bio ?? null,
-    stackTags: [...profile.stackTags],
+    slug: profile.slug ?? null, displayName: profile.user.displayName,
+    avatarUrl: profile.user.avatarUrl ?? null, publicWorkUrl: profile.publicWorkUrl ?? null,
+    bio: profile.bio ?? null, stackTags: [...profile.stackTags],
   };
 }
-export function toOwnerDto(profile: IMentorProfile, settings: PlatformSettings) {
-  return {
-    id: profile.id, priceBounds: settings.priceBounds,
-    prices: profile.price25Cents != null && profile.price50Cents != null && withinBounds(profile.price25Cents, settings.priceBounds.p25) && withinBounds(profile.price50Cents, settings.priceBounds.p50)
-      ? { price25Cents: profile.price25Cents, price50Cents: profile.price50Cents, currency: settings.currency }
-      : null,
-    slug: profile.slug ?? null,
-    displayName: profile.user.displayName,
-    avatarUrl: profile.user.avatarUrl ?? null,
-    publicWorkUrl: profile.publicWorkUrl ?? null,
-    bio: profile.bio ?? null,
-    stackTags: [...profile.stackTags],
+function ownerFields(profile: IMentorProfile) {
+  return { ...publicFields(profile), id: profile.id,
     publishedAt: profile.publishedAt?.toISOString() ?? null,
     initialPublishDueAt: profile.initialPublishDueAt?.toISOString() ?? null,
     readiness: mentorPagePublishable.evaluate(profile),
   };
 }
-export type MentorPublicDto = ReturnType<typeof toPublicDto> & { offerReady: boolean; slots: { id: string; startsAt: string; meetsLeadTime: boolean }[] };
+function pricesDto(profile: IMentorProfile, settings: PlatformSettings) {
+  return profile.price25Cents != null && profile.price50Cents != null && withinBounds(profile.price25Cents, settings.priceBounds.p25) && withinBounds(profile.price50Cents, settings.priceBounds.p50)
+    ? { price25Cents: profile.price25Cents, price50Cents: profile.price50Cents, currency: settings.currency }
+    : null;
+}
+// Keep the existing one-argument projections source-compatible; HTTP reads always supply settings.
+export function toPublicDto(profile: IMentorProfile): ReturnType<typeof publicFields>;
+export function toPublicDto(profile: IMentorProfile, settings: PlatformSettings): ReturnType<typeof publicFields> & { prices: ReturnType<typeof pricesDto> };
+export function toPublicDto(profile: IMentorProfile, settings?: PlatformSettings) {
+  const fields = publicFields(profile);
+  return settings ? { ...fields, prices: pricesDto(profile, settings) } : fields;
+}
+export function toOwnerDto(profile: IMentorProfile): ReturnType<typeof ownerFields>;
+export function toOwnerDto(profile: IMentorProfile, settings: PlatformSettings): ReturnType<typeof ownerFields> & { prices: ReturnType<typeof pricesDto>; priceBounds: PlatformSettings['priceBounds'] };
+export function toOwnerDto(profile: IMentorProfile, settings?: PlatformSettings) {
+  const fields = ownerFields(profile);
+  return settings ? { ...fields, prices: pricesDto(profile, settings), priceBounds: settings.priceBounds } : fields;
+}
+export type MentorPublicDto = ReturnType<typeof toPublicDto> & { offerReady: boolean; offerReadiness: ReturnType<typeof mentorOfferReady.evaluate>; slots: { id: string; startsAt: string; meetsLeadTime: boolean }[] };
 export type MentorOwnerDto = ReturnType<typeof toOwnerDto> & { offerReadiness: ReturnType<typeof mentorOfferReady.evaluate> };
 
 export interface MentorProfileServiceDeps {
@@ -203,13 +205,15 @@ export class MentorProfileService {
     );
     if (!profile) throw new NotFoundError('Mentor page not found');
     const now = this.deps.clock.now();
-    const slots = await this.deps.em.find(Slot, { mentorProfile: profile.id, removedAt: null, startsAt: { $gt: now } }, { orderBy: { startsAt: 'asc' } });
+    const slots = await this.deps.em.find(Slot, { mentorProfile: profile.id, removedAt: null, startsAt: { $gt: now } }, { orderBy: { startsAt: 'asc' }, limit: 50 });
     const settings = this.deps.platformSettingsService.get();
-    return { ...toPublicDto(profile, settings), offerReady: mentorOfferReady.evaluate({ ...profile, settings, hasFutureSlots: slots.length > 0 }).ready, slots: slots.map(slot => ({
+    const offerReadiness = mentorOfferReady.evaluate({ ...profile, settings, hasFutureSlots: slots.length > 0 });
+    return { ...toPublicDto(profile, settings), offerReady: offerReadiness.ready, offerReadiness, slots: slots.map(slot => ({
       id: slot.id,
       startsAt: slot.startsAt.toISOString(),
       meetsLeadTime: slot.startsAt.getTime() >= now.getTime() + 2 * 60 * 60 * 1000,
     })) };
   }
 }
+
 

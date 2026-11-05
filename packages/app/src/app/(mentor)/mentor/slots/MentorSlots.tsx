@@ -12,13 +12,14 @@ const serverZone = () => 'UTC';
 
 type Slot = { id: string; startsAt: string };
 export function MentorSlots() {
-  const resource = useApiResource<Slot[]>('/api/availability/slots');
   const [showPast, setShowPast] = useState(false);
+  const [page, setPage] = useState(1);
+  const resource = useApiResource<{ items: Slot[]; page: number; pageCount: number }>("/api/availability/slots?past=" + String(showPast) + "&page=" + String(page));
   const zone = useSyncExternalStore(subscribe, viewerZone, serverZone);
-  const [now, setNow] = useState(() => Date.now());
+
   const [notice, setNotice] = useState('');
-  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60_000); return () => clearInterval(timer); }, []);
-  const rows = resource.data?.filter(slot => showPast || new Date(slot.startsAt).getTime() > now);
+  useEffect(() => { const timer = setInterval(resource.reload, 60_000); return () => clearInterval(timer); }, [resource.reload]);
+  const rows = resource.data?.items;
   return <main className="dm-page max-w-3xl space-y-8 p-6">
     <header><h1 className="text-2xl font-medium">Availability</h1><p className="mt-2 text-muted-foreground">Publish individual start times for your mentor page.</p></header>
     <section className="space-y-6" aria-label="Publish availability">
@@ -27,10 +28,11 @@ export function MentorSlots() {
     </section>
     {notice && <p role="status">{notice}</p>}
     <section className="space-y-6" aria-label="Published availability">
-      <Button variant="outline" aria-pressed={showPast} onClick={() => setShowPast(value => !value)}>{showPast ? 'Hide past times' : 'Show past times'}</Button>
-      <DataTable rows={rows} loading={resource.loading} error={resource.error} onRetry={resource.reload} getRowId={slot => slot.id} caption="Published times" emptyMessage="No published times yet." columns={[{ key: 'startsAt', header: 'Start time', render: slot => <LocalTime value={slot.startsAt} /> }]} rowActions={slot => <WorkflowAction endpoint={`/api/availability/slots/${slot.id}`} method="DELETE" label="Remove time" pendingLabel="Removing…" onSuccess={() => { setNotice('Your time was removed.'); resource.reload(); }} />} />
+      <Button variant="outline" aria-pressed={showPast} onClick={() => { setPage(1); setShowPast(value => !value); }}>{showPast ? 'Hide past times' : 'Show past times'}</Button>
+      <DataTable pagination={resource.data ? { page: resource.data.page, pageCount: resource.data.pageCount, onPageChange: setPage } : undefined} rows={rows} loading={resource.loading} error={resource.error} onRetry={resource.reload} getRowId={slot => slot.id} caption="Published times" emptyMessage="No published times yet." columns={[{ key: 'startsAt', header: 'Start time', render: slot => <LocalTime value={slot.startsAt} /> }]} rowActions={slot => <WorkflowAction endpoint={`/api/availability/slots/${slot.id}`} method="DELETE" label="Remove time" pendingLabel="Removing…" onSuccess={() => { setNotice('Your time was removed.'); resource.reload(); }} />} />
     </section>
   </main>;
 }
+
 
 

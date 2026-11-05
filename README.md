@@ -322,3 +322,5 @@ The root `.env` is loaded without overriding real environment values.
 
 Founder/operator approval on 2026-11-05 sets PLN with two decimal minor units. `PLATFORM_CURRENCY=PLN`; `PLATFORM_PRICE_BOUNDS={"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}`. These approved defaults mean 25 min PLN 80–600 and 50 min PLN 160–1,200. Bounds are inclusive positive integer minor units; malformed/missing injected policy fails closed in the settings service. Changing currency after stored prices requires a migration; zero/three-decimal or other currencies are unsupported. Both prices save atomically. Booking, fees and payouts are separate capabilities.
 
+
+The owner availability collection supports `GET /api/availability/slots?past=false&page=1`: 25 server-filtered rows plus `page`/`pageCount`; `past=true` switches to past times. The public mentor page shows the next 50 active future times. Soft removal preserves slot history and permits republishing the same instant with a new slot ID.

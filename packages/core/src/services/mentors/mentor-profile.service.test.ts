@@ -131,6 +131,7 @@ describe('MentorProfileService', () => {
   });
   it('projects exact audience keys and snapshots instant labels', () => {
     const entity = profile as unknown as IMentorProfile;
+    expect(toPublicDto(entity)).not.toHaveProperty('prices'); expect(toOwnerDto(entity)).not.toHaveProperty('priceBounds');
     expect(Object.keys(toPublicDto(entity, settings)).sort()).toEqual(
       ['prices', 'slug', 'displayName', 'avatarUrl', 'publicWorkUrl', 'bio', 'stackTags'].sort(),
     );
@@ -263,6 +264,7 @@ describe('MentorProfileService', () => {
   });
   it('projects prices only when both exist and remain within current policy', () => {
     const entity = profile as unknown as IMentorProfile;
+    expect(toPublicDto(entity)).not.toHaveProperty('prices'); expect(toOwnerDto(entity)).not.toHaveProperty('priceBounds');
     expect(toPublicDto(entity, settings).prices).toBeNull();
     profile.price25Cents = 8000; expect(toPublicDto(entity, settings).prices).toBeNull();
     profile.price50Cents = 16000;
@@ -272,5 +274,6 @@ describe('MentorProfileService', () => {
     profile.price25Cents = 8000; profile.price50Cents = 1;
     expect(toPublicDto(entity, settings).prices).toBeNull(); expect(toOwnerDto(entity, settings).prices).toBeNull();
   });});
+
 
 

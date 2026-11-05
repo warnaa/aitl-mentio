@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+﻿import type { z } from 'zod';
 import { withRequestScope } from '../container/container';
 import type { Cradle } from '../container/cradle';
 import { apiHandler } from './apiHandler';
@@ -46,15 +46,16 @@ export function makeOwnedResourceRoute<T>(options: OwnedResourceOptions<T>) {
 
 export interface OwnedCollectionOptions<T> {
   role: Role;
-  list: (cradle: Cradle) => Promise<unknown>;
+  list: (cradle: Cradle, req: Request) => Promise<unknown>;
   createSchema: z.ZodType<T>;
   create: (cradle: Cradle, input: T) => Promise<unknown>;
   remove: (cradle: Cradle, params: OwnedParams) => Promise<unknown>;
 }
 export function makeOwnedCollectionRoute<T>(options: OwnedCollectionOptions<T>) {
   return {
-    GET: ownedAction({ role: options.role, run: cradle => options.list(cradle) }),
+    GET: ownedAction({ role: options.role, run: (cradle, _params, req) => options.list(cradle, req) }),
     POST: ownedAction({ role: options.role, run: async (cradle, _params, req) => options.create(cradle, parseWith(options.createSchema, await readJsonBody(req))) }),
     DELETE: ownedAction({ role: options.role, run: (cradle, params) => options.remove(cradle, params) }),
   };
 }
+

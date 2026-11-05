@@ -1,9 +1,11 @@
-﻿import { LockMode, MentorProfile, Slot, UniqueConstraintViolationException, type EntityManager, type ISlot } from '@devmentor/db';
+﻿import { z } from 'zod';
+import { LockMode, MentorProfile, Slot, UniqueConstraintViolationException, type EntityManager, type ISlot } from '@devmentor/db';
 import { requireRole, type Session } from '../../http/auth';
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from '../../http/errors';
 import { parseWith } from '../../http/body';
 import type { Clock } from '../../time/clock';
 import type { EventBus } from '../../events/event-bus';
+import { slotListSchema } from '../../validators/availability/slot-list.schema';
 import { slotCreateSchema, type SlotCreate } from '../../validators/availability/slot-create.schema';
 
 export function toSlotDto(slot: ISlot) {
@@ -24,10 +26,16 @@ export class SlotService {
     return requireRole(session, 'mentor').userId;
   }
 
-  async list() {
+  async list(input: unknown = {}) {
     const userId = await this.ownerId();
-    const slots = await this.deps.em.find(Slot, { mentorProfile: { user: userId }, removedAt: null }, { orderBy: { startsAt: 'asc' } });
-    return slots.map(toSlotDto);
+    const { page, past } = parseWith(slotListSchema, input);
+    const now = this.deps.clock.now();
+    const query = { mentorProfile: { user: userId }, removedAt: null, startsAt: past ? { $lte: now } : { $gt: now } };
+    const total = await this.deps.em.count(Slot, query);
+    const pageCount = Math.max(1, Math.ceil(total / 25));
+    const currentPage = Math.min(page, pageCount);
+    const slots = await this.deps.em.find(Slot, query, { orderBy: { startsAt: past ? 'desc' : 'asc' }, limit: 25, offset: (currentPage - 1) * 25 });
+    return { items: slots.map(toSlotDto), page: currentPage, pageCount };
   }
 
   async publish(input: SlotCreate) {
@@ -60,6 +68,7 @@ export class SlotService {
 
   async remove(id: string) {
     const userId = await this.ownerId();
+    parseWith(z.uuid(), id);
     return this.deps.em.fork().transactional(async em => {
       const slot = await em.findOne(Slot, { id, mentorProfile: { user: userId }, removedAt: null }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
       if (!slot) throw new NotFoundError('Slot not found');
@@ -70,3 +79,5 @@ export class SlotService {
     });
   }
 }
+
+

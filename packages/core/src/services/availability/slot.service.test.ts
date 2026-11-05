@@ -10,11 +10,12 @@ let profile: { id: string; lastPublishedAvailabilityAt: Date | null; updatedAt: 
 let slot: { id: string; startsAt: Date; removedAt: Date | null; updatedAt: Date };
 const findOne = vi.fn();
 const find = vi.fn();
+const count = vi.fn();
 const flush = vi.fn();
 const persist = vi.fn();
 const emit = vi.fn();
 const clock = { now: vi.fn(() => now) };
-const em = { findOne, find, flush, persist, create: vi.fn((_type, data) => ({ id: 'slot', ...data })), fork: () => ({ transactional: async (fn: (em: unknown) => unknown) => fn(em) }) };
+const em = { count, findOne, find, flush, persist, create: vi.fn((_type, data) => ({ id: 'slot', ...data })), fork: () => ({ transactional: async (fn: (em: unknown) => unknown) => fn(em) }) };
 const service = () => new SlotService({ em: em as unknown as EntityManager, session: Promise.resolve(session), clock, eventBus: { emit } });
 beforeEach(() => {
   vi.clearAllMocks();
@@ -22,19 +23,19 @@ beforeEach(() => {
   profile = { id: 'profile', lastPublishedAvailabilityAt: null, updatedAt: now };
   slot = { id: 'slot', startsAt: new Date('2026-11-06T12:00:00Z'), removedAt: null, updatedAt: now };
   findOne.mockImplementation(async type => type === 'Profile' ? profile : slot);
-  find.mockResolvedValue([slot]); flush.mockResolvedValue(undefined); emit.mockResolvedValue(undefined);
+  count.mockResolvedValue(1); find.mockResolvedValue([slot]); flush.mockResolvedValue(undefined); emit.mockResolvedValue(undefined);
 });
 it('guards every owner operation before access', async () => {
   for (session of [null, { userId: 'owner', roles: ['mentee'] } as Session]) {
-    for (const call of [() => service().list(), () => service().publish({ startsAt: slot.startsAt.toISOString() }), () => service().remove('slot')]) {
+    for (const call of [() => service().list(), () => service().publish({ startsAt: slot.startsAt.toISOString() }), () => service().remove('11111111-1111-4111-8111-111111111111')]) {
       await expect(call()).rejects.toMatchObject({ status: session ? 403 : 401 });
     }
   }
   expect(findOne).not.toHaveBeenCalled(); expect(find).not.toHaveBeenCalled();
 });
 it('lists only active slots for the live owner in chronological order', async () => {
-  expect(await service().list()).toEqual([{ id: 'slot', startsAt: slot.startsAt.toISOString() }]);
-  expect(find).toHaveBeenCalledWith('Slot', { mentorProfile: { user: 'owner' }, removedAt: null }, { orderBy: { startsAt: 'asc' } });
+  expect(await service().list()).toEqual({ items: [{ id: 'slot', startsAt: slot.startsAt.toISOString() }], page: 1, pageCount: 1 });
+  expect(find).toHaveBeenCalledWith('Slot', { mentorProfile: { user: 'owner' }, removedAt: null, startsAt: { $gt: now } }, { orderBy: { startsAt: 'asc' }, limit: 25, offset: 0 });
 });
 it('locks the owner before reading time and atomically writes the publication timestamp', async () => {
   expect(await service().publish({ startsAt: slot.startsAt.toISOString() })).toEqual({ id: 'slot', startsAt: slot.startsAt.toISOString() });
@@ -64,10 +65,20 @@ it('maps only the named duplicate constraint and never emits on rollback', async
   expect(emit).not.toHaveBeenCalled();
 });
 it('soft-removes under an owner-scoped row lock and hides foreign/missing IDs', async () => {
-  expect(await service().remove('slot')).toEqual({ id: 'slot' });
-  expect(findOne).toHaveBeenCalledWith('Slot', { id: 'slot', mentorProfile: { user: 'owner' }, removedAt: null }, { lockMode: 'write', refresh: true });
+  expect(await service().remove('11111111-1111-4111-8111-111111111111')).toEqual({ id: 'slot' });
+  expect(findOne).toHaveBeenCalledWith('Slot', { id: '11111111-1111-4111-8111-111111111111', mentorProfile: { user: 'owner' }, removedAt: null }, { lockMode: 'write', refresh: true });
   expect(slot.removedAt).toBe(now); expect(profile.lastPublishedAvailabilityAt).toBeNull();
   findOne.mockResolvedValue(null);
-  await expect(service().remove('foreign')).rejects.toMatchObject({ status: 404, message: 'Slot not found' });
+  await expect(service().remove('22222222-2222-4222-8222-222222222222')).rejects.toMatchObject({ status: 404, message: 'Slot not found' });
 });
 
+
+it('bounds future/past paging, clamps stale pages and rejects malformed list/id input', async () => {
+  count.mockResolvedValue(51);
+  expect(await service().list({ page: '2', past: 'true' })).toMatchObject({ page: 2, pageCount: 3 });
+  expect(find).toHaveBeenLastCalledWith('Slot', expect.objectContaining({ startsAt: { $lte: now } }), { orderBy: { startsAt: 'desc' }, limit: 25, offset: 25 });
+  expect(await service().list({ page: 9 })).toMatchObject({ page: 3 });
+  count.mockResolvedValue(0); expect(await service().list()).toMatchObject({ page: 1, pageCount: 1 });
+  await expect(service().list({ page: -1 })).rejects.toMatchObject({ status: 422 });
+  await expect(service().remove('invalid')).rejects.toMatchObject({ status: 422 });
+});

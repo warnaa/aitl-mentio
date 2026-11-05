@@ -87,3 +87,7 @@ D22/R14, R13, R18. R09 is handed to E03 above.
   reading of D22. Recurrence needs an expansion engine and a DST policy and is a later story if D22 is
   superseded.
 - **How the mentor learns a slot was booked** — #42 owns the notification. Non-blocking.
+
+## Bounded collection reads
+
+The owner collection is filtered on the server: future starts by default; `past=true` shows past starts. `page` is a positive integer (maximum 10,000), with 25 rows per page. The response is `{ items: [{ id, startsAt }], page, pageCount }`; stale pages clamp to the current last page. Removed rows never return. The public projection shows the next 50 future active starts and labels this limit. This bounds materialized reads without adding booking semantics. Malformed slot UUIDs fail with 422 before database access; unknown and foreign valid UUIDs share the same 404.
