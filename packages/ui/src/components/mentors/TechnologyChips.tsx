@@ -15,5 +15,7 @@ export function TechnologyIcon({ stack }: { stack: string }) {
 }
 
 export function TechnologyChips({ stacks, label = 'Technology stacks' }: TechnologyChipsProps) {
+  // A mentor may publish without technologies; an empty labelled list would still be announced.
+  if (stacks.length === 0) return null;
   return <ul className="dm-product-tags dm-technology-chips" aria-label={label}>{stacks.map(stack => <li key={stack}><TechnologyIcon stack={stack} /><span>{stack}</span></li>)}</ul>;
 }

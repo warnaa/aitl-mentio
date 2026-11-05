@@ -35,5 +35,5 @@ it('normalizes known names, distinguishes API topics and uses a code fallback on
     expect(icon.getAttribute('focusable')).toBe('false');
   }
   rerender(<TechnologyChips stacks={[]} />);
-  expect(screen.getByRole('list').children).toHaveLength(0);
+  expect(screen.queryByRole('list')).toBeNull();
 });

@@ -27,6 +27,11 @@ it('composes the s1 header, public work and about sections, never private or sco
   expect(document.querySelector('.dm-mentor-profile-role')).toBeNull();
 });
 
+it('leaves the technology list out of a page published without technologies', () => {
+  render(<MentorPageView profile={base} />);
+  expect(screen.queryByRole('list', { name: 'Technology stacks' })).toBeNull();
+});
+
 it('lists every published time with its notice state and the empty state', () => {
   const profile = { ...base, slots: [{ id: 'a', startsAt: '2099-11-05T14:30:00Z', meetsLeadTime: true }, { id: 'b', startsAt: '2099-11-05T13:00:00Z', meetsLeadTime: false }] };
   const { rerender } = render(<MentorPageView profile={profile} />);
