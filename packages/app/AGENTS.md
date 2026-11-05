@@ -56,3 +56,7 @@ composition root; it may import every workspace package.
   operators are configured (R07).
 - Read `packages/ui/AGENTS.md` and its linked guidelines before composing UI;
   use its shared API, forms, tables, feedback and component-placement rules.
+- A page with a prototype screen (`prototypes/devmentor-journey/`, mapped in the
+  story's design handoff) reproduces that screen's composition: sections, order,
+  headings and the DS components it uses. Behaviour specs govern data, copy facts
+  and bounds. Compare desktop and 320px screenshots with the prototype before done.

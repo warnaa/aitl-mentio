@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-05 — User correction: E02 mentor screens matched the specs but not the designs. Plans had taken only behaviour specs as acceptance criteria, so pages were assembled from generic primitives (`ReadinessChecklist`, ad-hoc Tailwind) while the designed `MentorOnboarding` and `dm-product-panel` workspace went unused. Plan UI steps against the prototype screen named in the design handoff and compare screenshots before declaring done (rule in `packages/app/AGENTS.md`).
+
 - 2026-11-05 — To tamper a JWT in a test, flip a character inside the signature (e.g. the first), never the last: the final base64url character carries padding bits, so rewriting the end can decode to the same signature and the "tampered" token verifies intermittently.
 
 - 2026-11-05 — Windows PowerShell `Set-Content`/`Out-File` write a UTF-8 BOM and can append blank lines; the repository has no BOM files. Write files with the editor tools or Node, and before committing check that no file starts with the bytes EF BB BF. Visitor-facing views never render a mentor setup checklist; use `EmptyState` with visitor copy.
