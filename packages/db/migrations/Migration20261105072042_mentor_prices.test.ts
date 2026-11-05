@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { Migration20261105072042_mentor_prices as Migration } from './Migration20261105072042_mentor_prices';
 it('adds nullable positive integer prices and reverses both columns and checks', () => {
   const migration = new Migration(undefined as never, undefined as never);

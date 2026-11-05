@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import Link from 'next/link';
 import { ReadinessChecklist, ResourcePanel, useApiResource, type ReadinessItem } from '@devmentor/ui/backend';
 interface OfferStatus { offerReadiness: { ready: boolean; items: ReadinessItem[] } }

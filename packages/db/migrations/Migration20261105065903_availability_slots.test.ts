@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { Migration20261105065903_availability_slots as Migration } from './Migration20261105065903_availability_slots';
 
 it('creates the owner-indexed, partial-unique slot table and reverses both additions', () => {

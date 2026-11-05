@@ -1,4 +1,4 @@
-﻿import { ValidationError } from '../http/errors';
+import { ValidationError } from '../http/errors';
 
 declare const centsBrand: unique symbol;
 export type Cents = number & { readonly [centsBrand]: true };

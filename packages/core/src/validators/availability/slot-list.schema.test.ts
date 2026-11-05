@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { slotListSchema } from './slot-list.schema';
 it('defaults and bounds list paging while keeping past explicit', () => {
   expect(slotListSchema.parse({})).toEqual({ page: 1, past: false });

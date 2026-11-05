@@ -1,4 +1,4 @@
-﻿import { resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { describe, expect, inject, it, vi } from 'vitest';
 import {
   captureBrowserFailure,
@@ -171,7 +171,3 @@ describe('TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary',
     });
   });
 });
-
-
-
-

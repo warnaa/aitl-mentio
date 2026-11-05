@@ -1,4 +1,4 @@
-﻿# DevMentor — Platform Primitives II (the domain floor)
+# DevMentor — Platform Primitives II (the domain floor)
 
 Date: 2026-09-08
 Status: active reference spec — moves to `implemented/` with E02 after every `SHIP` entry is verified and merged
@@ -621,4 +621,3 @@ Three documentation steps are owed by whichever PR first ships a primitive from 
 - **Slug redirect aliases** — needed the first time a mentor must be renamed without breaking a
   printed link; until then renaming is an operator action under R18.
 - **Zero- and three-decimal currencies** (B12′) — an arithmetic and data-migration change, not configuration.
-

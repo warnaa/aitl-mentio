@@ -1,4 +1,4 @@
-﻿import { TechnologyChips } from './TechnologyChips';
+import { TechnologyChips } from './TechnologyChips';
 import { LocalTime } from '../../time/LocalTime';
 import { Badge } from '../ui/badge';
 import { EmptyState } from '../../backend/feedback/EmptyState';
@@ -55,5 +55,3 @@ export function MentorPageView({ profile }: { profile: MentorPageData }) {
     </article>
   );
 }
-
-

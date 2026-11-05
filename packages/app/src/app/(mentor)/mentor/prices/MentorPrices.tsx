@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState } from 'react';
 import { mentorPricesUpdateSchema } from '@devmentor/core/validators/mentors/mentor-prices-update.schema';
 import { CrudForm, ResourcePanel, useApiResource } from '@devmentor/ui/backend';
@@ -18,4 +18,3 @@ export function MentorPrices() {
     {saved && <p role="status">Both session prices were saved.</p>}
   </div>}</ResourcePanel>;
 }
-

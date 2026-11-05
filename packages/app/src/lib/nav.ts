@@ -1,4 +1,4 @@
-﻿import { Banknote, CalendarDays, House, ShieldCheck, SlidersHorizontal, UserRound, Users, type LucideIcon } from 'lucide-react';
+import { Banknote, CalendarDays, House, ShieldCheck, SlidersHorizontal, UserRound, Users, type LucideIcon } from 'lucide-react';
 import type { Role, RoleSet } from '@devmentor/core';
 
 /** One workspace navigation link. The icon is decorative; the label names the page. */
@@ -55,4 +55,3 @@ export function currentHref(items: readonly NavItem[], pathname: string): string
   }
   return current;
 }
-

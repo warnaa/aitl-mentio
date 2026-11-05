@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ROLE_HOMES, homeFor, type Role, type RoleSet } from '@devmentor/core';
 import { currentHref, navFor } from './nav';
 
@@ -85,5 +85,3 @@ describe('currentHref', () => {
     expect(currentHref([...items].reverse(), '/admin/users')).toBe('/admin/users');
   });
 });
-
-

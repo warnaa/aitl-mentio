@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { CrudForm, DataTable, WorkflowAction, useApiResource } from '@devmentor/ui/backend';
@@ -33,7 +33,3 @@ export function MentorSlots() {
     </section>
   </div>;
 }
-
-
-
-

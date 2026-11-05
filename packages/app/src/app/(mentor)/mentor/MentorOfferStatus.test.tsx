@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { apiCall } from '@devmentor/ui/backend';
@@ -15,4 +15,3 @@ it('shows readiness without implying a checkout/payment launch', async () => {
   vi.mocked(apiCall).mockResolvedValue({ ok: true, data: { offerReadiness: { ready: true, items: [] } } });
   render(<MentorOfferStatus />); expect((await screen.findByText(/Booking and payments are separate launch capabilities/)).textContent).toContain('Booking and payments are separate launch capabilities.');
 });
-

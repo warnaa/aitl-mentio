@@ -1,4 +1,4 @@
-﻿import { beforeEach, expect, it, vi } from 'vitest';
+import { beforeEach, expect, it, vi } from 'vitest';
 import { UniqueConstraintViolationException, type EntityManager } from '@devmentor/db';
 import { SlotService } from './slot.service';
 import type { Session } from '../../http/auth';

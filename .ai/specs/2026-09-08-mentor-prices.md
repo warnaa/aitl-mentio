@@ -1,4 +1,4 @@
-﻿# DevMentor — E02-S04: Prices within the operator's bounds
+# DevMentor — E02-S04: Prices within the operator's bounds
 
 Date: 2026-09-08
 Status: ready — founder/operator approval recorded 2026-11-05
@@ -87,4 +87,3 @@ D09/R08, R01/D01, D11/R10, D19/R18.
 ## Approved currency and bounds — 2026-11-05
 
 The founder/operator explicitly approved in the implementation session: Polish złoty (PLN), two decimal minor units; 25-minute minimum 80 PLN and maximum 600 PLN; 50-minute minimum 160 PLN and maximum 1,200 PLN. Server defaults use {p25:{minCents:8000,maxCents:60000},p50:{minCents:16000,maxCents:120000}}. Both blocking questions above are resolved; proposed USD and historical PLN 90/180 minimums are superseded. See research/decisions/D28-platform-prices.md for provenance. Currency changes after stored prices require migration, never an environment-only switch.
-

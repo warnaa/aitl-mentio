@@ -1,4 +1,4 @@
-﻿import type { z } from 'zod';
+import type { z } from 'zod';
 import { withRequestScope } from '../container/container';
 import type { Cradle } from '../container/cradle';
 import { apiHandler } from './apiHandler';
@@ -58,4 +58,3 @@ export function makeOwnedCollectionRoute<T>(options: OwnedCollectionOptions<T>) 
     DELETE: ownedAction({ role: options.role, run: (cradle, params) => options.remove(cradle, params) }),
   };
 }
-

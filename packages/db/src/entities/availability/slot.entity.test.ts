@@ -1,4 +1,4 @@
-﻿import { MikroORM } from '@mikro-orm/postgresql';
+import { MikroORM } from '@mikro-orm/postgresql';
 import { expect, it } from 'vitest';
 import { Slot } from './slot.entity';
 import { User } from '../auth/user.entity';

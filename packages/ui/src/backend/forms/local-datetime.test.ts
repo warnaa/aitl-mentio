@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { localDatetimeToInstant } from './local-datetime';
 
 it('converts viewer local minutes to the corresponding UTC instant', () => {

@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { parseMajorAmount, withinBounds } from './money';
 import { SessionLengths } from '../domain/vocabularies/session-lengths';
 it('parses decimal strings exactly, including PostgreSQL maximum', () => {

@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { slotCreateSchema } from './slot-create.schema';
 
 it('accepts UTC instants independently of time policy and strips owner fields', () => {

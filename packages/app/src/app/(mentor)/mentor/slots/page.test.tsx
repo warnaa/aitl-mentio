@@ -1,4 +1,4 @@
-﻿import { expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vitest';
 vi.mock('../../../../lib/session', () => ({ requirePageRole: vi.fn() }));
 import { requirePageRole } from '../../../../lib/session';
 import Page, { dynamic } from './page';

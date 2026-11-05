@@ -1,4 +1,4 @@
-﻿import { expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vitest';
 it('parses and caches the approved CLI configuration and rejects malformed assignments', async () => {
   vi.resetModules();
   const { getDbEnv } = await import('./env');
@@ -10,4 +10,3 @@ it('parses and caches the approved CLI configuration and rejects malformed assig
     expect(() => fresh(input as unknown as NodeJS.ProcessEnv)).toThrow();
   }
 });
-

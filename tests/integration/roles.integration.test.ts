@@ -1,4 +1,4 @@
-﻿import { resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
 import {
   captureBrowserFailure,
@@ -171,4 +171,3 @@ describe('TC-ROLES-003 the user list is operator-only, in the page and the API',
     });
   });
 });
-

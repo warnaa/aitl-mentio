@@ -1,4 +1,4 @@
-﻿import { writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { expect, inject, it } from 'vitest';
 import { captureBrowserFailure, closeAgentBrowser, cookieHeader, expectFitsMobile, integrationArtifactsDirectory, runAgentBrowser, sessionCookie, signInAs } from './agent-browser';
@@ -83,7 +83,3 @@ it('TC-AVAILABILITY-002 publishes locally entered time and shows it signed out',
   } catch (error) { await captureBrowserFailure(session, 'slots'); throw error; }
   finally { await closeAgentBrowser(session); await closeAgentBrowser(visitor); }
 });
-
-
-
-

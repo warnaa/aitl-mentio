@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 /**
  * dotenv and Next turn `KEY=` into an empty string. For an optional value that means
@@ -147,4 +147,3 @@ export function getEnv(env: NodeJS.ProcessEnv = process.env): AppEnv {
   }
   return cached;
 }
-

@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { PlatformSettingsService } from './platform-settings.service';
 const bounds = { p25: { minCents: 8000, maxCents: 60000 }, p50: { minCents: 16000, maxCents: 120000 } };
 const service = (currency: unknown, policy: unknown) => new PlatformSettingsService({ env: { PLATFORM_CURRENCY: currency, PLATFORM_PRICE_BOUNDS: policy } });

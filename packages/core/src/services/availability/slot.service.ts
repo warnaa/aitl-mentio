@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 import { LockMode, MentorProfile, Slot, UniqueConstraintViolationException, type EntityManager, type ISlot } from '@devmentor/db';
 import { requireRole, type Session } from '../../http/auth';
 import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from '../../http/errors';
@@ -79,5 +79,3 @@ export class SlotService {
     });
   }
 }
-
-

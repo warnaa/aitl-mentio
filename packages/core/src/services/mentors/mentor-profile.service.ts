@@ -1,4 +1,4 @@
-﻿import {
+import {
   LockMode,
   MentorProfile,
   Slot,
@@ -218,5 +218,3 @@ export class MentorProfileService {
     })) };
   }
 }
-
-

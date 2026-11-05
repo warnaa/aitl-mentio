@@ -1,4 +1,4 @@
-﻿# D28: Platform currency and initial mentor price bounds
+# D28: Platform currency and initial mentor price bounds
 
 - Decision date: 2026-09-10. Recovered for this brief on 2026-09-14.
 - Owner: the founders, as attributed in the accepted pricing specification.
@@ -14,4 +14,3 @@
 ## Superseding founder/operator approval — 2026-11-05
 
 Source: direct user approval relayed to the implementation agent in this repository on 2026-11-05. Currency PLN remains fixed. Approved bounds: 25 minutes PLN 80–600 (8000–60000 groszy), 50 minutes PLN 160–1,200 (16000–120000 groszy). This supersedes the historical 90/180 minimums above; the external repository links remain historical provenance and are not evidence of these new values. Status: active. D09/R08 and R21 use these approved bounds. No fee or payment-launch decision changes.
-

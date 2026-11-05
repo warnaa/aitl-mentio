@@ -1,4 +1,4 @@
-﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LockMode,
   UniqueConstraintViolationException,
@@ -280,6 +280,3 @@ describe('MentorProfileService', () => {
     profile.price25Cents = 8000; profile.price50Cents = 1;
     expect(toPublicDto(entity, settings).prices).toBeNull(); expect(toOwnerDto(entity, settings).prices).toBeNull();
   });});
-
-
-

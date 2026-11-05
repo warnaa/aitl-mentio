@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { mentorPricesUpdateSchema } from './mentor-prices-update.schema';
 it('requires both raw decimals and strips all policy/storage/owner injection', () => {
   expect(mentorPricesUpdateSchema.parse({ price25: '80.00', price50: '160', currency: 'USD', price25Cents: 1, priceBounds: {} })).toEqual({ price25: '80.00', price50: '160' });

@@ -1,4 +1,4 @@
-﻿import { randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 
 /**
  * Test infrastructure is the sole exception to the application's config rule: it
@@ -55,4 +55,3 @@ export function integrationChildEnvironment(databaseUrl: string, appUrl?: string
     OPERATOR_EMAILS: 'mock-operator@devmentor.test',
   };
 }
-

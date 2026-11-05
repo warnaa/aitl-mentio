@@ -1,4 +1,4 @@
-﻿name: Pull request checks
+name: Pull request checks
 
 on:
   pull_request:
@@ -117,4 +117,3 @@ jobs:
           path: test-results/integration/
           if-no-files-found: ignore
           retention-days: 7
-

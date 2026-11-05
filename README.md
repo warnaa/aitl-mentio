@@ -1,4 +1,4 @@
-﻿# DevMentor
+# DevMentor
 
 A platform connecting developers with experienced mentors. Built as an
 npm-workspaces monorepo on Next.js 16 + React 19 + TypeScript, with PostgreSQL via

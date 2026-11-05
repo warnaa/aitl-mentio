@@ -1,4 +1,4 @@
-﻿# DevMentor — product brief
+# DevMentor — product brief
 
 - Date: 2026-09-14; Mode: own; Owner: founder A (Oliwia), scope decider in the workshop record; Pass: full refresh, independent skeptical review, and refresh from current synthetic session 001.
 - Evidence basis: seven supplied interview records covering four mentee situations and three mentor situations; the longer records contain edited transcripts and summaries, not independently verified verbatim transcripts. Their stated dates, authors and roles are preserved as provenance, not newly verified identities. A 109-thread Discord export, a 54-response survey from the same community, and a 50-prospect mentor list broaden the material but are not independent samples of the market. Documented founder decisions determine scope. A02, payment for the proposed scheduled text session, remains untested.
@@ -267,5 +267,3 @@ Four actual follow-ups remain; missing optional sections do not create research 
 2. **A03, invitation outcomes and conditional decliner interviews.** Both founders record acceptance and published availability for the first twenty invitations. Within two weeks of acceptance, fewer than five bookable mentors triggers interviews before another batch and before writing more mentor-side stories under D18. Record objections to shared-list exposure, setup effort and bank-details timing. The existing fifty-name list contains no commitments and does not fulfill this check.
 3. **A01, E00-T03.** Founder B interviews ten appropriate developers about the named mentor's notes; readout 2026-11-30 applies D14. Retain the limited meaning of stated willingness; do not call it a paid subscription test.
 4. **A06, private note use.** Collect approval/decline outcomes from actual completed sessions and ask what the mentee kept or reused. D20 names repeated decline as a co-editing trigger; a collection owner and date were not supplied and remain unset. This does not invent note-use results before sessions exist.
-
-

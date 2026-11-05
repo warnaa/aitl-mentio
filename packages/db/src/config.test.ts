@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { DbEnv } from './env';
 
 /**
@@ -98,4 +98,3 @@ describe('createOrmConfig', () => {
     expect(config.migrations?.glob).toBe('!(*.d|*.test).{js,ts,cjs}');
   });
 });
-

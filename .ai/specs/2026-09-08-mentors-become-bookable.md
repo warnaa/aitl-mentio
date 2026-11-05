@@ -1,4 +1,4 @@
-﻿# DevMentor — Mentors Become Bookable (E02)
+# DevMentor — Mentors Become Bookable (E02)
 
 Date: 2026-09-08
 Status: active — moves to `implemented/` when its four first-iteration slices land
@@ -809,5 +809,3 @@ across the whole epic:
 ## Founder/operator approval on 2026-11-05
 
 Slice 4 currency and initial bounds are resolved: PLN with two decimal minor units; p25 minCents 8000 / maxCents 60000; p50 minCents 16000 / maxCents 120000. This supersedes USD proposals and historical minimums in D28. All other Slice4 contract requirements remain binding.
-
-

@@ -1,4 +1,4 @@
-﻿import { makeOwnedCollectionRoute } from '@devmentor/core';
+import { makeOwnedCollectionRoute } from '@devmentor/core';
 import { slotCreateSchema } from '@devmentor/core/validators/availability/slot-create.schema';
 
 const handlers = makeOwnedCollectionRoute({
@@ -14,7 +14,3 @@ const handlers = makeOwnedCollectionRoute({
 export const GET = handlers.GET;
 export const POST = handlers.POST;
 export const DELETE = handlers.DELETE;
-
-
-
-

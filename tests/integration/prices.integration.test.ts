@@ -1,4 +1,4 @@
-﻿import { resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { expect, inject, it } from 'vitest';
 import { captureBrowserFailure, closeAgentBrowser, cookieHeader, expectFitsMobile, integrationArtifactsDirectory, runAgentBrowser, sessionCookie, signInAs } from './agent-browser';
 import { acceptInvitationAs, CSRF_HEADERS, seedOfferReadyMentor, seedMentorWithSlots, seedPendingInvitation } from './fixtures/mentor';
@@ -66,6 +66,3 @@ it('TC-PRICES-002 edits raw decimals, shows readiness and exposes prices signed 
   } catch (error) { await captureBrowserFailure(session, 'prices'); throw error; }
   finally { await closeAgentBrowser(session); await closeAgentBrowser(visitor); }
 });
-
-
-

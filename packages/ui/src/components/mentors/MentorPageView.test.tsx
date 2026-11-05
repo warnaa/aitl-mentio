@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import { afterEach, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { MentorPageView } from './MentorPageView';
@@ -53,4 +53,3 @@ it('uses the owner readiness gate and leaves unprovided availability out of the 
   expect(screen.queryByRole('region', { name: 'Published times' })).toBeNull();
   expect(screen.getByText('This mentor has published their profile, prices and availability.')).toBeTruthy();
 });
-

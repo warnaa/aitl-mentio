@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 /**
  * Database environment schema. This is the *only* place in the `db` package that
@@ -35,4 +35,3 @@ export function getDbEnv(env: NodeJS.ProcessEnv = process.env): DbEnv {
   }
   return cached;
 }
-

@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 import { ServiceUnavailableError } from '../../http/errors';
 import { MAX_CENTS } from '../../money/money';
 
