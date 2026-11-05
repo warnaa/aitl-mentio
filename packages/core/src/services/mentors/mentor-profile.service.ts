@@ -1,4 +1,4 @@
-import {
+﻿import {
   LockMode,
   MentorProfile,
   Slot,
@@ -9,18 +9,24 @@ import {
 import type { EventBus } from '../../events/event-bus';
 import { MAX_SLUG_ATTEMPTS, uniqueSlug } from '../../domain/slug';
 import { requireRole, type Session } from '../../http/auth';
-import { ConflictError, NotFoundError, UnauthorizedError } from '../../http/errors';
+import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from '../../http/errors';
 import type { Clock } from '../../time/clock';
 import {
   mentorProfileUpdateSchema,
   type MentorProfileUpdate,
 } from '../../validators/mentors/mentor-profile-update.schema';
 import { parseWith } from '../../http/body';
-import { mentorPagePublishable } from './readiness';
+import { mentorOfferReady, mentorPagePublishable } from './readiness';
+import { parseMajorAmount, withinBounds } from '../../money/money';
+import type { PlatformSettings, PlatformSettingsService } from '../operator/platform-settings.service';
+import { mentorPricesUpdateSchema, type MentorPricesUpdate } from '../../validators/mentors/mentor-prices-update.schema';
 
 /** Explicit audience allowlists: adding a private entity field cannot widen these. */
-export function toPublicDto(profile: IMentorProfile) {
+export function toPublicDto(profile: IMentorProfile, settings: PlatformSettings) {
   return {
+    prices: profile.price25Cents != null && profile.price50Cents != null && withinBounds(profile.price25Cents, settings.priceBounds.p25) && withinBounds(profile.price50Cents, settings.priceBounds.p50)
+      ? { price25Cents: profile.price25Cents, price50Cents: profile.price50Cents, currency: settings.currency }
+      : null,
     slug: profile.slug ?? null,
     displayName: profile.user.displayName,
     avatarUrl: profile.user.avatarUrl ?? null,
@@ -29,9 +35,12 @@ export function toPublicDto(profile: IMentorProfile) {
     stackTags: [...profile.stackTags],
   };
 }
-export function toOwnerDto(profile: IMentorProfile) {
+export function toOwnerDto(profile: IMentorProfile, settings: PlatformSettings) {
   return {
-    id: profile.id,
+    id: profile.id, priceBounds: settings.priceBounds,
+    prices: profile.price25Cents != null && profile.price50Cents != null && withinBounds(profile.price25Cents, settings.priceBounds.p25) && withinBounds(profile.price50Cents, settings.priceBounds.p50)
+      ? { price25Cents: profile.price25Cents, price50Cents: profile.price50Cents, currency: settings.currency }
+      : null,
     slug: profile.slug ?? null,
     displayName: profile.user.displayName,
     avatarUrl: profile.user.avatarUrl ?? null,
@@ -43,13 +52,14 @@ export function toOwnerDto(profile: IMentorProfile) {
     readiness: mentorPagePublishable.evaluate(profile),
   };
 }
-export type MentorPublicDto = ReturnType<typeof toPublicDto> & { slots: { id: string; startsAt: string; meetsLeadTime: boolean }[] };
-export type MentorOwnerDto = ReturnType<typeof toOwnerDto>;
+export type MentorPublicDto = ReturnType<typeof toPublicDto> & { offerReady: boolean; slots: { id: string; startsAt: string; meetsLeadTime: boolean }[] };
+export type MentorOwnerDto = ReturnType<typeof toOwnerDto> & { offerReadiness: ReturnType<typeof mentorOfferReady.evaluate> };
 
 export interface MentorProfileServiceDeps {
   em: EntityManager;
   session: Promise<Session | null>;
   clock: Clock;
+  platformSettingsService: Pick<PlatformSettingsService, 'get'>;
   eventBus: Pick<EventBus, 'emit'>;
 }
 
@@ -76,8 +86,37 @@ export class MentorProfileService {
     return profile;
   }
 
+  private async ownerDto(em: EntityManager, profile: IMentorProfile): Promise<MentorOwnerDto> {
+    const settings = this.deps.platformSettingsService.get();
+    const hasFutureSlots = await em.count(Slot, { mentorProfile: profile.id, removedAt: null, startsAt: { $gt: this.deps.clock.now() } }) > 0;
+    return { ...toOwnerDto(profile, settings), offerReadiness: mentorOfferReady.evaluate({ ...profile, settings, hasFutureSlots }) };
+  }
+
+  async updatePrices(input: MentorPricesUpdate): Promise<MentorOwnerDto> {
+    const userId = await this.ownerId();
+    const data = parseWith(mentorPricesUpdateSchema, input);
+    return this.deps.em.fork().transactional(async em => {
+      const profile = await this.profile(em, userId, true);
+      const settings = this.deps.platformSettingsService.get();
+      const price25Cents = parseMajorAmount(data.price25);
+      const price50Cents = parseMajorAmount(data.price50);
+      const fieldErrors: Record<string, string[]> = {};
+      for (const [key, value, bounds] of [
+        ['price25', price25Cents, settings.priceBounds.p25],
+        ['price50', price50Cents, settings.priceBounds.p50],
+      ] as const) {
+        if (!withinBounds(value, bounds)) fieldErrors[key] = [`Enter ${settings.currency} ${(bounds.minCents / 100).toFixed(2)}–${(bounds.maxCents / 100).toFixed(2)}.`];
+      }
+      if (Object.keys(fieldErrors).length) throw new ValidationError('Prices must be within the platform bounds.', fieldErrors);
+      profile.price25Cents = price25Cents;
+      profile.price50Cents = price50Cents;
+      profile.updatedAt = this.deps.clock.now();
+      await em.flush();
+      return this.ownerDto(em, profile);
+    });
+  }
   async getMine(): Promise<MentorOwnerDto> {
-    return toOwnerDto(await this.profile(this.deps.em, await this.ownerId()));
+    return this.ownerDto(this.deps.em, await this.profile(this.deps.em, await this.ownerId()));
   }
 
   async update(input: MentorProfileUpdate): Promise<MentorOwnerDto> {
@@ -93,7 +132,7 @@ export class MentorProfileService {
       }
       profile.updatedAt = this.deps.clock.now();
       await em.flush();
-      return toOwnerDto(profile);
+      return this.ownerDto(em, profile);
     });
   }
 
@@ -106,18 +145,18 @@ export class MentorProfileService {
         // Never reuse a rolled-back identity map or an enclosing failed transaction.
         const result = await this.deps.em.fork().transactional(async (em) => {
           const profile = await this.profile(em, userId, true);
-          if (profile.publishedAt) return { dto: toOwnerDto(profile), changed: false };
+          if (profile.publishedAt) return { dto: await this.ownerDto(em, profile), changed: false };
           mentorPagePublishable.assert(profile);
           if (!profile.slug) {
             candidate = uniqueSlug(profile.user.displayName, occupied);
             const collision = await em.findOne(MentorProfile, { slug: candidate });
-            if (collision) return { dto: toOwnerDto(profile), changed: false, collision: candidate };
+            if (collision) return { dto: await this.ownerDto(em, profile), changed: false, collision: candidate };
             profile.slug = candidate;
           }
           profile.publishedAt = this.deps.clock.now();
           profile.updatedAt = profile.publishedAt;
           await em.flush();
-          return { dto: toOwnerDto(profile), changed: true };
+          return { dto: await this.ownerDto(em, profile), changed: true };
         });
         if (result.collision) {
           occupied.add(result.collision);
@@ -149,7 +188,7 @@ export class MentorProfileService {
       profile.publishedAt = null;
       profile.updatedAt = this.deps.clock.now();
       await em.flush();
-      return toOwnerDto(profile);
+      return this.ownerDto(em, profile);
     });
   }
 
@@ -165,10 +204,12 @@ export class MentorProfileService {
     if (!profile) throw new NotFoundError('Mentor page not found');
     const now = this.deps.clock.now();
     const slots = await this.deps.em.find(Slot, { mentorProfile: profile.id, removedAt: null, startsAt: { $gt: now } }, { orderBy: { startsAt: 'asc' } });
-    return { ...toPublicDto(profile), slots: slots.map(slot => ({
+    const settings = this.deps.platformSettingsService.get();
+    return { ...toPublicDto(profile, settings), offerReady: mentorOfferReady.evaluate({ ...profile, settings, hasFutureSlots: slots.length > 0 }).ready, slots: slots.map(slot => ({
       id: slot.id,
       startsAt: slot.startsAt.toISOString(),
       meetsLeadTime: slot.startsAt.getTime() >= now.getTime() + 2 * 60 * 60 * 1000,
     })) };
   }
 }
+
