@@ -55,6 +55,10 @@ yarn-error.log*
 .ai/qa/artifacts_*/
 .ai/qa/test-env.json
 .ai/qa/test-env.env
+.ai/qa/test-env-build-cache.json
+.ai/qa/test-env-browser.json
+.ai/qa/test-env.lock/
+.ai/qa/test-env-runtime/
 
 # skills installer staging copy (unrendered upstream download of .agents/skills)
 /agent/

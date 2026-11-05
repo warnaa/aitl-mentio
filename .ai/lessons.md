@@ -9,6 +9,10 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-05 - Native agent-browser 0.36.0 does not resolve compound Playwright `role=... >> role=...` selectors. For duplicate accessible link names, obtain a fresh `snapshot`, match the observed role/name and click its current `@ref`; never hardcode the ref. The focused mentor technology test first failed at navigation despite the link being present.
+
+- 2026-11-05 - Persistent QA startup must use the workspace `npm run start --workspace @devmentor/app` command: invoking Next directly from the root failed to resolve the TypeScript config helper. Reuse integration environment pinning, verify `database: up` plus mock operator access, and stop the owned npm process tree on Windows. Docker named-pipe denial inside the sandbox requires an authorized retry before diagnosing Docker as unavailable.
+
 - 2026-11-05 — The full integration suite (TC-MIGRATION down/up) rewrites `packages/db/migrations/.snapshot-devmentor.json` cosmetically, and a `git add -A` after it swept that churn into a review-fix commit on #65 (reverted in the next commit). After any integration run, stage paths explicitly or check `git diff --cached --stat` before committing, and `git checkout` the snapshot unless the change adds a migration.
 
 - 2026-11-05 — User correction: E02 mentor screens matched the specs but not the designs. Plans had taken only behaviour specs as acceptance criteria, so pages were assembled from generic primitives (`ReadinessChecklist`, ad-hoc Tailwind) while the designed `MentorOnboarding` and `dm-product-panel` workspace went unused. Plan UI steps against the prototype screen named in the design handoff and compare screenshots before declaring done (rule in `packages/app/AGENTS.md`).
