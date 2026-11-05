@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
@@ -24,6 +24,7 @@ describe('WorkspaceNav', () => {
       ['Users', '/admin/users'],
       ['Mentor home', '/mentor'],
       ['Mentor profile', '/mentor/profile'],
+      ['Availability', '/mentor/slots'],
     ]);
   });
 
@@ -50,3 +51,4 @@ describe('WorkspaceNav', () => {
     expect(icon?.getAttribute('aria-hidden')).toBe('true');
   });
 });
+
