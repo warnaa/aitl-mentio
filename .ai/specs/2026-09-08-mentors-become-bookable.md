@@ -1,4 +1,4 @@
-# DevMentor — Mentors Become Bookable (E02)
+﻿# DevMentor — Mentors Become Bookable (E02)
 
 Date: 2026-09-08
 Status: active — moves to `implemented/` when its four first-iteration slices land
@@ -654,7 +654,7 @@ spec and lifecycle; it is not Slice 5 of this epic.
 - **Slice 3 — Slots (#36).** `risk-high` (schema migration, `SDLC.md:97`), `needs-qa`, second reviewer.
   Ships B23's collection callback, B26 and F5′ `datetime`; booking occupancy remains E03.
 - **Slice 4 — Prices and offer readiness (#37).** `risk-high` (money), `needs-qa`, second reviewer. Ships
-  B12′, B16′, F5′ `money`. Blocked until the founders approve the platform currency and both bounds.
+  B12′, B16′, F5′ `money`. Unblocked by founder/operator approval2026-11-05: PLN,25min80–600PLN,50min160–1200PLN.
 
 ## 📋 Implementation Plan
 
@@ -799,7 +799,7 @@ across the whole epic:
   of money**, not the four E02 preparation slices. The founders must either bring Connect + settlement
   into the iteration or approve a superseding payment decision.
 - **Initial platform currency and price bounds** (owner: founder A). Proposed smallest scope: USD and
-  one approved bounds object. Both values are **blocking before Slice 4 implementation**; placeholder
+  one approved bounds object. Both values are **approved2026-11-05: PLN,25min80–600,50min160–1200**; placeholder
   money policy must not become a production default.
 - **Whether the mentor's publish-by report is needed before #49** (owner: both founders). D18's check
   is "5 of the first 20 within two weeks", and until #49 the operator counts by hand from
@@ -811,3 +811,8 @@ across the whole epic:
 - **A pre-existing §3 violation, not introduced here.** The repository's only migration,
   `Migration20260901142829.ts`, has no `down()`. Every migration in this spec ships both directions;
   the existing one should be fixed under its own issue.
+
+## Founder/operator approval2026-11-05
+
+Slice4 currency and initial bounds are resolved: PLN with two decimal minor units; p25 minCents8000/maxCents60000; p50 minCents16000/maxCents120000. This supersedes USD proposals and historical minimums in D28. All other Slice4 contract requirements remain binding.
+
