@@ -109,7 +109,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
     <PublicPage>
       <div className="dm-invitation">
         <div className="dm-invitation-intro">
-          <span className="dm-product-eyebrow">An invitation to mentor</span>
+          <span className="dm-page-eyebrow">An invitation to mentor</span>
           <h1>Mentor developers through text sessions.</h1>
           <p>DevMentor sessions happen in text. You set your prices and choose when you are available.</p>
           <div className="dm-fact-chips" role="group" aria-label="Session format">

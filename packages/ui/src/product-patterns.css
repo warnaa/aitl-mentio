@@ -17,6 +17,8 @@
 .dm-product-title { font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: -.01em; }
 .dm-product-muted { color: var(--dm-text-sub-600); font-size: 14px; line-height: 22px; }
 .dm-product-caption { display: block; color: var(--dm-text-sub-600); font-size: 12px; line-height: 18px; }
+/* Page-level eyebrow above a page heading (prototype `proto-eyebrow`). */
+.dm-page-eyebrow { display: block; color: var(--dm-text-sub-600); font-size: 11px; line-height: 16px; letter-spacing: .1em; font-weight: 600; text-transform: uppercase; }
 .dm-product-eyebrow { display: block; color: var(--dm-text-sub-600); font-size: 12px; line-height: 16px; font-weight: 500; }
 .dm-product-copy { max-width: var(--dm-reading-width); font-size: 14px; line-height: 24px; }
 .dm-product-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--dm-space-16); }

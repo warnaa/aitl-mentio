@@ -97,7 +97,7 @@ export function MentorProfileWorkspace({ appUrl, options }: { appUrl: string; op
           <div className="dm-mentor-workspace">
             <header className="dm-mentor-workspace-heading">
               <div>
-                <span className="dm-product-eyebrow">Your public profile</span>
+                <span className="dm-page-eyebrow">Your public profile</span>
                 <h1>Show mentees how you can help</h1>
                 <p>
                   Describe your work and the problems you know well. Your public work gives mentees an example to look

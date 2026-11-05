@@ -31,7 +31,7 @@ export function MentorWorkspace() {
   return <div className="dm-mentor-workspace">
     <header className="dm-mentor-workspace-heading">
       {resource.data ? <div>
-        <span className="dm-product-eyebrow">Mentor workspace</span>
+        <span className="dm-page-eyebrow">Mentor workspace</span>
         <h1>{ready ? 'Your mentor workspace' : 'Get ready for your first session'}</h1>
         <p>{ready ? 'Manage your public profile, session prices and availability.' : 'Complete your profile, set both prices and publish a time so a mentee can book you.'}</p>
       </div> : <div><h1>Mentor workspace</h1></div>}
