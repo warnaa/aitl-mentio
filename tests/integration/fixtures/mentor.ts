@@ -104,3 +104,20 @@ export async function seedPublishedMentorProfile(
   if (published.status !== 200 || !slug) throw new Error(`publishing answered ${published.status}`);
   return slug;
 }
+
+/** A published profile with one future slot, through the protected API (T1). */
+export async function seedMentorWithSlots(baseUrl: string, mentor: Record<string, string>) {
+  const slug = await seedPublishedMentorProfile(baseUrl, mentor);
+  const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const response = await fetch(`${baseUrl}/api/availability/slots`, { method: 'POST', headers: { ...mentor, ...CSRF_HEADERS, 'content-type': 'application/json' }, body: JSON.stringify({ startsAt }) });
+  if (!response.ok) throw new Error(`publishing slot answered ${response.status}`);
+  return { slug, slot: (await response.json()).data as { id: string; startsAt: string } };
+}
+
+/** A fully prepared E02 offer; deliberately does not imply the E03 payment launch gate. */
+export async function seedOfferReadyMentor(baseUrl: string, mentor: Record<string, string>) {
+  const prepared = await seedMentorWithSlots(baseUrl, mentor);
+  const response = await fetch(`${baseUrl}/api/mentors/me/prices`, { method: 'PUT', headers: { ...mentor, ...CSRF_HEADERS, 'content-type': 'application/json' }, body: JSON.stringify({ price25: '80', price50: '160' }) });
+  if (!response.ok) throw new Error(`setting prices answered ${response.status}`);
+  return prepared;
+}

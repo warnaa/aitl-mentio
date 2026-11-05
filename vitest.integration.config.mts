@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+﻿import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -7,9 +7,11 @@ export default defineConfig({
     globalSetup: ['tests/integration/global-setup.ts'],
     fileParallelism: false,
     maxWorkers: 1,
-    testTimeout: 60_000,
+    // Invitation-backed scenarios launch isolated operator CLI processes and browser sessions.
+    testTimeout: 180_000,
     hookTimeout: 180_000,
     teardownTimeout: 30_000,
     retry: 0,
   },
 });
+

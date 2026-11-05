@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+﻿import { resolve } from 'node:path';
 import { describe, expect, inject, it, vi } from 'vitest';
 import {
   captureBrowserFailure,
@@ -130,7 +130,7 @@ describe('TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary',
       expect(page.status).toBe(200);
       const body = (await page.json()) as { data: Record<string, unknown> };
       // The projection boundary: exactly the public keys, nothing private.
-      expect(Object.keys(body.data).sort()).toEqual(['avatarUrl', 'bio', 'displayName', 'publicWorkUrl', 'slug', 'stackTags']);
+      expect(Object.keys(body.data).sort()).toEqual(['avatarUrl', 'bio', 'displayName', 'offerReadiness', 'offerReady', 'prices', 'publicWorkUrl', 'slots', 'slug', 'stackTags']);
       expect(JSON.stringify(body)).not.toMatch(/@|publishDueAt|initialPublishDueAt|publishedAt/);
 
       const hidden = await transition(baseUrl, mentor, 'unpublish');
@@ -171,3 +171,7 @@ describe('TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary',
     });
   });
 });
+
+
+
+
