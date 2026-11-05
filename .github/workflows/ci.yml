@@ -2,6 +2,18 @@ name: Pull request checks
 
 on:
   pull_request:
+    # ready_for_review runs the suite once a draft flips to ready. Draft PRs (the
+    # loop skills push one commit per step to a draft) skip every job below.
+    types: [opened, synchronize, reopened, ready_for_review]
+    # Skip PRs that only touch agent working notes. Specs, AGENTS.md and other
+    # Markdown stay checked: the agent-route check validates them. GitHub filters
+    # on the whole PR diff, so this never skips a PR that also changes code.
+    paths-ignore:
+      - '.ai/runs/**'
+      - '.ai/qa/**'
+      - '.ai/analysis/**'
+      - '.ai/lessons.md'
+      - '.ai/lessons/**'
 
 permissions:
   contents: read
@@ -16,6 +28,7 @@ env:
 jobs:
   build:
     name: Build
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -34,6 +47,7 @@ jobs:
 
   lint:
     name: Lint
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -49,6 +63,7 @@ jobs:
 
   unit:
     name: Unit tests
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -71,6 +86,7 @@ jobs:
 
   integration:
     name: Integration tests
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The auth configuration for the app under test (a per-run SESSION_SECRET,
