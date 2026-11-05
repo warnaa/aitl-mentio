@@ -498,3 +498,15 @@ describe('CrudForm', () => {
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
   });
 });
+
+it('renders datetime locally and sends only the converted instant while preserving invalid input', async () => {
+  render(<CrudForm schema={z.object({ startsAt: z.string().datetime() })} fields={[{ name: 'startsAt', label: 'Starts at', type: 'datetime' }]} endpoint="/api/slots" />);
+  const field = input('Starts at');
+  expect(field.type).toBe('datetime-local');
+  submitForm();
+  expect(request).not.toHaveBeenCalled();
+  fireEvent.change(field, { target: { value: '2026-11-06T14:30' } });
+  submitForm();
+  await waitFor(() => expect(request).toHaveBeenCalledWith('/api/slots', { method: 'POST', body: { startsAt: new Date(2026, 10, 6, 14, 30).toISOString() } }));
+  expect(field.value).toBe('2026-11-06T14:30');
+});
