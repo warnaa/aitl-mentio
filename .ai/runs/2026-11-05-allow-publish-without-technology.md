@@ -63,9 +63,22 @@ and description stay required.
 
 ### Phase 1: Relax the publish gate
 
-- [ ] 1.1 Remove the stackTags readiness rule and update core unit tests
+- [x] 1.1 Remove the stackTags readiness rule and update core unit tests — 5235a6e, e0291de
 
 ### Phase 2: Make technologies optional in the UI
 
-- [ ] 2.1 Make the editor technology group optional and update its tests
-- [ ] 2.2 Update the workspace publish copy and its tests
+- [x] 2.1 Make the editor technology group optional and update its tests — 4e9014c
+- [x] 2.2 Update the workspace publish copy and its tests — a97ddf3
+
+## Outcome
+
+- Validation gate (`typecheck`, `lint`, `test`, `build`): green; 152 files /
+  1468 unit tests passed; lint shows 2 pre-existing warnings in untouched files.
+- `tests/integration/mentor-page.integration.test.ts`: 3 passed, 1 failed, as
+  intended — TC-MENTOR-PAGE-002 receives `['bio', 'publicWorkUrl']` where it
+  expects `['bio', 'publicWorkUrl', 'stackTags']`.
+
+## Follow-ups
+
+- If this behaviour is kept, TC-MENTOR-PAGE-002 needs its expectation updated;
+  left untouched on purpose for this run.
