@@ -510,3 +510,10 @@ it('renders datetime locally and sends only the converted instant while preservi
   await waitFor(() => expect(request).toHaveBeenCalledWith('/api/slots', { method: 'POST', body: { startsAt: new Date(2026, 10, 6, 14, 30).toISOString() } }));
   expect(field.value).toBe('2026-11-06T14:30');
 });
+
+it('keeps money as a decimal string and exposes a decimal keyboard', async () => {
+  render(<CrudForm schema={z.object({ price: z.string() })} fields={[{ name: 'price', label: 'Price', type: 'money' }]} endpoint="/api/prices" />);
+  expect(input('Price').type).toBe('text'); expect(input('Price').inputMode).toBe('decimal');
+  fireEvent.change(input('Price'), { target: { value: '80.00' } }); submitForm();
+  await waitFor(() => expect(request).toHaveBeenCalledWith('/api/prices', { method: 'POST', body: { price: '80.00' } }));
+});

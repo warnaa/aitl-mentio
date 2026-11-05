@@ -24,6 +24,7 @@ describe('WorkspaceNav', () => {
       ['Users', '/admin/users'],
       ['Mentor home', '/mentor'],
       ['Mentor profile', '/mentor/profile'],
+      ['Session prices', '/mentor/prices'],
       ['Availability', '/mentor/slots'],
     ]);
   });
@@ -51,4 +52,5 @@ describe('WorkspaceNav', () => {
     expect(icon?.getAttribute('aria-hidden')).toBe('true');
   });
 });
+
 

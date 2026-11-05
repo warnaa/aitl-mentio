@@ -18,6 +18,7 @@ export type CrudFieldType =
   | 'date'
   | 'datetime-local'
   | 'datetime'
+  | 'money'
   | 'textarea'
   | 'checkbox'
   | 'select'
@@ -299,7 +300,8 @@ export function CrudForm<T>({
             ) : (
               <Input
                 {...inputProps}
-                type={field.type === 'datetime' ? 'datetime-local' : field.type === 'number' ? 'number' : field.type ?? 'text'}
+                type={field.type === 'money' ? 'text' : field.type === 'datetime' ? 'datetime-local' : field.type === 'number' ? 'number' : field.type ?? 'text'}
+                inputMode={field.type === 'money' ? 'decimal' : undefined}
                 className="w-full"
                 placeholder={field.placeholder}
                 value={String(value ?? '')}
