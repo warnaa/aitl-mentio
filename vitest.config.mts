@@ -29,6 +29,8 @@ export default defineConfig({
         'packages/db/src/entities/bookings/booking.entity.ts',
         'packages/core/src/services/bookings/booking.service.ts',
         'packages/app/src/app/api/bookings/route.ts',
+        'packages/app/src/app/m/\\[slug\\]/SlotPicker.tsx',
+        'packages/ui/src/components/sessions/SessionIsTextNotice.tsx',
         'packages/core/src/services/bookings/occupancy.ts',
         'packages/core/src/validators/bookings/booking-create.schema.ts',
         'packages/db/migrations/Migration20261105222730_bookings.ts',

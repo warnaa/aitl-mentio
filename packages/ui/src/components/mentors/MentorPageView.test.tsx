@@ -75,3 +75,10 @@ it('formats minor units, dropping decimals only for whole amounts', () => {
   expect(formatPrice(60000, 'PLN')).toBe('PLN 600');
   expect(formatPrice(8005, 'PLN')).toBe('PLN 80.05');
 });
+
+it('accepts public booking controls in the existing card while retaining the shared session notice', () => {
+  render(<MentorPageView profile={{ ...base, offerReady: true }} booking={<button>Reserve a session</button>} />);
+  const card = screen.getByRole('complementary', { name: 'Session prices' });
+  expect(within(card).getByRole('button', { name: 'Reserve a session' })).toBeTruthy();
+  expect(within(card).getByText('Sessions are text. DevMentor makes no promise about how soon an answer arrives.')).toBeTruthy();
+});
