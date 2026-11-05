@@ -71,5 +71,9 @@ export * from './http/index';
 export { checkDbConnection } from '@devmentor/db';
 
 export { InvitationService } from './services/invitations/invitation.service';
+export * from './services/mentors/mentor-profile.service';
 export * from './domain/vocabulary';
 export * from './domain/vocabularies/stack-tags';
+export * from './domain/slug';
+export * from './domain/readiness';
+export * from './http/owned-route';

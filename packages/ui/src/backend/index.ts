@@ -21,3 +21,5 @@ export * from './shell/AppShell';
 export * from './shell/AuthLayout';
 
 export * from './api/useApiResource';
+export * from './panels/ResourcePanel';
+export * from './feedback/ReadinessChecklist';

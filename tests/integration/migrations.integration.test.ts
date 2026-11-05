@@ -14,6 +14,7 @@ const AUTH_IDENTITY = 'Migration20261102230816_auth_identity';
 const AUTH_PASSWORD = 'Migration20261103080749_auth_password';
 const AUTH_RATE_LIMIT = 'Migration20261103081334_auth_rate_limit';
 const INVITATIONS = 'Migration20261104000100_invitations';
+const MENTOR_PAGE = 'Migration20261104225821_mentor_page';
 const DATABASE = 'devmentor_migrations';
 const IDENTITY_COLUMNS = [
   'roles',
@@ -391,5 +392,52 @@ describe('TC-MIGRATION-004 invitations migration round trip', () => {
 
     await migrateTo(INVITATIONS);
     expect(await constraintsOf('invitations')).toHaveLength(6);
+  }, 300_000);
+});
+
+const PAGE_COLUMNS = ['public_work_url', 'published_at', 'slug', 'stack_tags'];
+
+describe('TC-MIGRATION-005 mentor-page migration round trip', () => {
+  ownPostgres();
+
+  it('adds the page columns and checks, drops them on down keeping profiles, and adds them again', async () => {
+    await migrateTo(INVITATIONS);
+    for (const email of ['a@devmentor.test', 'b@devmentor.test']) {
+      expect((await insertUser(email)).exitCode).toBe(0);
+      expect(
+        (await psql(`insert into mentor_profiles (id, created_at, updated_at, user_id, headline)
+          values (gen_random_uuid(), now(), now(), ${userId(email)}, 'Kept')`)).exitCode,
+      ).toBe(0);
+    }
+
+    await migrateTo(MENTOR_PAGE);
+    expect(await appliedMigrations()).toEqual([
+      BASELINE, AUTH_IDENTITY, AUTH_PASSWORD, AUTH_RATE_LIMIT, INVITATIONS, MENTOR_PAGE,
+    ]);
+    expect(await columnsOf('mentor_profiles', PAGE_COLUMNS)).toEqual(PAGE_COLUMNS);
+    expect(await constraintsOf('mentor_profiles')).toEqual(
+      expect.arrayContaining([
+        'mentor_profiles_published_slug_check',
+        'mentor_profiles_slug_unique',
+        'mentor_profiles_stack_tags_check',
+      ]),
+    );
+    // Existing profiles stay unpublished drafts with no tags.
+    expect(await queryJson(`select json_agg(stack_tags) from mentor_profiles`)).toEqual([[], []]);
+    const profile = (email: string) => `user_id = ${userId(email)}`;
+    // Publication implies a slug; the slug is unique; tags stay inside the vocabulary.
+    expect((await psql(`update mentor_profiles set published_at = now() where ${profile('a@devmentor.test')}`)).exitCode).not.toBe(0);
+    expect((await psql(`update mentor_profiles set slug = 'ada', published_at = now() where ${profile('a@devmentor.test')}`)).exitCode).toBe(0);
+    expect((await psql(`update mentor_profiles set slug = 'ada' where ${profile('b@devmentor.test')}`)).exitCode).not.toBe(0);
+    expect((await psql(`update mentor_profiles set stack_tags = '{cobol}' where ${profile('b@devmentor.test')}`)).exitCode).not.toBe(0);
+    expect((await psql(`update mentor_profiles set stack_tags = '{react,python}' where ${profile('b@devmentor.test')}`)).exitCode).toBe(0);
+
+    await runNpm(['run', 'db:migrate:down'], environment);
+    expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY, AUTH_PASSWORD, AUTH_RATE_LIMIT, INVITATIONS]);
+    expect(await columnsOf('mentor_profiles', PAGE_COLUMNS)).toEqual([]);
+    expect(await queryJson(`select json_agg(headline) from mentor_profiles`)).toEqual(['Kept', 'Kept']);
+
+    await migrateTo(MENTOR_PAGE);
+    expect(await columnsOf('mentor_profiles', PAGE_COLUMNS)).toEqual(PAGE_COLUMNS);
   }, 300_000);
 });

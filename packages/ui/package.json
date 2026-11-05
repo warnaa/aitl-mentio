@@ -17,6 +17,7 @@
     "./tokens.css": "./src/tokens.css",
     "./lib/utils": "./src/lib/utils.ts",
     "./components/*": "./src/components/ui/*.tsx",
+    "./components/mentors/*": "./src/components/mentors/*.tsx",
     "./time": "./src/time/index.ts"
   },
   "dependencies": {

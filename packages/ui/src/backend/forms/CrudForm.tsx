@@ -9,7 +9,17 @@ import { Label } from '../../components/ui/label';
 import { apiCall } from '../api/apiCall';
 import type { FieldErrors } from '../api/types';
 
-export type CrudFieldType = 'text' | 'email' | 'password' | 'number' | 'date' | 'datetime-local' | 'textarea' | 'checkbox' | 'select';
+export type CrudFieldType =
+  | 'text'
+  | 'email'
+  | 'password'
+  | 'number'
+  | 'date'
+  | 'datetime-local'
+  | 'textarea'
+  | 'checkbox'
+  | 'select'
+  | 'multiselect';
 
 export interface CrudFieldRenderProps {
   inputProps: {
@@ -37,7 +47,9 @@ export interface CrudField {
   autoComplete?: string;
   /** Marks a required control; the schema remains the validation authority. */
   required?: boolean;
-  /** Options for `select` fields. */
+  /** Submits an empty string as absent, so an optional field the user left blank is not validated. */
+  omitEmpty?: boolean;
+  /** Options for `select` and `multiselect` fields. */
   options?: { label: string; value: string }[];
   /** Custom controls reuse this form's values, validation, errors and submission.
    * Associate the visible label using labelId and make the invalid target focusable.
@@ -59,6 +71,8 @@ export interface CrudFormProps<T> {
   onCancel?: () => void;
   /** Lets a composition disable competing actions while this request is pending. */
   onSubmittingChange?: (submitting: boolean) => void;
+  /** Errors from a related action (such as a refused publish), shown until this form reports its own. */
+  externalFieldErrors?: FieldErrors;
 }
 
 function flattenZodError(error: z.ZodError): FieldErrors {
@@ -71,6 +85,7 @@ function flattenZodError(error: z.ZodError): FieldErrors {
 }
 
 function defaultValueFor(field: CrudField): unknown {
+  if (field.type === 'multiselect') return [];
   if (field.type === 'checkbox') return false;
   if (field.type === 'number') return '';
   return '';
@@ -94,6 +109,7 @@ export function CrudForm<T>({
   onSuccess,
   onCancel,
   onSubmittingChange,
+  externalFieldErrors = {},
 }: CrudFormProps<T>) {
   const formId = useId();
   const formRef = useRef<HTMLFormElement>(null);
@@ -130,7 +146,7 @@ export function CrudForm<T>({
     for (const field of fields) {
       const raw = values[field.name];
       candidate[field.name] =
-        field.type === 'number' && raw === '' ? undefined : raw;
+        (field.type === 'number' || field.omitEmpty) && raw === '' ? undefined : raw;
     }
 
     const parsed = schema.safeParse(candidate);
@@ -190,7 +206,7 @@ export function CrudForm<T>({
       }}
     >
       {fields.map((field) => {
-        const errors = fieldErrors[field.name];
+        const errors = fieldErrors[field.name] ?? externalFieldErrors[field.name];
         const value = values[field.name];
         const id = `${formId}-${field.name}`;
         const errorId = `${id}-errors`;
@@ -212,7 +228,40 @@ export function CrudForm<T>({
               {field.required && <span className="dm-field-required" aria-hidden="true"> *</span>}
             </Label>
 
-            {field.render ? field.render({ inputProps, labelId: `${id}-label`, value, onChange: value => setValue(field.name, value) }) : field.type === 'textarea' ? (
+            {field.render ? field.render({ inputProps, labelId: `${id}-label`, value, onChange: value => setValue(field.name, value) }) : field.type === 'multiselect' ? (
+              <fieldset
+                id={id}
+                aria-labelledby={`${id}-label`}
+                aria-describedby={inputProps['aria-describedby']}
+                aria-invalid={inputProps['aria-invalid']}
+                disabled={submitting}
+                tabIndex={-1}
+                className="flex flex-wrap gap-4"
+              >
+                {field.options?.map((option) => {
+                  const selected = value as string[];
+                  return (
+                    <label key={option.value} className="flex min-h-11 items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name={field.name}
+                        value={option.value}
+                        checked={selected.includes(option.value)}
+                        onChange={(event) =>
+                          setValue(
+                            field.name,
+                            event.target.checked
+                              ? [...selected, option.value]
+                              : selected.filter((item) => item !== option.value),
+                          )
+                        }
+                      />
+                      {option.label}
+                    </label>
+                  );
+                })}
+              </fieldset>
+            ) : field.type === 'textarea' ? (
               <Textarea
                 {...inputProps}
                 className="w-full"
