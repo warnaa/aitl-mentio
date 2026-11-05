@@ -24,21 +24,19 @@ describe('readiness', () => {
     }
   });
   it('defines page requirements once for both service and client output', () => {
-    expect(mentorPagePublishable.evaluate({ publicWorkUrl: null, bio: null, stackTags: [] }).ready).toBe(
+    expect(mentorPagePublishable.evaluate({ publicWorkUrl: null, bio: null }).ready).toBe(
       false,
     );
     expect(
       mentorPagePublishable.evaluate({
         publicWorkUrl: 'https://example.test',
         bio: ' ',
-        stackTags: ['react'],
       }).ready,
     ).toBe(false);
     expect(
       mentorPagePublishable.evaluate({
         publicWorkUrl: 'https://example.test',
         bio: 'Experience',
-        stackTags: ['react'],
       }).ready,
     ).toBe(true);
   });
