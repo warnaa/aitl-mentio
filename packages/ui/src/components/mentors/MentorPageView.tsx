@@ -24,6 +24,9 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).map(word =>
 export const formatPrice = (cents: number, currency: string) =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency, minimumFractionDigits: cents % 100 ? 2 : 0 }).format(cents / 100);
 
+const isEligible = (slot: NonNullable<MentorPageData['slots']>[number]) =>
+  slot.meetsLeadTime && (slot.viableLengths === undefined || slot.viableLengths.length > 0);
+
 /**
  * The mentor page as the prototype's s1 screen, for the public `/m/<slug>` page and the
  * owner's preview. The public host supplies booking controls; previews remain read-only.
@@ -31,7 +34,7 @@ export const formatPrice = (cents: number, currency: string) =>
  */
 export function MentorPageView({ profile, booking }: { profile: MentorPageData; booking?: ReactNode }) {
   const ready = profile.offerReadiness?.ready ?? profile.offerReady;
-  const eligible = profile.slots?.filter(slot => slot.meetsLeadTime);
+  const eligible = profile.slots?.filter(isEligible);
   const firstParagraph = profile.bio?.split(/\n\s*\n/)[0];
   return <article className="dm-mentor-profile">
     <div className="dm-mentor-profile-layout">
@@ -62,7 +65,7 @@ export function MentorPageView({ profile, booking }: { profile: MentorPageData; 
           {!ready ? <EmptyState title="Not bookable yet" description="This mentor is still preparing their offer. Check back once their setup is complete." />
             : eligible && (eligible.length
               ? <div className="dm-mentor-profile-availability"><p><CalendarDays aria-hidden="true" />Published availability</p><PublishedDays startsAt={eligible.map(slot => slot.startsAt)} /></div>
-              : <EmptyState title="No times available right now" description="This mentor has no published times starting at least two hours from now. Check this page again later." />)}
+              : <EmptyState title="No times available right now" description="No unreserved published times start at least two hours from now. Check this page again later." />)}
           {booking}
           <ul className="dm-mentor-profile-included" aria-label="Included with your session">
             <li><MessageSquare aria-hidden="true" /><span>A conversation in text</span></li>
@@ -87,9 +90,9 @@ export function MentorPageView({ profile, booking }: { profile: MentorPageData; 
             <h2 id="mentor-times-title">Available times</h2>
             <p>The next 50 published times are shown. Eligibility is checked when this page loads.</p>
           </div>
-          {profile.slots.length ? <ul className="dm-mentor-profile-times">{profile.slots.map(slot => <li key={slot.id} data-eligible={slot.meetsLeadTime}>
+          {profile.slots.length ? <ul className="dm-mentor-profile-times">{profile.slots.map(slot => <li key={slot.id} data-eligible={isEligible(slot)}>
             <LocalTime value={slot.startsAt} />
-            <p>{slot.meetsLeadTime ? 'Meets the two-hour notice period.' : 'Unavailable: less than two hours before the start.'}</p>
+            <p>{!slot.meetsLeadTime ? 'Unavailable: less than two hours before the start.' : isEligible(slot) ? 'Meets the two-hour notice period.' : 'Unavailable: overlaps a reserved session.'}</p>
           </li>)}</ul> : <p className="dm-mentor-profile-prose">No published times yet. Check back later.</p>}
         </section>}
       </div>

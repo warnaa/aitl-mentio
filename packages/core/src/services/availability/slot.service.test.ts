@@ -66,9 +66,12 @@ it('maps only the named duplicate constraint and never emits on rollback', async
 });
 it('soft-removes under an owner-scoped row lock and hides foreign/missing IDs', async () => {
   expect(await service().remove('11111111-1111-4111-8111-111111111111')).toEqual({ id: 'slot' });
-  expect(findOne).toHaveBeenCalledWith('Slot', { id: '11111111-1111-4111-8111-111111111111', mentorProfile: { user: 'owner' }, removedAt: null }, { lockMode: 'write', refresh: true });
+  expect(findOne).toHaveBeenCalledWith('Slot', { id: '11111111-1111-4111-8111-111111111111', mentorProfile: 'profile', removedAt: null }, { lockMode: 'write', refresh: true });
+  expect(findOne.mock.calls.slice(-3).map(call => call[0])).toEqual(['Profile', 'Slot', 'Booking']);
   expect(slot.removedAt).toBe(now); expect(profile.lastPublishedAvailabilityAt).toBeNull();
   findOne.mockResolvedValue(null);
+  await expect(service().remove('22222222-2222-4222-8222-222222222222')).rejects.toMatchObject({ status: 404, message: 'Slot not found' });
+  findOne.mockResolvedValueOnce(profile).mockResolvedValueOnce(null);
   await expect(service().remove('22222222-2222-4222-8222-222222222222')).rejects.toMatchObject({ status: 404, message: 'Slot not found' });
 });
 

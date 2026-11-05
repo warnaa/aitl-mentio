@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-05 — MikroORM `PESSIMISTIC_WRITE` on a slot query joined to mentor ownership emits unrestricted `FOR UPDATE`, which locks both tables and can invert booking's mentor-then-slot order. Discover/lock the mentor explicitly, then lock the slot by profile ID without a join; keep a PostgreSQL booking/removal regression and show occupied intervals as unavailable in every public projection.
+
 - 2026-11-05 - Native agent-browser 0.36.0 does not resolve compound Playwright `role=... >> role=...` selectors. For duplicate accessible link names, obtain a fresh `snapshot`, match the observed role/name and click its current `@ref`; never hardcode the ref. The focused mentor technology test first failed at navigation despite the link being present.
 
 - 2026-11-05 - Persistent QA startup must use the workspace `npm run start --workspace @devmentor/app` command: invoking Next directly from the root failed to resolve the TypeScript config helper. Reuse integration environment pinning, verify `database: up` plus mock operator access, and stop the owned npm process tree on Windows. Docker named-pipe denial inside the sandbox requires an authorized retry before diagnosing Docker as unavailable.
