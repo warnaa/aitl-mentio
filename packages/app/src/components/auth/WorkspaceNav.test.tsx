@@ -45,7 +45,7 @@ describe('WorkspaceNav', () => {
   it('keeps the icons out of the accessible name', () => {
     navigation.pathname = '/home';
     const { container } = render(<WorkspaceNav roles={['mentee']} />);
-    expect(screen.getByRole('link', { name: 'Mentee home' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('link', { name: 'My sessions' }).getAttribute('aria-current')).toBe('page');
     const icon = container.querySelector('svg');
     expect(icon?.getAttribute('aria-hidden')).toBe('true');
   });

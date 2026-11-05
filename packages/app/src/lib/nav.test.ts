@@ -8,7 +8,7 @@ const OPERATOR = [
   ['/admin', 'Admin dashboard'],
   ['/admin/users', 'Users'],
 ];
-const MENTEE = [['/home', 'Mentee home']];
+const MENTEE = [['/home', 'My sessions']];
 const MENTOR = [['/mentor', 'Mentor workspace'], ['/mentor/profile', 'Edit profile']];
 
 const ROLE_SETS: RoleSet[] = [

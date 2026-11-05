@@ -67,9 +67,9 @@ describe('TC-ROLES-001 a wrong-role screen sends the user to their own home', ()
       await signInAs(session, baseUrl, 'mock-mentee');
 
       for (const path of ['/mentor', '/admin', '/admin/users']) {
-        const { snapshot, url } = await visit(session, baseUrl, path, 'Mentee home');
+        const { snapshot, url } = await visit(session, baseUrl, path, 'My sessions');
         expect(url.pathname, `opening ${path}`).toBe('/home');
-        expect(snapshot).toContain('heading "Mentee home"');
+        expect(snapshot).toContain('heading "My sessions"');
         expect(snapshot).not.toContain('heading "Mentor workspace"');
         expect(snapshot).not.toContain('heading "Get ready for your first session"');
         expect(snapshot).not.toContain('heading "Dashboard"');
@@ -98,7 +98,7 @@ describe('TC-ROLES-001 a wrong-role screen sends the user to their own home', ()
 
 describe('TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07)', () => {
   const personas = [
-    { login: 'mock-mentee', home: '/home', heading: 'Mentee home', links: ['Mentee home'] },
+    { login: 'mock-mentee', home: '/home', heading: 'My sessions', links: ['My sessions'] },
     { login: 'mock-mentor', home: '/mentor', heading: 'Get ready for your first session', links: ['Mentor workspace', 'Edit profile'] },
     {
       login: 'mock-operator',

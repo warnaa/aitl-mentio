@@ -1,4 +1,4 @@
-import { House, ShieldCheck, SlidersHorizontal, UserRound, Users, type LucideIcon } from 'lucide-react';
+import { CalendarDays, ShieldCheck, SlidersHorizontal, UserRound, Users, type LucideIcon } from 'lucide-react';
 import type { Role, RoleSet } from '@devmentor/core';
 
 /** One workspace navigation link. The icon is decorative; the label names the page. */
@@ -19,7 +19,7 @@ const NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
     { href: '/admin', label: 'Admin dashboard', icon: ShieldCheck },
     { href: '/admin/users', label: 'Users', icon: Users },
   ],
-  mentee: [{ href: '/home', label: 'Mentee home', icon: House }],
+  mentee: [{ href: '/home', label: 'My sessions', icon: CalendarDays }],
   mentor: [
     { href: '/mentor', label: 'Mentor workspace', icon: SlidersHorizontal },
     { href: '/mentor/profile', label: 'Edit profile', icon: UserRound },

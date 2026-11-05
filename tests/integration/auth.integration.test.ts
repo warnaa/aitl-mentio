@@ -110,11 +110,11 @@ describe('TC-AUTH-002 GitHub sign-in lands on the role home', () => {
 
       expect(cookie).toMatchObject({ name: SESSION_COOKIE, secure: true, httpOnly: true, path: '/', sameSite: 'Lax' });
       expect((await currentUrl(session)).pathname).toBe('/home');
-      await runAgentBrowser(session, 'wait', '--text', 'Mentee home');
+      await runAgentBrowser(session, 'wait', '--text', 'My sessions');
       const home = await runAgentBrowser(session, 'snapshot');
-      expect(home).toContain('heading "Mentee home"');
+      expect(home).toContain('heading "My sessions"');
       expect(home).toContain('StaticText "Grace Hopper"');
-      expect(home).toContain('list "Your roles"');
+      expect(home).toContain('No sessions yet');
       expect(home).toContain('button "Sign out"');
       await screenshot(session, 'auth-mentee-home');
 
@@ -189,7 +189,7 @@ describe('TC-AUTH-003 an invalid session on a signed-in screen', () => {
       expect(url.searchParams.get('returnTo')).toBe('/home');
       expect(page).toContain('button "Continue with GitHub"');
       expect(page).not.toContain('Grace Hopper');
-      expect(page).not.toContain('Mentee home');
+      expect(page).not.toContain('My sessions');
       expect(page).not.toContain('mock-mentee@devmentor.test');
       await screenshot(session, 'auth-invalid-session');
     });
@@ -238,7 +238,7 @@ describe('TC-AUTH-005 sign-out ends every session, including a copied cookie', (
     // the user, so a seeded persona would also kill cookies other scenarios hold.
     await inBrowser('sign-out', async (session) => {
       const copied = await signInAs(session, baseUrl, 'mock-signout');
-      await runAgentBrowser(session, 'wait', '--text', 'Mentee home');
+      await runAgentBrowser(session, 'wait', '--text', 'My sessions');
 
       // Live: the page renders, and the operator-only API answers 403 (signed in, wrong role).
       expect(await probe(baseUrl, copied)).toEqual({ home: 200, homeLocation: null, users: 403, code: 'forbidden' });
@@ -343,7 +343,7 @@ describe('TC-AUTH-007 email registration, end to end', () => {
       const link = new URL(firstLink(mail));
       expect(link.pathname).toBe('/api/auth/verify-email');
       await runAgentBrowser(session, 'open', `${baseUrl}${link.pathname}${link.search}`);
-      await runAgentBrowser(session, 'wait', '--text', 'Mentee home');
+      await runAgentBrowser(session, 'wait', '--text', 'My sessions');
       expect((await currentUrl(session)).pathname).toBe('/home');
       const home = await runAgentBrowser(session, 'snapshot');
       expect(home).toContain('StaticText "Katherine Johnson"');
@@ -359,7 +359,7 @@ describe('TC-AUTH-007 email registration, end to end', () => {
 
       // And the password now signs in.
       await signInWithEmail(session, email, password);
-      await runAgentBrowser(session, 'wait', '--text', 'Mentee home');
+      await runAgentBrowser(session, 'wait', '--text', 'My sessions');
       expect((await currentUrl(session)).pathname).toBe('/home');
     });
   });
