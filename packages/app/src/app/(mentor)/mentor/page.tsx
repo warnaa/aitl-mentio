@@ -1,3 +1,4 @@
+import { MentorDeadline } from './MentorDeadline';
 import { RoleChips } from '../../../components/auth/SignedInShell';
 import { requirePageAccount } from '../../../lib/session';
 
@@ -15,9 +16,8 @@ export default async function MentorHomePage() {
         </p>
       </div>
       <RoleChips roles={session.roles} />
-      <p className="text-base leading-7">
-        Your mentor profile, prices and available times are not editable here yet.
-      </p>
+      <MentorDeadline />
     </section>
   );
 }
+

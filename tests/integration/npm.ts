@@ -16,13 +16,14 @@ export function npmInvocation(args: string[]): [string, string[]] {
   return isWindows ? [`npm.cmd ${args.join(' ')}`, []] : ['npm', args];
 }
 
-/** Run one npm command from the repository root and wait for it to finish. */
-export async function runNpm(args: string[], environment: NodeJS.ProcessEnv): Promise<void> {
-  await execFileAsync(...npmInvocation(args), {
+/** Run one npm command from the repository root and wait for it to finish; returns its stdout. */
+export async function runNpm(args: string[], environment: NodeJS.ProcessEnv): Promise<string> {
+  const { stdout } = await execFileAsync(...npmInvocation(args), {
     cwd: integrationRoot,
     env: environment,
     shell: isWindows,
     maxBuffer: 20 * 1024 * 1024,
     timeout: 180_000,
   });
+  return stdout;
 }

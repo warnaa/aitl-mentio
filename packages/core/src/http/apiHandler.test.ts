@@ -11,7 +11,7 @@ vi.mock('../logger', () => ({ createLogger: state.createLogger }));
 // `auth` imports the `User` entity; keep the ORM graph out of this test.
 vi.mock('@devmentor/db', () => ({ User: class User {} }));
 
-const { apiHandler, jsonError, jsonOk } = await import('./apiHandler');
+const { apiHandler, jsonError, jsonOk, loggablePath } = await import('./apiHandler');
 
 const ctx = { params: Promise.resolve({}) } as ApiRouteContext;
 
@@ -144,6 +144,18 @@ describe('apiHandler', () => {
     );
     // The logger is created lazily on the first failure and then reused.
     expect(state.createLogger).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('loggablePath', () => {
+  it.each([
+    ['http://devmentor.test/api/things', 'http://devmentor.test/api/things'],
+    ['http://devmentor.test/api/auth/github/callback?code=secret&state=s', 'http://devmentor.test/api/auth/github/callback'],
+    ['http://devmentor.test/api/invitations/raw-token', 'http://devmentor.test/api/invitations/[token]'],
+    ['http://devmentor.test/api/invitations/raw-token/accept', 'http://devmentor.test/api/invitations/[token]/accept'],
+    ['http://devmentor.test/invitation/raw-token', 'http://devmentor.test/invitation/[token]'],
+  ])('logs %s as %s', (url, logged) => {
+    expect(loggablePath(url)).toBe(logged);
   });
 });
 

@@ -24,6 +24,7 @@ import { PasswordService } from '../services/auth/password.service';
 import { readSessionCookie, SessionService } from '../services/auth/session.service';
 import { TokenService } from '../services/auth/token.service';
 import { UserService } from '../services/auth/user.service';
+import { InvitationService } from '../services/invitations/invitation.service';
 import { systemClock } from '../time/clock';
 import type { Cradle } from './cradle';
 
@@ -126,6 +127,7 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     // A forked EntityManager per scope gives each request its own identity map / UoW.
     em: asFunction(({ orm }: Cradle) => orm.em.fork()).scoped(),
     userService: asClass(UserService).scoped(),
+    invitationService: asClass(InvitationService).scoped(),
     // Scoped: it counts through the request's `em`.
     rateLimiter: asClass(RateLimiter).scoped(),
   });

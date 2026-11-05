@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   AppError,
   BadRequestError,
@@ -144,5 +144,44 @@ describe('isAppError', () => {
     expect(isAppError(new Error('plain'))).toBe(false);
     expect(isAppError({ status: 503, code: 'service_unavailable' })).toBe(false);
     expect(isAppError(undefined)).toBe(false);
+  });
+});
+
+describe('errors thrown by another copy of this module', () => {
+  // Next compiles `core` per bundle; a service may throw another copy's classes.
+  async function foreignCopy() {
+    vi.resetModules();
+    return import('./errors');
+  }
+
+  it('are still recognised by their own class and by AppError', async () => {
+    const foreign = await foreignCopy();
+    expect(foreign.NotFoundError).not.toBe(NotFoundError);
+    const error = new foreign.NotFoundError('This invitation is not valid.');
+    expect(error).toBeInstanceOf(NotFoundError);
+    expect(error).toBeInstanceOf(AppError);
+    expect(isAppError(error)).toBe(true);
+    expect(new foreign.TooManyRequestsError(5)).toBeInstanceOf(TooManyRequestsError);
+  });
+
+  it('are not mistaken for another subclass, and nothing unbranded is an AppError', async () => {
+    const foreign = await foreignCopy();
+    expect(new foreign.NotFoundError()).not.toBeInstanceOf(ForbiddenError);
+    expect(new foreign.ValidationError()).not.toBeInstanceOf(NotFoundError);
+    expect(isAppError(Object.assign(new Error('x'), { status: 404, code: 'not_found' }))).toBe(false);
+    expect(isAppError(null)).toBe(false);
+    expect(isAppError('not_found')).toBe(false);
+  });
+});
+
+describe('a subclass that declares no code of its own', () => {
+  class Unnamed extends NotFoundError {}
+
+  it('matches by prototype only, never by its inherited code', async () => {
+    vi.resetModules();
+    const foreign = await import('./errors');
+    expect(new Unnamed()).toBeInstanceOf(Unnamed);
+    expect(new NotFoundError()).not.toBeInstanceOf(Unnamed);
+    expect(new foreign.NotFoundError()).not.toBeInstanceOf(Unnamed);
   });
 });

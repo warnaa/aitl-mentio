@@ -71,10 +71,12 @@ export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
  * sign-in screen's `unverified` reason.
  */
 export class UnverifiedAccountLinkError extends AppError {
+  static override readonly code = 'account_link_unverified';
+
   constructor(
     message = 'An account with this email address exists, but the address is not verified yet. Open the verification link we emailed you, then sign in with GitHub again.',
   ) {
-    super(message, 403, 'account_link_unverified');
+    super(message, 403, UnverifiedAccountLinkError.code);
   }
 }
 
@@ -83,10 +85,12 @@ export class UnverifiedAccountLinkError extends AppError {
  * GitHub account. The existing link is never silently re-pointed; nothing changes.
  */
 export class GithubAccountConflictError extends AppError {
+  static override readonly code = 'github_account_conflict';
+
   constructor(
     message = 'This email address is already linked to a different GitHub account. Sign in with that GitHub account instead.',
   ) {
-    super(message, 409, 'github_account_conflict');
+    super(message, 409, GithubAccountConflictError.code);
   }
 }
 
@@ -101,10 +105,12 @@ export const INVALID_CREDENTIALS_MESSAGE = 'Email or password is incorrect.';
  * only *after* the password verified, so it reveals nothing to someone guessing.
  */
 export class EmailNotVerifiedError extends AppError {
+  static override readonly code = 'email_unverified';
+
   constructor(
     message = 'Confirm your email address first: open the verification link we emailed you.',
   ) {
-    super(message, 403, 'email_unverified');
+    super(message, 403, EmailNotVerifiedError.code);
   }
 }
 

@@ -13,6 +13,7 @@ const BASELINE = 'Migration20260901142829';
 const AUTH_IDENTITY = 'Migration20261102230816_auth_identity';
 const AUTH_PASSWORD = 'Migration20261103080749_auth_password';
 const AUTH_RATE_LIMIT = 'Migration20261103081334_auth_rate_limit';
+const INVITATIONS = 'Migration20261104000100_invitations';
 const DATABASE = 'devmentor_migrations';
 const IDENTITY_COLUMNS = [
   'roles',
@@ -287,8 +288,8 @@ describe('TC-MIGRATION-003 auth-rate-limit migration round trip', () => {
     await migrateTo(AUTH_PASSWORD);
     expect((await insertUser('kept@devmentor.test')).exitCode).toBe(0);
 
-    // up: the newest migration, so plain `db:migrate` is exactly this step
-    await runNpm(['run', 'db:migrate'], environment);
+    // up (pinned, like TC-MIGRATION-002, so later migrations cannot change its meaning)
+    await migrateTo(AUTH_RATE_LIMIT);
     expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY, AUTH_PASSWORD, AUTH_RATE_LIMIT]);
     expect(await rateLimitTable()).toEqual({
       columns: [
@@ -309,7 +310,86 @@ describe('TC-MIGRATION-003 auth-rate-limit migration round trip', () => {
     expect(await queryJson(`select json_agg(email) from users`)).toEqual(['kept@devmentor.test']);
 
     // up again
-    await runNpm(['run', 'db:migrate'], environment);
+    await migrateTo(AUTH_RATE_LIMIT);
     expect((await rateLimitTable()).indexes).toEqual(['auth_rate_limits_pkey', 'auth_rate_limits_window_start_index']);
+  }, 300_000);
+});
+
+/** The named constraints and indexes of `table`, in name order. */
+async function constraintsOf(table: string): Promise<string[]> {
+  return (
+    (await queryJson<string[] | null>(`
+      select json_agg(name order by name) from (
+        select conname as name from pg_constraint where conrelid = 'public.${table}'::regclass
+        union
+        select indexname from pg_indexes where schemaname = 'public' and tablename = '${table}'
+      ) named`)) ?? []
+  );
+}
+
+async function columnsOf(table: string, names: string[]): Promise<string[]> {
+  return (
+    (await queryJson<string[] | null>(`
+      select json_agg(column_name order by column_name) from information_schema.columns
+      where table_schema = 'public' and table_name = '${table}'
+        and column_name in (${names.map((name) => `'${name}'`).join(', ')})`)) ?? []
+  );
+}
+
+const userId = (email: string) => `(select id from users where email = '${email}')`;
+
+async function insertInvitation(email: string, extra = '') {
+  return psql(
+    `insert into invitations (id, created_at, updated_at, email, token_hash, stack_tags, expires_at${extra ? ', accepted_at, accepted_by_id' : ''})
+     values (gen_random_uuid(), now(), now(), '${email}', md5(random()::text), '{react}', now() + interval '14 days'${extra})`,
+  );
+}
+
+describe('TC-MIGRATION-004 invitations migration round trip', () => {
+  ownPostgres();
+
+  it('creates invitations with its constraints and the first deadline, drops both on down, and recreates them', async () => {
+    await migrateTo(AUTH_RATE_LIMIT);
+    expect((await insertUser('mentor@devmentor.test')).exitCode).toBe(0);
+    expect(
+      (await psql(`insert into mentor_profiles (id, created_at, updated_at, user_id, headline)
+        values (gen_random_uuid(), now(), now(), ${userId('mentor@devmentor.test')}, 'Kept')`)).exitCode,
+    ).toBe(0);
+
+    await migrateTo(INVITATIONS);
+    expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY, AUTH_PASSWORD, AUTH_RATE_LIMIT, INVITATIONS]);
+    expect(await constraintsOf('invitations')).toEqual([
+      'invitations_accepted_at_check',
+      'invitations_accepted_by_id_foreign',
+      'invitations_pkey',
+      'invitations_stack_tags_check',
+      'invitations_token_hash_unique',
+      'invitations_unresolved_email_unique',
+    ]);
+    expect(await columnsOf('mentor_profiles', ['initial_publish_due_at'])).toEqual(['initial_publish_due_at']);
+    expect(await queryJson(`select json_agg(initial_publish_due_at) from mentor_profiles`)).toEqual([null]);
+
+    expect((await insertInvitation('invitee@devmentor.test')).exitCode).toBe(0);
+    // One unresolved invitation per address; a resolved one does not count.
+    expect((await insertInvitation('invitee@devmentor.test')).exitCode).not.toBe(0);
+    expect(
+      (await insertInvitation('mentor@devmentor.test', `, now(), ${userId('mentor@devmentor.test')}`)).exitCode,
+    ).toBe(0);
+    expect((await insertInvitation('mentor@devmentor.test')).exitCode).toBe(0);
+    // Acceptance is all or nothing, and tags stay inside the vocabulary.
+    expect((await insertInvitation('half@devmentor.test', ', now(), null')).exitCode).not.toBe(0);
+    expect(
+      (await psql(`insert into invitations (id, created_at, updated_at, email, token_hash, stack_tags, expires_at)
+        values (gen_random_uuid(), now(), now(), 'tags@devmentor.test', 'x', '{cobol}', now())`)).exitCode,
+    ).not.toBe(0);
+
+    await runNpm(['run', 'db:migrate:down'], environment);
+    expect(await appliedMigrations()).toEqual([BASELINE, AUTH_IDENTITY, AUTH_PASSWORD, AUTH_RATE_LIMIT]);
+    expect(await queryJson(`select to_regclass('public.invitations')`)).toBeNull();
+    expect(await columnsOf('mentor_profiles', ['initial_publish_due_at'])).toEqual([]);
+    expect(await queryJson(`select json_agg(headline) from mentor_profiles`)).toEqual(['Kept']);
+
+    await migrateTo(INVITATIONS);
+    expect(await constraintsOf('invitations')).toHaveLength(6);
   }, 300_000);
 });

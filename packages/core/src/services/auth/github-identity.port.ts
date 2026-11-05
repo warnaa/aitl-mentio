@@ -75,9 +75,11 @@ export interface GithubIdentityPort {
  * callback route recognises this error and tells the user why.
  */
 export class GithubEmailUnverifiedError extends AppError {
+  static override readonly code = 'github_email_unverified';
+
   constructor(
     message = 'Your GitHub account has no verified primary email address. Verify it on GitHub, then sign in again.',
   ) {
-    super(message, 403, 'github_email_unverified');
+    super(message, 403, GithubEmailUnverifiedError.code);
   }
 }

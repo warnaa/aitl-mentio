@@ -10,6 +10,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "invite": "node --import tsx -e \"import('./scripts/invite.ts').then(m => m.main(process.argv.slice(1))).catch(error => { console.error(error.message); process.exitCode = 1; })\" --",
     "setup": "node scripts/setup/index.mjs",
     "storybook": "npm run prototype && npm run storybook --workspace @devmentor/ui --",
     "build-storybook": "npm run prototype && npm run build-storybook --workspace @devmentor/ui",
