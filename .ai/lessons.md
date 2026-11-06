@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-06 — Stripe Checkout expiry must be at least 30 minutes after provider session creation, so an already-running 30-minute booking hold cannot be reused as expires_at. Payment design must reconcile provider truth before releasing inventory; delayed webhooks and lost create responses need durable recovery. Hold-policy changes require owner confirmation.
+
 - 2026-11-06 — Documentation CI must skip application jobs rather than the entire workflow so required checks report status. Keep Lint's instruction/classifier checks mandatory; classify the whole merge-base diff with renames disabled and run the full suite on unknown paths, missing output or classification failures.
 - 2026-11-06 — User correction: keep the skill override/update process in `SDLC.md` (Amending this process); do not duplicate it in root `AGENTS.md`, which already routes delivery-pipeline work there.
 - 2026-11-06 — User correction: customize installed OM skills through the repo-local `.ai/skills/<skill>/SKILL.md` extension loaded by `references/agentic-setup.md`, not by editing `.agents/skills/`. The artifact-policy fixes already target these extensions; describe them as overrides to avoid confusion.

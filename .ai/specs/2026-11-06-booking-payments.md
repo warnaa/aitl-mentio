@@ -1,0 +1,110 @@
+# Paying for a reserved mentor session
+
+## 📝 TLDR
+Issue #41 extends #40's unpaid reservation with Stripe Checkout, verified payment confirmation and participant-visible status. Include #53 as the provider adapter task within this capability. This is a design draft: payment-window policy needs owner confirmation before implementation.
+
+## Resolved assumptions (autonomous defaults)
+
+These are proposals, not owner-approved product decisions. No money-handling implementation starts while Q1/Q2 remain unconfirmed.
+
+| ID | Proposed choice | Reason | Gate |
+| --- | --- | --- | --- |
+| Q1 | On the first Checkout attempt, replace the remaining unpaid hold with one provider-aligned payment window: 31 minutes from attempt preparation, with a cutoff at least 30 minutes before startsAt. Retries never extend that deadline. Retain occupancy until provider reconciliation proves unpaid terminal expiry or confirms payment. | An existing 30-minute hold has less than Stripe's minimum lifetime remaining. Blind lazy expiry can resell a paid session during webhook delay. This changes #40's expiry contract. | ⚠ NEEDS HUMAN CONFIRMATION from the booking/payment policy owner. |
+| Q2 | Use immediate card payments initially; do not enable delayed-settlement methods. Persist anomalous/mismatched paid events for operator reconciliation without confirming or silently discarding money received. No automatic refund is introduced. | Delayed methods and recovery/refund promises need a product policy; #41 excludes refunds. Provider outages can temporarily keep inventory reserved, which must be disclosed and accepted. | ⚠ NEEDS HUMAN CONFIRMATION from the payment policy owner. |
+| Q3 | Keep operator analytics as a separately deployable follow-on phase/spec; retain paidAt and bookedAt inputs here. Do not choose D16's official week definition. | Reporting works independently and the ticket explicitly leaves booking-week versus start-week undecided. Scope-cohesion review must keep that decision visible. | Non-blocking for Checkout; issue #41 remains incomplete until its reporting criterion is supplied. |
+| Q4 | Include #53's real adapter in this payment capability, with the SDK in the app composition layer and a vendor-neutral core port. | A mock-only implementation cannot satisfy Stripe Checkout; protected engineering standards keep core/db free of vendor SDKs. | Technical default, no rule superseded. |
+
+## Non-goals
+Connect, transfers and platform fee split; cancellation/refund policy or automatic refunds; notifications; changing approved PLN bounds; deleting reservation history; launching paid production sessions. The reporting requirement is recorded for a separate phase, not silently dropped.
+
+## 📝 Problem Statement
+Booking currently creates a pending unpaid 30-minute hold. There is no payment adapter, webhook or confirmed-booking projection. The previous spec expressly deferred payment. The ticket's suggested Checkout expiresAt cannot simply equal an already-running hold: Stripe requires expiry at least 30 minutes after Checkout creation. Releasing inventory from wall time alone can also resell a slot whose successful payment webhook is delayed.
+
+## 📝 Proposed Solution
+Create one durable payment attempt for an owned pending booking, redirect to hosted Stripe Checkout and confirm only on authenticated provider evidence that the exact snapshotted price/currency was paid. Preserve #40's historical bookings and mentor-wide exclusive time. A browser return never proves payment; a cancel redirect never proves Stripe cannot still collect money.
+
+The rejected alternative is retaining the fixed original expiry and confirming a late event anyway: a replacement mentee may already own that time. Rejecting every late event also leaves paid customers without a session and implicitly creates a refund policy. Q1 instead prevents resale while payment truth is unknown; its availability cost is an explicit owner decision.
+
+## 📝 Architecture
+Core owns PaymentGateway and PaymentService, shared schemas, typed results and transaction orchestration. The app owns a pinned Stripe SDK adapter and supplies the port through explicit composition; core must not import the app or SDK. Refactor container construction minimally to accept a gateway factory without changing request scope ownership. The mock implements the same port, including retrieval and expiry, and is available only under explicit integration-test/development configuration. Missing credentials never selects mock implicitly; production checkout/webhook fails closed. Use existing core/db zod configuration and request-scoped live sessions.
+
+Gateway operations: createCheckoutSession with durable attempt ID/idempotency key, authoritative amount/currency and server-built redirects; retrieveCheckoutSession; expireCheckoutSession; verifyWebhook with raw body/signature returning a normalized event. Do not add an unused refund method. The official SDK verifies signatures; no custom cryptographic verifier. Provider I/O uses bounded timeouts outside database row-lock transactions.
+
+Every booking/payment/slot-release writer uses mentor → slot → booking/attempt lock order. Reserving a payment creation intent makes it occupy before calling Stripe, so lazy expiry cannot release inventory while a successful create response is lost. Persist fixed request inputs and idempotency key before the call; retries recover the same session. If creation succeeds but local attachment fails, recovery retrieves/replays the same attempt rather than creating a second payable session. Recheck attempt generation and state when attaching results. An uncertain create must be reconciled before releasing occupancy.
+
+The proposed exact timing invariant is: preparation requires the original pending hold still live and ceil(now-to-seconds) + 31 minutes <= startsAt - 30 minutes. Set that fixed absolute Checkout expiry once. Refuse a new attempt if the invariant fails, and never extend it on a retry. After the one-minute creation margin, do not blindly issue a fresh create with stale expires_at. Distinguish (a) a provably unsubmitted request, which can terminalize without a provider session; (b) an ambiguous submitted request, recovered with the same idempotency key/provider evidence or escalated to review when safe replay/retrieval is unavailable; and (c) an attached session, retrieved normally. Age beyond the provider's idempotency retention is also review, never a fresh payable create. No definitive evidence means no release.
+
+Late webhooks may confirm a verified timely payment after Checkout expiry if occupancy was retained and now < startsAt. At or after startsAt, route otherwise-valid paid evidence to review instead of creating a newly confirmed past session; keep history truthful. The authorized exception path below determines the outcome. Tests cover exact creation-margin, cutoff and startsAt boundaries, including a webhook delayed through the session start. The 30-minute pre-start cutoff and exception treatment are part of Q1/Q2's proposed policy, not an existing product rule.
+
+The current in-process event bus is not durable. Commit confirmation before emitting bookings.booking.confirmed, and do not promise exactly-once downstream delivery. Durable confirmation and uniqueness are in PostgreSQL; future notification consumers need their own recovery/outbox requirement.
+
+## 📝 Data Model
+Keep Booking.status pending/confirmed/cancelled/expired, existing price/start snapshots, nullable bookedAt and existing unique stripeCheckoutSessionId. Add paidAt, unique nullable stripePaymentIntentId and amountPaidCents. Do not add slot.booking: occupancy is derived from Booking rows. Record payment anomalies separately rather than inventing an undefined payment_mismatch booking status.
+
+Add a PaymentAttempt entity under db/entities/payments with unique booking reference for this one-attempt slice, stable idempotency key, immutable creation parameters/deadline, provider session identity, lifecycle state (creating/open/confirmed/expired/review), next reconciliation time and bounded diagnostic code. Add ProcessedWebhookEvent with unique provider event ID, type, receivedAt and processing outcome; store normalized required fields only, not full customer/card payloads.
+
+Change activeOccupancy centrally: pending unexpired holds occupy as today; pending bookings with creating/open/review payment attempts remain occupied until reconciliation terminalizes them, even after local expiresAt. Preserve same-slot unique index and mentor-wide half-open interval checks. All expiry writers, occupied-slot removal and public viableLengths must use the same rule. Never release a paid mismatch automatically. History remains stored; abandoned means no confirmed session and eventual free availability after verified unpaid expiry.
+
+Generate an additive reversible migration/snapshot. New references use no-action deletion. Rollback requires disabling payment entry points, reconciling all in-flight provider sessions, exporting payment/audit data and restoring compatible application writers before dropping columns/tables. Never roll back by dropping records while provider money is unresolved.
+
+## 📝 API Contracts
+POST /api/bookings/[id]/checkout uses apiHandler, central CSRF and live mentee/session ownership guards at route and service. UUID/schema validation strips unrelated fields. Return the standard envelope with checkout URL, booking ID and effective expiry. Server decides origin from validated configured application origin, mentor slug, amount, currency and success/cancel paths. No request URL/origin controls a redirect. Retry returns the existing safe session URL without extending the payment window. Missing/foreign booking returns indistinguishable 404; wrong role 403, no session 401, terminal/expired conflict 409, unavailable provider/config typed 503.
+
+POST /api/payments/webhook uses raw text, strict body-size limit, signature verification and explicit plain Responses for all paths. The sole CSRF opt-out is this route; session cookies are not authorization for it. Invalid signature/payload returns 400; unavailable configuration returns 503; transient database/provider error returns 5xx for retry. Unsupported verified events return 2xx without state mutation. Valid domain anomalies are durably recorded and acknowledged after commit, visible to the operator. Do not acknowledge before durable processing.
+
+Process checkout.session.completed only when payment_status is paid, mode payment, provider environment/account and stored attempt/session/booking identities match, currency equals the stored normalized PLN and amount equals the immutable booking price. Handle supported expiry notifications and recovery using verified provider terminal state. Insert the event record and update booking in the same transaction; rollback both on transient failure. Event-ID uniqueness suppresses transport replay; booking/session/payment-intent uniqueness and locked transition suppress distinct event IDs describing the same charge. Emit once per committed transition in the normal execution path; crash recovery must not claim a durable event bus.
+
+A bounded reconciliation runner recovers creating/open attempts after crashes, missing webhooks and provider expiry. It uses the same idempotent transition function. Supply a local runnable entry point and document the production scheduling obligation; a browser visit is not the only recovery trigger. During provider outage do not advertise unresolved inventory as free. Test timeouts, retry backoff, eventual recovery and operator-visible overdue attempts. Deployment/scheduling are outside this run's publication authority.
+
+Review attempts also remain in the bounded reconciliation/overdue inventory; the runner may gather provider evidence but cannot invent an operator disposition. Supply an operator-only, CSRF-guarded resolution command and runbook as part of this capability, with actor/time/reason and minimal evidence IDs in an append-only resolution record. It must re-fetch provider truth outside locks, then re-lock/recheck the attempt before applying any action. Permitted dispositions: confirm only an exact fully paid matching session before startsAt with exclusive occupancy; release only a proven never-created or terminal unpaid session, or independently verified completed full refund; otherwise keep review. A partial refund, mismatched amount, unknown provider identity or inconclusive evidence cannot authorize release. Refund execution itself remains outside this implementation, and the runbook must require separately authorized external money remediation. Expose a safe participant status (payment needs review/contact support) and the recorded final outcome. Q2 must explicitly approve this manual exception responsibility before implementation; an operator view alone is insufficient.
+
+Participant read projection is owner-scoped: mentee sees their bookings in /home; mentor sees their own bookings in /mentor. No unguarded /sessions route or foreign-mentee details. An operator-only bounded query exposes unresolved reconciliation cases; no card details, webhook secrets or Checkout bearer URLs in logs. Follow-on analytics will explicitly define week boundaries/timezone, zero counts and median sample semantics before implementing the official D16 metric.
+
+## 📝 UI/UX
+Follow prototype screens s4 (booking summary), s14 (Checkout), s5 (payment recovery), s13 (conflict/expiry), s6 (/home), s11 (/mentor); operator reporting follows s24 separately. Reuse shared components and SessionIsTextNotice. Show the stored amount/currency and proposed payment window before an explicit Pay with Stripe action. Disable duplicate submits; retain selection and provide retry for provider failure. Stripe hosts payment inputs.
+
+Return to /home?booked=<id> and show checking-payment until the owned stored booking is confirmed. Success query parameters never change state. Cancel returns to /m/<slug> and explains pending payment status; freeing a session requires server reconciliation/expiry. Both parties see confirmed time, duration and truthful text-session copy. Cover loading, error, expired, no-permission, long content and 320px layout. Mockups and browser evidence remain pending; no screenshot or runtime QA has been performed for this gated draft.
+
+## 📝 Edge Cases & Failure Scenarios
+Creation timeout before/after provider commit; database failure attaching a created session; retry after the fixed expiry becomes invalid for a new creation; ambiguous create beyond idempotency retention; concurrent Checkout retries; same event replay and different event IDs for one payment; webhook before attach; paid event versus expiry/removal/new booking; payment exactly at the cutoff or webhook after session start; wrong amount/currency/environment/metadata; unpaid completed event; cancel then pay in another tab; verified unknown event; provider outage past the local deadline; process death before/after commit and before event emission. Unknown paid sessions are quarantined for reconciliation, never matched by client metadata alone. Existing pending holds without payment retain their original expiry.
+
+## 📝 Risks & Impact Review
+Risk-high: external money, new schema, changed occupancy and shared scope configuration. BACKWARD_COMPATIBILITY must document the raw webhook exception, payment-window change, optional fail-closed Stripe env values, new event and additive tables/columns. No money/QA sign-off may be self-approved. Require failure/retry/idempotency tests, real PostgreSQL concurrency and migration up/down/up, a second person's money review and manual QA approval. A successful mock suite proves application state handling, not live Stripe integration or production readiness.
+
+## 📝 Decisions in play
+D04/R05 Stripe only; R01 25/50 minutes; R03 text-session copy; R08/R21 approved mentor PLN price snapshots; R15/D22 bookedAt, paidAt and startsAt recorded without a speed promise; R10 fee split explicitly excluded; D16 official weekly counting remains owner-defined. Q1 proposes changing #40's fixed hold semantics; it does not silently amend that spec or product decisions. D13's shortened iteration is not approval to launch paid sessions without the full payout requirements.
+
+## Research
+Stripe [Checkout creation](https://docs.stripe.com/api/checkout/sessions/create) documents the minimum 30-minute lifetime from creation. Stripe [fulfillment guidance](https://docs.stripe.com/checkout/fulfillment?ui=full-page) requires idempotent processing, payment-status checks and webhooks, and describes delayed payment methods. These sources were checked on 2026-11-06. The Stripe open-source SDK boundary is reused for signature verification and API error handling; subscription, invoice and tax capabilities are excluded. This design infers the reservation mismatch from Stripe's documented lifetime and the observed #40 code; Stripe does not prescribe DevMentor's hold policy.
+
+## Acceptance criteria
+1. One owned pending booking opens at most one payable Checkout session at the stored exact price/currency; retries and crashes recover that same attempt.
+2. Only verified paid provider evidence confirms; invalid signatures, foreign scope, wrong amount/currency and unpaid completion cannot confirm.
+3. Duplicate/concurrent event delivery confirms once and records one payment intent; failures roll back retry markers with transitions.
+4. All availability/booking/removal paths preserve unresolved payment occupancy; verified unpaid expiry eventually releases it and retains history. A webhook delayed beyond local expiry cannot create a second owner of the time.
+5. Both participants see their confirmed booking; query parameters do not prove payment. Confirmed records retain bookedAt, paidAt and startsAt.
+6. Production fails closed without real payment configuration; explicit mocks are isolated from production and cannot forge confirmation there.
+7. Migration, configured gate, per-file coverage, documented integration cases and independent review run with truthful results; risk-high human review/QA remain required.
+8. Issue #41 remains open until a separate reviewed reporting definition and implementation satisfy its D16/operator analytics requirement.
+9. A new attempt cannot remain payable within 30 minutes of startsAt; creation retries do not slide the deadline. Expired creation parameters and ambiguous provider submissions follow distinct tested recovery paths. After-start paid evidence enters review.
+10. Review cases have an operator-only audited disposition workflow and participant outcome. Inconclusive payment evidence or an unauthorized caller cannot release inventory or mark payment confirmed.
+
+## 📋 Phasing
+Phase 0 confirms payment-window and exception policy. Phase 1 builds durable payment/occupancy primitives behind disabled entry points. Phase 2 supplies real Checkout and verified confirmation. Phase 3 delivers participant visibility and recovery. Phase 4 verifies and reviews. Operator analytics is a separate capability, tracked here as outstanding scope for #41.
+
+## 📋 Implementation Plan
+| Step | Work | Verification |
+| --- | --- | --- |
+| 0 | Owner confirms Q1/Q2; record exact policy and split reporting follow-on. | Confirmed assumption record; no implementation while gated. |
+| 1 | Add attempt/event entities and payment fields, reversible migration/snapshot. | Entity tests, migration up/down/up; existing reservations unchanged. |
+| 2 | Extend shared occupancy and all expiry/removal/projection consumers for unresolved attempts. | Same-slot/cross-slot races, adjacent intervals, timeout and old-hold regressions. |
+| 3 | Add vendor-neutral gateway/DI, fail-closed config and explicit mock. | Configuration, scope disposal and production/mock isolation tests. |
+| 4 | Add app Stripe SDK adapter and durable idempotent creation/recovery service. | API contract, failed/lost responses, replay/concurrency tests. |
+| 5 | Add guarded Checkout and raw verified webhook routes with atomic confirmation. | CSRF, role, IDOR, bad signature, mismatch, paid/unpaid, replay and rollback tests. |
+| 6 | Add bounded reconciliation runner and operator exception visibility. | Missing event, crash, timeout/backoff, expiry/payment races; no silent release. |
+| 7 | Add prototype-aligned payment/participant states and ownership-scoped DTOs. | Component/API and signed-out/foreign-role integration cases; browser state matrix. |
+| 8 | Update compatibility/env/README/CI/test-env configuration and security model. | Contract consumers and environment pinning checked; no secrets in records. |
+| 9 | Complete money/concurrency integration cases, coverage, full gate, independent review and QA evidence. | typecheck, lint, test, build, test:unit:coverage, test:integration; second-person money review and human QA outstanding until supplied. |
+
+## 🔍 Architectural review
+Fresh-context skeptical review requested changes: two high findings (unbounded payment timing relative to startsAt; no actionable anomaly disposition) and one medium finding (retrying expired creation inputs). The draft now specifies the pre-start cutoff/late-event review path, audited operator evidence-based disposition and separate unsubmitted/ambiguous/attached recovery cases. These additions remain explicitly gated by Q1/Q2. Scope cohesion passed: Checkout, occupancy, provider recovery and minimal participant/exception visibility form one capability; analytics is separate. Findings were addressed by the author but have not had a second independent review. Controls remain unimplemented and untested.
