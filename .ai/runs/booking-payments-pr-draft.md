@@ -4,7 +4,7 @@ Refs #71
 Tracking plan: .ai/runs/2026-11-06-booking-payments-implementation.md
 Source doc: .ai/specs/2026-11-06-booking-payments.md
 Reporting source doc: .ai/specs/2026-11-06-paid-session-reporting.md
-Status: complete
+Status: implementation complete; human money review and manual QA pending
 
 ## 🎯 Goal
 Let a mentee pay for reserved mentor time through Stripe Checkout, with verified idempotent confirmation and safe recovery when provider responses or webhooks are delayed.
@@ -29,3 +29,8 @@ D04/R05 Stripe; R08/R21 stored PLN prices; R15/D22 booking/payment/start timesta
 
 ## 📋 Progress
 See the tracking plan. Independent automated source reviews are addressed; a second person's money review and a QA reviewer must still approve this risk-high change. No merge or deployment is authorized.
+
+## Evidence
+[Final runtime and screenshots](https://github.com/warnaa/aitl-mentio/blob/feat/booking-payments/.ai/qa/PAYMENTS/2026-11-06-final-runtime.md), [coverage and scenario matrix](https://github.com/warnaa/aitl-mentio/blob/feat/booking-payments/.ai/qa/PAYMENTS/coverage.md), [manual QA instructions](https://github.com/warnaa/aitl-mentio/blob/feat/booking-payments/.ai/runs/booking-payments-manual-qa.md), and [operator runbook](https://github.com/warnaa/aitl-mentio/blob/feat/booking-payments/docs/payments-operations.md).
+
+Spec PR #71 currently has an inherited base test-runner CI failure. This implementation corrects the native Node/Vitest runner mismatch; the design-only PR remains blocked until that fix reaches its base. No green remote CI claim is made by this local verification report.

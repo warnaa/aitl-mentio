@@ -1,0 +1,5 @@
+🤖 `om-auto-fix-issue` run complete: Checkout, payment recovery and both owner-requested weekly paid-session views are implemented. Final local typecheck/lint/unit/build passed; the full Checkout integration suite passed 81 tests and the final-source scoped suite passed four cases. Automated reviews and browser evidence are recorded on this branch. Human money review and risk-high manual QA remain required. No merge or deployment occurred. Lock released.
+
+Labels: feature reflects the new payment/reporting capability; priority-medium follows issue #41; risk-high covers money, authorization and additive schema; review requests the second person's review; needs-qa preserves the required human QA gate. in-progress is removed because this autonomous run has ended. No qa-approved, self-QA, or merge-queue label is applied.
+
+Evidence: [.ai/qa/PAYMENTS/coverage.md](https://github.com/warnaa/aitl-mentio/blob/feat/booking-payments/.ai/qa/PAYMENTS/coverage.md). The paired design-only PR #71 has an inherited CI runner blocker; its fix is included here. Live Stripe charge/refund and production scheduling/deployment have not been exercised.

@@ -31,7 +31,7 @@ Money and schema are risk-high. Preserve mentor→slot lock order, immutable pay
 ### Phase 4: Verification and publication
 - [x] 4.1 Update compatibility, environment documentation, scheduling runbook and threat model. — prepared with final evidence; threat model and source designs are on PR #71.
 - [x] 4.2 Run configured gate, per-file coverage and integration suite; fix failures. — final configured gate passed; full 81-test integration plus final-source four-case scoped pass.
-- [ ] 4.3 Run independent review and browser QA; publish fully reported PRs when remote approval exists.
+- [x] 4.3 Run independent review and browser QA; publish fully reported PRs when remote approval exists. — PR #72 is ready for review with automated review, manual QA instructions, screenshots and operations evidence published. Issue/PR in-progress claims were released. Human money review, manual QA and remote CI remain separate gates.
 
 ## Verification record
 Final configured gate passed in order on 2026-11-06: typecheck, lint (zero errors), npm test (1,584 tests in 181 files plus four native Node tests), then production build including the report route. Lint had two unchanged baseline warnings and one warning in an ignored disposable QA exploration script; that script is not staged. Full per-file coverage including reporting passed 100% statements/branches/functions/lines with 1,583 tests; the later additional real-SDK signature test also passed and was included in the final 1,584-test run. No production source changed between the coverage run and final configured gate.
@@ -52,3 +52,6 @@ The backup was later nested under `.ai/qa/test-env-runtime/dependencies-backup/n
 Final pre-report full native integration run passed 81 tests in 40 files, exit0,848.86s; this includes all twelve Checkout/recovery/migration cases and the fixed concurrent-retry regression. Its build predates the additional owner-requested report, so reporting019/rejection020 and the admin consumer receive a final-source scoped native pass. The latest full unit/coverage run including reporting passed 1583 Vitest tests plus four native Node tests, with100% statements/branches/functions/lines. Typecheck and lint passed. Final-source build/browser reporting evidence was still pending at that checkpoint and subsequently passed as recorded above.
 
 Dependency audit found28 advisories (19moderate,7high,2critical), matching the unchanged base lock exactly. Stripe has no reported advisory. No unrelated dependency upgrade or audit fix was applied.
+
+## Publication outcome
+Implementation PR: https://github.com/warnaa/aitl-mentio/pull/72 (ready for review). Source design PR: https://github.com/warnaa/aitl-mentio/pull/71 (design-only; inherited native-test-runner CI blocker remains). Final labels on the implementation are feature, review, needs-qa, priority-medium and risk-high. The issue remains open pending an authorized merge. No merge, deployment, live Stripe transaction or human sign-off occurred. Owned test processes and databases were stopped; temporary worktree cleanup follows publication. No remote CI monitoring was requested.
