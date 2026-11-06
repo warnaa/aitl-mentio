@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { inject } from 'vitest';
-import { AuthRateLimit, Booking, entities, MentorProfile, MikroORM, Slot, User, type EntityManager } from '@devmentor/db';
+import { AuthRateLimit, Booking, entities, MentorProfile, MikroORM, PaymentAttempt, PaymentResolution, ProcessedWebhookEvent, Slot, User, type EntityManager } from '@devmentor/db';
 import { CSRF_HEADERS } from './mentor';
 
 export const BOOKING_START = '2099-11-06T12:00:00.000Z';
@@ -89,13 +89,24 @@ export async function withBookingFixture(caseId: string, run: (fixture: BookingF
     try {
       // FK history is deliberately restrictive: release owned bookings before their slots/accounts.
       if (profileId) {
+        const bookings = await em.find(Booking, { mentorProfile: profileId });
+        const bookingIds = bookings.map(booking => booking.id);
+        if (bookingIds.length) {
+          const attempts = await em.find(PaymentAttempt, { booking: { $in: bookingIds } });
+          const attemptIds = attempts.map(attempt => attempt.id);
+          if (attemptIds.length) await em.nativeDelete(PaymentResolution, { attempt: { $in: attemptIds } });
+          await em.nativeDelete(ProcessedWebhookEvent, { booking: { $in: bookingIds } });
+          await em.nativeDelete(PaymentAttempt, { booking: { $in: bookingIds } });
+        }
         await em.nativeDelete(Booking, { mentorProfile: profileId });
         await em.nativeDelete(Slot, { mentorProfile: profileId });
         await em.nativeDelete(MentorProfile, { id: profileId });
       }
       for (const userId of userIds) {
-        const key = `bookings:account:${createHash('sha256').update(userId).digest('hex')}`;
-        await em.nativeDelete(AuthRateLimit, { key });
+        for (const scope of ['bookings', 'checkout']) {
+          const key = `${scope}:account:${createHash('sha256').update(userId).digest('hex')}`;
+          await em.nativeDelete(AuthRateLimit, { key });
+        }
       }
       // Include partially created OAuth personas when setup failed before collecting their IDs.
       await em.nativeDelete(User, { githubLogin: { $in: logins } });

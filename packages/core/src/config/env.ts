@@ -113,6 +113,9 @@ const appEnvSchema = z
     // Transactional mail over Resend's HTTP API (consumed from Slice 4).
     MAIL_API_KEY: optional(z.string()),
     MAIL_FROM: optional(z.string()),
+    PAYMENT_GATEWAY_ADAPTER: z.preprocess(blankAsUnset, z.enum(['stripe', 'mock']).default('stripe')),
+    STRIPE_SECRET_KEY: optional(z.string()),
+    STRIPE_WEBHOOK_SECRET: optional(z.string()),
   })
   .superRefine((env, ctx) => {
     if (env.INTEGRATION_TEST_RUN) {
@@ -133,6 +136,9 @@ const appEnvSchema = z
         message:
           'MAILER_ADAPTER=log never delivers mail; it is refused unless INTEGRATION_TEST_RUN=1',
       });
+    }
+    if (env.PAYMENT_GATEWAY_ADAPTER === 'mock') {
+      ctx.addIssue({ code: 'custom', path: ['PAYMENT_GATEWAY_ADAPTER'], message: 'Mock payments are refused unless INTEGRATION_TEST_RUN=1' });
     }
   });
 

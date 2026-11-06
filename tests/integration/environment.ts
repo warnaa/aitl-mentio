@@ -27,6 +27,11 @@ export function integrationChildEnvironment(databaseUrl: string, appUrl?: string
     SESSION_SECRET: randomBytes(32).toString('base64url'),
     // The mock GitHub adapter is accepted only together with the run signal.
     AUTH_IDENTITY_ADAPTER: 'mock',
+    // The payment fake is explicit and isolated by INTEGRATION_TEST_RUN; absent
+    // provider secrets must never choose a fake in ordinary production.
+    PAYMENT_GATEWAY_ADAPTER: 'mock',
+    STRIPE_SECRET_KEY: '',
+    STRIPE_WEBHOOK_SECRET: '',
     // Verification mail becomes a `mail.sent` line in app.log, read by `waitForMail`.
     MAILER_ADAPTER: 'log',
     INTEGRATION_TEST_RUN: '1',

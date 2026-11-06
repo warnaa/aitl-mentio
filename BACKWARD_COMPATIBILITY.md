@@ -53,6 +53,11 @@ a different GitHub account). An `AppError` may carry optional
 
 **Routes in place:**
 
+- `POST /api/payments/webhook` is a new deliberate non-enveloped exception: bounded raw signed body, plain 200 after durable handling, plain 400 for invalid input/signature, 503 for unavailable configuration/provider and 500 for transient processing failure. It is the only mutation with `apiHandler` CSRF disabled; Stripe's verified signature replaces browser-session authorization. Browser success/cancel redirects never mutate payment state.
+- `GET /api/bookings?role=mentee|mentor` is a bounded role-and-owner-scoped participant projection (default mentee); `POST /api/bookings/[id]/checkout` is owned mentee-only. Operator payment review/reconciliation/resolution routes require a live operator session and standard CSRF on mutations.
+- `GET /api/payments/report` is a new operator-only aggregate. It returns both weekly views, recorded-payment total and valid-timing median for one server-derived twelve-booking-week cohort in Europe/Warsaw. No participant/provider identities are returned; callback delivery cannot multiply a booking row. Both week definitions remain labelled observations rather than a selected official D16 metric.
+- Starting Checkout changes the original unpaid hold once: its immutable 31-minute payment window ends at least 30 minutes before session start, and unresolved provider state retains occupancy until verified terminal resolution. Q1/Q2 were owner-approved on 2026-11-06. Existing unpaid holds without payment attempts retain their original 30-minute expiry. Expired history is retained rather than deleted. All booking/removal/public-availability consumers share the payment occupancy rule.
+
 - `GET /api/health`: a plain JSON probe, not enveloped:
   `{ status: "ok", app, environment, database: "up" | "down", databaseError? }`, HTTP
   200 even when the database is down. `tests/integration/global-setup.ts` polls it and
@@ -193,6 +198,8 @@ the change spans several concepts; note it in the PR body.
 
 ### 3. Database schema, migrations, and seed data (`packages/db/`)
 
+Payments add `payment_attempts` (one immutable provider attempt per booking with submission/rejection counters and indexed reconciliation state), `processed_webhook_events` (unique event identity/outcome), and `payment_resolutions` (operator evidence/audit). Bookings gain nullable payment identity/amount/time fields and `payment_pending` default false. Existing rows remain unpaid. Preserve history and unique payment/session identities; use the generated reversible migrations. Before rollback, stop payment entry, reconcile all provider sessions and export payment/audit history; do not drop unresolved money records. See `docs/payments-operations.md`.
+
 - Tables: `users` (`id` uuid, `created_at`, `updated_at`, `email` unique,
   `display_name`, `roles` `text[]` default `{mentee}` under the `users_roles_check`
   constraint, `github_id` unique, `github_login`, `avatar_url`, `email_verified_at`,
@@ -230,6 +237,8 @@ and the integration test updated together; `risk-high` plus `needs-qa` per `SDLC
 
 ### 4. Configuration and environment
 
+Payment configuration adds `PAYMENT_GATEWAY_ADAPTER` default `stripe`, optional `STRIPE_SECRET_KEY` and optional `STRIPE_WEBHOOK_SECRET`. Payment calls fail closed without required credentials. A mock requires both explicit `PAYMENT_GATEWAY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`, matching the existing harness boundary. These app-only values do not alter db's connection schema; CI and child integration environments pin them to synthetic settings.
+
 Variables, as listed in `.env.example`: `NODE_ENV`, `APP_NAME`, `LOG_LEVEL`,
 `DATABASE_URL` (takes precedence), `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`,
 `DB_PASSWORD`, `DB_POOL_MIN`, `DB_POOL_MAX`, `DB_POOL_IDLE_MS`, `DB_DEBUG`. Two zod
@@ -247,6 +256,8 @@ changing a default in a way that changes runtime behavior; dropping the
 harness environment updated in the same PR; a default wherever one is sensible.
 
 ### 5. npm scripts and CI check names
+
+`payments:reconcile` is a new bounded CLI recovery entry point. An external scheduler must invoke it every minute before paid traffic is enabled. Existing command/job names remain unchanged. Unit commands now run the CI classifier's native Node suite explicitly before Vitest; Vitest excludes that native test file from its own incompatible discovery. No test assertion is skipped.
 
 The root `package.json` scripts are this repository's command-line interface. They are
 referenced by `README.md`, `AGENTS.md`, `.github/workflows/ci.yml`,
@@ -267,6 +278,8 @@ to the full suite. Workflow/configuration, MDX and unknown changes run all check
 maintainer updates the ruleset before the PR merges, otherwise the PR blocks itself.
 
 ### 6. Domain events (`packages/core/src/events/event-map.ts`)
+
+`bookings.booking.confirmed` adds `{ bookingId: string }`, emitted after the durable payment-confirmation transaction commits. The existing in-process emitter offers no durable downstream delivery; future consumers must not infer a notification queue or exactly-once external delivery from payment idempotency.
 
 Event ids follow `concept.entity.action`. Today: `auth.user.created` with payload
 `{ userId, email }`, and `auth.user.roles_changed` with payload

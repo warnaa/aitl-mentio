@@ -1,0 +1,40 @@
+- generic
+  - link "Skip to content" [ref=e1]
+  - complementary
+    - generic
+      - StaticText "DevMentorWorkspace"
+    - navigation "Workspace navigation" [ref=e2]
+      - link "My sessions" [ref=e6]
+    - generic
+      - StaticText "Signed in as"
+      - strong
+        - StaticText "report-observe-2636-mentee"
+  - banner
+    - StaticText "Your DevMentor workspace"
+    - button "Sign out" [ref=e3]
+      - StaticText "Sign out"
+  - main
+    - heading "My sessions" [level=1, ref=e4]
+    - region "Your bookings" [ref=e5]
+      - heading "Your bookings" [level=2, ref=e7]
+      - button "Check payment status" [ref=e8]
+        - StaticText "Check payment status"
+      - heading "Session with A deliberately long synthetic mentor name for payment reconciliation" [level=3, ref=e9]
+        - StaticText "Session with A deliberately long synthetic mentor name for payment reconciliation"
+      - StaticText "Pending"
+      - paragraph
+        - StaticText "Starts: "
+        - time
+          - StaticText "6 Nov 2099, 13:00 (Europe/Warsaw)"
+      - paragraph
+        - StaticText "25-minute text session"
+      - paragraph
+        - StaticText "PLN80"
+      - status
+        - StaticText "Your payment needs review. Contact support with booking reference "
+        - code
+          - StaticText "ba779110-0674-4c19-822c-986efdfb1ace"
+        - StaticText ". This session is not confirmed."
+      - paragraph
+        - StaticText "Sessions are text. DevMentor makes no promise about how soon an answer arrives."
+- alert

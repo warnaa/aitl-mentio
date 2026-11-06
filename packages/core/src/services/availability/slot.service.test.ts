@@ -80,7 +80,7 @@ it('refuses removal of an actively reserved slot after taking its row lock', asy
   await expect(service().remove('11111111-1111-4111-8111-111111111111')).rejects.toMatchObject({ status: 409 });
   expect(slot.removedAt).toBeNull();
   expect(flush).not.toHaveBeenCalled();
-  expect(findOne).toHaveBeenLastCalledWith('Booking', { slot: 'slot', $or: [{ status: 'confirmed' }, { status: 'pending', expiresAt: { $gt: now } }] });
+  expect(findOne).toHaveBeenLastCalledWith('Booking', { slot: 'slot', $or: [{ status: 'confirmed' }, { status: 'pending', expiresAt: { $gt: now } }, { status: 'pending', paymentPending: true }] });
 });
 
 

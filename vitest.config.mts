@@ -16,6 +16,8 @@ export default defineConfig({
       'scripts/**/*.test.ts',
     ],
     exclude: [
+      // Native node:test suite is run explicitly by the npm unit commands.
+      'scripts/ci/change-scope.test.mjs',
       'tests/integration/**',
       '**/.next/**',
       '**/node_modules/**',
@@ -26,6 +28,17 @@ export default defineConfig({
       // Entries are globs: escape the parentheses of a Next route group (`\\(auth\\)`),
       // or `(auth)` is read as a group matching `auth` and the file silently drops out.
       include: [
+        'packages/core/src/services/payments/**/*.ts',
+        'packages/core/src/validators/payments/*.ts',
+        'packages/db/src/entities/payments/*.ts',
+        'packages/db/migrations/Migration20261106100812_payments.ts',
+        'packages/db/migrations/Migration20261106132627_payment_submissions.ts',
+        'packages/app/src/lib/payments/*.ts',
+        'packages/app/src/app/api/payments/**/route.ts',
+        'packages/app/src/app/api/bookings/\\[id\\]/checkout/route.ts',
+        'packages/app/src/components/sessions/*.tsx',
+        'packages/app/src/app/admin/PaymentReview.tsx',
+        'packages/app/src/app/admin/PaidSessionsReport.tsx',
         'packages/db/src/entities/bookings/booking.entity.ts',
         'packages/core/src/services/bookings/booking.service.ts',
         'packages/app/src/app/api/bookings/route.ts',

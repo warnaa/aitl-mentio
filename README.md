@@ -1,5 +1,11 @@
 # DevMentor
 
+## Paying for reserved sessions
+
+Checkout uses Stripe with `PAYMENT_GATEWAY_ADAPTER=stripe` (the default), `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. Missing credentials disable payment operations without selecting a fake provider. Explicit synthetic tests require both `PAYMENT_GATEWAY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`; never enable the test harness for paid production traffic. Stripe SDK code lives in the app composition layer behind core's payment port.
+
+Register the payment webhook for Checkout completion/expiry in deployment configuration and run `npm run payments:reconcile` every minute through an external scheduler before enabling paid traffic. This repository change provisions neither a public webhook nor a scheduler. See [payment recovery and rollback operations](docs/payments-operations.md) for provider outages, stuck attempts, operator exceptions and rollback prerequisites. Both participants see booking status in their existing workspaces. The operator sees both booking-week and session-start-week counts plus the booking-to-start median; neither view selects D16's official weekly definition.
+
 A platform connecting developers with experienced mentors. Built as an
 npm-workspaces monorepo on Next.js 16 + React 19 + TypeScript, with PostgreSQL via
 MikroORM v7, awilix for dependency injection, Tailwind CSS for public pages, and

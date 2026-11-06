@@ -41,7 +41,7 @@ export class BookingService {
       const slot = await em.findOne(Slot, { id: data.slotId, mentorProfile: mentorProfile.id, removedAt: null }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
       if (!slot) throw new NotFoundError('Slot not found');
       const now = this.deps.clock.now();
-      await em.nativeUpdate(Booking, { mentorProfile: mentorProfile.id, status: 'pending', expiresAt: { $lte: now } }, { status: 'expired', updatedAt: now });
+      await em.nativeUpdate(Booking, { mentorProfile: mentorProfile.id, status: 'pending', paymentPending: false, expiresAt: { $lte: now } }, { status: 'expired', updatedAt: now });
       const occupant = await em.findOne(Booking, { slot: slot.id, ...activeOccupancy(now) }, { refresh: true });
       if (occupant) {
         if (occupant.status === 'pending' && occupant.mentee.id === userId && occupant.lengthMinutes === data.lengthMinutes) {
@@ -62,7 +62,7 @@ export class BookingService {
         priceCents: (data.lengthMinutes === 25 ? mentorProfile.price25Cents : mentorProfile.price50Cents)!,
         currency: settings.currency, status: 'pending', startsAt: slot.startsAt,
         bookedAt: null, expiresAt: new Date(now.getTime() + HOLD_MINUTES * MINUTE_MS),
-        stripeCheckoutSessionId: null, createdAt: now, updatedAt: now,
+        stripeCheckoutSessionId: null, stripePaymentIntentId: null, paidAt: null, amountPaidCents: null, paymentPending: false, createdAt: now, updatedAt: now,
       });
       em.persist(booking);
       await em.flush();

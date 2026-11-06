@@ -5,6 +5,8 @@ import userEvent from '@testing-library/user-event';
 import { apiCall, type ApiResult } from '@devmentor/ui/backend';
 import { SlotPicker, type SlotPickerProps } from './SlotPicker';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 vi.mock('@devmentor/ui/backend', async original => ({
   ...(await original<typeof import('@devmentor/ui/backend')>()), apiCall: vi.fn(),
 }));

@@ -38,6 +38,6 @@ Browser sessions close in finally (or the existing inBrowser wrapper), with fail
 
 ## Verification and review
 
-- **Latest execution:** Not run in this invocation as of 2026-11-05. Selected for the pending `npm run test:integration` full-suite execution; this documentation task does not execute tests.
-- **Observed result and evidence:** No execution result is claimed. Setup, actions and expected assertions were checked against the exact linked TypeScript case. Runtime screenshots/logs, when produced, remain in ignored [integration artifacts](../../../test-results/integration/).
+- **Latest execution:** Passed on2026-11-06 in both the81-test full run and the final-source scoped native report/rejection/report-API/admin run (four files/four tests,38.73s).
+- **Observed result and evidence:** Existing dashboard/users assertions passed after adding the report consumer. Report contents and state matrix are separately verified in the [payment final runtime report](../PAYMENTS/2026-11-06-final-runtime.md); this historical admin smoke test does not assert every new reporting value.
 - **Human review:** Pending; automation and agent review do not establish human review.

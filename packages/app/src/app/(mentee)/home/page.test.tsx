@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
-import { EmptyState } from '@devmentor/ui/backend';
+import { BookingsPanel } from '../../../components/sessions/BookingsPanel';
 import { admit, deny, GuardRedirect, guards } from '../../../test/page-guards';
 import { findByType, textOf } from '../../../test/element-tree';
 
@@ -24,14 +24,12 @@ describe('/home', () => {
     expect(guards.requirePageAccount).toHaveBeenCalledExactlyOnceWith('mentee', '/home');
   });
 
-  it('is the s6 My sessions workspace in its first-use state, without a link to an unbuilt catalogue', async () => {
+  it('is the s6 My sessions workspace with an authenticated booking projection', async () => {
     const tree = await render();
 
     expect((tree.props as { className: string }).className).toBe('dm-product-stack');
     expect(textOf(findByType(tree, 'h1'))).toBe('My sessions');
-    const empty = findByType(tree, EmptyState);
-    expect(empty.props.title).toBe('No sessions yet');
-    expect(empty.props.action).toBeUndefined();
+    expect(findByType(tree, BookingsPanel).props.persona).toBe('mentee');
   });
 
   it.each(['/sign-in?returnTo=%2Fhome', '/mentor'])('renders nothing when the guard redirects to %s', async (location) => {

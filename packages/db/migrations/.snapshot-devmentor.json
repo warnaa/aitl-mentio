@@ -91,6 +91,23 @@
       "name": "bookings",
       "schema": "public",
       "columns": {
+        "amount_paid_cents": {
+          "name": "amount_paid_cents",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
         "booked_at": {
           "name": "booked_at",
           "type": "timestamptz(6)",
@@ -133,16 +150,14 @@
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": null,
+          "length": 3,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "PLN"
-          ],
-          "mappedType": "enum"
+          "enumItems": [],
+          "mappedType": "string"
         },
         "expires_at": {
           "name": "expires_at",
@@ -229,6 +244,40 @@
           "enumItems": [],
           "mappedType": "uuid"
         },
+        "paid_at": {
+          "name": "paid_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "payment_pending": {
+          "name": "payment_pending",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
         "price_cents": {
           "name": "price_cents",
           "type": "int",
@@ -253,7 +302,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": true,
+          "unique": false,
           "length": null,
           "precision": null,
           "scale": null,
@@ -288,22 +337,34 @@
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": null,
+          "length": 16,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "pending",
-            "confirmed",
-            "cancelled",
-            "expired"
-          ],
-          "mappedType": "enum"
+          "enumItems": [],
+          "mappedType": "string"
         },
         "stripe_checkout_session_id": {
           "name": "stripe_checkout_session_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "stripe_payment_intent_id": {
+          "name": "stripe_payment_intent_id",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -339,15 +400,13 @@
       },
       "indexes": [
         {
-          "columnNames": [
-            "slot_id"
-          ],
+          "columnNames": [],
           "composite": false,
           "constraint": false,
           "keyName": "bookings_active_slot_unique",
           "primary": false,
-          "unique": true,
-          "where": "(status)::text = ANY ((ARRAY['pending'::character varying, 'confirmed'::character varying])::text[])"
+          "unique": false,
+          "expression": "create unique index \"bookings_active_slot_unique\" on \"bookings\" (\"slot_id\") where status in ('pending', 'confirmed')"
         },
         {
           "columnNames": [
@@ -379,37 +438,46 @@
           "keyName": "bookings_stripe_checkout_session_id_unique",
           "primary": false,
           "unique": true
+        },
+        {
+          "columnNames": [
+            "stripe_payment_intent_id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "bookings_stripe_payment_intent_id_unique",
+          "primary": false,
+          "unique": true
         }
       ],
       "checks": [
         {
           "name": "bookings_currency_check",
-          "expression": "\"currency\" in ('PLN')",
-          "definition": "check (\"currency\" in ('PLN'))",
+          "expression": "currency = 'PLN'",
+          "definition": "check (currency = 'PLN')",
           "columnName": "currency"
         },
         {
           "name": "bookings_length_minutes_check",
-          "expression": "length_minutes = ANY (ARRAY[25, 50])",
-          "definition": "CHECK ((length_minutes = ANY (ARRAY[25, 50])))",
+          "expression": "length_minutes in (25, 50)",
+          "definition": "check (length_minutes in (25, 50))",
           "columnName": "length_minutes"
         },
         {
           "name": "bookings_pending_expiry_check",
-          "expression": "(status <> 'pending'::text) OR (expires_at IS NOT NULL)",
-          "definition": "CHECK ((((status)::text <> 'pending'::text) OR (expires_at IS NOT NULL)))",
-          "columnName": "expires_at"
+          "expression": "status <> 'pending' or expires_at is not null",
+          "definition": "check (status <> 'pending' or expires_at is not null)"
         },
         {
           "name": "bookings_price_cents_check",
           "expression": "price_cents > 0",
-          "definition": "CHECK ((price_cents > 0))",
+          "definition": "check (price_cents > 0)",
           "columnName": "price_cents"
         },
         {
           "name": "bookings_status_check",
-          "expression": "\"status\" in ('pending', 'confirmed', 'cancelled', 'expired')",
-          "definition": "check (\"status\" in ('pending', 'confirmed', 'cancelled', 'expired'))",
+          "expression": "status in ('pending', 'confirmed', 'cancelled', 'expired')",
+          "definition": "check (status in ('pending', 'confirmed', 'cancelled', 'expired'))",
           "columnName": "status"
         }
       ],
@@ -530,7 +598,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": true,
+          "unique": false,
           "length": 255,
           "precision": null,
           "scale": null,
@@ -682,28 +750,26 @@
           "unique": true
         },
         {
-          "columnNames": [
-            "email"
-          ],
+          "columnNames": [],
           "composite": false,
           "constraint": false,
           "keyName": "invitations_unresolved_email_unique",
           "primary": false,
-          "unique": true,
-          "where": "(accepted_at IS NULL) AND (revoked_at IS NULL)"
+          "unique": false,
+          "expression": "create unique index \"invitations_unresolved_email_unique\" on \"invitations\" (\"email\") where accepted_at is null and revoked_at is null"
         }
       ],
       "checks": [
         {
           "name": "invitations_accepted_at_check",
-          "expression": "(accepted_at IS NULL) = (accepted_by_id IS NULL)",
-          "definition": "CHECK (((accepted_at IS NULL) = (accepted_by_id IS NULL)))",
+          "expression": "(accepted_at is null) = (accepted_by_id is null)",
+          "definition": "check ((accepted_at is null) = (accepted_by_id is null))",
           "columnName": "accepted_at"
         },
         {
           "name": "invitations_stack_tags_check",
-          "expression": "(array_position(stack_tags, NULL::text) IS NULL) AND (stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text])",
-          "definition": "CHECK (((array_position(stack_tags, NULL::text) IS NULL) AND (stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text])))",
+          "expression": "array_position(stack_tags, null) is null and stack_tags <@ array['typescript', 'react', 'python', 'ai-agents']::text[]",
+          "definition": "check (array_position(stack_tags, null) is null and stack_tags <@ array['typescript', 'react', 'python', 'ai-agents']::text[])",
           "columnName": "stack_tags"
         }
       ],
@@ -1019,25 +1085,24 @@
         {
           "name": "mentor_profiles_price_25_cents_check",
           "expression": "price_25_cents > 0",
-          "definition": "CHECK ((price_25_cents > 0))",
+          "definition": "check (price_25_cents > 0)",
           "columnName": "price_25_cents"
         },
         {
           "name": "mentor_profiles_price_50_cents_check",
           "expression": "price_50_cents > 0",
-          "definition": "CHECK ((price_50_cents > 0))",
+          "definition": "check (price_50_cents > 0)",
           "columnName": "price_50_cents"
         },
         {
           "name": "mentor_profiles_published_slug_check",
-          "expression": "(published_at IS NULL) OR (slug IS NOT NULL)",
-          "definition": "CHECK (((published_at IS NULL) OR (slug IS NOT NULL)))",
-          "columnName": "published_at"
+          "expression": "published_at is null or slug is not null",
+          "definition": "check (published_at is null or slug is not null)"
         },
         {
           "name": "mentor_profiles_stack_tags_check",
-          "expression": "(stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text]) AND (array_position(stack_tags, NULL::text) IS NULL)",
-          "definition": "CHECK (((stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text]) AND (array_position(stack_tags, NULL::text) IS NULL)))",
+          "expression": "stack_tags <@ array['typescript','react','python','ai-agents']::text[] and array_position(stack_tags, null) is null",
+          "definition": "check (stack_tags <@ array['typescript','react','python','ai-agents']::text[] and array_position(stack_tags, null) is null)",
           "columnName": "stack_tags"
         }
       ],
@@ -1054,6 +1119,728 @@
           ],
           "referencedTableName": "public.users",
           "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "payment_attempts",
+      "schema": "public",
+      "columns": {
+        "booking_id": {
+          "name": "booking_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "cancel_url": {
+          "name": "cancel_url",
+          "type": "varchar(2048)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 2048,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "diagnostic_code": {
+          "name": "diagnostic_code",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "next_reconciliation_at": {
+          "name": "next_reconciliation_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "rejected_submission_count": {
+          "name": "rejected_submission_count",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "state": {
+          "name": "state",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "submission_count": {
+          "name": "submission_count",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "success_url": {
+          "name": "success_url",
+          "type": "varchar(2048)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 2048,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "booking_id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "payment_attempts_booking_id_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "idempotency_key"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "payment_attempts_idempotency_key_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "payment_attempts_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "state",
+            "next_reconciliation_at"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "payment_attempts_reconciliation_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "session_id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "payment_attempts_session_id_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "payment_attempts_state_check",
+          "expression": "state in ('creating', 'open', 'confirmed', 'expired', 'review')",
+          "definition": "check (state in ('creating', 'open', 'confirmed', 'expired', 'review'))",
+          "columnName": "state"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "payment_attempts_booking_id_foreign": {
+          "columnNames": [
+            "booking_id"
+          ],
+          "constraintName": "payment_attempts_booking_id_foreign",
+          "localTableName": "public.payment_attempts",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.bookings"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "payment_resolutions",
+      "schema": "public",
+      "columns": {
+        "action": {
+          "name": "action",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "actor_id": {
+          "name": "actor_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "attempt_id": {
+          "name": "attempt_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "payment_intent_id": {
+          "name": "payment_intent_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "reason": {
+          "name": "reason",
+          "type": "varchar(500)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 500,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "payment_resolutions_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "payment_resolutions_action_check",
+          "expression": "action in ('confirm', 'release')",
+          "definition": "check (action in ('confirm', 'release'))",
+          "columnName": "action"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "payment_resolutions_actor_id_foreign": {
+          "columnNames": [
+            "actor_id"
+          ],
+          "constraintName": "payment_resolutions_actor_id_foreign",
+          "localTableName": "public.payment_resolutions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users"
+        },
+        "payment_resolutions_attempt_id_foreign": {
+          "columnNames": [
+            "attempt_id"
+          ],
+          "constraintName": "payment_resolutions_attempt_id_foreign",
+          "localTableName": "public.payment_resolutions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.payment_attempts"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "processed_webhook_events",
+      "schema": "public",
+      "columns": {
+        "booking_id": {
+          "name": "booking_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "event_id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "processed_webhook_events_event_id_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "processed_webhook_events_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {
+        "processed_webhook_events_booking_id_foreign": {
+          "columnNames": [
+            "booking_id"
+          ],
+          "constraintName": "processed_webhook_events_booking_id_foreign",
+          "localTableName": "public.processed_webhook_events",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.bookings"
         }
       },
       "comment": null
@@ -1103,7 +1890,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": true,
+          "unique": false,
           "length": null,
           "precision": null,
           "scale": null,
@@ -1167,16 +1954,13 @@
       },
       "indexes": [
         {
-          "columnNames": [
-            "mentor_profile_id",
-            "starts_at"
-          ],
-          "composite": true,
+          "columnNames": [],
+          "composite": false,
           "constraint": false,
           "keyName": "slots_active_mentor_start_unique",
           "primary": false,
-          "unique": true,
-          "where": "removed_at IS NULL"
+          "unique": false,
+          "expression": "create unique index \"slots_active_mentor_start_unique\" on \"slots\" (\"mentor_profile_id\", \"starts_at\") where removed_at is null"
         },
         {
           "columnNames": [
@@ -1462,8 +2246,8 @@
       "checks": [
         {
           "name": "users_roles_check",
-          "expression": "(cardinality(roles) > 0) AND (array_ndims(roles) = 1) AND (array_position(roles, NULL::text) IS NULL) AND (roles <@ ARRAY['mentee'::text, 'mentor'::text, 'operator'::text])",
-          "definition": "CHECK (((cardinality(roles) > 0) AND (array_ndims(roles) = 1) AND (array_position(roles, NULL::text) IS NULL) AND (roles <@ ARRAY['mentee'::text, 'mentor'::text, 'operator'::text])))",
+          "expression": "cardinality(roles) > 0 and array_ndims(roles) = 1 and array_position(roles, null) is null and roles <@ array['mentee', 'mentor', 'operator']::text[]",
+          "definition": "check (cardinality(roles) > 0 and array_ndims(roles) = 1 and array_position(roles, null) is null and roles <@ array['mentee', 'mentor', 'operator']::text[])",
           "columnName": "roles"
         }
       ],

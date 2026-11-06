@@ -122,6 +122,9 @@ jobs:
       PLATFORM_PRICE_BOUNDS: '{"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}'
       INVITATION_TTL_DAYS: '14'
       MENTOR_PUBLISH_WINDOW_DAYS: '14'
+      PAYMENT_GATEWAY_ADAPTER: 'mock'
+      STRIPE_SECRET_KEY: ''
+      STRIPE_WEBHOOK_SECRET: ''
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v7

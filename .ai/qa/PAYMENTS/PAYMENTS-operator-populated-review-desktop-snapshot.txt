@@ -1,0 +1,120 @@
+- generic
+  - link "Skip to content" [ref=e1]
+  - complementary
+    - StaticText "DevMentor"
+    - StaticText "Workspace"
+    - navigation "Workspace navigation" [ref=e2]
+      - link "Operator home" [ref=e10]
+      - link "Users" [ref=e11]
+      - link "Mentor workspace" [ref=e12]
+      - link "Edit profile" [ref=e13]
+    - StaticText "Signed in as"
+    - strong
+      - StaticText "Margaret Hamilton"
+  - banner
+    - StaticText "Your DevMentor workspace"
+    - button "Sign out" [ref=e3]
+      - StaticText "Sign out"
+  - main
+    - paragraph
+      - StaticText "OPERATIONS"
+    - heading "Operator workspace" [level=1, ref=e4]
+    - paragraph
+      - StaticText "Open the user directory to review accounts and their assigned roles."
+    - heading "Account access" [level=2, ref=e5]
+    - paragraph
+      - StaticText "Roles come from account records, invitations and operator configuration. Users cannot assign themselves a role."
+    - link "View users" [ref=e6]
+    - heading "Service status" [level=2, ref=e7]
+    - group "DevMentor instance"
+      - StaticText "Environment: production"
+      - StaticText "Connected"
+    - paragraph
+      - StaticText "Database connection, checked when this page loads."
+    - region "Paid session report" [ref=e8]
+      - heading "Recorded paid sessions" [level=2, ref=e14]
+      - button "Refresh paid session report" [ref=e15]
+        - StaticText "Refresh paid session report"
+      - paragraph
+        - StaticText "Payments recorded since 2026-08-17, covering twelve booking weeks in Europe/Warsaw. The current booking week is partial."
+      - paragraph
+        - StaticText "Recorded paid sessions: "
+        - strong
+          - StaticText "2"
+      - paragraph
+        - StaticText "Median booking-to-start: "
+        - strong
+          - StaticText "5,130 minutes"
+        - StaticText " (2 sessions with valid timing)."
+      - heading "By booking week" [level=3, ref=e16]
+      - table "By booking week"
+        - caption
+          - StaticText "By booking week"
+        - rowgroup
+          - row
+            - columnheader "Week beginning" [ref=e31]
+            - columnheader "Sessions" [ref=e32]
+        - row
+          - rowheader "2026-10-26" [ref=e22]
+          - cell "1" [ref=e23]
+        - row
+          - rowheader "2026-11-02" [ref=e24]
+          - cell "1" [ref=e25]
+      - heading "By session-start week" [level=3, ref=e17]
+      - table "By session-start week"
+        - caption
+          - StaticText "By session-start week"
+        - rowgroup
+          - row
+            - columnheader "Week beginning" [ref=e33]
+            - columnheader "Sessions" [ref=e34]
+        - row
+          - rowheader "2026-11-02" [ref=e26]
+          - cell "2" [ref=e27]
+      - paragraph
+        - StaticText "Both views use the same recorded payments; the session-start view can include future weeks. These are recorded full payments, with refunds not subtracted. Neither week definition has been selected as the official target."
+    - region "Payment reconciliation" [ref=e9]
+      - heading "Payments needing review" [level=2, ref=e18]
+      - button "Refresh payment review" [ref=e19]
+        - StaticText "Refresh payment review"
+      - paragraph
+        - StaticText "Unresolved payments keep the mentor time reserved. Check the provider evidence before recording an outcome."
+      - heading "Booking ba779110-0674-4c19-822c-986efdfb1ace" [level=3, ref=e20]
+        - StaticText "Booking "
+        - code
+          - StaticText "ba779110-0674-4c19-822c-986efdfb1ace"
+      - paragraph
+        - StaticText "Payment state: review"
+      - paragraph
+        - StaticText "amount_mismatch"
+      - paragraph
+        - StaticText "Stripe Checkout reference: "
+        - code
+          - StaticText "cs_mock_723c4bc5-9f09-4c4a-b300-5f7a385b241c"
+      - paragraph
+        - StaticText "Created: "
+        - time
+          - StaticText "6 Nov 2026, 15:15 (Europe/Warsaw)"
+      - paragraph
+        - StaticText "Next check: "
+        - time
+          - StaticText "6 Nov 2026, 15:16 (Europe/Warsaw)"
+      - form "Resolve payment for ba779110-0674-4c19-822c-986efdfb1ace"
+        - LabelText
+          - StaticText "Verified outcome"
+          - combobox "Verified outcome" [expanded=false, ref=e28]: Confirm a matching paid booking
+            - MenuListPopup
+              - option "Confirm a matching paid booking" [selected, ref=e35]
+              - option "Release a verified unpaid or fully refunded booking" [ref=e36]
+        - LabelText
+          - StaticText "Resolution reason"
+          - textbox "Resolution reason" [required, ref=e29]
+        - LabelText
+          - StaticText "Stripe Checkout reference (optional)"
+          - textbox "Stripe Checkout reference (optional) For an interrupted Checkout creation, supply the matching session reference from Stripe. The server verifies the booking and payment details." [ref=e30]
+          - StaticText "For an interrupted Checkout creation, supply the matching session reference from Stripe. The server verifies the booking and payment details."
+        - paragraph
+          - StaticText "The server checks current provider evidence before changing the booking. This action does not issue a refund."
+        - button "Verify and record outcome" [disabled, ref=e21]
+          - StaticText "Verify and record outcome"
+- alert

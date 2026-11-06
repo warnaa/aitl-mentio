@@ -39,3 +39,7 @@ export {
   readOAuthStateCookie,
 } from './auth/oauth-state';
 export { homeFor, ROLE_HOMES } from './auth/roles';
+export type { PaymentGateway, CheckoutSession, CreateCheckoutSession, PaymentEvent } from './payments/payment-gateway.port';
+export { PaymentService } from './payments/payment.service';
+export { PaymentReportService, type PaidSessionReport } from './payments/payment-report.service';
+export { CheckoutNotCreatedError } from './payments/payment-gateway.port';

@@ -10,6 +10,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "payments:reconcile": "node --env-file-if-exists=.env --import tsx -e \"import('./packages/app/src/lib/payments/reconcile.ts').then(m => m.reconcilePayments()).then(result => console.log(JSON.stringify(result)))\"",
     "invite": "node --import tsx -e \"import('./scripts/invite.ts').then(m => m.main(process.argv.slice(1))).catch(error => { console.error(error.message); process.exitCode = 1; })\" --",
     "setup": "node scripts/setup/index.mjs",
     "storybook": "npm run prototype && npm run storybook --workspace @devmentor/ui --",
@@ -21,8 +22,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "vitest run --config vitest.config.mts",
-    "test:unit:coverage": "vitest run --config vitest.config.mts --coverage",
+    "test:unit": "node --test scripts/ci/change-scope.test.mjs && vitest run --config vitest.config.mts",
+    "test:unit:coverage": "node --test scripts/ci/change-scope.test.mjs && vitest run --config vitest.config.mts --coverage",
     "test:prototype": "node --test prototypes/devmentor-journey/prototype.test.mjs prototypes/devmentor-journey/navigation.test.ts && vitest run --config prototypes/devmentor-journey/vitest.config.mts",
     "test:integration": "vitest run --config vitest.integration.config.mts",
     "test:browser:install": "agent-browser install",

@@ -3,6 +3,8 @@ import { ShieldCheck, Users } from "lucide-react";
 import { Badge, Button, Card } from "@devmentor/ui";
 import { checkDbConnection, getEnv } from "@devmentor/core";
 import { requirePageRole } from "../../lib/session";
+import { PaymentReview } from './PaymentReview';
+import { PaidSessionsReport } from './PaidSessionsReport';
 
 // Touches the DB — keep it out of the static prerender.
 export const dynamic = "force-dynamic";
@@ -49,6 +51,8 @@ export default async function AdminDashboard() {
         </div>
         <p className="dm-product-caption">Database connection, checked when this page loads.</p>
       </Card>
+      <PaidSessionsReport />
+      <PaymentReview />
     </div>
   );
 }

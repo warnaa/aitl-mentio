@@ -35,6 +35,6 @@ The fixture deletes only bookings for its own mentor, then its slots/profile, ac
 
 ## Verification and review
 
-- **Latest execution:** Not run; authored on 2026-11-05. Parent will execute `npm run test:integration` after stopping the shared QA environment and completing the configured gate.
+- **Latest execution:** Passed on 2026-11-06 with `npm run test:integration`: all 40 files and 81 tests passed in 848.86s. This run predates the later read-only reporting addition.
 - **Observed result and evidence:** Parent live exploration confirmed the booking API envelope/statuses and actual signed-out selection/sign-in/pending flow. This executable case has not yet run; no pass is claimed.
 - **Human review:** Pending.

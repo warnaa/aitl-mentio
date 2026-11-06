@@ -1,0 +1,43 @@
+- generic
+  - link "Skip to content" [ref=e1]
+  - complementary
+    - StaticText "DevMentor"
+    - StaticText "Workspace"
+    - navigation "Workspace navigation" [ref=e2]
+      - link "My sessions" [ref=e6]
+    - StaticText "Signed in as"
+    - strong
+      - StaticText "payment-observe-57112-mentee"
+  - banner
+    - StaticText "Your DevMentor workspace"
+    - button "Sign out" [ref=e3]
+      - StaticText "Sign out"
+  - main
+    - heading "My sessions" [level=1, ref=e4]
+    - region "Your bookings" [ref=e5]
+      - heading "Your bookings" [level=2, ref=e7]
+      - button "Check payment status" [ref=e8]
+        - StaticText "Check payment status"
+      - heading "Session with payment-observe-57112-mentor" [level=3, ref=e9]
+        - StaticText "Session with payment-observe-57112-mentor"
+      - StaticText "Pending"
+      - paragraph
+        - StaticText "Starts: "
+        - time
+          - StaticText "6 Nov 2099, 13:00 (Europe/Warsaw)"
+      - paragraph
+        - StaticText "25-minute text session"
+      - paragraph
+        - StaticText "PLN80"
+      - status
+        - StaticText "Waiting for payment confirmation. Returning from Checkout does not confirm a session."
+      - paragraph
+        - StaticText "Payment window: "
+        - time
+          - StaticText "6 Nov 2026, 15:04 (Europe/Warsaw)"
+        - StaticText ". The time stays reserved while payment is checked."
+      - button "Pay with Stripe" [ref=e10]
+        - StaticText "Pay with Stripe"
+      - paragraph
+        - StaticText "Sessions are text. DevMentor makes no promise about how soon an answer arrives."
+- alert

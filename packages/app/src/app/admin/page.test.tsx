@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Badge } from '@devmentor/ui';
 import { admit, deny, GuardRedirect, guards } from '../../test/page-guards';
 import { findAll, findAllByType, findByType, textOf } from '../../test/element-tree';
+import { PaymentReview } from './PaymentReview';
 
 const core = vi.hoisted(() => ({
   checkDbConnection: vi.fn<() => Promise<{ ok: boolean }>>(),
@@ -46,6 +47,7 @@ describe('/admin', () => {
     expect(textOf(findByType(tree, Link))).toBe('View users');
     expect(textOf(findByType(tree, Badge))).toBe('Environment: production');
     expect(status(tree)).toEqual(['Connected', 'success']);
+    expect(findByType(tree, PaymentReview)).toBeTruthy();
   });
 
   it('degrades to Unavailable when the database check fails', async () => {

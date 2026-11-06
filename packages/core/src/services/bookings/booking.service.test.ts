@@ -41,7 +41,7 @@ it('snapshots each duration from current stored prices at the inclusive lead bou
   }
   expect(findOne).toHaveBeenCalledWith('Profile', { id: 'profile' }, { lockMode: 'write', refresh: true });
   expect(findOne).toHaveBeenCalledWith('Slot', { id: slotId, mentorProfile: 'profile', removedAt: null }, { lockMode: 'write', refresh: true });
-  expect(nativeUpdate).toHaveBeenCalledWith('Booking', { mentorProfile: 'profile', status: 'pending', expiresAt: { $lte: now } }, { status: 'expired', updatedAt: now });
+  expect(nativeUpdate).toHaveBeenCalledWith('Booking', { mentorProfile: 'profile', status: 'pending', paymentPending: false, expiresAt: { $lte: now } }, { status: 'expired', updatedAt: now });
   expect(flush).toHaveBeenCalledTimes(2);
 });
 it('rechecks a missing or removed slot and missing mentor after locking', async () => {

@@ -36,6 +36,6 @@ The fixture deletes its own booking history before its slots, profile and synthe
 
 ## Verification and review
 
-- **Latest execution:** Not run; authored on 2026-11-05. Parent will run the targeted and full integration suite after its configured gate.
+- **Latest execution:** Passed on 2026-11-06 with `npm run test:integration`: all 40 files and 81 tests passed in 848.86s. This run predates the later read-only reporting addition.
 - **Observed result and evidence:** Expectations follow the spec's cancelled-history occupancy rule. This newly authored case has not yet run; no pass is claimed.
 - **Human review:** Pending.

@@ -2,6 +2,7 @@ export { getEnv, type AppEnv } from './config/env';
 export { createLogger, type Logger } from './logger';
 export {
   getContainer,
+  configurePaymentGatewayFactory,
   withScope,
   withRequestScope,
   withSessionCookieScope,

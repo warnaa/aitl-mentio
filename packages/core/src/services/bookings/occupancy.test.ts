@@ -4,7 +4,7 @@ import { activeOccupancy, MINUTE_MS, overlappingInterval, viableLengths } from '
 const start = new Date('2026-11-05T12:00:00Z');
 const at = (minutes: number) => new Date(start.getTime() + minutes * MINUTE_MS);
 it('queries only confirmed and unexpired pending occupancy', () => {
-  expect(activeOccupancy(start)).toEqual({ $or: [{ status: 'confirmed' }, { status: 'pending', expiresAt: { $gt: start } }] });
+  expect(activeOccupancy(start)).toEqual({ $or: [{ status: 'confirmed' }, { status: 'pending', expiresAt: { $gt: start } }, { status: 'pending', paymentPending: true }] });
 });
 it('uses strict half-open interval boundaries for both stored durations', () => {
   expect(overlappingInterval(start, 25)).toEqual({ startsAt: { $lt: at(25) }, $or: [
