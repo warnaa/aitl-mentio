@@ -15,6 +15,7 @@ import type { MentorProfileService } from '../services/mentors/mentor-profile.se
 import type { SlotService } from '../services/availability/slot.service';
 import type { BookingService } from '../services/bookings/booking.service';
 import type { PaymentService } from '../services/payments/payment.service';
+import type { PaymentReportService } from '../services/payments/payment-report.service';
 import type { PaymentGateway } from '../services/payments/payment-gateway.port';
 import type { PlatformSettingsService } from '../services/operator/platform-settings.service';
 import type { Mailer } from '../services/notifications/mailer.port';
@@ -61,6 +62,7 @@ export interface Cradle {
   slotService: SlotService;
   bookingService: BookingService;
   paymentService: PaymentService;
+  paymentReportService: PaymentReportService;
   paymentGateway: PaymentGateway;
   platformSettingsService: PlatformSettingsService;
   rateLimiter: RateLimiter;

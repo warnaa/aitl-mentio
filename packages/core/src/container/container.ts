@@ -29,6 +29,7 @@ import { MentorProfileService } from '../services/mentors/mentor-profile.service
 import { SlotService } from '../services/availability/slot.service';
 import { BookingService } from '../services/bookings/booking.service';
 import { PaymentService } from '../services/payments/payment.service';
+import { PaymentReportService } from '../services/payments/payment-report.service';
 import type { PaymentGateway } from '../services/payments/payment-gateway.port';
 import { MockPaymentGateway } from '../services/payments/adapters/mock-payment-gateway';
 import { UnavailablePaymentGateway } from '../services/payments/adapters/unavailable-payment-gateway';
@@ -150,6 +151,7 @@ async function build(): Promise<AwilixContainer<Cradle>> {
         ? new MockPaymentGateway({ clock })
         : globalForContainer.__devmentorPaymentGatewayFactory?.(env) ?? new UnavailablePaymentGateway()).singleton(),
     paymentService: asClass(PaymentService).scoped(),
+    paymentReportService: asClass(PaymentReportService).scoped(),
     platformSettingsService: asClass(PlatformSettingsService).scoped(),
     // Scoped: it counts through the request's `em`.
     rateLimiter: asClass(RateLimiter).scoped(),

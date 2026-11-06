@@ -38,6 +38,7 @@ export default defineConfig({
         'packages/app/src/app/api/bookings/\\[id\\]/checkout/route.ts',
         'packages/app/src/components/sessions/*.tsx',
         'packages/app/src/app/admin/PaymentReview.tsx',
+        'packages/app/src/app/admin/PaidSessionsReport.tsx',
         'packages/db/src/entities/bookings/booking.entity.ts',
         'packages/core/src/services/bookings/booking.service.ts',
         'packages/app/src/app/api/bookings/route.ts',
