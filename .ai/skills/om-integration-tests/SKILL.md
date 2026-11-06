@@ -36,8 +36,8 @@ It is the user's required testing policy, preserved from their attachment.
   Preserve an existing native executable ID separately when it differs.
 - One document describes one business case. Keep TypeScript implementations in
   the repository's native integration-test location and follow its conventions.
-  A document is an authored deliverable; runtime descriptors, credentials,
-  screenshots and reports remain separate working state.
+  Commit scenario documents, sanitized screenshots and reports as project records
+  alongside the work. Keep credentials and disposable runtime descriptors ignored.
 - Every document must contain a clickable relative Markdown link to its actual
   TypeScript implementation and the exact `describe`/`it` test-case title (or
   stable native case ID) within that file. A file containing several existing

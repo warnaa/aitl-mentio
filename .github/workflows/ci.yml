@@ -5,15 +5,7 @@ on:
     # ready_for_review runs the suite once a draft flips to ready. Draft PRs (the
     # loop skills push one commit per step to a draft) skip every job below.
     types: [opened, synchronize, reopened, ready_for_review]
-    # Skip PRs that only touch agent working notes. Specs, AGENTS.md and other
-    # Markdown stay checked: the agent-route check validates them. GitHub filters
-    # on the whole PR diff, so this never skips a PR that also changes code.
-    paths-ignore:
-      - '.ai/runs/**'
-      - '.ai/qa/**'
-      - '.ai/analysis/**'
-      - '.ai/lessons.md'
-      - '.ai/lessons/**'
+    # Filter individual jobs, not the workflow, so required checks are reported.
 
 permissions:
   contents: read
@@ -26,9 +18,32 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
+  changes:
+    name: Change scope
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      application: ${{ steps.scope.outputs.application }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Classify the entire pull request
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/ci/change-scope.mjs "$BASE_SHA" "$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build
-    if: ${{ !github.event.pull_request.draft }}
+    needs: changes
+    # A missing output or failed classifier must run the full suite.
+    if: ${{ !cancelled() && !github.event.pull_request.draft && (needs.changes.result != 'success' || needs.changes.outputs.application != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -47,7 +62,8 @@ jobs:
 
   lint:
     name: Lint
-    if: ${{ !github.event.pull_request.draft }}
+    needs: changes
+    if: ${{ !cancelled() && !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -55,15 +71,19 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
       - name: Check agent instruction routes and budgets
         run: node scripts/check-agent-routes.mjs
+      - name: Test CI change classification
+        run: node --test scripts/ci/change-scope.test.mjs
       - run: npm ci --include=optional
+        if: ${{ needs.changes.result != 'success' || needs.changes.outputs.application != 'false' }}
       - run: npm run lint
+        if: ${{ needs.changes.result != 'success' || needs.changes.outputs.application != 'false' }}
 
   unit:
     name: Unit tests
-    if: ${{ !github.event.pull_request.draft }}
+    needs: changes
+    if: ${{ !cancelled() && !github.event.pull_request.draft && (needs.changes.result != 'success' || needs.changes.outputs.application != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -86,7 +106,8 @@ jobs:
 
   integration:
     name: Integration tests
-    if: ${{ !github.event.pull_request.draft }}
+    needs: changes
+    if: ${{ !cancelled() && !github.event.pull_request.draft && (needs.changes.result != 'success' || needs.changes.outputs.application != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The auth configuration for the app under test (a per-run SESSION_SECRET,
