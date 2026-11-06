@@ -42,6 +42,8 @@ Measured on 2026-11-05: cold preparation/startup 97.504s, warm reuse 0.157s;
 after verified double teardown, a fresh database/app using the build cache
 started in 14.415s and warm reuse took 0.146s. Teardown verified container,
 app process and port removal. Source timestamp invalidation and exact restoration
-passed. Runtime state under `.ai/qa/` is gitignored. Commit the scripts, spec,
-local skill and line-ending/ignore rules together when publishing is approved;
-keep `.ai/runs/` and generated runtime state out of commits.
+passed. Disposable test-environment runtime state under `.ai/qa/test-env*` is
+gitignored. Commit the scripts, spec, local skill and line-ending/ignore rules
+alongside sanitized `.ai/runs/` logs and `.ai/qa/` reports and evidence. Keep
+secret-bearing files and disposable runtime state out of commits; remote writes
+still require explicit approval.

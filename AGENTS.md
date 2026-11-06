@@ -10,9 +10,11 @@ Package roles and framework details live in the unit instructions below.
 - Work locally. Obtain explicit approval before any remote write: pushes, PRs,
   issues, publishing/deployment, Figma or another external service. Read-only
   research is allowed; a request to build locally is not approval to publish.
-- Keep run logs, local PR drafts, working references and generated previews out
-  of commits. Review the staged list; commit only requested deliverables and their
-  required source, tests and documentation.
+- Commit `.ai/` artifacts as project records alongside the work that produced them:
+  `.ai/runs/` logs, `.ai/qa/` reports and evidence, generated test-environment
+  helpers, PR drafts, working references and generated previews. Review and sanitize
+  them before staging; redact credentials, tokens, cookies and other sensitive values.
+  Keep secret-bearing env files and disposable test-environment runtime state ignored.
 - Plan first. If implementation goes sideways, stop and revise the plan/spec.
   For high-stakes plans, get a skeptical staff-engineer subagent review before coding.
 - Before continuing after a user correction, record it in `.ai/lessons.md`;
