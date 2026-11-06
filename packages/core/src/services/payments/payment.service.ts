@@ -150,10 +150,16 @@ export class PaymentService {
     // every submitted request can prove that an unattached attempt never existed.
     const submit = await this.locked(attempt.booking.id, async (em, booking) => {
       const current = await em.findOneOrFail(PaymentAttempt, { id: attempt.id }, { refresh: true });
-      if (current.sessionId || current.state !== 'creating' || booking.status !== 'pending') return false;
-      current.submissionCount++; await em.flush(); return true;
+      if (current.sessionId) return { sessionId: current.sessionId, submitted: false };
+      if (current.state !== 'creating' || booking.status !== 'pending') return { sessionId: null, submitted: false };
+      current.submissionCount++; await em.flush(); return { sessionId: null, submitted: true };
     });
-    if (!submit) return null;
+    if (submit.sessionId) {
+      const session = await this.deps.paymentGateway.retrieveCheckoutSession(submit.sessionId);
+      const outcome = await this.applyRetrieved(attempt, session);
+      return outcome === 'open' ? session : null;
+    }
+    if (!submit.submitted) return null;
     let session: CheckoutSession;
     try { session = await this.deps.paymentGateway.createCheckoutSession(this.input(attempt)); }
     catch (error) {

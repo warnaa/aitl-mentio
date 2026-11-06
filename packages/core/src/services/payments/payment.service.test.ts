@@ -71,20 +71,26 @@ it('does not release after a later definite rejection when an earlier call may h
   expect(attempt()).toMatchObject({ submissionCount: 2, rejectedSubmissionCount: 1 });
 });
 
-it.each(['session_attached', 'review', 'booking_expired'])('does not submit when another transaction changed state before provider submission: %s', async change => {
+it.each(['session_attached', 'session_paid', 'review', 'booking_expired'])('does not submit when another transaction changed state before provider submission: %s', async change => {
   const lookup = findOne.getMockImplementation()!;
   let changed = false;
   findOne.mockImplementation(async (entity, query) => {
     if (!changed && entity === 'Booking' && tables.Attempt.length && attempt().submissionCount === 0) {
       changed = true;
-      if (change === 'session_attached') attempt().sessionId = 'cs_concurrent';
+      if (change.startsWith('session_')) attempt().sessionId = 'cs_concurrent';
       else if (change === 'review') attempt().state = 'review';
       else booking.status = 'expired';
     }
     return lookup(entity, query);
   });
   const create = vi.spyOn(gateway, 'createCheckoutSession');
-  try { await expect(checkout()).rejects.toMatchObject({ status: 409 }); expect(create).not.toHaveBeenCalled(); }
+  if (change === 'session_attached') vi.spyOn(gateway, 'retrieveCheckoutSession').mockImplementation(async () => evidence({ id: 'cs_concurrent', paid: false, status: 'open', url: 'https://provider.invalid/concurrent' }));
+  if (change === 'session_paid') vi.spyOn(gateway, 'retrieveCheckoutSession').mockImplementation(async () => evidence({ id: 'cs_concurrent' }));
+  try {
+    if (change === 'session_attached') await expect(checkout()).resolves.toMatchObject({ url: 'https://provider.invalid/concurrent' });
+    else await expect(checkout()).rejects.toMatchObject({ status: 409 });
+    expect(create).not.toHaveBeenCalled();
+  }
   finally { findOne.mockImplementation(lookup); }
 });
 
