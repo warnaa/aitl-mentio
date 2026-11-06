@@ -1,0 +1,55 @@
+{
+  "sourceValidated": true,
+  "viewports": {
+    "operatorEmptyDesktop": 0,
+    "operatorEmptyMobile": 0,
+    "participantEmpty": 0,
+    "operatorPopulatedDesktop": 0,
+    "operatorPopulatedMobile": 0,
+    "participantReviewDesktop": 0,
+    "participantReviewMobile": 0
+  },
+  "faults": {
+    "loading": {
+      "applied": "loading",
+      "rendering": "reload keeps prior data and disables refresh",
+      "overflow": 0
+    },
+    "error": {
+      "applied": "error",
+      "rendering": "error feedback replaces booking content",
+      "overflow": 0
+    }
+  },
+  "api": {
+    "operator": 200,
+    "anonymous": 401,
+    "mentee": 403,
+    "emptyCount": 0,
+    "emptyMedian": null
+  },
+  "keyboardRefreshRequests": 1,
+  "report": {
+    "timezone": "Europe/Warsaw",
+    "paidSessionCount": 2,
+    "timingSampleCount": 2,
+    "medianBookingToStartMinutes": 5130,
+    "bookingWeeks": [
+      {
+        "week": "2026-10-26",
+        "count": 1
+      },
+      {
+        "week": "2026-11-02",
+        "count": 1
+      }
+    ],
+    "sessionStartWeeks": [
+      {
+        "week": "2026-11-02",
+        "count": 2
+      }
+    ]
+  },
+  "nonoperatorAdminPath": "/home"
+}

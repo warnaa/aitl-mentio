@@ -1,0 +1,72 @@
+- generic
+  - link "Skip to content" [ref=e1]
+  - complementary
+    - generic
+      - StaticText "DevMentorWorkspace"
+    - navigation "Workspace navigation" [ref=e2]
+      - link "Operator home" [ref=e10]
+      - link "Users" [ref=e11]
+      - link "Mentor workspace" [ref=e12]
+      - link "Edit profile" [ref=e13]
+    - generic
+      - StaticText "Signed in as"
+      - strong
+        - StaticText "Margaret Hamilton"
+  - banner
+    - StaticText "Your DevMentor workspace"
+    - button "Sign out" [ref=e3]
+      - StaticText "Sign out"
+  - main
+    - paragraph
+      - StaticText "OPERATIONS"
+    - heading "Operator workspace" [level=1, ref=e4]
+    - paragraph
+      - StaticText "Open the user directory to review accounts and their assigned roles."
+    - heading "Account access" [level=2, ref=e5]
+    - paragraph
+      - StaticText "Roles come from account records, invitations and operator configuration. Users cannot assign themselves a role."
+    - link "View users" [ref=e6]
+    - heading "Service status" [level=2, ref=e7]
+    - group "DevMentor instance"
+      - StaticText "Environment: production"
+      - StaticText "Connected"
+    - paragraph
+      - StaticText "Database connection, checked when this page loads."
+    - region "Paid session report" [ref=e8]
+      - heading "Recorded paid sessions" [level=2, ref=e14]
+      - button "Refresh paid session report" [ref=e15]
+        - StaticText "Refresh paid session report"
+      - paragraph
+        - StaticText "Payments recorded since 2026-08-17, covering twelve booking weeks in Europe/Warsaw. The current booking week is partial."
+      - paragraph
+        - StaticText "Recorded paid sessions: "
+        - strong
+          - StaticText "0"
+      - paragraph
+        - StaticText "Median booking-to-start: "
+        - strong
+          - StaticText "Not available"
+        - StaticText " (0 sessions with valid timing)."
+      - paragraph
+        - StaticText "No recorded payments yet"
+      - paragraph
+        - StaticText "Verified full payments will appear here once a booking is confirmed."
+      - heading "By booking week" [level=3, ref=e16]
+      - paragraph
+        - StaticText "No recorded paid sessions in this view."
+      - heading "By session-start week" [level=3, ref=e17]
+      - paragraph
+        - StaticText "No recorded paid sessions in this view."
+      - paragraph
+        - StaticText "Both views use the same recorded payments; the session-start view can include future weeks. These are recorded full payments, with refunds not subtracted. Neither week definition has been selected as the official target."
+    - region "Payment reconciliation" [ref=e9]
+      - heading "Payments needing review" [level=2, ref=e18]
+      - button "Refresh payment review" [ref=e19]
+        - StaticText "Refresh payment review"
+      - paragraph
+        - StaticText "Unresolved payments keep the mentor time reserved. Check the provider evidence before recording an outcome."
+      - paragraph
+        - StaticText "No payments need review"
+      - paragraph
+        - StaticText "Provider exceptions and overdue payment attempts will appear here."
+- alert

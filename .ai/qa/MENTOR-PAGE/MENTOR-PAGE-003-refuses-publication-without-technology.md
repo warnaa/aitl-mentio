@@ -52,6 +52,6 @@ or failure. Failure context and screenshots stay in ignored `test-results/`.
 
 ## Verification and review
 
-- **Latest execution:** Passed on 2026-11-05 with `npm run test:integration -- tests/integration/mentor-profile-technology.integration.test.ts --retry 0`: 1 file, 1 test passed; 64.72s total, 37.86s test execution.
+- **Latest execution:** Passed on 2026-11-06 with `npm run test:integration`: all 40 files and 81 tests passed in 848.86s. This run predates the later read-only reporting addition.
 - **Observed result and evidence:** Browser exploration confirmed the actual flow. The passing native run verified all steps above and captured [the refused publication screenshot](../../../test-results/integration/mentor-profile-technology-refused.png), visually inspected by the agent. Typecheck and focused ESLint also passed. The first attempt failed on an unsupported compound browser selector; a fresh snapshot reference fixed navigation, and the rerun passed.
 - **Human review:** Pending.

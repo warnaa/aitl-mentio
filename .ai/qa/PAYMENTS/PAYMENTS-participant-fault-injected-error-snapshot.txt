@@ -1,0 +1,29 @@
+- generic
+  - link "Skip to content" [ref=e1]
+  - complementary
+    - generic
+      - StaticText "DevMentorWorkspace"
+    - navigation "Workspace navigation" [ref=e2]
+      - link "My sessions" [ref=e6]
+    - generic
+      - StaticText "Signed in as"
+      - strong
+        - StaticText "report-observe-2636-mentee"
+  - banner
+    - StaticText "Your DevMentor workspace"
+    - button "Sign out" [ref=e3]
+      - StaticText "Sign out"
+  - main
+    - heading "My sessions" [level=1, ref=e4]
+    - region "Your bookings" [ref=e5]
+      - heading "Your bookings" [level=2, ref=e7]
+      - button "Check payment status" [ref=e8]
+        - StaticText "Check payment status"
+      - alert
+        - paragraph
+          - StaticText "Synthetic QA booking request failure."
+        - button "Try again" [ref=e9]
+          - StaticText "Try again"
+      - paragraph
+        - StaticText "Sessions are text. DevMentor makes no promise about how soon an answer arrives."
+- alert

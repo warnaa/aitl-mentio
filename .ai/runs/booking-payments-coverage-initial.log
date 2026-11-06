@@ -1,0 +1,59 @@
+
+> devmentor@0.1.0 test:unit:coverage
+> node --test scripts/ci/change-scope.test.mjs && vitest run --config vitest.config.mts --coverage
+
+✔ documentation and artifact-policy changes use lightweight checks (1.0843ms)
+✔ code, configuration, dependencies, executable MDX and unknown paths run application checks (0.4153ms)
+✔ missing or invalid SHAs fail instead of classifying as documentation (0.8546ms)
+✔ real Git history covers whole PRs, deletions, renames and filenames with newlines (2512.9596ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2665.8324
+
+ RUN  v4.1.11 D:/repos/aitl-mentio/.ai/tmp/booking-payments-implementation
+      Coverage enabled with v8
+
+
+ Test Files  175 passed (175)
+      Tests  1563 passed (1563)
+   Start at  14:16:49
+   Duration  34.47s (transform 19.11s, setup 0ms, import 229.78s, tests 65.42s, environment 147.41s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+-------------------|---------|----------|---------|---------|-------------------
+All files          |    99.9 |    99.63 |   99.78 |   99.89 |
+ ...ore/src/config |   95.65 |     92.3 |     100 |   95.45 |
+  env.ts           |   95.65 |     92.3 |     100 |   95.45 | 141
+ .../src/container |      96 |    82.85 |   89.47 |   95.91 |
+  container.ts     |      96 |    82.85 |   89.47 |   95.91 | 51,149
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 99.9% ( 3202/3205 )
+Branches     : 99.63% ( 1922/1929 )
+Functions    : 99.78% ( 946/948 )
+Lines        : 99.89% ( 2901/2904 )
+================================================================================
+node.exe : ERROR: Coverage for lines (95.91%) does not meet global threshold (100%) for packages/core/src/container/con
+tainer.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\warna\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ERROR: Coverage...er/container.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+ERROR: Coverage for functions (89.47%) does not meet global threshold (100%) for packages/core/src/container/container.
+ts
+ERROR: Coverage for statements (96%) does not meet global threshold (100%) for packages/core/src/container/container.ts
+ERROR: Coverage for branches (82.85%) does not meet global threshold (100%) for packages/core/src/container/container.t
+s
+ERROR: Coverage for lines (95.45%) does not meet global threshold (100%) for packages/core/src/config/env.ts
+ERROR: Coverage for statements (95.65%) does not meet global threshold (100%) for packages/core/src/config/env.ts
+ERROR: Coverage for branches (92.3%) does not meet global threshold (100%) for packages/core/src/config/env.ts

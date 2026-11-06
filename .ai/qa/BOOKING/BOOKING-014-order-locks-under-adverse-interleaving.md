@@ -35,6 +35,6 @@ The external transaction releases its lock on success or failure. In-flight requ
 
 ## Verification and review
 
-- **Latest execution:** Not run; authored on 2026-11-05. Parent will run the targeted and full integration command after its configured gate.
+- **Latest execution:** Passed on 2026-11-06 with `npm run test:integration`: all 40 files and 81 tests passed in 848.86s. This run predates the later read-only reporting addition.
 - **Observed result and evidence:** The expectation follows the documented lock order and independent review's adverse-interleaving finding. No execution success is claimed.
 - **Human review:** Pending.

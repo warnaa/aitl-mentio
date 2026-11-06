@@ -1,0 +1,21 @@
+{
+  "reserve": 201,
+  "checkout": 200,
+  "checkoutFields": [
+    "bookingId",
+    "url",
+    "expiresAt"
+  ],
+  "badSignature": 400,
+  "foreignCheckout": 404,
+  "paid": 200,
+  "replay": 200,
+  "storedStatus": "confirmed",
+  "amountPaidCents": 8000,
+  "markers": 1,
+  "ownListContainsConfirmed": true,
+  "mentorListContainsConfirmed": true,
+  "unknownMetadata": 200,
+  "operatorSeesUnknown": true,
+  "mobileOverflow": 0
+}

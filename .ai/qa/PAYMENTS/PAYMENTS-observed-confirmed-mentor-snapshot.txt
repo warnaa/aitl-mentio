@@ -1,0 +1,146 @@
+- generic
+  - link "Skip to content" [ref=e1]
+  - complementary
+    - StaticText "DevMentor"
+    - StaticText "Workspace"
+    - navigation "Workspace navigation" [ref=e2]
+      - link "My sessions" [ref=e11]
+      - link "Mentor workspace" [ref=e12]
+      - link "Edit profile" [ref=e13]
+    - StaticText "Signed in as"
+    - strong
+      - StaticText "payment-observe-57112-mentor"
+  - banner
+    - StaticText "Your DevMentor workspace"
+    - button "Sign out" [ref=e3]
+      - StaticText "Sign out"
+  - main
+    - sectionheader
+      - StaticText "MENTOR WORKSPACE"
+      - heading "Your mentor workspace" [level=1, ref=e14]
+      - paragraph
+        - StaticText "Manage your public profile, session prices and availability."
+      - link "Edit profile" [ref=e15]
+    - region "Set up your mentor profile" [ref=e4]
+      - sectionheader
+        - heading "Set up your mentor profile" [level=2, ref=e21]
+        - paragraph
+          - StaticText "Complete your profile, set your prices and add time for sessions."
+      - paragraph
+        - StaticText "3 of 3 steps complete"
+      - progressbar "Mentor setup progress": 3
+      - list
+        - listitem [level=1]
+          - heading "Publish your mentor profile" [level=3, ref=e26]
+          - StaticText "Complete"
+          - paragraph
+            - StaticText "Add your public work, a description and your technologies."
+          - link "Edit profile" [ref=e33]
+        - listitem [level=1]
+          - heading "Set your session prices" [level=3, ref=e27]
+          - StaticText "Complete"
+          - paragraph
+            - StaticText "Choose a price for 25 minutes and 50 minutes."
+          - link "Set prices" [ref=e34]
+        - listitem [level=1]
+          - heading "Publish an available time" [level=3, ref=e28]
+          - StaticText "Complete"
+          - paragraph
+            - StaticText "Choose a future start time for your first session."
+          - link "Add time" [ref=e35]
+    - generic
+      - heading "Session prices" [level=2, ref=e16]
+      - paragraph
+        - StaticText "Both prices are required before anyone can book."
+      - generic "Allowed session prices"
+        - StaticText "25 min: PLN 80–600"
+        - StaticText "50 min: PLN 160–1,200"
+      - form
+        - LabelText
+          - StaticText "25-minute price (PLN)"
+        - textbox "25-minute price (PLN)" [required, ref=e22]: 80.00
+          - StaticText "80.00"
+        - paragraph
+          - StaticText "Use up to two decimal places."
+        - LabelText
+          - StaticText "50-minute price (PLN)"
+        - textbox "50-minute price (PLN)" [required, ref=e23]: 160.00
+          - StaticText "160.00"
+        - paragraph
+          - StaticText "Use up to two decimal places."
+        - button "Save prices" [ref=e24]
+          - StaticText "Save prices"
+    - generic
+      - heading "Add an available time" [level=2, ref=e17]
+      - paragraph
+        - StaticText "Enter the start in your local time (Europe/Warsaw). Mentees see it in their own timezone."
+      - form
+        - LabelText
+          - StaticText "Session starts at"
+        - DateTime "Session starts at"
+          - generic
+            - spinbutton "Dzień Dzień" [ref=e36]: 0
+              - StaticText "dd"
+            - StaticText "."
+            - spinbutton "Miesiąc Miesiąc" [ref=e37]: 0
+              - StaticText "mm"
+            - StaticText "."
+            - spinbutton "Rok Rok" [ref=e38]: 0
+              - StaticText "rrrr"
+            - StaticText " "
+            - spinbutton "Godziny Godziny" [ref=e39]: 0
+              - StaticText "--"
+            - StaticText ":"
+            - spinbutton "Minuty Minuty" [ref=e40]: 0
+              - StaticText "--"
+          - button "Pokaż selektor lokalnej daty igodziny Pokaż selektor lokalnej daty igodziny" [ref=e29]
+        - paragraph
+          - StaticText "Mentees can book a time up to two hours before it starts."
+        - button "Publish available time" [ref=e25]
+          - StaticText "Publish available time"
+    - heading "Your available times" [level=2, ref=e5]
+    - paragraph
+      - StaticText "Times are shown in your local timezone."
+    - button "Show past times" [ref=e6]
+      - StaticText "Show past times"
+    - region "Your available times table" [ref=e7] focusable [tabindex]
+      - table "Your available times"
+        - caption
+          - StaticText "Your available times"
+        - rowgroup
+          - row
+            - columnheader "Start" [ref=e41]
+            - columnheader "Status" [ref=e42]
+            - columnheader "Actions" [ref=e43]
+        - row
+          - cell "6 Nov 2099, 13:00 (Europe/Warsaw)" [ref=e30]
+            - time
+              - StaticText "6 Nov 2099, 13:00 (Europe/Warsaw)"
+          - cell "Open" [ref=e31]
+          - cell "Remove time" [ref=e32]
+            - button "Remove time" [expanded=false, ref=e44]
+              - StaticText "Remove time"
+    - heading "Your profile is ready to share" [level=2, ref=e8]
+    - paragraph
+      - StaticText "Check what mentees see, including your current prices and availability."
+    - link "View public profile" [ref=e9]
+    - region "Your bookings" [ref=e10]
+      - heading "Your bookings" [level=2, ref=e18]
+      - button "Check payment status" [ref=e19]
+        - StaticText "Check payment status"
+      - heading "Session with payment-observe-57112-mentee" [level=3, ref=e20]
+        - StaticText "Session with payment-observe-57112-mentee"
+      - StaticText "Confirmed"
+      - paragraph
+        - StaticText "Starts: "
+        - time
+          - StaticText "6 Nov 2099, 13:00 (Europe/Warsaw)"
+      - paragraph
+        - StaticText "25-minute text session"
+      - paragraph
+        - StaticText "PLN80"
+      - status
+        - StaticText "Payment verified. Your session is confirmed."
+      - paragraph
+        - StaticText "Sessions are text. DevMentor makes no promise about how soon an answer arrives."
+- alert
