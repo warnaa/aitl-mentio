@@ -157,6 +157,16 @@ Every PR passes the full validation gate before review sign-off, in this order:
 
 Any non-zero exit fails the gate and blocks the PR. The implementing skills run the gate before opening a PR, and `om-check-and-commit` runs it before pushing a hand-worked branch. The command list lives in `.ai/agentic.config.json`; when it changes, update it there and in this section together.
 
+CI uses a lightweight path for documentation-only PRs: Lint checks instruction
+routes and the dependency-free change classifier, without installing packages.
+Markdown, `.gitignore` and known evidence formats in agent-record directories
+qualify; MDX, code, workflows, dependencies, other configuration and unknown files
+run the full application jobs. Classification examines the entire PR diff, with
+failures defaulting to full checks. Build, Lint, Unit tests and Integration tests
+keep their existing check names; application jobs are skipped individually rather
+than excluding the workflow. The full local validation gate above remains the
+default for application work.
+
 ## Amending this process
 
 This document and `.ai/agentic.config.json` describe the same process: change them together, and re-run the `om-setup-agent-pipeline` skill when the toolchain or label taxonomy changes. Per-skill deviations — extra review rules, a different PR body template, an added gate step — belong in a repo-local skill of the same name at `.ai/skills/<skill-name>/SKILL.md`, which takes precedence over the installed skill (and can `@`-import or reference it to extend rather than replace it); local rules win, but a repo-local skill cannot grant what the installed skill's safety rules forbid.

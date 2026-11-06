@@ -255,6 +255,12 @@ referenced by `README.md`, `AGENTS.md`, `.github/workflows/ci.yml`,
 `run.ps1`. The CI job names `Build`, `Lint`, `Unit tests`, and `Integration tests` are
 what the branch ruleset requires.
 
+These names remain unchanged with documentation-aware CI: Lint always validates
+instruction routes and change classification, while application steps/jobs skip
+only for an explicitly documentation-only PR diff. Classification failures default
+to the full suite. Workflow/configuration, MDX and unknown changes run all checks;
+`.gitignore` is an explicit maintenance exception.
+
 **Breaking:** renaming or removing a script; renaming a CI job.
 
 **Required path:** update every reference above in the same PR; for a job rename, a

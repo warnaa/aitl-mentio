@@ -36,6 +36,7 @@ authoritative runner configuration and CI commands.
 - Add integration coverage when behavior crosses the app/database/API/browser
   boundary. Browser/integration tests supplement, never replace, unit coverage.
 - Read `tests/integration/AGENTS.md` before running or changing those scenarios.
-- CI runs Build, Lint, Unit tests and Integration tests independently on each PR.
-  They become merge-blocking only when a repository ruleset requires those exact
-  four check names.
+- CI classifies the whole PR diff. Lint always checks instruction routes and CI
+  classification; application changes also run ESLint, Build, Unit tests and
+  Integration tests. Documentation-only changes skip application checks. The four
+  existing check names remain stable for repository rulesets.
