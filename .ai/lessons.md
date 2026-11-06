@@ -13,6 +13,7 @@ Omit the link for lessons short enough to state inline.
 
 - 2026-11-06 — Payment callbacks are historical snapshots: retrieve current provider payment/refund evidence outside database locks before confirmation, validate metadata IDs before UUID queries, and check provider readiness before making inventory durable. All payment expiry/removal/availability paths must retain unresolved payment occupancy.
 - 2026-11-06 — The CI change classifier uses native `node:test`; run it through `node --test` in npm unit commands and exclude that test file from Vitest discovery. Otherwise its assertions pass but Vitest reports “No test suite found”.
+- 2026-11-06 — Stripe Checkout expiry must be at least 30 minutes after provider session creation, so an already-running 30-minute booking hold cannot be reused as expires_at. Payment design must reconcile provider truth before releasing inventory; delayed webhooks and lost create responses need durable recovery. Hold-policy changes require owner confirmation.
 
 - 2026-11-06 — Documentation CI must skip application jobs rather than the entire workflow so required checks report status. Keep Lint's instruction/classifier checks mandatory; classify the whole merge-base diff with renames disabled and run the full suite on unknown paths, missing output or classification failures.
 - 2026-11-06 — User correction: keep the skill override/update process in `SDLC.md` (Amending this process); do not duplicate it in root `AGENTS.md`, which already routes delivery-pipeline work there.
