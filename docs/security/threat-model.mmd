@@ -8,6 +8,11 @@ flowchart LR
     API(Owned routes and SlotService)
     Public(Published mentor projection)
     Booking(Booking route and service)
+    Payments(Checkout and verified webhook service)
+    Recovery(Bounded reconciliation runner)
+  end
+  subgraph provider [External payment provider]
+    Stripe[Stripe Checkout and API]
   end
   subgraph data [Trusted storage]
     DB[(PostgreSQL)]
@@ -20,6 +25,12 @@ flowchart LR
   Booking -->|"mentor then slot locks, snapshot and expiry T14 T15 T18"| DB
   Booking -->|"own pending DTO T16 T18"| Mentee
   Public -->|"bounded active intervals and viable lengths T14 T17"| DB
+  Mentee -->|"owned booking, cookie, CSRF T19 T23"| Payments
+  Payments -->|"idempotent session request T20 T24 T25"| Stripe
+  Stripe -->|"raw signed event T19 T22 T23"| Payments
+  Payments -->|"atomic payment identity and confirmation T20 T21 T22"| DB
+  Recovery -->|"bounded pending attempts T21 T25"| DB
+  Recovery -->|"verified session retrieval and expiry T20 T21 T25"| Stripe
   classDef boundary stroke-dasharray: 5 5
-  class internet,app,data boundary
+  class internet,app,data,provider boundary
 

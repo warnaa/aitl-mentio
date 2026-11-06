@@ -20,6 +20,11 @@ flowchart LR
     API(Owned routes and SlotService)
     Public(Published mentor projection)
     Booking(Booking route and service)
+    Payments(Checkout and verified webhook service)
+    Recovery(Bounded reconciliation runner)
+  end
+  subgraph provider [External payment provider]
+    Stripe[Stripe Checkout and API]
   end
   subgraph data [Trusted storage]
     DB[(PostgreSQL)]
@@ -32,8 +37,14 @@ flowchart LR
   Booking -->|"mentor then slot locks, snapshot and expiry T14 T15 T18"| DB
   Booking -->|"own pending DTO T16 T18"| Mentee
   Public -->|"bounded active intervals and viable lengths T14 T17"| DB
+  Mentee -->|"owned booking, cookie, CSRF T19 T23"| Payments
+  Payments -->|"idempotent session request T20 T24 T25"| Stripe
+  Stripe -->|"raw signed event T19 T22 T23"| Payments
+  Payments -->|"atomic payment identity and confirmation T20 T21 T22"| DB
+  Recovery -->|"bounded pending attempts T21 T25"| DB
+  Recovery -->|"verified session retrieval and expiry T20 T21 T25"| Stripe
   classDef boundary stroke-dasharray: 5 5
-  class internet,app,data boundary
+  class internet,app,data,provider boundary
 ```
 
 ## Threats and controls
@@ -99,3 +110,25 @@ flowchart LR
 Test scope: synthetic ephemeral PostgreSQL, real app/API and isolated browser sessions. Cover all T12–T18 controls in unit/integration/QA, including failed input, role denial, concurrency, expiry, price tampering and retry. No real accounts, provider calls, production scans or destructive cleanup. STRIDE: S/E role/identity; T transactional invariants; R history/timestamps; I explicit DTO; D bounded reads/throttling. Controls remain planned until the recorded gate proves them.
 
 Implementation sequence: entity/migration; service and occupied removal; route/DI; viable lengths and picker; documented integration scenarios; coverage/full gate/independent review and QA. Each step is a separate commit; the local run plan tracks exact hashes without committing runtime artifacts.
+
+## Booking payment design extension — 2026-11-06
+
+Scope: #41/#53 design only. The existing availability profile remains historical; the payment proposal adds an external integration through an app-layer Stripe adapter. The main inline and sibling diagrams now include that proposed boundary. No payment control below is implemented or tested. See `.ai/specs/2026-11-06-booking-payments.md`; Q1/Q2 require policy-owner confirmation. No risk acceptance is inferred.
+
+New assets: collected money, exclusive paid session time, stable provider identities, webhook signing/API secrets, Checkout bearer URLs and reconciliation history. Actors include another mentee, a nonoperator caller, forged callback sender and a failing/retrying external provider. Entries: owned Checkout POST, raw payment webhook, participant reads and bounded reconciliation runner. Provider requests are untrusted until the official SDK verifies signatures and the service verifies exact stored payment identity/amount/currency/environment. No AI component is added; Rule of Two remains inapplicable.
+
+| ID | Threat | STRIDE | L/I | Planned mitigation | How verified | Mapping |
+| --- | --- | --- | --- | --- | --- | --- |
+| T19 | Forged callback or browser success URL confirms an unpaid booking | S/T/E | H/H | Raw-body SDK signature verification; trusted environment/account; paid status; return pages read state only; production fails closed | Bad/missing signature, wrong environment and forged success-return tests | API2:2023 CWE-345 |
+| T20 | Lost creation response or retries produce multiple payable sessions | T/R | H/H | Durable immutable attempt/idempotency key before provider call; replay/retrieve same attempt; no indefinite deadline extension | Timeout before/after remote creation, crash before attachment, parallel retries | A06:2025 CWE-362 |
+| T21 | A delayed paid callback races wall-clock expiry and resells mentor time | T | H/H | Shared mentor→slot lock order; unresolved-attempt occupancy across every availability/release path; provider reconciliation before unpaid release | Paid/expiry/new-booking/removal interleavings on real PostgreSQL, provider outage recovery | A06:2025 CWE-367 |
+| T22 | Transport replay or distinct event IDs confirm/record one payment twice | T/R | H/H | Atomic event marker plus transition; booking/session/payment-intent uniqueness; rollback markers on failure | Same/different event IDs, concurrent delivery, database rollback then retry | A06:2025 CWE-841 |
+| T23 | Valid provider event binds the wrong owner, amount, currency or booking | T/I/E | M/H | Match stored attempt/session/booking and exact immutable price; ownership from live session; generic foreign/missing 404; paid anomalies durably quarantined | Two-mentee/two-mentor IDOR, wrong role, altered metadata/amount/currency, operator-only exception reads | API1:2023 API3:2023 CWE-639 |
+| T24 | Secrets, Checkout bearer URLs or customer/card data leak through logs/audit rows | I | M/H | Minimal normalized event fields, bounded diagnostic codes, logger redaction, explicit DTOs and configured server-origin redirects | DTO/log assertions and sanitized artifact review; no raw provider payload persisted | A02:2025 CWE-200 |
+| T25 | Oversized webhook or unavailable provider exhausts locks and inventory | D | H/M | Body limit, verified event filtering, bounded I/O outside locks, indexed bounded reconciliation with backoff; operator-visible overdue state | Oversized request, unknown event, API timeout, bounded runner and overdue recovery cases | API4:2023 CWE-400 |
+
+Payment test scope: synthetic local ephemeral PostgreSQL and isolated test adapters; real Stripe test-mode smoke only with separate test credentials and explicit scope. No production calls, charges, refunds, provider infrastructure scans or new public webhook registration in this design run. Integration tests must cover T19–T25, including wrong-scope reads, denial, failure, retry, idempotency, crash recovery and migration up/down/up. Human money review and risk-high QA approval remain outstanding.
+
+STRIDE across browser/app, provider/app and app/storage: S verified provider identity/live sessions; T locked state/amount/expiry; R durable normalized markers and transitions; I DTO/log minimization; D bounded inputs/I/O/recovery; E role/ownership/operator guards. All high threats have planned mitigations and concrete tests. Residual policy risks: unresolved provider state temporarily retains inventory; paid anomalies need operator action; in-process confirmation events have no durable delivery guarantee. Q1/Q2 owner confirmation gates implementation. These are assumptions, not accepted risks or completed controls.
+
+Changelog: 2026-11-06 added payment design threats T19–T25, preserving T01–T18 and existing scopes.
