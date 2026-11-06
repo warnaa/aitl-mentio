@@ -56,6 +56,15 @@ it('shows the s2 empty state when no published time meets the notice period', ()
   expect(screen.queryByRole('group', { name: 'Days with published sessions' })).toBeNull();
 });
 
+it('does not advertise occupied days and preserves durations that remain viable', () => {
+  const { rerender } = render(<MentorPageView profile={{ ...base, prices, offerReady: true, slots: [{ id: 'taken', startsAt: '2099-11-04T14:30:00Z', meetsLeadTime: true, viableLengths: [] }] }} />);
+  expect(screen.queryByRole('group', { name: 'Days with published sessions' })).toBeNull();
+  expect(screen.getByText('No times available right now')).toBeTruthy();
+  expect(screen.getByText('Unavailable: overlaps a reserved session.').closest('li')!.dataset.eligible).toBe('false');
+  rerender(<MentorPageView profile={{ ...base, offerReady: true, slots: [{ id: 'free', startsAt: '2099-11-04T14:30:00Z', meetsLeadTime: true, viableLengths: [25] }] }} />);
+  expect(screen.getByRole('group', { name: 'Days with published sessions' })).toBeTruthy();
+});
+
 it('shows visitors "Not bookable yet" without the mentor setup checklist', () => {
   render(<MentorPageView profile={{ ...base, prices: null, offerReady: false, offerReadiness: readiness(false) }} />);
   expect(screen.getByText('Not bookable yet')).toBeTruthy();
@@ -74,4 +83,11 @@ it('formats minor units, dropping decimals only for whole amounts', () => {
   // A non-breaking space keeps the currency with its amount.
   expect(formatPrice(60000, 'PLN')).toBe('PLN 600');
   expect(formatPrice(8005, 'PLN')).toBe('PLN 80.05');
+});
+
+it('accepts public booking controls in the existing card while retaining the shared session notice', () => {
+  render(<MentorPageView profile={{ ...base, offerReady: true }} booking={<button>Reserve a session</button>} />);
+  const card = screen.getByRole('complementary', { name: 'Session prices' });
+  expect(within(card).getByRole('button', { name: 'Reserve a session' })).toBeTruthy();
+  expect(within(card).getByText('Sessions are text. DevMentor makes no promise about how soon an answer arrives.')).toBeTruthy();
 });

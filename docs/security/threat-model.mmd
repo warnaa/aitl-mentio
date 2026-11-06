@@ -2,10 +2,12 @@ flowchart LR
   subgraph internet [Untrusted browser]
     Mentor[Mentor or attacker]
     Visitor[Anonymous visitor]
+    Mentee[Mentee or attacker]
   end
   subgraph app [Trusted application]
     API(Owned routes and SlotService)
     Public(Published mentor projection)
+    Booking(Booking route and service)
   end
   subgraph data [Trusted storage]
     DB[(PostgreSQL)]
@@ -14,5 +16,10 @@ flowchart LR
   API -->|"owner-scoped queries and transactional publication (T02,T05,T06)"| DB
   Visitor -->|"slug (T07,T08)"| Public
   Public -->|"published profile and future slots (T07,T08)"| DB
+  Mentee -->|"cookie, CSRF, slot and duration T12 T13 T17"| Booking
+  Booking -->|"mentor then slot locks, snapshot and expiry T14 T15 T18"| DB
+  Booking -->|"own pending DTO T16 T18"| Mentee
+  Public -->|"bounded active intervals and viable lengths T14 T17"| DB
   classDef boundary stroke-dasharray: 5 5
   class internet,app,data boundary
+

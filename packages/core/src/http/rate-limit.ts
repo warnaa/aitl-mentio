@@ -8,8 +8,8 @@ import { TooManyRequestsError } from './errors';
 export interface RateLimitPolicy {
   /** What is being limited, e.g. `sign-in` — the first part of the key. */
   scope: string;
-  /** What identifies the caller: a client IP or an email address. */
-  kind: 'ip' | 'email';
+  /** What identifies the caller: a client IP, an email address or a signed-in account id. */
+  kind: 'ip' | 'email' | 'account';
   limit: number;
   windowMs: number;
 }

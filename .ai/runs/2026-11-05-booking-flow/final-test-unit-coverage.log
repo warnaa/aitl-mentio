@@ -1,0 +1,26 @@
+
+> devmentor@0.1.0 test:unit:coverage
+> vitest run --config vitest.config.mts --coverage
+
+
+ RUN  v4.1.11 D:/repos/worktrees/aitl-mentio/t3-807f413c
+      Coverage enabled with v8
+
+
+ Test Files  161 passed (161)
+      Tests  1500 passed (1500)
+   Start at  23:46:52
+   Duration  37.94s (transform 19.48s, setup 0ms, import 257.73s, tests 82.92s, environment 148.85s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 2726/2726 )
+Branches     : 100% ( 1622/1622 )
+Functions    : 100% ( 852/852 )
+Lines        : 100% ( 2534/2534 )
+================================================================================

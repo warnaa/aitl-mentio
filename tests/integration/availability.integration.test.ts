@@ -22,7 +22,7 @@ it('TC-AVAILABILITY-001 scopes writes, serializes duplicates and preserves remov
     expect(parallel.map(r => r.status).sort()).toEqual([200, 409]);
     const created = (await parallel.find(r => r.status === 200)!.json()).data as { id: string };
     const publicSlots = (await (await fetch(`${base}/api/mentors/${slug}`)).json()).data.slots;
-    expect(publicSlots).toEqual([{ id: created.id, startsAt, meetsLeadTime: true }]);
+    expect(publicSlots).toEqual([{ id: created.id, startsAt, meetsLeadTime: true, viableLengths: [25, 50] }]);
     const foreignLogin = `slots-other-${process.pid}`;
     const foreignInitial = cookieHeader(await signInAs(session, base, foreignLogin));
     expect((await fetch(path, { headers: foreignInitial })).status).toBe(403);

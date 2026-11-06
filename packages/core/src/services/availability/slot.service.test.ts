@@ -3,7 +3,7 @@ import { UniqueConstraintViolationException, type EntityManager } from '@devment
 import { SlotService } from './slot.service';
 import type { Session } from '../../http/auth';
 
-vi.mock('@devmentor/db', () => ({ Slot: 'Slot', MentorProfile: 'Profile', LockMode: { PESSIMISTIC_WRITE: 'write' }, UniqueConstraintViolationException: class extends Error {} }));
+vi.mock('@devmentor/db', () => ({ Booking: 'Booking', Slot: 'Slot', MentorProfile: 'Profile', LockMode: { PESSIMISTIC_WRITE: 'write' }, UniqueConstraintViolationException: class extends Error {} }));
 const now = new Date('2026-11-05T12:00:00Z');
 let session: Session | null;
 let profile: { id: string; lastPublishedAvailabilityAt: Date | null; updatedAt: Date };
@@ -22,7 +22,7 @@ beforeEach(() => {
   session = { userId: 'owner', roles: ['mentor'] };
   profile = { id: 'profile', lastPublishedAvailabilityAt: null, updatedAt: now };
   slot = { id: 'slot', startsAt: new Date('2026-11-06T12:00:00Z'), removedAt: null, updatedAt: now };
-  findOne.mockImplementation(async type => type === 'Profile' ? profile : slot);
+  findOne.mockImplementation(async type => type === 'Profile' ? profile : type === 'Booking' ? null : slot);
   count.mockResolvedValue(1); find.mockResolvedValue([slot]); flush.mockResolvedValue(undefined); emit.mockResolvedValue(undefined);
 });
 it('guards every owner operation before access', async () => {
@@ -66,10 +66,21 @@ it('maps only the named duplicate constraint and never emits on rollback', async
 });
 it('soft-removes under an owner-scoped row lock and hides foreign/missing IDs', async () => {
   expect(await service().remove('11111111-1111-4111-8111-111111111111')).toEqual({ id: 'slot' });
-  expect(findOne).toHaveBeenCalledWith('Slot', { id: '11111111-1111-4111-8111-111111111111', mentorProfile: { user: 'owner' }, removedAt: null }, { lockMode: 'write', refresh: true });
+  expect(findOne).toHaveBeenCalledWith('Slot', { id: '11111111-1111-4111-8111-111111111111', mentorProfile: 'profile', removedAt: null }, { lockMode: 'write', refresh: true });
+  expect(findOne.mock.calls.slice(-3).map(call => call[0])).toEqual(['Profile', 'Slot', 'Booking']);
   expect(slot.removedAt).toBe(now); expect(profile.lastPublishedAvailabilityAt).toBeNull();
   findOne.mockResolvedValue(null);
   await expect(service().remove('22222222-2222-4222-8222-222222222222')).rejects.toMatchObject({ status: 404, message: 'Slot not found' });
+  findOne.mockResolvedValueOnce(profile).mockResolvedValueOnce(null);
+  await expect(service().remove('22222222-2222-4222-8222-222222222222')).rejects.toMatchObject({ status: 404, message: 'Slot not found' });
+});
+
+it('refuses removal of an actively reserved slot after taking its row lock', async () => {
+  findOne.mockImplementation(async type => type === 'Booking' ? { id: 'active-booking' } : slot);
+  await expect(service().remove('11111111-1111-4111-8111-111111111111')).rejects.toMatchObject({ status: 409 });
+  expect(slot.removedAt).toBeNull();
+  expect(flush).not.toHaveBeenCalled();
+  expect(findOne).toHaveBeenLastCalledWith('Booking', { slot: 'slot', $or: [{ status: 'confirmed' }, { status: 'pending', expiresAt: { $gt: now } }] });
 });
 
 

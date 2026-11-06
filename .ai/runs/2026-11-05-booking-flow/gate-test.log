@@ -1,0 +1,17 @@
+
+> devmentor@0.1.0 test
+> npm run test:unit
+
+
+> devmentor@0.1.0 test:unit
+> vitest run --config vitest.config.mts
+
+
+ RUN  v4.1.11 D:/repos/worktrees/aitl-mentio/t3-807f413c
+
+
+ Test Files  161 passed (161)
+      Tests  1499 passed (1499)
+   Start at  23:41:46
+   Duration  27.17s (transform 20.04s, setup 0ms, import 253.86s, tests 69.84s, environment 151.92s)
+

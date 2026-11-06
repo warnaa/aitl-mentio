@@ -1,0 +1,13 @@
+
+> devmentor@0.1.0 test:integration
+> vitest run --config vitest.integration.config.mts
+
+
+ RUN  v4.1.11 D:/repos/worktrees/aitl-mentio/t3-807f413c
+
+
+ Test Files  28 passed (28)
+      Tests  69 passed (69)
+   Start at  23:47:33
+   Duration  979.03s (transform 1.32s, setup 0ms, import 25.09s, tests 876.91s, environment 3ms)
+

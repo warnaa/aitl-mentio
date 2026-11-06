@@ -17,7 +17,7 @@ import {
 import type { EventBus } from '../../events/event-bus';
 
 vi.mock('@devmentor/db', () => ({
-  MentorProfile: 'MentorProfile', Slot: 'Slot',
+  MentorProfile: 'MentorProfile', Slot: 'Slot', Booking: 'Booking',
   LockMode: { PESSIMISTIC_WRITE: 'write' },
   UniqueConstraintViolationException: class extends Error {
     constraint?: string;
@@ -64,7 +64,7 @@ describe('MentorProfileService', () => {
     findOne = vi.fn(async (_entity, query) => ('slug' in query ? null : profile));
     transactions = [];
     em = {
-      count: vi.fn().mockResolvedValue(0), find: vi.fn().mockResolvedValue([{ id: 'future', startsAt: new Date('2026-11-04T14:00:00Z') }, { id: 'near', startsAt: new Date('2026-11-04T13:59:59.999Z') }]),
+      count: vi.fn().mockResolvedValue(0), find: vi.fn(async entity => entity === 'Booking' ? [] : [{ id: 'future', startsAt: new Date('2026-11-04T14:00:00Z') }, { id: 'near', startsAt: new Date('2026-11-04T13:59:59.999Z') }]),
       findOne,
       fork: vi.fn(() => ({
         transactional: vi.fn(async (fn) => {
@@ -253,6 +253,15 @@ describe('MentorProfileService', () => {
     }
     expect(profile.price25Cents).toBe(60000); expect(profile.price50Cents).toBe(120000);
     expect(findOne).toHaveBeenCalledWith('MentorProfile', { user: 'owner' }, expect.objectContaining({ lockMode: LockMode.PESSIMISTIC_WRITE }));
+  });
+  it('projects viable durations from active overlapping intervals and skips empty-slot occupancy reads', async () => {
+    findOne.mockResolvedValue(profile);
+    vi.mocked(em.find).mockResolvedValueOnce([{ id: 'start', startsAt: new Date('2026-11-04T14:00:00Z') }] as never)
+      .mockResolvedValueOnce([{ startsAt: new Date('2026-11-04T14:25:00Z'), lengthMinutes: 25 }] as never);
+    expect((await service().getPublicBySlug('ada')).slots).toEqual([{ id: 'start', startsAt: '2026-11-04T14:00:00.000Z', meetsLeadTime: true, viableLengths: [25] }]);
+    vi.mocked(em.find).mockClear().mockResolvedValueOnce([]);
+    expect((await service().getPublicBySlug('ada')).slots).toEqual([]);
+    expect(em.find).toHaveBeenCalledOnce();
   });
   it('validates both before mutating either and names every breached bound', async () => {
     profile.price25Cents = 10000; profile.price50Cents = 20000;
