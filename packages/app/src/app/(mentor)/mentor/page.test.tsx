@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
 import { MentorWorkspace } from './MentorWorkspace';
+import { BookingsPanel } from '../../../components/sessions/BookingsPanel';
+import { findByType } from '../../../test/element-tree';
 import { admit, deny, GuardRedirect, guards } from '../../../test/page-guards';
 
 vi.mock('../../../lib/session', async () => (await import('../../../test/page-guards')).guards);
@@ -24,7 +26,9 @@ describe('/mentor', () => {
   });
 
   it('renders the mentor workspace', async () => {
-    expect((await render()).type).toBe(MentorWorkspace);
+    const tree = await render();
+    expect(findByType(tree, MentorWorkspace)).toBeTruthy();
+    expect(findByType(tree, BookingsPanel).props.persona).toBe('mentor');
   });
 
   it.each(['/sign-in?returnTo=%2Fmentor', '/home'])('renders nothing when the guard redirects to %s (edge case 19)', async (location) => {

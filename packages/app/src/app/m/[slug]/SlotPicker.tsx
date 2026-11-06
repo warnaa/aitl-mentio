@@ -6,6 +6,7 @@ import { apiCall, ErrorMessage, LoadingMessage } from '@devmentor/ui/backend';
 import { Button } from '@devmentor/ui/components/button';
 import { formatPrice } from '@devmentor/ui/components/mentors/MentorPageView';
 import { LocalTime } from '@devmentor/ui/time';
+import { CheckoutAction } from '../../../components/sessions/CheckoutAction';
 
 export interface PickerSlot {
   id: string;
@@ -81,7 +82,9 @@ export function SlotPicker({ slug, slots, prices, viewer, initialSlotId, initial
       <p>{booking.lengthMinutes} minutes: {formatPrice(booking.priceCents, booking.currency)}</p>
       <p>Starts: <LocalTime value={booking.startsAt} /></p>
       <p>Held until: <LocalTime value={booking.expiresAt} /></p>
-      <p>Payment and confirmation are not available yet. The hold expires automatically.</p>
+      <p>Pay securely through Stripe Checkout. Your session is confirmed only after payment is verified.</p>
+      <p className="dm-product-caption">Opening Checkout starts one 31-minute payment window. Your time stays reserved while the payment result is checked.</p>
+      <CheckoutAction bookingId={booking.id} />
     </div> : <form aria-label="Reserve selected time" onSubmit={reserve} className="grid min-w-0 gap-4">
       <fieldset disabled={pending} className="grid min-w-0 gap-3">
         <legend className="mb-2 font-medium">Session start</legend>
