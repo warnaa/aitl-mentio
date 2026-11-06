@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
 import { MentorWorkspace } from './MentorWorkspace';
+import { NotificationsPanel } from '../../../components/notifications/NotificationsPanel';
 import { BookingsPanel } from '../../../components/sessions/BookingsPanel';
 import { findByType } from '../../../test/element-tree';
 import { admit, deny, GuardRedirect, guards } from '../../../test/page-guards';
@@ -28,6 +29,7 @@ describe('/mentor', () => {
   it('renders the mentor workspace', async () => {
     const tree = await render();
     expect(findByType(tree, MentorWorkspace)).toBeTruthy();
+    expect(findByType(tree, NotificationsPanel)).toBeTruthy();
     expect(findByType(tree, BookingsPanel).props.persona).toBe('mentor');
   });
 

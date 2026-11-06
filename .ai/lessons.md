@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-06 — **Integration fixture logins must stay within GitHub's 39-character login limit, or the whole test hangs instead of failing.** `bookingPersona` forwards the login to the mock OAuth start route, which drops any hint that is not a well-formed GitHub login; the fixture then signs in as the shared default persona, its `findOneOrFail` assertions fail, and the fixture's cleanup keeps the run until the test timeout (a case id of `sessions-001` produced `booking-payment-sessions-001-<pid>-mentor`, 41 characters; `list-001` works). Keep `booking-payment-<case>-<pid>-mentor` ≤ 39 characters.
+- 2026-11-06 — `bookings.booking.confirmed` consumers run inside the payment webhook request: `EventBus.emit` awaits each handler and `PaymentService` awaits the emit, so a subscriber's rows and `mail.sent` lines exist before the callback answers 200. Integration tests for consumers therefore need no sleeps or polling, which the QA determinism rule forbids anyway. Also: running `db:migrate` up/down against the generated migration rewrites `.snapshot-devmentor.json` with unrelated reformatting, and `migration:create` emits a spurious `bookings_currency_check` drop/add left over from the payment-submissions migration; keep only the `create` output's snapshot diff (restore the file, regenerate once) and delete the currency lines from the migration.
 - 2026-11-06 — User correction for PR #72: the requested work was merge-conflict resolution only. Keep this run to merging the base and preserving both lessons-index entries; do not publish the additional review-driven payment fixes.
 
 
