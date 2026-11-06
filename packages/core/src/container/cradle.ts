@@ -14,6 +14,8 @@ import type { InvitationService } from '../services/invitations/invitation.servi
 import type { MentorProfileService } from '../services/mentors/mentor-profile.service';
 import type { SlotService } from '../services/availability/slot.service';
 import type { BookingService } from '../services/bookings/booking.service';
+import type { PaymentService } from '../services/payments/payment.service';
+import type { PaymentGateway } from '../services/payments/payment-gateway.port';
 import type { PlatformSettingsService } from '../services/operator/platform-settings.service';
 import type { Mailer } from '../services/notifications/mailer.port';
 import type { Clock } from '../time/clock';
@@ -58,6 +60,8 @@ export interface Cradle {
   mentorProfileService: MentorProfileService;
   slotService: SlotService;
   bookingService: BookingService;
+  paymentService: PaymentService;
+  paymentGateway: PaymentGateway;
   platformSettingsService: PlatformSettingsService;
   rateLimiter: RateLimiter;
   session: Promise<Session | null>;

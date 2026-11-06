@@ -230,6 +230,15 @@ describe('invitation policy configuration', () => {
   });
 });
 
+describe('payment provider configuration', () => {
+  it('uses Stripe by default and refuses implicit fake payment configuration', async () => {
+    expect(await parse({})).toMatchObject({ PAYMENT_GATEWAY_ADAPTER: 'stripe' });
+    await expect(parse({ PAYMENT_GATEWAY_ADAPTER: 'mock' })).rejects.toThrow('Mock payments are refused');
+    expect(await parse({ PAYMENT_GATEWAY_ADAPTER: 'mock', INTEGRATION_TEST_RUN: '1' })).toMatchObject({ PAYMENT_GATEWAY_ADAPTER: 'mock', INTEGRATION_TEST_RUN: true });
+    expect(await parse({ PAYMENT_GATEWAY_ADAPTER: '', STRIPE_SECRET_KEY: '', STRIPE_WEBHOOK_SECRET: '' })).toMatchObject({ PAYMENT_GATEWAY_ADAPTER: 'stripe', STRIPE_SECRET_KEY: undefined, STRIPE_WEBHOOK_SECRET: undefined });
+  });
+});
+
 it('uses only the founder-approved PLN defaults and rejects blank commercial configuration', async () => {
   const env = await parse({});
   expect(env.PLATFORM_CURRENCY).toBe('PLN');

@@ -28,6 +28,10 @@ import { InvitationService } from '../services/invitations/invitation.service';
 import { MentorProfileService } from '../services/mentors/mentor-profile.service';
 import { SlotService } from '../services/availability/slot.service';
 import { BookingService } from '../services/bookings/booking.service';
+import { PaymentService } from '../services/payments/payment.service';
+import type { PaymentGateway } from '../services/payments/payment-gateway.port';
+import { MockPaymentGateway } from '../services/payments/adapters/mock-payment-gateway';
+import { UnavailablePaymentGateway } from '../services/payments/adapters/unavailable-payment-gateway';
 import { PlatformSettingsService } from '../services/operator/platform-settings.service';
 import { systemClock } from '../time/clock';
 import type { Cradle } from './cradle';
@@ -39,7 +43,13 @@ import type { Cradle } from './cradle';
  */
 const globalForContainer = globalThis as unknown as {
   __devmentorContainer?: Promise<AwilixContainer<Cradle>>;
+  __devmentorPaymentGatewayFactory?: (env: AppEnv) => PaymentGateway;
 };
+
+/** The host supplies its vendor adapter; core never imports the SDK or app. */
+export function configurePaymentGatewayFactory(factory: (env: AppEnv) => PaymentGateway): void {
+  globalForContainer.__devmentorPaymentGatewayFactory = factory;
+}
 
 /**
  * Configuration production cannot serve without. Checked when the container is first
@@ -135,6 +145,11 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     mentorProfileService: asClass(MentorProfileService).scoped(),
     slotService: asClass(SlotService).scoped(),
     bookingService: asClass(BookingService).scoped(),
+    paymentGateway: asFunction(({ env, clock }: Cradle) =>
+      env.PAYMENT_GATEWAY_ADAPTER === 'mock' && env.INTEGRATION_TEST_RUN
+        ? new MockPaymentGateway({ clock })
+        : globalForContainer.__devmentorPaymentGatewayFactory?.(env) ?? new UnavailablePaymentGateway()).singleton(),
+    paymentService: asClass(PaymentService).scoped(),
     platformSettingsService: asClass(PlatformSettingsService).scoped(),
     // Scoped: it counts through the request's `em`.
     rateLimiter: asClass(RateLimiter).scoped(),

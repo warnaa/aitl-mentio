@@ -20,6 +20,7 @@ const state = vi.hoisted(() => {
       MAILER_ADAPTER?: 'resend' | 'log';
       MAIL_API_KEY?: string;
       MAIL_FROM?: string;
+      PAYMENT_GATEWAY_ADAPTER?: 'stripe' | 'mock';
     },
     getOrm: vi.fn(async () => ({ em: { fork } })),
   };
@@ -30,7 +31,7 @@ vi.mock('@devmentor/db', () => ({ getOrm: state.getOrm, User: class User {} }));
 vi.mock('../config/env', () => ({ getEnv: () => state.env }));
 vi.mock('../logger', () => ({ createLogger: () => state.logger }));
 
-const { getContainer, withRequestScope, withScope, withSessionCookieScope } = await import('./container');
+const { getContainer, withRequestScope, withScope, withSessionCookieScope, configurePaymentGatewayFactory } = await import('./container');
 const { requireSession } = await import('../http/auth');
 const { systemClock } = await import('../time/clock');
 const { UserService } = await import('../services/auth/user.service');
@@ -45,16 +46,40 @@ const { ResendMailer } = await import('../services/notifications/adapters/resend
 const { GithubIdentityAdapter } = await import('../services/auth/adapters/github-identity');
 const { MockGithubIdentityAdapter } = await import('../services/auth/adapters/mock-github-identity');
 
-const globalForContainer = globalThis as { __devmentorContainer?: unknown };
+const globalForContainer = globalThis as { __devmentorContainer?: unknown; __devmentorPaymentGatewayFactory?: unknown };
 
 beforeEach(() => {
   delete globalForContainer.__devmentorContainer;
+  delete globalForContainer.__devmentorPaymentGatewayFactory;
   vi.clearAllMocks();
   state.env = { NODE_ENV: 'test' };
 });
 
 afterEach(() => {
   delete globalForContainer.__devmentorContainer;
+  delete globalForContainer.__devmentorPaymentGatewayFactory;
+});
+
+describe('payment gateway composition', () => {
+  it('fails closed without a host provider and does not select mock from missing credentials', async () => {
+    const container = await getContainer();
+    expect(() => container.cradle.paymentGateway.assertReady()).toThrow('Payments are not configured');
+  });
+  it('selects a synthetic provider only with both explicit harness flags', async () => {
+    state.env = { NODE_ENV: 'test', PAYMENT_GATEWAY_ADAPTER: 'mock', INTEGRATION_TEST_RUN: true };
+    const container = await getContainer();
+    expect(container.cradle.paymentGateway.constructor.name).toBe('MockPaymentGateway');
+    expect(container.cradle.paymentGateway.assertReady()).toBeUndefined();
+    expect(await withScope(cradle => cradle.paymentGateway)).toBe(container.cradle.paymentGateway);
+  });
+  it('uses the host factory for real mode, including when mock is requested without its run flag', async () => {
+    state.env = { NODE_ENV: 'test', PAYMENT_GATEWAY_ADAPTER: 'mock', INTEGRATION_TEST_RUN: false };
+    const supplied = { livemode: true };
+    const factory = vi.fn(() => supplied as never);
+    configurePaymentGatewayFactory(factory);
+    expect((await getContainer()).cradle.paymentGateway).toBe(supplied);
+    expect(factory).toHaveBeenCalledWith(state.env);
+  });
 });
 
 describe('getContainer', () => {
