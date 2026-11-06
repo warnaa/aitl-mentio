@@ -1,0 +1,26 @@
+[
+    {
+        "command":  "npm run typecheck",
+        "exitCode":  0
+    },
+    {
+        "command":  "npm run lint",
+        "exitCode":  0
+    },
+    {
+        "command":  "npm run test",
+        "exitCode":  0
+    },
+    {
+        "command":  "npm run build",
+        "exitCode":  0
+    },
+    {
+        "command":  "npm run test:unit:coverage",
+        "exitCode":  0
+    },
+    {
+        "command":  "npm run test:integration",
+        "exitCode":  0
+    }
+]

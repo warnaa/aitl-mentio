@@ -1,0 +1,60 @@
+
+> devmentor@0.1.0 build
+> npm run build --workspace @devmentor/app
+
+
+> @devmentor/app@0.1.0 build
+> cross-env NODE_ENV=production next build
+
+▲ Next.js 16.3.3 (Turbopack)
+✓ Running next.config.ts took 53ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1309ms
+  Running TypeScript ...
+  Finished TypeScript in 12.0s ...
+  Collecting page data using 23 workers ...
+  Generating static pages using 23 workers (0/3) ...
+✓ Generating static pages using 23 workers (3/3) in 319ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/users
+├ ƒ /api/auth/github
+├ ƒ /api/auth/github/callback
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/register
+├ ƒ /api/auth/verify-email
+├ ƒ /api/availability/slots
+├ ƒ /api/availability/slots/[id]
+├ ƒ /api/bookings
+├ ƒ /api/health
+├ ƒ /api/invitations/[token]
+├ ƒ /api/invitations/[token]/accept
+├ ƒ /api/mentors/[slug]
+├ ƒ /api/mentors/me
+├ ƒ /api/mentors/me/onboarding
+├ ƒ /api/mentors/me/prices
+├ ƒ /api/mentors/me/publish
+├ ƒ /api/mentors/me/unpublish
+├ ƒ /api/users
+├ ƒ /home
+├ ƒ /invitation/[token]
+├ ƒ /m/[slug]
+├ ƒ /mentor
+├ ƒ /mentor/prices
+├ ƒ /mentor/profile
+├ ƒ /mentor/slots
+├ ƒ /register
+└ ƒ /sign-in
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
