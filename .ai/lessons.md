@@ -9,6 +9,9 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-06 — User correction for PR #72: the requested work was merge-conflict resolution only. Keep this run to merging the base and preserving both lessons-index entries; do not publish the additional review-driven payment fixes.
+
+
 - 2026-11-06 — Checkout retry recovery must re-read an attached session under the submission lock: another request can attach it after the caller's earlier attempt read. Recover that session instead of returning a false conflict; retain a real-PostgreSQL concurrent retry regression.
 
 - 2026-11-06 — Payment callbacks are historical snapshots: retrieve current provider payment/refund evidence outside database locks before confirmation, validate metadata IDs before UUID queries, and check provider readiness before making inventory durable. All payment expiry/removal/availability paths must retain unresolved payment occupancy.
