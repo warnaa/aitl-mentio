@@ -35,6 +35,11 @@ export const Booking = defineSingletonEntity('Booking', () =>
       bookedAt: p.datetime().nullable(),
       expiresAt: p.datetime().nullable(),
       stripeCheckoutSessionId: p.string().nullable().unique(),
+      stripePaymentIntentId: p.string().nullable().unique(),
+      paidAt: p.datetime().nullable(),
+      amountPaidCents: p.integer().nullable(),
+      // Updated atomically with the attempt. Lazy hold expiry must never release unresolved money.
+      paymentPending: p.boolean().default(false),
     },
   }),
 );

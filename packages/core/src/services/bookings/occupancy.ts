@@ -10,6 +10,7 @@ export function activeOccupancy(now: Date) {
   return { $or: [
     { status: 'confirmed' as const },
     { status: 'pending' as const, expiresAt: { $gt: now } },
+    { status: 'pending' as const, paymentPending: true },
   ] };
 }
 
