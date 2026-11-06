@@ -1,11 +1,11 @@
 # Paying for a reserved mentor session
 
 ## 📝 TLDR
-Issue #41 extends #40's unpaid reservation with Stripe Checkout, verified payment confirmation and participant-visible status. Include #53 as the provider adapter task within this capability. This is a design draft: payment-window policy needs owner confirmation before implementation.
+Issue #41 extends #40's unpaid reservation with Stripe Checkout, verified payment confirmation and participant-visible status. Include #53 as the provider adapter task within this capability. The owner confirmed Q1 and Q2 on 2026-11-06 in the implementation conversation; their policy gate is resolved. This approval does not authorize production deployment or waive human money review/QA.
 
 ## Resolved assumptions (autonomous defaults)
 
-These are proposals, not owner-approved product decisions. No money-handling implementation starts while Q1/Q2 remain unconfirmed.
+Q1 and Q2 below were explicitly owner-approved on 2026-11-06: “Q1 and Q2 ok”. References to their confirmation gate in the original design discussion are historical; implementation follows the choices below. Other autonomous defaults remain visible for override. Remote writes require separate approval.
 
 | ID | Proposed choice | Reason | Gate |
 | --- | --- | --- | --- |
