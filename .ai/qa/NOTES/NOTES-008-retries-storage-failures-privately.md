@@ -1,0 +1,41 @@
+﻿# NOTES-008: retries a temporarily unavailable note and keeps failed-save text private
+
+- **Area:** NOTES
+- **Priority:** High
+- **Type:** UI/API
+- **Requirement:** [Reviewed slice A spec](../../specs/2026-11-07-session-notes.md), failure recovery and privacy acceptance criteria
+- **Implementation:** [TypeScript test](../../../tests/integration/session-notes.integration.test.ts)
+- **Executable case:** `NOTES-008 keeps the session readable and retries a temporarily unavailable note without leaking driver text`
+- **Prerequisites:** Own ended confirmed booking and answer, mentor browser, ephemeral suite PostgreSQL with fileParallelism false.
+- **Determinism:** Fixed body markers and explicit answer instant. Only the owned test database is altered; no external service or random outcome.
+
+## Given-When-Then
+
+Given a readable session whose note table is temporarily unavailable
+When the mentor loads the session, storage returns and Retry is pressed
+Then the session stays readable and the note editor recovers
+And a deliberately rejected saved edit keeps the typed body while the driver text is absent from logs
+
+## Steps and expected results
+
+| Step | Action | Expected result |
+| --- | --- | --- |
+| 1 | Temporarily rename session_notes in the isolated test database and open the session | Transcript/ended notice remains readable; note panel has ErrorMessage and Retry |
+| 2 | Restore table and click observed Retry | Error clears; note form is usable |
+| 3 | Save draft with Ctrl+Enter, then install a failing update trigger that includes NEW.body in its driver error | Original draft is persisted; only subsequent writes fail |
+| 4 | Type fixed private marker and save | Shared 500 error appears, typed text remains; stored original remains; private marker is absent from app log |
+| 5 | Capture desktop and 320px error state, then finally restore schema/close browser | No horizontal overflow; all owned test changes are cleaned up |
+
+## Related negative and boundary cases
+
+NOTES-002 covers validation and permissions; NOTES-003 covers conflicts; NOTES-004 covers subscriber failure. This case targets transient storage failures and actual UI recovery. No production database or external provider is touched.
+
+## Cleanup
+
+Finally restores the table name, removes trigger/function and closes the isolated browser before withPaymentFixture deletes owned rows. The suite owns/stops its PostgreSQL/app. The shared native runner serializes files so no other scenario runs against the temporary renamed table.
+
+## Verification and review
+
+- **Latest execution:** Not yet run; authored after final diff review on 2026-11-07, pending final full-suite rerun.
+- **Observed result and evidence:** Session note/Save draft/Retry/error roles are grounded in real shared-environment exploration and component states. This executable storage-failure scenario is pending execution.
+- **Human review:** Pending.

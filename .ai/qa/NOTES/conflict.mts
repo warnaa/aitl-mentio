@@ -1,0 +1,17 @@
+﻿import { readFile } from 'node:fs/promises';
+import { runAgentBrowser, sessionCookie, cookieHeader } from '../../../tests/integration/agent-browser';
+const { base, bookingId } = JSON.parse(await readFile('.ai/qa/test-env-runtime/notes-fixture.json','utf8'));
+const cookie = await sessionCookie('notes-mentor'); if(!cookie) throw new Error('Missing mentor session');
+const response = await fetch(`${base}/api/notes/${bookingId}`,{method:'PUT',headers:{...cookieHeader(cookie),'x-devmentor-request':'1','content-type':'application/json'},body:JSON.stringify({body:'Newer draft saved in another tab',expectedRevision:1})});
+if(response.status!==200) throw new Error('Concurrent edit setup failed');
+await runAgentBrowser('notes-mentor','find','role','button','click','--name','Save draft');
+await runAgentBrowser('notes-mentor','wait','--text','A newer session note exists.');
+await runAgentBrowser('notes-mentor','find','role','button','click','--name','Refresh note');
+await runAgentBrowser('notes-mentor','wait','--text','Newer draft saved in another tab');
+const snapshot = await runAgentBrowser('notes-mentor','snapshot','-i');
+if(!snapshot.includes('Unsaved local draft stays here') || !snapshot.includes('Reload saved draft')) throw new Error('Conflict lost dirty text/recovery');
+console.log(snapshot);
+console.log(await runAgentBrowser('notes-mentor','screenshot',`${process.cwd()}/.ai/qa/NOTES/mentor-conflict-desktop.png`,'--full'));
+await runAgentBrowser('notes-mentor','set','viewport','320','720');
+console.log('overflow',await runAgentBrowser('notes-mentor','eval','document.documentElement.scrollWidth - document.documentElement.clientWidth'));
+console.log(await runAgentBrowser('notes-mentor','screenshot',`${process.cwd()}/.ai/qa/NOTES/mentor-conflict-320.png`,'--full'));
