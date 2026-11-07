@@ -31,8 +31,8 @@ Phases and Steps follow the spec's Implementation Plan one-to-one.
 
 ### Phase 1: Storage and rules
 
-- [ ] 1.1 Booking answer columns, notification kind check, written-answer migration
-- [ ] 1.2 answerUpdateSchema, TextSessionService.postAnswer and read fields, sessions.answer.posted event
+- [x] 1.1 Booking answer columns, notification kind check, written-answer migration — 0c29387
+- [x] 1.2 answerUpdateSchema, TextSessionService.postAnswer and read fields, sessions.answer.posted event — db3cc56
 
 ### Phase 2: Route and screen
 
