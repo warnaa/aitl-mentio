@@ -1,0 +1,70 @@
+{
+  "pr": 77,
+  "issue": 46,
+  "head": "d4fab59",
+  "verdict": "PASS",
+  "provider": "agent-browser",
+  "environment": ".ai/scripts/test-env.mjs (production build, disposable PostgreSQL, mock sign-in, log mailer)",
+  "steps": [
+    {
+      "n": 1,
+      "name": "mentor-not-started",
+      "result": "PASS",
+      "screenshot": "step-01-mentor-not-started-desktop.png"
+    },
+    {
+      "n": 2,
+      "name": "mentor-posted",
+      "result": "PASS",
+      "screenshot": "step-02-mentor-posted-desktop.png"
+    },
+    {
+      "n": 3,
+      "name": "mentee-sees-answer",
+      "result": "PASS",
+      "screenshot": "step-03-mentee-sees-answer-desktop.png"
+    },
+    {
+      "n": 4,
+      "name": "mentee-notification",
+      "result": "PASS",
+      "screenshot": "step-04-mentee-notification-desktop.png"
+    },
+    {
+      "n": 5,
+      "name": "mentee-updated-answer (320px)",
+      "result": "PASS",
+      "screenshot": "step-05-mentee-updated-answer-mobile-320.png"
+    },
+    {
+      "n": 6,
+      "name": "mentee-still-owed",
+      "result": "PASS",
+      "screenshot": "step-06-mentee-still-owed-desktop.png"
+    },
+    {
+      "n": 7,
+      "name": "mentor-ended-editor",
+      "result": "PASS",
+      "screenshot": "step-07-mentor-ended-editor-desktop.png"
+    },
+    {
+      "n": 8,
+      "name": "stranger-not-found",
+      "result": "PASS",
+      "screenshot": "step-08-stranger-not-found-desktop.png"
+    },
+    {
+      "n": 9,
+      "name": "mentee-answer-weeks-later",
+      "result": "PASS",
+      "screenshot": "step-09-mentee-answer-weeks-later-desktop.png"
+    }
+  ],
+  "notExercised": [
+    "mentee PUT 403 / 409 / 422 via API (covered by integration and unit tests)",
+    "two mentor tabs racing (unit tests)",
+    "dark mode, real-device touch",
+    "prototype s8 side-by-side capture"
+  ]
+}

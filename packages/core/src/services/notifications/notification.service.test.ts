@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EntityManager } from '@devmentor/db';
 import type { Session } from '../../http/auth';
 import { NotificationService } from './notification.service';
@@ -123,7 +123,7 @@ it('lists only the caller notifications with the right audience, counterpart and
   expect(mentee.items.map(item => item.id)).toEqual(['a', 'c']);
   expect(mentee.items[0]).toEqual({
     id: 'a', kind: 'booking_confirmed', audience: 'mentee', counterpartName: 'Alex Mentor',
-    startsAt: '2026-11-12T14:00:00.000Z', lengthMinutes: 25, readAt: null, createdAt: now.toISOString(),
+    startsAt: '2026-11-12T14:00:00.000Z', lengthMinutes: 25, readAt: null, createdAt: now.toISOString(), sessionPath: `/sessions/${bookingId}`,
   });
   expect(mentee.items[1]!.readAt).toBe('2026-11-06T13:00:00.000Z');
   session = { userId: 'mentor', roles: ['mentor'] };
@@ -150,4 +150,70 @@ it('rejects signed-out callers and invalid bounds before touching data', async (
     await expect(service().markRead(bad)).rejects.toMatchObject({ status: 422 });
   }
   expect(nativeUpdate).not.toHaveBeenCalled();
+});
+
+describe('onAnswerPosted', () => {
+  const answered = (): Row => ({ ...confirmed(), writtenAnswer: 'Use a union.', writtenAnswerAt: now });
+  beforeEach(() => {
+    booking = answered();
+  });
+
+  it('tells only the mentee, once, in the product and by email without the answer', async () => {
+    await service().onAnswerPosted(bookingId);
+    expect(notifications.map(row => [row.user, row.kind, row.booking, row.readAt, (row.emailSentAt as Date | null)?.valueOf()])).toEqual([
+      ['mentee', 'answer_posted', bookingId, null, now.valueOf()],
+    ]);
+    expect(send).toHaveBeenCalledOnce();
+    const [mail] = send.mock.calls[0]!;
+    expect(mail).toMatchObject({ to: 'mentee@example.com', subject: 'Your DevMentor written answer is ready' });
+    expect(mail.text).toContain('Alex Mentor posted the written answer');
+    expect(mail.text).toContain(`https://devmentor.example/sessions/${bookingId}`);
+    expect(mail.text).not.toContain('Use a union.');
+  });
+
+  it('writes one row and sends one email however often the answer is saved', async () => {
+    await service().onAnswerPosted(bookingId);
+    await service().onAnswerPosted(bookingId);
+    await service().onAnswerPosted(bookingId);
+    expect(notifications).toHaveLength(1);
+    expect(send).toHaveBeenCalledOnce();
+  });
+
+  it('sends nothing when a concurrent event already claimed the email', async () => {
+    nativeUpdate.mockResolvedValueOnce(0);
+    await service().onAnswerPosted(bookingId);
+    expect(notifications).toHaveLength(1);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('releases the claim when the email fails, without logging the address, so the next save retries it', async () => {
+    send.mockRejectedValueOnce(new Error('provider down'));
+    await service().onAnswerPosted(bookingId);
+    expect(notifications[0]!.emailSentAt).toBeNull();
+    expect(warn).toHaveBeenCalledWith({ err: expect.any(Error), notificationId: notifications[0]!.id }, 'notifications.email_failed');
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('mentee@example.com');
+    await service().onAnswerPosted(bookingId);
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(notifications[0]!.emailSentAt).toEqual(now);
+    expect(notifications).toHaveLength(1);
+  });
+
+  it.each([
+    ['missing', () => null],
+    ['not confirmed', () => ({ ...answered(), status: 'cancelled' })],
+    ['without an answer', () => ({ ...confirmed(), writtenAnswer: null })],
+  ])('writes and sends nothing for a booking that is %s', async (_label, make) => {
+    booking = make();
+    await service().onAnswerPosted(bookingId);
+    expect(notifications).toEqual([]);
+    expect(send).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith({ bookingId }, 'notifications.answer_not_posted');
+  });
+
+  it('lists the answer notification for the mentee with its kind and session link', async () => {
+    await service().onAnswerPosted(bookingId);
+    notifications[0]!.createdAt = now;
+    notifications[0]!.booking = booking!;
+    expect((await service().listMine()).items[0]).toMatchObject({ kind: 'answer_posted', audience: 'mentee', counterpartName: 'Alex Mentor', sessionPath: `/sessions/${bookingId}` });
+  });
 });

@@ -21,6 +21,8 @@ export interface EventMap {
   /** The first role grant path (E02-S01); the durable deadline lives on the profile. */
   'invitations.invitation.accepted': { invitationId: string; userId: string; publishDueAt: string };
   'mentors.profile.published': { mentorProfileId: string; slug: string };
+  /** The booking's mentor saved the written answer (every save). Carries no answer text. */
+  'sessions.answer.posted': { bookingId: string };
 }
 
 export type EventId = keyof EventMap;

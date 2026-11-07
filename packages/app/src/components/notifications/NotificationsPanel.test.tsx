@@ -9,7 +9,7 @@ vi.mock('@devmentor/ui/backend', async original => ({ ...await original<typeof i
 
 const item = (overrides: Partial<NotificationItem> = {}): NotificationItem => ({
   id: 'n1', kind: 'booking_confirmed', audience: 'mentee', counterpartName: 'Alex Mentor',
-  startsAt: '2026-11-12T14:00:00Z', lengthMinutes: 25, readAt: null, createdAt: '2026-11-06T12:00:00Z', ...overrides,
+  startsAt: '2026-11-12T14:00:00Z', lengthMinutes: 25, readAt: null, createdAt: '2026-11-06T12:00:00Z', sessionPath: '/sessions/b1', ...overrides,
 });
 beforeEach(() => { vi.clearAllMocks(); resource.data = { unreadCount: 0, items: [] }; resource.loading = false; resource.error = null; });
 afterEach(cleanup);
@@ -40,6 +40,15 @@ it('tells a mentee and a mentor about a confirmed booking with the counterpart, 
   expect(screen.getByText(/25 minutes\./)).toBeTruthy();
   expect(screen.getByText(/50 minutes\./)).toBeTruthy();
   expect(screen.getAllByText('New:')).toHaveLength(1);
+});
+
+it('tells the mentee the written answer arrived and links to the session', () => {
+  resource.data = { unreadCount: 1, items: [item({ kind: 'answer_posted' })] };
+  render(<NotificationsPanel />);
+  expect(screen.getByText(/Alex Mentor posted the written answer for your session on/)).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Read the written answer' }).getAttribute('href')).toBe('/sessions/b1');
+  expect(screen.getByText('New:')).toBeTruthy();
+  expect(screen.queryByText(/is confirmed/)).toBeNull();
 });
 
 it('uses the singular for exactly one unread notification', () => {
