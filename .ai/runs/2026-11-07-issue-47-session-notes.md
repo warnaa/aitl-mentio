@@ -40,36 +40,20 @@ After #46 lands, update this worktree to the approved prerequisite, resolve or a
 
 - Owner approved spec publication. Opened ready design-only PR #78, https://github.com/warnaa/aitl-mentio/pull/78, head spec/session-notes, base main. Posted defaults on #78 and #47, label rationale and summary on #78. Read back review/documentation/skip-qa/priority-low/risk-low. Released in-progress on #47, assignment handed back to warnaa. No implementation or QA approval claimed.
 
-## Implementation execution plan
+## Local implementation execution plan (2026-11-07)
 
-Source doc: .ai/specs/2026-11-07-session-notes.md (design-only PR #78; materialize from spec/session-notes for reading, never commit it to implementation)
-Spec PR: https://github.com/warnaa/aitl-mentio/pull/78
-Engine: om-auto-create-pr (steps: 6, --loop: no)
-Status: in-progress
-
-Goal: implement slice A for #47, mentor draft/save/send and private read-only mentee view awaiting approval. Scope: only A1?A6 in reviewed spec; #48 slice B remains deferred.
-
-Risk: private data scoping and migration require independent review, full per-file coverage, real database isolation/concurrency and migration checks, desktop/320px browser evidence and human QA. Do not claim automatic QA approval.
-
-Local publication boundary: owner approved only the design PR #78. Implementation is local-only until a concrete result is validated and explicit approval authorizes implementation publication. Do not push, open/update PRs, mutate issues/labels/comments, merge main or upload evidence. Retain logs/screenshots sanitized locally.
+Scope: issue #47 slice A only, based on spec/session-notes:.ai/specs/2026-11-07-session-notes.md. Spec PR #78 remains separate; its document is never committed here. All tracker/publishing phases are replaced by local artifacts; no remote writes authorized.
 
 ## Progress
 
-> Convention: - [ ] pending, - [x] done. Append commit SHA when a step lands. Do not rename step titles.
+- [ ] P0: Skeptical staff-engineer read-only cezar review of this plan; resolve material findings before coding.
+- [ ] A1: Entity/discovery/export, generated reversible migration/snapshot and notification kind constraint; entity tests and migration up/down/up.
+- [ ] A2: Shared validators/DTOs and scoped SessionNoteService with booking-first locks, party authorization, exact revisions, immutable sent snapshot and replay event; 100% unit tests and PostgreSQL races.
+- [ ] A3: Dynamic GET/PUT/send API routes, authentication/CSRF, private no-store responses and bounded account limits; route unit tests.
+- [ ] A4: In-product-only notification consumer/subscription and notification UI kind; replay repair and readAt retention tests without body disclosure or email.
+- [ ] A5: SessionNotePanel/SessionRoom/page integration using CrudForm/apiCall/NoteReview. Explicit generation ordering, dirty-at-application and monotonic parent-prop handling. Controlled delayed-response/state/role tests; no decision buttons.
+- [ ] A6: Preserve integration scenarios, sanitized desktop/320px state-matrix evidence, compatibility record and implementation PR body draft. Run typecheck/lint/test/build in order, coverage and full integration. Inspect final diff; incremental source commits and report actual outcomes/blockers, without human QA claims.
 
-### Phase 1: Storage and rules
+Verification strategy: each production file enters coverage.include in its implementation commit; tests exercise statements/branches/functions/lines to 100%. Real PostgreSQL tests cover first-save collisions, save/send ordering, authorization and migration reversibility. Browser exploration precedes authored semantic UI scenarios through shared environment/provider descriptors. Include mentor/mentee/outsider, ended refresh, notification recovery, dirty conflicts, long escaped text and responsive controls. Stop owned processes by PID; no secrets in artifacts.
 
-- [ ] A1 SessionNote entity and notification-kind migration with constraints and rollback tests
-- [ ] A2 Validators, DTOs, transactional note service, expected revision, replay event and DI
-
-### Phase 2: API and product flow
-
-- [ ] A3 Private workflow routes with central CSRF, DTO envelopes and no-store headers
-- [ ] A4 In-product notification consumer and notification display
-- [ ] A5 SessionNotePanel with retained drafts, async ordering, explicit refresh and Notify mentee repair
-
-### Phase 3: Verification and handoff
-
-- [ ] A6 Integration/concurrency/migration cases, compatibility records, full gate, coverage, browser evidence and independent review
-
-Before implementation, skeptical staff review of this execution plan must agree it maps exactly to reviewed spec A1?A6. Existing spec re-review approved architecture; no source code has been reviewed yet. Commit step boundaries, test changes and Progress updates. No remote implementation artifacts before owner approval.
+Commit boundaries: A1 database, A2 core, A3-A4 API/notifications, A5 client, A6 verification/docs (adjust to keep each commit coherent). Parent performs fresh final implementation review and merges feature branch only after approval; this task supplies implementation and evidence, not remote reviews or merge.
