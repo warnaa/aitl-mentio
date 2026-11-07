@@ -20,7 +20,11 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
   await requirePageSignedIn(path);
   let initial;
   try {
-    initial = await withPageScope(path, ({ textSessionService }) => textSessionService.getForParticipant(bookingId));
+    initial = await withPageScope(path, async ({ textSessionService, sessionNoteService }) => {
+      const session = await textSessionService.getForParticipant(bookingId);
+      const note = await sessionNoteService.getForParticipant(bookingId);
+      return { session, note };
+    });
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     // The notices belong to every state of the session screen, the error state included.
@@ -32,5 +36,5 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
       </div>
     );
   }
-  return <SessionRoom initial={initial} />;
+  return <SessionRoom initial={initial.session} initialNote={initial.note} />;
 }

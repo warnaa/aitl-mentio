@@ -65,3 +65,5 @@ Commit boundaries: A1 database, A2 core, A3-A4 API/notifications, A5 client, A6 
 - A1 source commit a50a704; checklist commit 9be1be8. A2 targeted validators/service/container tests: 3 files, 62 tests passed. Initial typecheck caught nullable entity declineComment inference; normalized absent value to null in DTO. PostgreSQL race verification stays pending A6.
 
 - A2 source b40706c; typecheck passed and targeted new core coverage proves 100% statements/branches/functions/lines (64/45/14/56). PostgreSQL races still pending A6; do not mark A2 acceptance complete yet. A3/A4 routes and notification consumer targeted tests: 4 files, 69 tests passed.
+
+- A3/A4 source 1c295d6. A5 client/ordering tests: 5 files, 50 tests passed. First full coverage run: all 1779 tests passed but panel duplicate-action guards untested; added same-batch duplicate-send/refresh regression, targeted panel now 100% all four metrics. Added preserved unsaved-text copy when another tab sends a dirty draft.

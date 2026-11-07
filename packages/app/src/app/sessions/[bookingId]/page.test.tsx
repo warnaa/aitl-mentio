@@ -8,7 +8,7 @@ import { SessionIsTextNotice, ShareRuleNotice } from '@devmentor/ui';
 import { findByType } from '../../../test/element-tree';
 import { SessionRoom } from './SessionRoom';
 
-const scope = vi.hoisted(() => ({ withPageScope: vi.fn(), getForParticipant: vi.fn() }));
+const scope = vi.hoisted(() => ({ withPageScope: vi.fn(), getForParticipant: vi.fn(), getNote: vi.fn() }));
 vi.mock('../../../lib/session', async () => ({ requirePageSignedIn: (await import('../../../test/page-guards')).guards.requirePageSignedIn, withPageScope: scope.withPageScope }));
 vi.mock('next/navigation', () => ({ notFound: vi.fn(() => { throw new Error('404'); }) }));
 
@@ -22,7 +22,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   admit('mentee');
   scope.getForParticipant.mockResolvedValue(initial);
-  scope.withPageScope.mockImplementation(async (_path: string, fn: (cradle: unknown) => unknown) => fn({ textSessionService: { getForParticipant: scope.getForParticipant } }));
+  scope.getNote.mockResolvedValue({ current: null, history: [] });
+  scope.withPageScope.mockImplementation(async (_path: string, fn: (cradle: unknown) => unknown) => fn({ textSessionService: { getForParticipant: scope.getForParticipant }, sessionNoteService: { getForParticipant: scope.getNote } }));
 });
 
 describe('/sessions/[bookingId]', () => {
@@ -36,7 +37,8 @@ describe('/sessions/[bookingId]', () => {
     expect(scope.withPageScope.mock.calls[0]![0]).toBe(`/sessions/${id}`);
     expect(scope.getForParticipant).toHaveBeenCalledWith(id);
     expect(tree.type).toBe(SessionRoom);
-    expect(tree.props).toEqual({ initial });
+    expect(tree.props).toEqual({ initial, initialNote: { current: null, history: [] } });
+    expect(scope.getForParticipant.mock.invocationCallOrder[0]).toBeLessThan(scope.getNote.mock.invocationCallOrder[0]!);
   });
 
   it('answers not-found to an address that is not a uuid, before any guard or lookup', async () => {
