@@ -7,10 +7,14 @@ export interface WrittenAnswerProps {
   body: ReactNode;
   publishedLabel?: string;
   actions?: ReactNode;
+  /** What the owed card says; the caller words it for the viewer and the session's state. */
+  owedMessage?: ReactNode;
 }
 
-export function WrittenAnswer({ state, mentorName, body, publishedLabel, actions }: WrittenAnswerProps) {
-  return <Card className="dm-product-panel"><div className="dm-product-row"><h3 className="dm-product-title">Written answer</h3><span className="dm-product-status" data-tone={state === 'posted' ? 'success' : 'warning'}>{state === 'posted' ? 'Posted' : 'Awaiting answer'}</span></div><p className="dm-product-muted">From {mentorName}</p>{state === 'posted' ? <div className="dm-product-prose">{body}</div> : <p className="dm-product-callout">The mentor&apos;s written answer will appear here after the session.</p>}{publishedLabel && <p className="dm-product-caption">{publishedLabel}</p>}<div className="dm-product-actions">{actions}</div></Card>;
+const DEFAULT_OWED = <>The mentor&apos;s written answer will appear here after the session.</>;
+
+export function WrittenAnswer({ state, mentorName, body, publishedLabel, actions, owedMessage = DEFAULT_OWED }: WrittenAnswerProps) {
+  return <Card className="dm-product-panel"><div className="dm-product-row"><h3 className="dm-product-title">Written answer</h3><span className="dm-product-status" data-tone={state === 'posted' ? 'success' : 'warning'}>{state === 'posted' ? 'Posted' : 'Awaiting answer'}</span></div><p className="dm-product-muted">From {mentorName}</p>{state === 'posted' ? <div className="dm-product-prose">{body}</div> : <p className="dm-product-callout">{owedMessage}</p>}{publishedLabel && <p className="dm-product-caption">{publishedLabel}</p>}<div className="dm-product-actions">{actions}</div></Card>;
 }
 
 export interface SessionMessage {
