@@ -9,6 +9,7 @@ import type { Role } from '../services/auth/roles';
  * cache invalidation). There is no queue or background worker in this project.
  */
 export interface EventMap {
+  'notes.note.sent': { bookingId: string; noteId: string; version: number };
   'bookings.booking.confirmed': { bookingId: string };
   'availability.slot.published': { mentorProfileId: string; slotId: string; startsAt: string };
   'auth.user.created': { userId: string; email: string };

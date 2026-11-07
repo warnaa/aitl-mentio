@@ -61,3 +61,5 @@ Commit boundaries: A1 database, A2 core, A3-A4 API/notifications, A5 client, A6 
 - P0 approved by read-only cezar review 5076cd36; its diff is empty. npm ci passed (859 packages). Inherited spec is already tracked at fork; no implementation commit stages it.
 
 - A1 implemented: generated Migration20261107171237_session_notes; removed unrelated generator churn. Disposable PostgreSQL migration up/down/up passed; entity/notification/migration targeted tests: 3 files, 3 tests passed. Baseline after clean npm ci: 202 files, 1743 tests passed.
+
+- A1 source commit a50a704; checklist commit 9be1be8. A2 targeted validators/service/container tests: 3 files, 62 tests passed. Initial typecheck caught nullable entity declineComment inference; normalized absent value to null in DTO. PostgreSQL race verification stays pending A6.

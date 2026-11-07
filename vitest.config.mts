@@ -41,6 +41,8 @@ export default defineConfig({
         'packages/db/src/entities/notes/*.ts',
         'packages/db/migrations/Migration20261107171237_session_notes.ts',
         'packages/core/src/services/sessions/text-session.service.ts',
+        'packages/core/src/services/notes/*.ts',
+        'packages/core/src/validators/notes/*.ts',
         'packages/core/src/validators/sessions/*.ts',
         'packages/app/src/app/api/sessions/\\[bookingId\\]/route.ts',
         'packages/app/src/app/api/sessions/\\[bookingId\\]/messages/route.ts',
