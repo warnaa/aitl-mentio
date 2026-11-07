@@ -187,6 +187,16 @@ describe('getContainer', () => {
     expect(onBookingConfirmed).toHaveBeenCalledExactlyOnceWith('b1');
   });
 
+  it('hands a saved written answer to the notification consumer in its own disposed scope', async () => {
+    const container = await getContainer();
+    const onAnswerPosted = vi.fn().mockResolvedValue(undefined);
+    container.register({ notificationService: asValue({ onAnswerPosted }) });
+
+    await container.cradle.eventBus.emit('sessions.answer.posted', { bookingId: 'b1' });
+
+    expect(onAnswerPosted).toHaveBeenCalledExactlyOnceWith('b1');
+  });
+
   it('logs and swallows a failing notification consumer so the emitter is unaffected', async () => {
     const container = await getContainer();
     container.register({ notificationService: asValue({ onBookingConfirmed: vi.fn().mockRejectedValue(new Error('mail down')) }) });
