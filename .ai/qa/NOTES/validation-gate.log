@@ -1,0 +1,175 @@
+Command: npm run typecheck
+Exit: 0
+
+> devmentor@0.1.0 typecheck
+> tsc --noEmit
+
+
+
+Command: npm run lint
+Exit: 0
+
+> devmentor@0.1.0 lint
+> eslint
+
+
+[repo]\packages\core\src\services\auth\user.service.test.ts
+  172:37  warning  '_message' is defined but never used  @typescript-eslint/no-unused-vars
+
+[repo]\prototypes\devmentor-journey\LandingScreen.tsx
+  35:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+✖ 2 problems (0 errors, 2 warnings)
+
+
+
+Command: npm run test
+Exit: 0
+
+> devmentor@0.1.0 test
+> npm run test:unit
+
+
+> devmentor@0.1.0 test:unit
+> node --test scripts/ci/change-scope.test.mjs && vitest run --config vitest.config.mts
+
+✔ documentation and artifact-policy changes use lightweight checks (1.2065ms)
+✔ code, configuration, dependencies, executable MDX and unknown paths run application checks (0.2406ms)
+✔ missing or invalid SHAs fail instead of classifying as documentation (0.5107ms)
+✔ real Git history covers whole PRs, deletions, renames and filenames with newlines (2337.4214ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2459.4062
+
+ RUN  v4.1.11 [repo]
+
+
+ Test Files  210 passed (210)
+      Tests  1783 passed (1783)
+   Start at  18:55:30
+   Duration  21.79s (transform 14.10s, setup 0ms, import 230.48s, tests 45.96s, environment 114.65s)
+
+
+
+Command: npm run build
+Exit: 0
+
+> devmentor@0.1.0 build
+> npm run build --workspace @devmentor/app
+
+
+> @devmentor/app@0.1.0 build
+> cross-env NODE_ENV=production next build
+
+▲ Next.js 16.3.3 (Turbopack)
+✓ Running next.config.ts took 36ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.1s
+  Running TypeScript ...
+  Finished TypeScript in 6.4s ...
+  Collecting page data using 23 workers ...
+  Generating static pages using 23 workers (0/3) ...
+✓ Generating static pages using 23 workers (3/3) in 151ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/users
+├ ƒ /api/auth/github
+├ ƒ /api/auth/github/callback
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/register
+├ ƒ /api/auth/verify-email
+├ ƒ /api/availability/slots
+├ ƒ /api/availability/slots/[id]
+├ ƒ /api/bookings
+├ ƒ /api/bookings/[id]/checkout
+├ ƒ /api/health
+├ ƒ /api/invitations/[token]
+├ ƒ /api/invitations/[token]/accept
+├ ƒ /api/mentors/[slug]
+├ ƒ /api/mentors/me
+├ ƒ /api/mentors/me/onboarding
+├ ƒ /api/mentors/me/prices
+├ ƒ /api/mentors/me/publish
+├ ƒ /api/mentors/me/unpublish
+├ ƒ /api/notes/[bookingId]
+├ ƒ /api/notes/[bookingId]/send
+├ ƒ /api/notifications
+├ ƒ /api/payments/reconcile
+├ ƒ /api/payments/report
+├ ƒ /api/payments/review
+├ ƒ /api/payments/review/[id]
+├ ƒ /api/payments/webhook
+├ ƒ /api/sessions/[bookingId]
+├ ƒ /api/sessions/[bookingId]/answer
+├ ƒ /api/sessions/[bookingId]/messages
+├ ƒ /api/users
+├ ƒ /home
+├ ƒ /invitation/[token]
+├ ƒ /m/[slug]
+├ ƒ /mentor
+├ ƒ /mentor/prices
+├ ƒ /mentor/profile
+├ ƒ /mentor/slots
+├ ƒ /register
+├ ƒ /sessions/[bookingId]
+└ ƒ /sign-in
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+Command: npm run test:unit:coverage
+Exit: 0
+
+> devmentor@0.1.0 test:unit:coverage
+> node --test scripts/ci/change-scope.test.mjs && vitest run --config vitest.config.mts --coverage
+
+✔ documentation and artifact-policy changes use lightweight checks (1.2217ms)
+✔ code, configuration, dependencies, executable MDX and unknown paths run application checks (0.2456ms)
+✔ missing or invalid SHAs fail instead of classifying as documentation (0.5229ms)
+✔ real Git history covers whole PRs, deletions, renames and filenames with newlines (2384.2149ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2490.5515
+
+ RUN  v4.1.11 [repo]
+      Coverage enabled with v8
+
+
+ Test Files  210 passed (210)
+      Tests  1783 passed (1783)
+   Start at  18:56:12
+   Duration  34.14s (transform 16.31s, setup 0ms, import 240.37s, tests 54.59s, environment 107.71s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 3833/3833 )
+Branches     : 100% ( 2332/2332 )
+Functions    : 100% ( 1105/1105 )
+Lines        : 100% ( 3430/3430 )
+================================================================================

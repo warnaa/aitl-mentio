@@ -33,6 +33,6 @@ Native withPaymentFixture and booking fixture remove owned notes before restrict
 
 ## Verification and review
 
-- **Latest execution:** Failed assertion-helper JSON parsing after migration round trip; corrected and awaiting rerun.
-- **Observed result and evidence:** Initial shared-environment API/UI exploration passed relevant selectors and HTTP statuses. This executable scenario still awaits its first run.
+- **Latest execution:** Passed 2026-11-07: `npm run test:integration -- --testNamePattern=NOTES-00[78]` (2 passed; 98 excluded by filter). Final full-suite run pending.
+- **Observed result and evidence:** Actual migration lifecycle/rollback checks and real-browser initial-load Retry, pending controls, failed-save retention and private driver-log masking passed. Desktop/320px evidence is linked from [the report](report.md).
 - **Human review:** Pending. Automated execution is not human QA.

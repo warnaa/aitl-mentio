@@ -1,4 +1,4 @@
-﻿# NOTES-008: retries a temporarily unavailable note and keeps failed-save text private
+# NOTES-008: retries a temporarily unavailable note and keeps failed-save text private
 
 - **Area:** NOTES
 - **Priority:** High
@@ -36,6 +36,6 @@ Finally restores the table name, removes trigger/function and closes the isolate
 
 ## Verification and review
 
-- **Latest execution:** Not yet run; authored after final diff review on 2026-11-07, pending final full-suite rerun.
-- **Observed result and evidence:** Session note/Save draft/Retry/error roles are grounded in real shared-environment exploration and component states. This executable storage-failure scenario is pending execution.
+- **Latest execution:** Passed 2026-11-07: `npm run test:integration -- --testNamePattern=NOTES-00[78]` (2 passed; 98 excluded by filter). Final full-suite run pending.
+- **Observed result and evidence:** Actual migration lifecycle/rollback checks and real-browser initial-load Retry, pending controls, failed-save retention and private driver-log masking passed. Desktop/320px evidence is linked from [the report](report.md).
 - **Human review:** Pending.
