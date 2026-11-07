@@ -12,4 +12,3 @@ Exit: 0
       Tests  2 passed | 98 skipped (100)
    Start at  18:56:41
    Duration  97.08s (transform 1.21s, setup 0ms, import 36.72s, tests 19.76s, environment 5ms)
-
