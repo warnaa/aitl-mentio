@@ -36,9 +36,9 @@ Phases and Steps follow the spec's Implementation Plan one-to-one.
 
 ### Phase 2: Route and screen
 
-- [ ] 2.1 PUT /api/sessions/[bookingId]/answer route
-- [ ] 2.2 WrittenAnswer owed copy prop and story
-- [ ] 2.3 SessionRoom mentor editor and mentee answer states
+- [x] 2.1 PUT /api/sessions/[bookingId]/answer route — bd3218c
+- [x] 2.2 WrittenAnswer owed copy prop and story — 635cf49
+- [x] 2.3 SessionRoom mentor editor and mentee answer states — c6068cf
 
 ### Phase 3: Telling the mentee
 
