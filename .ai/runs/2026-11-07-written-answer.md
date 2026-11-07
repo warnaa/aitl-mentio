@@ -42,8 +42,8 @@ Phases and Steps follow the spec's Implementation Plan one-to-one.
 
 ### Phase 3: Telling the mentee
 
-- [ ] 3.1 NotificationService.onAnswerPosted, answerPostedMail, container subscriber
-- [ ] 3.2 NotificationsPanel answer_posted item
+- [x] 3.1 NotificationService.onAnswerPosted, answerPostedMail, container subscriber — d167d2d
+- [x] 3.2 NotificationsPanel answer_posted item — 3b3f406
 
 ### Phase 4: Verification
 
