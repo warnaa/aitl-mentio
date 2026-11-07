@@ -100,3 +100,5 @@ export class TextSessionService {
     return toMessageDto(row, booking, userId);
   }
 }
+
+export type SessionDto = Awaited<ReturnType<TextSessionService['getForParticipant']>>;

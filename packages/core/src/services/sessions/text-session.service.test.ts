@@ -6,6 +6,8 @@ import { MESSAGE_PAGE, POST_MESSAGE_POLICY, READ_SESSION_POLICY, sessionWindow, 
 
 vi.mock('@devmentor/db', () => ({ Booking: 'Booking', SessionMessage: 'SessionMessage' }));
 
+// Loose test rows stand in for entities.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
 const bookingId = '11111111-1111-4111-8111-111111111111';
 const start = new Date('2026-11-12T14:00:00.000Z');

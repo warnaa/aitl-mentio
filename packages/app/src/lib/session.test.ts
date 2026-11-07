@@ -48,7 +48,9 @@ const {
   requirePageAccount,
   requirePageRole,
   requirePageSession,
+  requirePageSignedIn,
   signInRedirectPath,
+  withPageScope,
 } = await import('./session');
 
 const user = { id: 'user-1', displayName: 'Grace Hopper', email: 'mock-mentee@devmentor.test' };
@@ -261,6 +263,37 @@ describe('requirePageAccount', () => {
     scope.withSessionCookieScope.mockRejectedValue(new Error('database unreachable'));
     await expect(requirePageAccount('mentee', '/home')).rejects.toThrow('database unreachable');
     expect(next.redirect).not.toHaveBeenCalled();
+  });
+});
+
+describe('requirePageSignedIn', () => {
+  it('sends a signed-out visitor to sign-in with the returnTo', async () => {
+    await expect(redirectOf(requirePageSignedIn('/sessions'))).resolves.toBe('/sign-in?returnTo=%2Fsessions');
+  });
+
+  it('returns the session and the account for any signed-in role, without a role check', async () => {
+    const session = signedInAs('operator');
+    await expect(requirePageSignedIn('/sessions')).resolves.toEqual({ session, user });
+    expect(next.redirect).not.toHaveBeenCalled();
+  });
+
+  it('propagates an infrastructure failure without redirecting', async () => {
+    next.cookieValue = 'signed-token';
+    scope.withSessionCookieScope.mockRejectedValue(new Error('database unreachable'));
+    await expect(requirePageSignedIn('/sessions')).rejects.toThrow('database unreachable');
+    expect(next.redirect).not.toHaveBeenCalled();
+  });
+});
+
+describe('withPageScope', () => {
+  it('sends a visitor without a cookie to sign-in and never builds a scope', async () => {
+    await expect(redirectOf(withPageScope('/sessions/x', async () => ({})))).resolves.toBe('/sign-in?returnTo=%2Fsessions%2Fx');
+    expect(scope.withSessionCookieScope).not.toHaveBeenCalled();
+  });
+
+  it('runs the work in the caller scope and returns its result', async () => {
+    signedInAs('mentee');
+    await expect(withPageScope('/sessions/x', async ({ session }) => ({ live: await session }))).resolves.toEqual({ live: { userId: 'user-1', roles: ['mentee'] } });
   });
 });
 
