@@ -2214,8 +2214,9 @@
       "checks": [
         {
           "name": "session_messages_body_length_check",
-          "expression": "char_length(body) between 1 and 4000",
-          "definition": "check (char_length(body) between 1 and 4000)"
+          "expression": "(char_length(body) >= 1) AND (char_length(body) <= 4000)",
+          "definition": "CHECK (((char_length(body) >= 1) AND (char_length(body) <= 4000)))",
+          "columnName": "body"
         }
       ],
       "triggers": [],
