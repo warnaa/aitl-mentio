@@ -1,19 +1,22 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button, Card } from '@devmentor/ui';
 import { apiCall, EmptyState, ResourcePanel, useApiResource } from '@devmentor/ui/backend';
 import { LocalTime } from '@devmentor/ui/time';
 
 export interface NotificationItem {
   id: string;
-  kind: 'booking_confirmed';
+  kind: 'booking_confirmed' | 'answer_posted';
   audience: 'mentee' | 'mentor';
   counterpartName: string;
   startsAt: string;
   lengthMinutes: number;
   readAt: string | null;
   createdAt: string;
+  /** The booking's session screen. */
+  sessionPath: string;
 }
 
 interface NotificationList {
@@ -58,12 +61,17 @@ export function NotificationsPanel() {
       </div>
       {error && <p role="alert">{error}</p>}
       {items.length === 0
-        ? <EmptyState title="Nothing new" description="We tell you here, and by email, when a session is confirmed." />
+        ? <EmptyState title="Nothing new" description="We tell you here, and by email, when a session is confirmed or its written answer arrives." />
         : <ul className="grid min-w-0 gap-3">{items.map(item => <li key={item.id}><Card className="dm-product-panel" data-unread={item.readAt === null ? 'true' : undefined}>
-          <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.audience === 'mentee'
-            ? <>Your session with {item.counterpartName} is confirmed.</>
-            : <>{item.counterpartName} booked a session with you.</>}</p>
-          <p className="dm-product-muted">Starts <LocalTime value={item.startsAt} />, {item.lengthMinutes} minutes.</p>
+          {item.kind === 'answer_posted' ? <>
+            <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.counterpartName} posted the written answer for your session on <LocalTime value={item.startsAt} />.</p>
+            <Link href={item.sessionPath}>Read the written answer</Link>
+          </> : <>
+            <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.audience === 'mentee'
+              ? <>Your session with {item.counterpartName} is confirmed.</>
+              : <>{item.counterpartName} booked a session with you.</>}</p>
+            <p className="dm-product-muted">Starts <LocalTime value={item.startsAt} />, {item.lengthMinutes} minutes.</p>
+          </>}
         </Card></li>)}</ul>}
     </>}
     </ResourcePanel>
