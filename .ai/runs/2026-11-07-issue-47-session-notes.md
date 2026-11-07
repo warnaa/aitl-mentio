@@ -47,7 +47,7 @@ Scope: issue #47 slice A only, based on spec/session-notes:.ai/specs/2026-11-07-
 ## Progress
 
 - [x] P0: Skeptical staff-engineer read-only cezar review of this plan; resolve material findings before coding.
-- [ ] A1: Entity/discovery/export, generated reversible migration/snapshot and notification kind constraint; entity tests and migration up/down/up.
+- [x] A1: Entity/discovery/export, generated reversible migration/snapshot and notification kind constraint; entity tests and migration up/down/up.
 - [ ] A2: Shared validators/DTOs and scoped SessionNoteService with booking-first locks, party authorization, exact revisions, immutable sent snapshot and replay event; 100% unit tests and PostgreSQL races.
 - [ ] A3: Dynamic GET/PUT/send API routes, authentication/CSRF, private no-store responses and bounded account limits; route unit tests.
 - [ ] A4: In-product-only notification consumer/subscription and notification UI kind; replay repair and readAt retention tests without body disclosure or email.
