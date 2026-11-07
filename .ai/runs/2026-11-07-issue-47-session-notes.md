@@ -46,7 +46,7 @@ Scope: issue #47 slice A only, based on spec/session-notes:.ai/specs/2026-11-07-
 
 ## Progress
 
-- [ ] P0: Skeptical staff-engineer read-only cezar review of this plan; resolve material findings before coding.
+- [x] P0: Skeptical staff-engineer read-only cezar review of this plan; resolve material findings before coding.
 - [ ] A1: Entity/discovery/export, generated reversible migration/snapshot and notification kind constraint; entity tests and migration up/down/up.
 - [ ] A2: Shared validators/DTOs and scoped SessionNoteService with booking-first locks, party authorization, exact revisions, immutable sent snapshot and replay event; 100% unit tests and PostgreSQL races.
 - [ ] A3: Dynamic GET/PUT/send API routes, authentication/CSRF, private no-store responses and bounded account limits; route unit tests.
@@ -57,3 +57,7 @@ Scope: issue #47 slice A only, based on spec/session-notes:.ai/specs/2026-11-07-
 Verification strategy: each production file enters coverage.include in its implementation commit; tests exercise statements/branches/functions/lines to 100%. Real PostgreSQL tests cover first-save collisions, save/send ordering, authorization and migration reversibility. Browser exploration precedes authored semantic UI scenarios through shared environment/provider descriptors. Include mentor/mentee/outsider, ended refresh, notification recovery, dirty conflicts, long escaped text and responsive controls. Stop owned processes by PID; no secrets in artifacts.
 
 Commit boundaries: A1 database, A2 core, A3-A4 API/notifications, A5 client, A6 verification/docs (adjust to keep each commit coherent). Parent performs fresh final implementation review and merges feature branch only after approval; this task supplies implementation and evidence, not remote reviews or merge.
+
+- P0 approved by read-only cezar review 5076cd36; its diff is empty. npm ci passed (859 packages). Inherited spec is already tracked at fork; no implementation commit stages it.
+
+- A1 implemented: generated Migration20261107171237_session_notes; removed unrelated generator churn. Disposable PostgreSQL migration up/down/up passed; entity/notification/migration targeted tests: 3 files, 3 tests passed. Baseline after clean npm ci: 202 files, 1743 tests passed.

@@ -38,6 +38,8 @@ export default defineConfig({
         'packages/db/migrations/Migration20261107080310_sessions.ts',
         'packages/db/migrations/Migration20261107113147_written_answer.ts',
         'packages/db/src/entities/sessions/*.ts',
+        'packages/db/src/entities/notes/*.ts',
+        'packages/db/migrations/Migration20261107171237_session_notes.ts',
         'packages/core/src/services/sessions/text-session.service.ts',
         'packages/core/src/validators/sessions/*.ts',
         'packages/app/src/app/api/sessions/\\[bookingId\\]/route.ts',
