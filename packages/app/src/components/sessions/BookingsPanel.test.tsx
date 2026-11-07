@@ -59,6 +59,19 @@ it('reports confirmed state only from the stored projection and isolates review 
   expect(screen.queryByRole('button', { name: /Checkout/ })).toBeNull();
 });
 
+it.each(['mentee', 'mentor'] as const)('links a confirmed booking to its text session for the %s, and no other booking', persona => {
+  resource.data = [
+    { ...booking, id: 'confirmed', status: 'confirmed', paymentStatus: 'confirmed' },
+    { ...booking, id: 'pending' },
+    { ...booking, id: 'review', paymentStatus: 'review' },
+    { ...booking, id: 'expired', status: 'expired' },
+    { ...booking, id: 'cancelled', status: 'cancelled' },
+  ];
+  render(<BookingsPanel persona={persona} />);
+  const links = screen.getAllByRole('link', { name: 'Open text session' });
+  expect(links.map(link => link.getAttribute('href'))).toEqual(['/sessions/confirmed']);
+});
+
 it.each(['expired', 'cancelled'])('renders historical %s reservations without payment actions', status => {
   resource.data = [{ ...booking, status, paymentStatus: 'expired' }];
   render(<BookingsPanel persona="mentee" />);

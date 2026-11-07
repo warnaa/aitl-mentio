@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Button, Card, SessionIsTextNotice } from '@devmentor/ui';
 import { EmptyState, ResourcePanel, useApiResource } from '@devmentor/ui/backend';
 import { formatPrice } from '@devmentor/ui/components/mentors/MentorPageView';
@@ -33,7 +34,7 @@ function SessionCard({ booking, persona, returned }: { booking: ParticipantBooki
     <p className="dm-product-muted">{booking.lengthMinutes}-minute text session</p>
     <p>{formatPrice(booking.priceCents, booking.currency)}</p>
     {booking.status === 'confirmed'
-      ? <p role="status">Payment verified. Your session is confirmed.</p>
+      ? <><p role="status">Payment verified. Your session is confirmed.</p><Link href={`/sessions/${booking.id}`} className="dm-product-title">Open text session</Link></>
       : booking.paymentStatus === 'review'
         ? <p role="status">Your payment needs review. Contact support with booking reference <code>{booking.id}</code>. This session is not confirmed.</p>
         : booking.status === 'pending'
