@@ -29,6 +29,7 @@ import { MentorProfileService } from '../services/mentors/mentor-profile.service
 import { SlotService } from '../services/availability/slot.service';
 import { BookingService } from '../services/bookings/booking.service';
 import { NotificationService } from '../services/notifications/notification.service';
+import { TextSessionService } from '../services/sessions/text-session.service';
 import { PaymentService } from '../services/payments/payment.service';
 import { PaymentReportService } from '../services/payments/payment-report.service';
 import type { PaymentGateway } from '../services/payments/payment-gateway.port';
@@ -148,6 +149,7 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     slotService: asClass(SlotService).scoped(),
     bookingService: asClass(BookingService).scoped(),
     notificationService: asClass(NotificationService).scoped(),
+    textSessionService: asClass(TextSessionService).scoped(),
     paymentGateway: asFunction(({ env, clock }: Cradle) =>
       env.PAYMENT_GATEWAY_ADAPTER === 'mock' && env.INTEGRATION_TEST_RUN
         ? new MockPaymentGateway({ clock })
