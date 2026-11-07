@@ -57,7 +57,7 @@ export type SessionMessageDto = ReturnType<typeof toMessageDto>;
 export class TextSessionService {
   constructor(private readonly deps: TextSessionServiceDeps) {}
 
-  private async party(bookingId: string) {
+  private async party(bookingId: unknown) {
     const session = await this.deps.session;
     if (!session) throw new UnauthorizedError();
     const id = parseWith(sessionBookingIdSchema, bookingId);
@@ -68,7 +68,7 @@ export class TextSessionService {
   }
 
   /** The session as the caller sees it: window, counterpart and the newest messages in time order. */
-  async getForParticipant(bookingId: string) {
+  async getForParticipant(bookingId: unknown) {
     const { booking, role, userId } = await this.party(bookingId);
     await this.deps.rateLimiter.consumeFor(READ_SESSION_POLICY, userId);
     const now = this.deps.clock.now();
@@ -86,7 +86,7 @@ export class TextSessionService {
   }
 
   /** Posts one message while the window is open. The window is judged by one clock read taken before the insert. */
-  async postMessage(bookingId: string, input: unknown) {
+  async postMessage(bookingId: unknown, input: unknown) {
     const { booking, userId, user } = await this.party(bookingId);
     await this.deps.rateLimiter.consumeFor(POST_MESSAGE_POLICY, userId);
     const { body } = parseWith(messageCreateSchema, input);

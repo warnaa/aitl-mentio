@@ -39,6 +39,8 @@ export default defineConfig({
         'packages/db/src/entities/sessions/*.ts',
         'packages/core/src/services/sessions/text-session.service.ts',
         'packages/core/src/validators/sessions/*.ts',
+        'packages/app/src/app/api/sessions/\\[bookingId\\]/route.ts',
+        'packages/app/src/app/api/sessions/\\[bookingId\\]/messages/route.ts',
         'packages/core/src/services/notifications/booking-confirmed-mail.ts',
         'packages/core/src/services/notifications/notification.service.ts',
         'packages/core/src/validators/notifications/*.ts',
