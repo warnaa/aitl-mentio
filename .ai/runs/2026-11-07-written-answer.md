@@ -27,6 +27,8 @@ Phases and Steps follow the spec's Implementation Plan one-to-one.
 
 ## Progress
 
+PR: #77
+
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.
 
 ### Phase 1: Storage and rules
@@ -48,4 +50,17 @@ Phases and Steps follow the spec's Implementation Plan one-to-one.
 ### Phase 4: Verification
 
 - [x] 4.1 Integration scenario and QA document — 8f5e89b
-- [ ] 4.2 BACKWARD_COMPATIBILITY.md, run log, full gate, review
+- [x] 4.2 BACKWARD_COMPATIBILITY.md, run log, full gate, review — d4fab59
+
+## Outcome (run log)
+
+**Request:** `om-auto-fix-issue 46` — implement E04-S02, the mentor's written answer. Classified as a feature: spec written autonomously on PR #76 (design-only), implemented here on PR #77.
+
+**Work:** additive `bookings.written_answer`/`written_answer_at` with checks and a widened notification kind (reversible migration, snapshot patched by hand to avoid the known churn); `TextSessionService.postAnswer` (mentor only, 403 for the mentee, 404 for strangers, 409 before the start, one `nativeUpdate` scoped to a confirmed booking, event on every save); `PUT /api/sessions/[bookingId]/answer`; `NotificationService.onAnswerPosted` with an atomic email claim; `WrittenAnswerPanel` on the session screen; `answer_posted` in the notifications panel; `BACKWARD_COMPATIBILITY.md`, QA documents, a lesson.
+
+**Verification:** typecheck, lint (0 errors), unit tests with per-file coverage (202 files, 1,741 tests) and build passed on `845c9cd`; the full integration suite passed (47 files, 92 tests). A fresh-context review found no blocker or major; two minors were fixed in `d4fab59` (stale mentor editor across tabs, documented claim semantics) with targeted tests, typecheck, lint and coverage re-run. Real-browser QA on the production build passed 9 of 9 steps (`.ai/qa/artifacts_pr77/`).
+
+**Deviations:** a cezar autosave committed the spec file onto this branch once; it was reset before pushing so the spec stays on #76 only. Review verdict submitted as a comment review because GitHub forbids approving one's own PR.
+
+**Follow-ups:** manual QA (`needs-qa`); merge #76 before or with #77 and then `git mv` the spec to `implemented/`; the at-most-once window between the email claim and the send (documented) could get a lease if it ever matters.
+
