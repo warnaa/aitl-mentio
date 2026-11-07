@@ -47,15 +47,15 @@ Video/audio, the written answer (#46), notes (#47/#48), operator access and disp
 
 ### Phase 1: Durable record and rules
 
-- [ ] 1.1 `SessionMessage` entity, registration and reversible `sessions` migration with its test
-- [ ] 1.2 Validators, `TextSessionService` (party check, window math, post), DI and `Cradle`
+- [x] 1.1 `SessionMessage` entity, registration and reversible `sessions` migration with its test — a220bcc
+- [x] 1.2 Validators, `TextSessionService` (party check, window math, post), DI and `Cradle` — b11adb7
 
 ### Phase 2: HTTP and screen
 
-- [ ] 2.1 `GET`/`POST /api/sessions/[bookingId]` routes with rate limits
-- [ ] 2.2 R19 share-rule notice in `packages/ui` with story and test
-- [ ] 2.3 Session page, layout, `SessionRoom` (polling, composer, states) and `proxy.ts` matcher
-- [ ] 2.4 "Open text session" link in `BookingsPanel` for confirmed bookings
+- [x] 2.1 `GET`/`POST /api/sessions/[bookingId]` routes with rate limits — cb8a1c0
+- [x] 2.2 R19 share-rule notice in `packages/ui` with story and test — ad2401a
+- [x] 2.3 Session page, layout, `SessionRoom` (polling, composer, states) and `proxy.ts` matcher — b77af4a
+- [x] 2.4 "Open text session" link in `BookingsPanel` for confirmed bookings — 780245f
 
 ### Phase 3: Verification
 
