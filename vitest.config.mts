@@ -36,6 +36,7 @@ export default defineConfig({
         'packages/db/migrations/Migration20261106153514_notifications.ts',
         'packages/db/src/entities/notifications/*.ts',
         'packages/db/migrations/Migration20261107080310_sessions.ts',
+        'packages/db/migrations/Migration20261107113147_written_answer.ts',
         'packages/db/src/entities/sessions/*.ts',
         'packages/core/src/services/sessions/text-session.service.ts',
         'packages/core/src/validators/sessions/*.ts',

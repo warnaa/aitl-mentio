@@ -7,8 +7,8 @@ import { Booking } from '../bookings/booking.entity';
 const p = defineEntity.properties;
 
 /**
- * One in-product message to one participant about one booking. The unique index makes
- * a replayed `bookings.booking.confirmed` event idempotent; `emailSentAt` records that
+ * One in-product message to one participant about one booking: its confirmation, or its
+ * written answer arriving. The unique index makes a replayed event idempotent; `emailSentAt` records that
  * the provider accepted the matching email, so a replay never mails twice.
  */
 export const Notification = defineSingletonEntity('Notification', () =>
@@ -21,7 +21,7 @@ export const Notification = defineSingletonEntity('Notification', () =>
       ...baseProperties,
       user: () => p.manyToOne(User).deleteRule('no action'),
       booking: () => p.manyToOne(Booking).deleteRule('no action'),
-      kind: p.string().length(32).check("kind in ('booking_confirmed')"),
+      kind: p.string().length(32).check("kind in ('booking_confirmed', 'answer_posted')"),
       readAt: p.datetime().nullable(),
       emailSentAt: p.datetime().nullable(),
     },
