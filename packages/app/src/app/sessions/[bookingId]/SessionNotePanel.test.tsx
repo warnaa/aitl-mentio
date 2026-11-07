@@ -134,6 +134,7 @@ it('accepts only progressing parent version/revision/status and never replaces d
   rerender(<SessionNotePanel {...p} initial={{ current: note({ version: 2, revision: 1, body: 'next version', status: 'awaiting_approval' }), history: [] }} />);
   expect(screen.getByText('next version')).toBeTruthy();
   expect(screen.getByLabelText('Unsaved session note').textContent).toBe('unsaved');
+  expect(button('Notify mentee').disabled).toBe(false);
   rerender(<SessionNotePanel {...p} initial={{ current: note({ version: 2, status: 'draft' }), history: [] }} />);
   expect(screen.queryByRole('textbox')).toBeNull();
   rerender(<SessionNotePanel {...p} initial={{ current: null, history: [] }} />);

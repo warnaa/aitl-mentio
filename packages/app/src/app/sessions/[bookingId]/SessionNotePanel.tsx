@@ -71,7 +71,7 @@ export function SessionNotePanel({ bookingId, viewerRole, counterpartName, hasAn
     setMessage('Session note saved. Review it before sending.');
   }
   async function send() {
-    if (pending.current || model.dirty || !model.saved) return;
+    if (pending.current || !model.saved || (model.saved.status === 'draft' && model.dirty)) return;
     begin();
     const result = await apiCall<NoteDto>(`${path}/send`, { method: 'POST', body: { version: model.saved.version, revision: model.saved.revision } });
     pending.current = false;
@@ -113,7 +113,7 @@ export function SessionNotePanel({ bookingId, viewerRole, counterpartName, hasAn
     {note ? <NoteReview title="Private session note" version={note.version} state={note.status === 'awaiting_approval' ? 'awaiting-approval' : note.status}
       author={mentor ? 'you' : counterpartName} updatedLabel={`Saved ${formatInstant(note.updatedAt, zone)}`}
       body={<p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{note.body}</p>}
-      actions={mentor && (note.status === 'draft' || note.status === 'awaiting_approval') ? <Button type="button" disabled={busy || model.dirty} onClick={() => void send()}>{note.status === 'draft' ? 'Send for approval' : 'Notify mentee'}</Button> : undefined} />
+      actions={mentor && (note.status === 'draft' || note.status === 'awaiting_approval') ? <Button type="button" disabled={busy || (note.status === 'draft' && model.dirty)} onClick={() => void send()}>{note.status === 'draft' ? 'Send for approval' : 'Notify mentee'}</Button> : undefined} />
       : hasAnswer && !mentor && <EmptyState title="No session note yet" description="Your mentor can save a private note after the written answer." />}
     {note?.status === 'draft' && !mentor && <p role="status">The mentor has not sent this note for approval yet.</p>}
     {note?.status === 'awaiting_approval' && <p role="status">{mentor ? "Waiting for the mentee’s approval" : 'Awaiting your approval'}</p>}
