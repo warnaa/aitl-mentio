@@ -47,5 +47,5 @@ Phases and Steps follow the spec's Implementation Plan one-to-one.
 
 ### Phase 4: Verification
 
-- [ ] 4.1 Integration scenario and QA document
+- [x] 4.1 Integration scenario and QA document — 8f5e89b
 - [ ] 4.2 BACKWARD_COMPATIBILITY.md, run log, full gate, review
