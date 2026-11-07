@@ -46,6 +46,7 @@ export default defineConfig({
         'packages/app/src/app/sessions/layout.tsx',
         'packages/app/src/app/sessions/\\[bookingId\\]/page.tsx',
         'packages/app/src/app/sessions/\\[bookingId\\]/SessionRoom.tsx',
+        'packages/app/src/app/sessions/\\[bookingId\\]/WrittenAnswerPanel.tsx',
         'packages/core/src/services/notifications/booking-confirmed-mail.ts',
         'packages/core/src/services/notifications/notification.service.ts',
         'packages/core/src/validators/notifications/*.ts',
