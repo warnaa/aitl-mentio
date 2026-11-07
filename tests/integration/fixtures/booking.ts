@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { inject } from 'vitest';
-import { AuthRateLimit, Booking, entities, MentorProfile, MikroORM, Notification, PaymentAttempt, PaymentResolution, ProcessedWebhookEvent, Slot, User, type EntityManager } from '@devmentor/db';
+import { AuthRateLimit, Booking, entities, MentorProfile, MikroORM, Notification, PaymentAttempt, PaymentResolution, ProcessedWebhookEvent, SessionMessage, Slot, User, type EntityManager } from '@devmentor/db';
 import { CSRF_HEADERS } from './mentor';
 
 export const BOOKING_START = '2099-11-06T12:00:00.000Z';
@@ -93,6 +93,7 @@ export async function withBookingFixture(caseId: string, run: (fixture: BookingF
         const bookingIds = bookings.map(booking => booking.id);
         if (bookingIds.length) {
           await em.nativeDelete(Notification, { booking: { $in: bookingIds } });
+          await em.nativeDelete(SessionMessage, { booking: { $in: bookingIds } });
           const attempts = await em.find(PaymentAttempt, { booking: { $in: bookingIds } });
           const attemptIds = attempts.map(attempt => attempt.id);
           if (attemptIds.length) await em.nativeDelete(PaymentResolution, { attempt: { $in: attemptIds } });
