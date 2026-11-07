@@ -69,3 +69,12 @@ describe('/sessions/[bookingId]', () => {
     expect(scope.withPageScope).not.toHaveBeenCalled();
   });
 });
+
+it('keeps the session readable with a retryable note panel when only the note load fails', async () => {
+  scope.getNote.mockRejectedValueOnce(new Error('database note query failed'));
+  const tree = await render();
+  expect(tree.type).toBe(SessionRoom);
+  expect(tree.props).toEqual({ initial, initialNote: null });
+  scope.getNote.mockRejectedValueOnce(new NotFoundError('Session not found'));
+  await expect(render()).rejects.toThrow('404');
+});

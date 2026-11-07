@@ -161,3 +161,17 @@ it('ignores a second send and refresh fired in the same event batch as the first
   expect(fetchMock).toHaveBeenCalledTimes(1);
   await act(async () => pending.resolve(fail('Try again')));
 });
+
+it('does not regress a newer parent revision when an older successful save response arrives later', async () => {
+  const p = props(note());
+  const { rerender } = render(<SessionNotePanel {...p} />);
+  fireEvent.change(text(), { target: { value: 'my saved second revision' } });
+  const put = deferred<Response>(); fetchMock.mockReturnValueOnce(put.promise);
+  fireEvent.click(button('Save draft'));
+  rerender(<SessionNotePanel {...p} initial={{ current: note({ revision: 3, body: 'third revision accepted first' }), history: [] }} />);
+  await act(async () => put.resolve(ok(note({ revision: 2, body: 'my saved second revision' }))));
+  expect(text().value).toBe('my saved second revision');
+  expect(screen.getByText('third revision accepted first')).toBeTruthy();
+  expect(button('Send for approval').disabled).toBe(true);
+  expect(button('Reload saved draft')).toBeTruthy();
+});

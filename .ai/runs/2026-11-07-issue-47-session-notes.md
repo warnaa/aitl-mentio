@@ -67,3 +67,35 @@ Commit boundaries: A1 database, A2 core, A3-A4 API/notifications, A5 client, A6 
 - A2 source b40706c; typecheck passed and targeted new core coverage proves 100% statements/branches/functions/lines (64/45/14/56). PostgreSQL races still pending A6; do not mark A2 acceptance complete yet. A3/A4 routes and notification consumer targeted tests: 4 files, 69 tests passed.
 
 - A3/A4 source 1c295d6. A5 client/ordering tests: 5 files, 50 tests passed. First full coverage run: all 1779 tests passed but panel duplicate-action guards untested; added same-batch duplicate-send/refresh regression, targeted panel now 100% all four metrics. Added preserved unsaved-text copy when another tab sends a dirty draft.
+
+## Security verification scope for slice A
+
+Applied the threat-model skill to the reviewed spec's existing security model. Scope is synthetic local browser/API/PostgreSQL only. Assets: private body, party identity, exact saved revision and notification read state. Browser cookie/CSRF boundary -> authenticated note route -> party-scoped service -> PostgreSQL; post-commit ID-only event -> system-scoped notification consumer. No AI, email or external provider is introduced.
+
+STRIDE: spoofing/elevation are controlled by live session and per-booking party checks (401/403/404 tests); tampering by shared schema, booking-first transaction and exact expected revision (stale/race tests); repudiation by persisted revision/sentAt, with no durable event audit claimed; disclosure by explicit DTOs, escaped text and no-store (outsider/public/event/notification tests); denial of service by body bounds/account limits (422/429 tests). Existing infrastructure at-rest policy and in-process lost-event recovery remain residual risks, not new acceptance or delivery guarantees. All mitigations remain pending full integration verification until A6 evidence is recorded.
+
+```mermaid
+flowchart LR
+  subgraph Browser[Untrusted browser]
+    Party[Booking party or outsider]
+  end
+  subgraph App[Trusted application]
+    API(Note API and session page)
+    Service(Party checks and revision transaction)
+    Consumer(ID-only notification consumer)
+  end
+  subgraph Storage[Trusted storage]
+    DB[(PostgreSQL)]
+  end
+  Party -->|Cookie CSRF and bounded plain text| API
+  API -->|Authenticated scope| Service
+  Service -->|Booking lock then exact revision| DB
+  Service -->|After commit bookingId noteId version| Consumer
+  Consumer -->|Validate persisted sent version and record once| DB
+```
+
+- A5 source commit 0208893. Shared QA startup initially failed Next bundled TypeScript checking on the new fieldset event-target cast (TS2352). Corrected through unknown, matching existing SessionRoom convention; shared environment rebuilding. No UI QA claimed yet.
+
+- Final ordered gate passed on 2026-11-07: typecheck 0, lint 0 (two pre-existing warnings), test 0 (210 files/1781 tests), build 0. Full test:unit:coverage 0, per-file statements/branches/functions/lines all 100% (3824/2322/1103/3425). Real shared-env browser mentor/mentee/outsider flow, exact saved send, Ctrl+Enter save, 320px zero overflow, ended refresh, dirty conflict and Notify repair/readAt preservation passed. Desktop/320 evidence is .ai/qa/NOTES; shared app/container/browser sessions stopped. Full integration suite running; A2-A6 remain unchecked until acceptance evidence is confirmed.
+
+- Final diff review tightened two A5 acceptance cases: a transient initial note query failure now preserves the readable session with a retryable panel; a delayed successful PUT cannot replace a newer parent revision accepted first. Added controlled regressions; targeted sessions coverage remains 100% across 52 tests. Added NOTES-008 real-browser storage-failure/Retry and driver-error privacy scenario. These source changes require a fresh ordered gate/full integration after the currently running suite settles.

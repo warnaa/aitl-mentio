@@ -67,7 +67,7 @@ export function SessionNotePanel({ bookingId, viewerRole, counterpartName, hasAn
     setMessage('');
   }
   function saved(note: NoteDto) {
-    setModel(current => ({ ...current, saved: note, base: note, dirty: false, formKey: current.formKey + 1 }));
+    setModel(current => newer(current.saved, note) ? current : ({ ...current, saved: note, base: note, dirty: false, formKey: current.formKey + 1 }));
     setMessage('Session note saved. Review it before sending.');
   }
   async function send() {
@@ -101,7 +101,7 @@ export function SessionNotePanel({ bookingId, viewerRole, counterpartName, hasAn
     {canEdit && <Card className="dm-product-panel">
       <h2 className="dm-product-title">Private session note</h2>
       <p className="dm-product-muted">Save a draft, review it, then send the saved revision for approval. Only you and your mentee can read it.</p>
-      <fieldset disabled={busy} className="min-w-0" onChange={event => { const value = (event.target as HTMLTextAreaElement).value; setModel(current => ({ ...current, dirty: true, localBody: value })); }}>
+      <fieldset disabled={busy} className="min-w-0" onChange={event => { const value = (event.target as unknown as HTMLTextAreaElement).value; setModel(current => ({ ...current, dirty: true, localBody: value })); }}>
         <CrudForm key={model.formKey} schema={schema} fields={[{ name: 'body', label: 'Session note', type: 'textarea', required: true }]}
           initialValues={{ body: model.base?.body ?? '' }} endpoint={path} method="PUT" submitLabel="Save draft"
           onSuccess={data => saved(data as NoteDto)} onSubmittingChange={submitting => { if (submitting) begin(); else { pending.current = false; setBusy(false); } }} />
