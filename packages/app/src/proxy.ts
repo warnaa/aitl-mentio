@@ -24,5 +24,5 @@ export function proxy(request: NextRequest): NextResponse {
 
 /** Only the signed-in surfaces; `/admin/:path*` also matches `/admin` itself. */
 export const config: ProxyConfig = {
-  matcher: ['/admin/:path*', '/home/:path*', '/mentor/:path*'],
+  matcher: ['/admin/:path*', '/home/:path*', '/mentor/:path*', '/sessions/:path*'],
 };

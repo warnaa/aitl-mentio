@@ -20,6 +20,7 @@ import type { PaymentGateway } from '../services/payments/payment-gateway.port';
 import type { PlatformSettingsService } from '../services/operator/platform-settings.service';
 import type { Mailer } from '../services/notifications/mailer.port';
 import type { NotificationService } from '../services/notifications/notification.service';
+import type { TextSessionService } from '../services/sessions/text-session.service';
 import type { Clock } from '../time/clock';
 
 /**
@@ -63,6 +64,7 @@ export interface Cradle {
   slotService: SlotService;
   bookingService: BookingService;
   notificationService: NotificationService;
+  textSessionService: TextSessionService;
   paymentService: PaymentService;
   paymentReportService: PaymentReportService;
   paymentGateway: PaymentGateway;

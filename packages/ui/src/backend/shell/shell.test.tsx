@@ -5,7 +5,7 @@ import { AppShell } from './AppShell';
 import { AuthLayout } from './AuthLayout';
 afterEach(cleanup);
 it('renders supplied navigation/actions and a unique skip target without inferring roles', () => {
-  render(<><AppShell className="custom" nav={<a href="/admin/users">Users</a>} user={{displayName:'Alex'}} actions={<button>Sign out</button>}><h1>Workspace</h1></AppShell><AppShell nav={<a href="/sessions">Sessions</a>} user={{displayName:'Sam'}}>Second workspace</AppShell></>);
+  render(<><AppShell className="custom" nav={<a href="/admin/users">Users</a>} user={{displayName:'Alex'}} actions={<button>Sign out</button>}><h1>Workspace</h1></AppShell><AppShell nav={<a href="/second">Sessions</a>} user={{displayName:'Sam'}}>Second workspace</AppShell></>);
   expect(screen.getByRole('link', { name:'Users' }).getAttribute('href')).toBe('/admin/users');
   expect(screen.getByRole('button', { name:'Sign out' })).toBeTruthy();
   expect(screen.getByText('Alex')).toBeTruthy();

@@ -144,6 +144,29 @@ export async function requirePageAccount(role: Role, returnTo: string): Promise<
   return account;
 }
 
+/**
+ * Run `fn` in the signed-in caller's own scope (their live session, like a route
+ * handler's), for a page that reads through a service that needs the session. Call it
+ * after a page guard; without a session cookie it still redirects to sign-in.
+ *
+ * @param returnTo the calling page's own path (fallback, as above).
+ */
+export async function withPageScope<T extends object>(returnTo: string, fn: (cradle: Cradle) => Promise<T>): Promise<T> {
+  return (await inPageScope(fn)) ?? redirectToSignIn(returnTo);
+}
+
+/**
+ * `requirePageAccount` for a page whose access is decided by the data, not by a role: any
+ * signed-in user gets through, and the service answers 404 to anyone who is not a party
+ * (the text session screen). Signed out → `/sign-in?returnTo=<requested path>`.
+ *
+ * @param returnTo the calling page's own path (fallback, as above).
+ */
+export async function requirePageSignedIn(returnTo: string): Promise<PageAccount> {
+  const account = await getPageAccount();
+  return account ?? redirectToSignIn(returnTo);
+}
+
 /** Signed in without `role` → the caller's own home. */
 function requireHeldRole(session: Session, role: Role): void {
   if (!session.roles.includes(role)) {

@@ -29,6 +29,7 @@ export const session = (...roles: RoleSet): Session => ({ userId: user.id, roles
 export const guards = {
   requirePageRole: vi.fn<(role: Role, returnTo: string) => Promise<Session>>(),
   requirePageAccount: vi.fn<(role: Role, returnTo: string) => Promise<{ session: Session; user: UserDto }>>(),
+  requirePageSignedIn: vi.fn<(returnTo: string) => Promise<{ session: Session; user: UserDto }>>(),
 };
 
 /** Let both guards admit a caller holding `roles`. */
@@ -36,6 +37,7 @@ export function admit(...roles: RoleSet): Session {
   const live = session(...roles);
   guards.requirePageRole.mockReset().mockResolvedValue(live);
   guards.requirePageAccount.mockReset().mockResolvedValue({ session: live, user });
+  guards.requirePageSignedIn.mockReset().mockResolvedValue({ session: live, user });
   return live;
 }
 
@@ -46,4 +48,5 @@ export function deny(location: string): void {
   };
   guards.requirePageRole.mockReset().mockImplementation(refuse);
   guards.requirePageAccount.mockReset().mockImplementation(refuse);
+  guards.requirePageSignedIn.mockReset().mockImplementation(refuse);
 }

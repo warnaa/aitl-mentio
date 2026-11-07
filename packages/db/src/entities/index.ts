@@ -8,6 +8,7 @@ import { PaymentAttempt } from './payments/payment-attempt.entity';
 import { ProcessedWebhookEvent } from './payments/processed-webhook-event.entity';
 import { PaymentResolution } from './payments/payment-resolution.entity';
 import { Notification } from './notifications/notification.entity';
+import { SessionMessage } from './sessions/session-message.entity';
 
 export { User, type IUser } from './auth/user.entity';
 export { AuthRateLimit, type IAuthRateLimit } from './auth/rate-limit.entity';
@@ -19,7 +20,8 @@ export { PaymentAttempt, type IPaymentAttempt } from './payments/payment-attempt
 export { ProcessedWebhookEvent, type IProcessedWebhookEvent } from './payments/processed-webhook-event.entity';
 export { PaymentResolution, type IPaymentResolution } from './payments/payment-resolution.entity';
 export { Notification, type INotification } from './notifications/notification.entity';
+export { SessionMessage, type ISessionMessage } from './sessions/session-message.entity';
 export { baseProperties } from './base.entity';
 
 /** Every entity the ORM should discover. Keep this in sync when adding entities. */
-export const entities = [User, MentorProfile, AuthRateLimit, Invitation, Slot, Booking, PaymentAttempt, ProcessedWebhookEvent, PaymentResolution, Notification];
+export const entities = [User, MentorProfile, AuthRateLimit, Invitation, Slot, Booking, PaymentAttempt, ProcessedWebhookEvent, PaymentResolution, Notification, SessionMessage];

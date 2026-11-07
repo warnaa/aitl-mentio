@@ -36,6 +36,6 @@ describe('proxy', () => {
   });
 
   it('matches only the signed-in surfaces', () => {
-    expect(config.matcher).toEqual(['/admin/:path*', '/home/:path*', '/mentor/:path*']);
+    expect(config.matcher).toEqual(['/admin/:path*', '/home/:path*', '/mentor/:path*', '/sessions/:path*']);
   });
 });
