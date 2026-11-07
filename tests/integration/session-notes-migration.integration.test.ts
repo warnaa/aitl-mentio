@@ -29,12 +29,12 @@ it('NOTES-007 migrates session notes up down up with restrictive lifecycle const
     expect((await psql(`update session_notes set status = 'awaiting_approval', sent_at = now()`)).exitCode).toBe(0);
     expect((await psql('delete from bookings')).exitCode).not.toBe(0);
     await runNpm(['run', 'db:migrate:down'], environment);
-    expect(await query(`select to_regclass('public.session_notes')`)).toBeNull();
+    expect(await query(`select to_json(to_regclass('public.session_notes'))`)).toBeNull();
     expect(await query('select json_agg(kind) from notifications')).toEqual(['booking_confirmed']);
     expect(await query('select count(*) from bookings')).toBe(1);
     expect((await psql(`update notifications set kind = 'note_awaiting_approval'`)).exitCode).not.toBe(0);
     await runNpm(['run', 'db:migrate'], environment);
-    expect(await query(`select to_regclass('public.session_notes')`)).toBe('session_notes');
+    expect(await query(`select to_json(to_regclass('public.session_notes'))`)).toBe('session_notes');
     expect(await query('select count(*) from session_notes')).toBe(0);
     expect(await query('select json_agg(kind) from notifications')).toEqual(['booking_confirmed']);
   } finally { await postgres.stop(); }

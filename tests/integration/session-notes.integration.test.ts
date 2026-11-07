@@ -1,5 +1,5 @@
 ﻿import { expect, it } from 'vitest';
-import { Booking, Notification, SessionNote, User } from '@devmentor/db';
+import { Booking, LockMode, Notification, SessionNote, User } from '@devmentor/db';
 import { EventBus, RateLimiter, SessionNoteService, createLogger } from '@devmentor/core';
 import type { NoteDto, NoteView } from '@devmentor/core';
 import { bookingPersona } from './fixtures/booking';
@@ -199,7 +199,18 @@ it('NOTES-008 keeps the session readable and retries a temporarily unavailable n
       await runAgentBrowser(browser, 'find', 'role', 'button', 'click', '--name', 'Retry');
       await runAgentBrowser(browser, 'wait', '--fn', `!document.querySelector('[role="alert"]')`);
       await runAgentBrowser(browser, 'find', 'label', 'Session note', 'fill', 'Original retryable note');
-      await runAgentBrowser(browser, 'press', 'Control+Enter');
+      const blocker = f.em.fork();
+      await blocker.begin();
+      try {
+        await blocker.findOneOrFail(Booking, { id: f.booking.id }, { lockMode: LockMode.PESSIMISTIC_WRITE });
+        await runAgentBrowser(browser, 'press', 'Control+Enter');
+        await runAgentBrowser(browser, 'wait', '--text', 'Saving');
+        const loading = await runAgentBrowser(browser, 'snapshot', '-i');
+        expect(loading).toContain('button "Saving');
+        expect(loading).toContain('button "Refresh note" [disabled');
+        await runAgentBrowser(browser, 'screenshot', resolve(integrationArtifactsDirectory, 'notes-saving-desktop.png'), '--full');
+        await expectFitsMobile(browser, 'notes-saving');
+      } finally { await blocker.rollback(); }
       await runAgentBrowser(browser, 'wait', '--text', 'Session note saved. Review it before sending.');
       await f.em.execute(`create function notes_fixture_failure() returns trigger language plpgsql as $$ begin raise exception 'private row: %', NEW.body; end; $$`);
       await f.em.execute('create trigger notes_fixture_failure before update on session_notes for each row execute function notes_fixture_failure()'); trigger = true;

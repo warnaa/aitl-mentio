@@ -41,7 +41,7 @@ it('saves a normalized draft with create-only revision and sends the exact saved
   render(<SessionNotePanel {...props()} />);
   fireEvent.change(text(), { target: { value: '  private\r\ntext  ' } });
   fetchMock.mockResolvedValueOnce(ok(note({ body: 'private\ntext' })));
-  fireEvent.click(button('Save draft'));
+  fireEvent.keyDown(text(), { key: 'Enter', ctrlKey: true });
   await waitFor(() => expect(button('Send for approval').disabled).toBe(false));
   expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ body: 'private\ntext', expectedRevision: null });
   const sent = note({ body: 'private\ntext', status: 'awaiting_approval', sentAt: '2026-11-07T15:01:00Z' });
@@ -158,6 +158,8 @@ it('ignores a second send and refresh fired in the same event batch as the first
     sendButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     sendButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     refreshButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fireEvent.submit(text().closest('form')!);
+    fireEvent.keyDown(text(), { key: 'Enter', ctrlKey: true });
   });
   expect(fetchMock).toHaveBeenCalledTimes(1);
   await act(async () => pending.resolve(fail('Try again')));

@@ -22,7 +22,7 @@ And a deliberately rejected saved edit keeps the typed body while the driver tex
 | --- | --- | --- |
 | 1 | Temporarily rename session_notes in the isolated test database and open the session | Transcript/ended notice remains readable; note panel has ErrorMessage and Retry |
 | 2 | Restore table and click observed Retry | Error clears; note form is usable |
-| 3 | Save draft with Ctrl+Enter, then install a failing update trigger that includes NEW.body in its driver error | Original draft is persisted; only subsequent writes fail |
+| 3 | Hold the booking lock from a controlled transaction, save with Ctrl+Enter, capture disabled Saving/Refresh states at desktop and 320px, release lock, then install a failing update trigger | Real pending UI is observed without arbitrary sleeps; original draft persists after release; only subsequent writes fail |
 | 4 | Type fixed private marker and save | Shared 500 error appears, typed text remains; stored original remains; private marker is absent from app log |
 | 5 | Capture desktop and 320px error state, then finally restore schema/close browser | No horizontal overflow; all owned test changes are cleaned up |
 

@@ -10,7 +10,7 @@ Issue 47 only. Spec PR 78 remains design-only; this is local implementation evid
 | First full unit coverage | Tests passed; two new panel guard branches uncovered | Added same-batch duplicate-send/refresh controlled test. Subsequent full coverage passed all per-file 100% metrics. |
 | Pre-final-tightening gate | typecheck/lint/test/build all exit 0 | 210 files / 1781 tests. Lint has two pre-existing warnings (auth test unused arg; prototype img). |
 | Pre-final-tightening coverage | exit 0 | Statements 3824/3824, branches 2322/2322, functions 1103/1103, lines 3425/3425; configured per-file 100% thresholds unchanged. |
-| Full integration | Running | NOTES-001 through NOTES-007 first run; NOTES-008 and final page/ordering changes require final full-suite rerun. |
+| First full integration | Exit 1: 48 files passed, 1 failed; 98 tests passed, 1 failed (900.93s) | NOTES-001..006 passed. NOTES-007 failed only parsing unquoted to_regclass output as JSON after successful up/down/up; corrected query with to_json. Agent/QA assertion-helper defect. NOTES-008 awaits final rebuilt run. |
 
 ## Observed state matrix
 

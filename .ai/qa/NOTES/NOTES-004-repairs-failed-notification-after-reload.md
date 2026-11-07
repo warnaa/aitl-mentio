@@ -33,6 +33,6 @@ Native withPaymentFixture and booking fixture remove owned notes before restrict
 
 ## Verification and review
 
-- **Latest execution:** Not yet run; prepared 2026-11-07 for `npm run test:integration`.
+- **Latest execution:** Passed in the first full `npm run test:integration`, 2026-11-07 (98 passed / 1 failed overall; failure was NOTES-007).
 - **Observed result and evidence:** Initial shared-environment API/UI exploration passed relevant selectors and HTTP statuses. This executable scenario still awaits its first run.
 - **Human review:** Pending. Automated execution is not human QA.
