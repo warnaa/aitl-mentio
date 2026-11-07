@@ -292,7 +292,7 @@ maintainer updates the ruleset before the PR merges, otherwise the PR blocks its
 
 `bookings.booking.confirmed` now has an in-process consumer that writes one notification and sends one email per participant (best effort: a failing handler is logged and swallowed, a process crash between the payment commit and the consumer loses the notification, and there is no outbox or sweep yet). The payload and emission point are unchanged.
 
-`sessions.answer.posted` adds `{ bookingId: string }` (no answer text, no user ids), emitted after every successful save of the written answer. Its in-process consumer writes at most one `answer_posted` notification for the mentee and claims the email atomically, so repeated or concurrent events send at most one successful email and a failed send is retried on the next save. Delivery is best effort like the confirmation consumer: no outbox, and a failure never fails the save.
+`sessions.answer.posted` adds `{ bookingId: string }` (no answer text, no user ids), emitted after every successful save of the written answer. Its in-process consumer writes at most one `answer_posted` notification for the mentee and claims the email atomically, so repeated or concurrent events send at most one successful email and a failed send is retried on the next save; a process that dies between the claim and the send leaves that email unsent, and a send that the provider accepted but reported as failed may be repeated once on the next save. Delivery is best effort like the confirmation consumer: no outbox, and a failure never fails the save.
 
 Event ids follow `concept.entity.action`. Today: `auth.user.created` with payload
 `{ userId, email }`, and `auth.user.roles_changed` with payload

@@ -94,3 +94,23 @@ it('keeps the mentor draft when the session ends under the form', () => {
   rerender(asMentor({ window: 'ended' }));
   expect(textarea().value).toBe('Half written');
 });
+
+it('follows a newer saved answer when the mentor has no unsaved edits, and shows the trimmed copy after a save', async () => {
+  const { rerender } = render(asMentor({ answer: saved, answerOwed: false }));
+  rerender(asMentor({ answer: { body: 'Saved in another tab.', postedAt: '2026-11-12T15:00:00.000Z' }, answerOwed: false }));
+  expect(textarea().value).toBe('Saved in another tab.');
+  fetchMock.mockResolvedValue(new Response(JSON.stringify({ ok: true, data: { body: 'Trimmed.', postedAt: '2026-11-12T16:00:00.000Z' } }), { status: 200 }));
+  fireEvent.change(textarea(), { target: { value: '  Trimmed.  ' } });
+  await submit('Update written answer');
+  rerender(asMentor({ answer: { body: 'Trimmed.', postedAt: '2026-11-12T16:00:00.000Z' }, answerOwed: false }));
+  expect(textarea().value).toBe('Trimmed.');
+  expect(screen.getByText('Written answer saved.')).toBeTruthy();
+});
+
+it('keeps unsaved edits when a newer answer arrives and says that saving replaces it', () => {
+  const { rerender } = render(asMentor({ answer: saved, answerOwed: false }));
+  fireEvent.change(textarea(), { target: { value: 'My edit' } });
+  rerender(asMentor({ answer: { body: 'Saved in another tab.', postedAt: '2026-11-12T15:00:00.000Z' }, answerOwed: false }));
+  expect(textarea().value).toBe('My edit');
+  expect(screen.getByText(/A newer written answer was saved/)).toBeTruthy();
+});

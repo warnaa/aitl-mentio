@@ -109,7 +109,9 @@ export class NotificationService {
         sessionUrl: new URL(`/sessions/${booking.id}`, this.deps.env.APP_URL).toString(),
       }));
     } catch (error) {
-      // Neither address nor body is logged; releasing the claim lets a later save retry.
+      // Neither address nor body is logged; releasing the claim lets a later save retry. A send the
+      // provider accepted but reported as failed (a response timeout) can therefore be sent twice.
+      // A process that dies between the claim and the send leaves the email unsent: at most once.
       await this.deps.em.fork().nativeUpdate(Notification, { id: row.id, emailSentAt: claimedAt }, { emailSentAt: null });
       this.deps.logger.warn({ err: error, notificationId: row.id }, 'notifications.email_failed');
     }
