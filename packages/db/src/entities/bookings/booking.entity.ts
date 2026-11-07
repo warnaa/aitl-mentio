@@ -14,6 +14,9 @@ export const Booking = defineSingletonEntity('Booking', () =>
     tableName: 'bookings',
     checks: [
       { name: 'bookings_pending_expiry_check', expression: "status <> 'pending' or expires_at is not null" },
+      // The written answer (E04-S02) and its latest save time exist together or not at all.
+      { name: 'bookings_written_answer_pair_check', expression: '(written_answer is null) = (written_answer_at is null)' },
+      { name: 'bookings_written_answer_length_check', expression: 'char_length(written_answer) <= 20000' },
     ],
     indexes: [
       { name: 'bookings_mentor_start_index', properties: ['mentorProfile', 'startsAt'] },
@@ -40,6 +43,9 @@ export const Booking = defineSingletonEntity('Booking', () =>
       amountPaidCents: p.integer().nullable(),
       // Updated atomically with the attempt. Lazy hold expiry must never release unresolved money.
       paymentPending: p.boolean().default(false),
+      // One plain-text answer per session, written by the booking's mentor; replaceable, no history.
+      writtenAnswer: p.text().nullable(),
+      writtenAnswerAt: p.datetime().nullable(),
     },
   }),
 );

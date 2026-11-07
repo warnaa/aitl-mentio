@@ -6,10 +6,11 @@ import { UnauthorizedError } from '../../http/errors';
 import type { Logger } from '../../logger';
 import type { Clock } from '../../time/clock';
 import { notificationReadSchema } from '../../validators/notifications/notification-read.schema';
+import { answerPostedMail } from './answer-posted-mail';
 import { bookingConfirmedMail, type Audience } from './booking-confirmed-mail';
 import type { Mailer } from './mailer.port';
 
-const KIND = 'booking_confirmed';
+export type NotificationKind = 'booking_confirmed' | 'answer_posted';
 const PAGE = 50;
 
 export interface NotificationServiceDeps {
@@ -26,13 +27,14 @@ function toDto(row: INotification, userId: string) {
   const audience: Audience = booking.mentee.id === userId ? 'mentee' : 'mentor';
   return {
     id: row.id,
-    kind: row.kind,
+    kind: row.kind as NotificationKind,
     audience,
     counterpartName: audience === 'mentee' ? booking.mentorProfile.user.displayName : booking.mentee.displayName,
     startsAt: booking.startsAt.toISOString(),
     lengthMinutes: booking.lengthMinutes,
     readAt: row.readAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
+    sessionPath: `/sessions/${booking.id}`,
   };
 }
 export type NotificationDto = ReturnType<typeof toDto>;
@@ -63,7 +65,7 @@ export class NotificationService {
       { user: mentor, counterpart: booking.mentee, audience: 'mentor' as const, path: '/mentor' },
     ];
     for (const party of parties) {
-      const row = await this.record(party.user.id, booking.id);
+      const row = await this.record(party.user.id, booking.id, 'booking_confirmed');
       if (!row || row.emailSentAt) continue;
       try {
         await this.deps.mailer.send(bookingConfirmedMail({
@@ -82,16 +84,49 @@ export class NotificationService {
     }
   }
 
+  /**
+   * Event consumer for `sessions.answer.posted`, which fires on every save of the answer. Only
+   * the mentee is told, once: the unique row makes a repeat find the existing notification, and
+   * the email is claimed atomically (`emailSentAt` set before sending) so concurrent events send
+   * it at most once. A failed send releases the claim, so the mentor's next save retries it.
+   * Nothing is written for a booking that is not confirmed or has no answer.
+   */
+  async onAnswerPosted(bookingId: string): Promise<void> {
+    const booking = await this.deps.em.fork().findOne(Booking, { id: bookingId }, { populate: ['mentee', 'mentorProfile.user'] });
+    if (!booking || booking.status !== 'confirmed' || booking.writtenAnswer === null) {
+      this.deps.logger.warn({ bookingId }, 'notifications.answer_not_posted');
+      return;
+    }
+    const row = await this.record(booking.mentee.id, booking.id, 'answer_posted');
+    if (!row || row.emailSentAt) return;
+    const claimedAt = this.deps.clock.now();
+    const claimed = await this.deps.em.fork().nativeUpdate(Notification, { id: row.id, emailSentAt: null }, { emailSentAt: claimedAt });
+    if (claimed !== 1) return;
+    try {
+      await this.deps.mailer.send(answerPostedMail({
+        to: booking.mentee.email,
+        mentorName: booking.mentorProfile.user.displayName,
+        sessionUrl: new URL(`/sessions/${booking.id}`, this.deps.env.APP_URL).toString(),
+      }));
+    } catch (error) {
+      // Neither address nor body is logged; releasing the claim lets a later save retry. A send the
+      // provider accepted but reported as failed (a response timeout) can therefore be sent twice.
+      // A process that dies between the claim and the send leaves the email unsent: at most once.
+      await this.deps.em.fork().nativeUpdate(Notification, { id: row.id, emailSentAt: claimedAt }, { emailSentAt: null });
+      this.deps.logger.warn({ err: error, notificationId: row.id }, 'notifications.email_failed');
+    }
+  }
+
   /** The existing row, a new one, or null when a concurrent consumer inserted it first. */
-  private async record(userId: string, bookingId: string): Promise<INotification | null> {
+  private async record(userId: string, bookingId: string, kind: NotificationKind): Promise<INotification | null> {
     const em = this.deps.em.fork();
-    const existing = await em.findOne(Notification, { user: userId, kind: KIND, booking: bookingId });
+    const existing = await em.findOne(Notification, { user: userId, kind, booking: bookingId });
     if (existing) return existing;
     try {
       const now = this.deps.clock.now();
       const row = em.create(Notification, {
         user: em.getReference(User, userId), booking: em.getReference(Booking, bookingId),
-        kind: KIND, readAt: null, emailSentAt: null, createdAt: now, updatedAt: now,
+        kind, readAt: null, emailSentAt: null, createdAt: now, updatedAt: now,
       });
       em.persist(row);
       await em.flush();

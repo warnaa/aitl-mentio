@@ -19,6 +19,10 @@ it('preserves booking history while constraining active occupancy, money and dur
     expect(sql).toContain('"stripe_checkout_session_id" varchar(255) null');
     expect(sql).toContain('bookings_stripe_checkout_session_id_unique');
     expect(sql).toContain('bookings_mentor_start_index');
+    expect(sql).toContain('"written_answer" text null');
+    expect(sql).toContain('"written_answer_at" timestamptz null');
+    expect(sql).toContain('(written_answer is null) = (written_answer_at is null)');
+    expect(sql).toContain('char_length(written_answer) <= 20000');
     expect(metadata.properties.slot.kind).toBe('m:1');
     expect(metadata.properties.slot.deleteRule).toBe('no action');
     expect(metadata.properties.mentee.deleteRule).toBe('no action');

@@ -9,7 +9,7 @@ const message = (n: number, own: boolean) => ({ id: `m${n}`, authorRole: own ? '
 const session = (over: Partial<SessionDto> = {}): SessionDto => ({
   booking: { id, startsAt: '2026-11-12T14:00:00.000Z', endsAt: '2026-11-12T14:25:00.000Z', lengthMinutes: 25 },
   window: 'open', serverNow: '2026-11-12T14:05:00.000Z', viewerRole: 'mentee', counterpartName: 'Alex Mentor', truncated: false,
-  messages: [message(1, true), message(2, false)], ...over,
+  messages: [message(1, true), message(2, false)], answer: null, answerOwed: false, ...over,
 });
 const ok = (data: unknown, status = 200) => new Response(JSON.stringify({ ok: true, data }), { status });
 const fail = (status: number, code: string, message: string) => new Response(JSON.stringify({ ok: false, error: { code, message } }), { status });
@@ -65,22 +65,37 @@ it('before the start it explains when writing opens and offers no composer, keep
 });
 
 it('after the end it keeps the transcript readable, closes the composer and shows the owed written answer without polling', async () => {
-  render(<SessionRoom initial={session({ window: 'ended' })} />);
+  render(<SessionRoom initial={session({ window: 'ended', answerOwed: true })} />);
   noticesShown();
   expect(screen.getByText('This session has ended')).toBeTruthy();
   expect(screen.getByText('You can still read the conversation above.')).toBeTruthy();
   expect(screen.getByText('Awaiting answer')).toBeTruthy();
+  expect(screen.getByText('The written answer is still owed.')).toBeTruthy();
   expect(screen.getByText('From Alex Mentor')).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Send message' })).toBeNull();
   await tick(POLL_MS * 3);
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
-it('shows the mentor view with the mentee as counterpart and the answer attributed to the mentor', () => {
-  render(<SessionRoom initial={session({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', window: 'ended' })} />);
+it('shows the mentor view with the mentee as counterpart and the answer editor', () => {
+  render(<SessionRoom initial={session({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', window: 'ended', answerOwed: true })} />);
   expect(screen.getByText('Your mentee: Sam Mentee')).toBeTruthy();
   expect(screen.getByRole('link', { name: 'My sessions' }).getAttribute('href')).toBe('/mentor');
+  expect(screen.getByRole('heading', { name: 'Written answer for Sam' })).toBeTruthy();
+  expect(screen.queryByText('Awaiting answer')).toBeNull();
+});
+
+it('shows the saved answer at once and refreshes the session after the mentor posts it', async () => {
+  render(<SessionRoom initial={session({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', window: 'ended', answerOwed: true })} />);
+  const saved = { body: 'Use a union.', postedAt: '2026-11-12T14:30:00.000Z' };
+  fetchMock.mockImplementation(async (_url, init) => (init?.method === 'PUT' ? ok(saved) : ok(session({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', window: 'ended', answer: saved }))));
+  fireEvent.change(screen.getByLabelText(/Written answer/), { target: { value: 'Use a union.' } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Post written answer' })); });
+  expect(fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT')![0]).toBe(`/api/sessions/${id}/answer`);
+  expect(screen.getByText('Written answer saved.')).toBeTruthy();
   expect(screen.getByText('From you')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Update written answer' })).toBeTruthy();
+  expect(calls(`/api/sessions/${id}`)).toHaveLength(1);
 });
 
 it('says when older messages are not shown', () => {
@@ -119,7 +134,7 @@ it('does not poll while the tab is hidden and polls at once when it becomes visi
 
 it('switches itself to the ended state from the server window and stops polling', async () => {
   render(<SessionRoom initial={session()} />);
-  fetchMock.mockResolvedValue(ok(session({ window: 'ended' })));
+  fetchMock.mockResolvedValue(ok(session({ window: 'ended', answerOwed: true })));
   await tick();
   expect(screen.getByText('This session has ended')).toBeTruthy();
   expect(screen.queryByText(/Your draft is kept/)).toBeNull();
@@ -173,7 +188,7 @@ it('keeps the draft and shows the error when a post fails while the session is s
 
 it('keeps the draft visible when the session ended before the message was sent', async () => {
   render(<SessionRoom initial={session()} />);
-  fetchMock.mockImplementation(async (url, init) => (init?.method === 'POST' ? fail(409, 'conflict', 'This session has ended.') : ok(session({ window: 'ended' }))));
+  fetchMock.mockImplementation(async (url, init) => (init?.method === 'POST' ? fail(409, 'conflict', 'This session has ended.') : ok(session({ window: 'ended', answerOwed: true }))));
   type('too late');
   await send();
   expect(screen.getByText(/This session ended before your message was sent/)).toBeTruthy();
@@ -193,7 +208,7 @@ it('ignores a failed refresh after a post without claiming the session ended', a
 it('keeps an unsent draft readable when a poll finds the session ended under it', async () => {
   render(<SessionRoom initial={session()} />);
   type('a long paste I was still writing');
-  fetchMock.mockResolvedValue(ok(session({ window: 'ended' })));
+  fetchMock.mockResolvedValue(ok(session({ window: 'ended', answerOwed: true })));
   await tick();
   expect(screen.getByText(/ended before your message was sent/)).toBeTruthy();
   expect((screen.getByLabelText(/Message to Alex/) as HTMLTextAreaElement).value).toBe('a long paste I was still writing');
@@ -204,7 +219,7 @@ it('closes the composer when the session ends and there is no draft', async () =
   render(<SessionRoom initial={session()} />);
   type('x');
   type('');
-  fetchMock.mockResolvedValue(ok(session({ window: 'ended' })));
+  fetchMock.mockResolvedValue(ok(session({ window: 'ended', answerOwed: true })));
   await tick();
   expect(screen.queryByLabelText(/Message to Alex/)).toBeNull();
   expect(screen.getByText('You can still read the conversation above.')).toBeTruthy();

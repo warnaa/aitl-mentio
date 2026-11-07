@@ -7,6 +7,9 @@ it('keeps an owed answer unavailable and exposes posted content without an impli
   const { rerender } = render(<WrittenAnswer state="owed" mentorName="Alex" body={<p>Draft should not appear</p>} />);
   expect(screen.queryByText('Draft should not appear')).toBeNull();
   expect(screen.getByText('Awaiting answer')).toBeTruthy();
+  expect(screen.getByText("The mentor's written answer will appear here after the session.")).toBeTruthy();
+  rerender(<WrittenAnswer state="owed" mentorName="Alex" body={null} owedMessage="The written answer is still owed." />);
+  expect(screen.getByText('The written answer is still owed.')).toBeTruthy();
   rerender(<WrittenAnswer state="posted" mentorName="Alex" body={<p>Use a discriminated union.</p>} publishedLabel="Posted 9 September" actions={<a href="#note">Review session note</a>} />);
   expect(screen.getByText('Use a discriminated union.')).toBeTruthy();
   expect(screen.getByText('Posted 9 September')).toBeTruthy();

@@ -403,6 +403,40 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "written_answer": {
+          "name": "written_answer",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "written_answer_at": {
+          "name": "written_answer_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         }
       },
       "indexes": [
@@ -489,6 +523,16 @@
           "expression": "\"status\" in ('pending', 'confirmed', 'cancelled', 'expired')",
           "definition": "check (\"status\" in ('pending', 'confirmed', 'cancelled', 'expired'))",
           "columnName": "status"
+        },
+        {
+          "name": "bookings_written_answer_length_check",
+          "expression": "char_length(written_answer) <= 20000",
+          "definition": "check (char_length(written_answer) <= 20000)"
+        },
+        {
+          "name": "bookings_written_answer_pair_check",
+          "expression": "(written_answer is null) = (written_answer_at is null)",
+          "definition": "check ((written_answer is null) = (written_answer_at is null))"
         }
       ],
       "triggers": [],
@@ -1317,8 +1361,8 @@
       "checks": [
         {
           "name": "notifications_kind_check",
-          "expression": "\"kind\" in ('booking_confirmed')",
-          "definition": "check (\"kind\" in ('booking_confirmed'))",
+          "expression": "kind in ('booking_confirmed', 'answer_posted')",
+          "definition": "check (kind in ('booking_confirmed', 'answer_posted'))",
           "columnName": "kind"
         }
       ],

@@ -188,6 +188,17 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     }
   });
 
+  // Tell the mentee that the written answer is there; same system-scope pattern as above, so a
+  // mail failure never fails the mentor's save.
+  container.cradle.eventBus.on('sessions.answer.posted', async ({ bookingId }) => {
+    const scope = container.createScope<Cradle>();
+    try {
+      await scope.cradle.notificationService.onAnswerPosted(bookingId);
+    } finally {
+      await scope.dispose();
+    }
+  });
+
   return container;
 }
 

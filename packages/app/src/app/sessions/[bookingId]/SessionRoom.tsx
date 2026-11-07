@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { SessionDto } from '@devmentor/core';
 import { messageCreateSchema } from '@devmentor/core/validators/sessions/message-create.schema';
-import { Label, SessionHeader, SessionIsTextNotice, SessionTranscript, ShareRuleNotice, Textarea, WrittenAnswer, type SessionMessage } from '@devmentor/ui';
+import { Label, SessionHeader, SessionIsTextNotice, SessionTranscript, ShareRuleNotice, Textarea, type SessionMessage } from '@devmentor/ui';
 import { apiCall, CrudForm } from '@devmentor/ui/backend';
 import { formatInstant, useViewerTimeZone } from '@devmentor/ui/time';
+import { WrittenAnswerPanel } from './WrittenAnswerPanel';
 
 /** How often an open tab asks for new messages. */
 export const POLL_MS = 5000;
@@ -134,7 +135,7 @@ export function SessionRoom({ initial }: { initial: SessionDto }) {
       {gone && <p className="dm-product-callout" role="alert">This session is no longer available. Reload the page or go back to My sessions.</p>}
       {data.truncated && <p className="dm-product-caption">Earlier messages are not shown.</p>}
       <SessionTranscript messages={messages} composer={body} />
-      {ended && <WrittenAnswer state="owed" mentorName={data.viewerRole === 'mentee' ? data.counterpartName : 'you'} body={null} />}
+      <WrittenAnswerPanel session={data} zone={zone} onSaved={answer => { setData(current => ({ ...current, answer, answerOwed: false })); void refresh(); }} />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EntityManager } from '@devmentor/db';
 import type { Session } from '../../http/auth';
 import { TooManyRequestsError } from '../../http/errors';
-import { MESSAGE_PAGE, POST_MESSAGE_POLICY, READ_SESSION_POLICY, sessionWindow, TextSessionService } from './text-session.service';
+import { MESSAGE_PAGE, POST_ANSWER_POLICY, POST_MESSAGE_POLICY, READ_SESSION_POLICY, sessionWindow, TextSessionService } from './text-session.service';
 
 vi.mock('@devmentor/db', () => ({ Booking: 'Booking', SessionMessage: 'SessionMessage' }));
 
@@ -18,14 +18,17 @@ let session: Session | null;
 let booking: Row | null;
 let newestFirst: Row[];
 const consumeFor = vi.fn();
+const emit = vi.fn();
+let updatedRows: number;
 const em = {
   findOne: vi.fn(async (_entity: string, where: Row) => (booking && where.id === booking.id && where.status === booking.status ? booking : null)),
   find: vi.fn(async (_entity: string, _where: Row, options: Row) => newestFirst.slice(0, options.limit)),
   create: vi.fn((_entity: string, values: Row): Row => ({ id: 'new-message', ...values })),
   persist: vi.fn(),
   flush: vi.fn(),
+  nativeUpdate: vi.fn(async () => updatedRows),
 };
-const service = () => new TextSessionService({ em: em as unknown as EntityManager, session: Promise.resolve(session), clock: { now: () => now }, rateLimiter: { consumeFor } });
+const service = () => new TextSessionService({ em: em as unknown as EntityManager, session: Promise.resolve(session), clock: { now: () => now }, rateLimiter: { consumeFor }, eventBus: { emit } });
 const confirmed = (length = 25): Row => ({ id: bookingId, status: 'confirmed', mentee, mentorProfile: { user: mentor }, startsAt: start, lengthMinutes: length });
 const message = (id: string, author: Row, body: string, createdAt: string): Row => ({ id, author, body, createdAt: new Date(createdAt) });
 const at = (offsetMs: number) => new Date(start.getTime() + offsetMs);
@@ -37,6 +40,7 @@ beforeEach(() => {
   booking = confirmed();
   newestFirst = [];
   consumeFor.mockResolvedValue(undefined);
+  updatedRows = 1;
 });
 
 describe('sessionWindow', () => {
@@ -207,5 +211,105 @@ describe('postMessage', () => {
     consumeFor.mockRejectedValue(new TooManyRequestsError(10));
     await expect(service().postMessage(bookingId, { body: '' })).rejects.toMatchObject({ status: 429 });
     expect(em.persist).not.toHaveBeenCalled();
+  });
+});
+
+describe('the written answer on the read', () => {
+  it('is null and not owed while the session has not ended', async () => {
+    for (const offset of [-1, 0]) {
+      now = at(offset);
+      expect(await service().getForParticipant(bookingId)).toMatchObject({ answer: null, answerOwed: false });
+    }
+  });
+
+  it('is owed once the session ended without an answer', async () => {
+    now = at(25 * 60_000);
+    expect(await service().getForParticipant(bookingId)).toMatchObject({ answer: null, answerOwed: true });
+  });
+
+  it('is shown to both parties, and still there weeks later', async () => {
+    booking = { ...confirmed(), writtenAnswer: 'Use a union.', writtenAnswerAt: at(30 * 60_000) };
+    now = at(42 * 24 * 60 * 60_000);
+    const expected = { answer: { body: 'Use a union.', postedAt: '2026-11-12T14:30:00.000Z' }, answerOwed: false };
+    expect(await service().getForParticipant(bookingId)).toMatchObject(expected);
+    session = { userId: 'mentor-id', roles: ['mentor'] };
+    expect(await service().getForParticipant(bookingId)).toMatchObject(expected);
+  });
+});
+
+describe('postAnswer', () => {
+  beforeEach(() => {
+    session = { userId: 'mentor-id', roles: ['mentor'] };
+  });
+
+  it.each([['open', 60_000], ['ended', 25 * 60_000], ['long ended', 30 * 24 * 60 * 60_000]])("saves the mentor's answer when the session is %s and tells the bus", async (_label, offset) => {
+    now = at(offset);
+    const dto = await service().postAnswer(bookingId, { body: '  Use a union.\r\nNarrow on ok.  ', extra: 1 });
+    expect(dto).toEqual({ body: 'Use a union.\nNarrow on ok.', postedAt: now.toISOString() });
+    expect(em.nativeUpdate).toHaveBeenCalledWith('Booking', { id: bookingId, status: 'confirmed' }, { writtenAnswer: 'Use a union.\nNarrow on ok.', writtenAnswerAt: now, updatedAt: now });
+    expect(emit).toHaveBeenCalledWith('sessions.answer.posted', { bookingId });
+    expect(consumeFor).toHaveBeenCalledWith(POST_ANSWER_POLICY, 'mentor-id');
+  });
+
+  it('replaces an earlier answer and emits again', async () => {
+    booking = { ...confirmed(), writtenAnswer: 'First draft.', writtenAnswerAt: at(60_000) };
+    now = at(26 * 60_000);
+    await expect(service().postAnswer(bookingId, { body: 'Corrected.' })).resolves.toEqual({ body: 'Corrected.', postedAt: now.toISOString() });
+    expect(emit).toHaveBeenCalledOnce();
+  });
+
+  it('refuses before the start with 409 and accepts exactly at the start', async () => {
+    now = at(-1);
+    await expect(service().postAnswer(bookingId, { body: 'early' })).rejects.toMatchObject({ status: 409, message: 'You can post the written answer when the session starts.' });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+    now = at(0);
+    await expect(service().postAnswer(bookingId, { body: 'on time' })).resolves.toMatchObject({ body: 'on time' });
+  });
+
+  it("refuses the booking's mentee with 403 before the rate limit or any write", async () => {
+    session = { userId: 'mentee-id', roles: ['mentee', 'mentor'] };
+    await expect(service().postAnswer(bookingId, { body: 'mine' })).rejects.toMatchObject({ status: 403, message: 'Only the mentor can post the written answer.' });
+    expect(consumeFor).not.toHaveBeenCalled();
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('answers 404 to the mentor of a different session, an unknown and an unconfirmed booking', async () => {
+    session = { userId: 'other-mentor-id', roles: ['mentor'] };
+    await expect(service().postAnswer(bookingId, { body: 'x' })).rejects.toMatchObject({ status: 404 });
+    session = { userId: 'mentor-id', roles: ['mentor'] };
+    booking = { ...confirmed(), status: 'cancelled' };
+    await expect(service().postAnswer(bookingId, { body: 'x' })).rejects.toMatchObject({ status: 404 });
+    booking = null;
+    await expect(service().postAnswer(bookingId, { body: 'x' })).rejects.toMatchObject({ status: 404 });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+  });
+
+  it('answers 404 and emits nothing when the booking stopped being confirmed before the write', async () => {
+    updatedRows = 0;
+    await expect(service().postAnswer(bookingId, { body: 'x' })).rejects.toMatchObject({ status: 404, message: 'Session not found' });
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('answers 401 when signed out and 422 for a malformed id', async () => {
+    session = null;
+    await expect(service().postAnswer(bookingId, { body: 'x' })).rejects.toMatchObject({ status: 401 });
+    session = { userId: 'mentor-id', roles: ['mentor'] };
+    await expect(service().postAnswer('nope', { body: 'x' })).rejects.toMatchObject({ status: 422 });
+  });
+
+  it.each([
+    ['empty', { body: '' }],
+    ['over 20,000 characters', { body: 'x'.repeat(20001) }],
+    ['containing NUL', { body: 'a\u0000b' }],
+  ])('rejects a body that is %s and writes nothing', async (_label, input) => {
+    await expect(service().postAnswer(bookingId, input)).rejects.toMatchObject({ status: 422, fieldErrors: { body: expect.any(Array) } });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+  });
+
+  it('rate limits saves before validation or writing', async () => {
+    consumeFor.mockRejectedValue(new TooManyRequestsError(10));
+    await expect(service().postAnswer(bookingId, { body: '' })).rejects.toMatchObject({ status: 429 });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
   });
 });
