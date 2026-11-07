@@ -42,6 +42,7 @@ export default defineConfig({
         'packages/core/src/validators/sessions/*.ts',
         'packages/app/src/app/api/sessions/\\[bookingId\\]/route.ts',
         'packages/app/src/app/api/sessions/\\[bookingId\\]/messages/route.ts',
+        'packages/app/src/app/api/sessions/\\[bookingId\\]/answer/route.ts',
         'packages/app/src/app/sessions/layout.tsx',
         'packages/app/src/app/sessions/\\[bookingId\\]/page.tsx',
         'packages/app/src/app/sessions/\\[bookingId\\]/SessionRoom.tsx',
