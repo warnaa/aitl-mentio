@@ -177,6 +177,25 @@ describe('getContainer', () => {
     expect(state.logger.info).toHaveBeenCalledWith({ userId: 'u1' }, 'auth.user.created');
   });
 
+  it('hands a confirmed booking to the notification consumer in its own disposed scope', async () => {
+    const container = await getContainer();
+    const onBookingConfirmed = vi.fn().mockResolvedValue(undefined);
+    container.register({ notificationService: asValue({ onBookingConfirmed }) });
+
+    await container.cradle.eventBus.emit('bookings.booking.confirmed', { bookingId: 'b1' });
+
+    expect(onBookingConfirmed).toHaveBeenCalledExactlyOnceWith('b1');
+  });
+
+  it('logs and swallows a failing notification consumer so the emitter is unaffected', async () => {
+    const container = await getContainer();
+    container.register({ notificationService: asValue({ onBookingConfirmed: vi.fn().mockRejectedValue(new Error('mail down')) }) });
+
+    await expect(container.cradle.eventBus.emit('bookings.booking.confirmed', { bookingId: 'b1' })).resolves.toBeUndefined();
+
+    expect(state.logger.error).toHaveBeenCalledWith({ err: expect.any(Error), event: 'bookings.booking.confirmed' }, 'event handler failed');
+  });
+
   it('logs auth.user.roles_changed through the default subscriber', async () => {
     const container = await getContainer();
 

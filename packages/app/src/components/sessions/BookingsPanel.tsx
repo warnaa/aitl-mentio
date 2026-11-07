@@ -5,6 +5,7 @@ import { EmptyState, ResourcePanel, useApiResource } from '@devmentor/ui/backend
 import { formatPrice } from '@devmentor/ui/components/mentors/MentorPageView';
 import { LocalTime } from '@devmentor/ui/time';
 import { CheckoutAction } from './CheckoutAction';
+import { splitSessions } from './split-sessions';
 
 export interface ParticipantBooking {
   id: string;
@@ -20,26 +21,53 @@ export interface ParticipantBooking {
   paymentStatus: 'unpaid' | 'creating' | 'open' | 'confirmed' | 'expired' | 'review';
 }
 
-/** The authenticated API projection is authority, including after a Checkout return. */
-export function BookingsPanel({ persona }: { persona: 'mentee' | 'mentor' }) {
+function statusLabel(status: string) {
+  return status === 'confirmed' ? 'Confirmed' : status === 'expired' ? 'Expired' : status === 'cancelled' ? 'Cancelled' : 'Pending';
+}
+
+function SessionCard({ booking, persona, returned }: { booking: ParticipantBooking; persona: 'mentee' | 'mentor'; returned: boolean }) {
+  return <Card className="dm-product-panel" aria-current={returned ? 'true' : undefined}>
+    <div className="dm-product-row"><h4 className="dm-product-title">Session with {persona === 'mentee' ? booking.mentorName : booking.menteeName}</h4><span className="dm-product-status" data-tone={booking.status === 'confirmed' ? 'success' : 'information'}>{statusLabel(booking.status)}</span></div>
+    {returned && <p className="dm-product-caption">You returned from Checkout for this session. The status below comes from our records.</p>}
+    <p className="dm-product-copy">Starts: <LocalTime value={booking.startsAt} /></p>
+    <p className="dm-product-muted">{booking.lengthMinutes}-minute text session</p>
+    <p>{formatPrice(booking.priceCents, booking.currency)}</p>
+    {booking.status === 'confirmed'
+      ? <p role="status">Payment verified. Your session is confirmed.</p>
+      : booking.paymentStatus === 'review'
+        ? <p role="status">Your payment needs review. Contact support with booking reference <code>{booking.id}</code>. This session is not confirmed.</p>
+        : booking.status === 'pending'
+          ? <><p role="status">Waiting for payment confirmation. Returning from Checkout does not confirm a session.</p>{booking.expiresAt && <p className="dm-product-caption">Payment window: <LocalTime value={booking.expiresAt} />. The time stays reserved while payment is checked.</p>}{persona === 'mentee' && <CheckoutAction bookingId={booking.id} />}</>
+          : <p>This reservation is no longer active. Choose an available time to book again.</p>}
+  </Card>;
+}
+
+function SessionSection({ id, title, empty, bookings, persona, returnedId }: { id: string; title: string; empty: string; bookings: ParticipantBooking[]; persona: 'mentee' | 'mentor'; returnedId?: string }) {
+  return <section aria-labelledby={id} className="dm-product-stack">
+    <h3 id={id} className="dm-product-title">{title}</h3>
+    {bookings.length === 0
+      ? <p className="dm-product-muted">{empty}</p>
+      : <div className="grid min-w-0 gap-6">{bookings.map(booking => <SessionCard key={booking.id} booking={booking} persona={persona} returned={booking.id === returnedId} />)}</div>}
+  </section>;
+}
+
+/**
+ * The authenticated API projection is authority, including after a Checkout return.
+ * Sessions are split into upcoming and past by the browser clock; `returnedId` marks the
+ * booking a Checkout redirect named, without saying anything the stored status does not.
+ */
+export function BookingsPanel({ persona, returnedId }: { persona: 'mentee' | 'mentor'; returnedId?: string }) {
   const resource = useApiResource<ParticipantBooking[]>(`/api/bookings?role=${persona}`);
   return <section aria-label="Your bookings" className="dm-product-stack">
     <div className="dm-product-row"><h2 className="dm-product-title">Your bookings</h2><Button type="button" intent="neutral" appearance="stroke" disabled={resource.loading} onClick={resource.reload}>Check payment status</Button></div>
-    <ResourcePanel resource={resource}>{bookings => bookings.length === 0
-      ? <EmptyState title="No sessions yet" description="Sessions you book will appear here, with their payment status and scheduled time." />
-      : <div className="grid min-w-0 gap-6">{bookings.map(booking => <Card key={booking.id} className="dm-product-panel">
-        <div className="dm-product-row"><h3 className="dm-product-title">Session with {persona === 'mentee' ? booking.mentorName : booking.menteeName}</h3><span className="dm-product-status" data-tone={booking.status === 'confirmed' ? 'success' : 'information'}>{booking.status === 'confirmed' ? 'Confirmed' : booking.status === 'expired' ? 'Expired' : booking.status === 'cancelled' ? 'Cancelled' : 'Pending'}</span></div>
-        <p className="dm-product-copy">Starts: <LocalTime value={booking.startsAt} /></p>
-        <p className="dm-product-muted">{booking.lengthMinutes}-minute text session</p>
-        <p>{formatPrice(booking.priceCents, booking.currency)}</p>
-        {booking.status === 'confirmed'
-          ? <p role="status">Payment verified. Your session is confirmed.</p>
-          : booking.paymentStatus === 'review'
-            ? <p role="status">Your payment needs review. Contact support with booking reference <code>{booking.id}</code>. This session is not confirmed.</p>
-            : booking.status === 'pending'
-              ? <><p role="status">Waiting for payment confirmation. Returning from Checkout does not confirm a session.</p>{booking.expiresAt && <p className="dm-product-caption">Payment window: <LocalTime value={booking.expiresAt} />. The time stays reserved while payment is checked.</p>}{persona === 'mentee' && <CheckoutAction bookingId={booking.id} />}</>
-              : <p>This reservation is no longer active. Choose an available time to book again.</p>}
-      </Card>)}</div>}
+    <ResourcePanel resource={resource}>{bookings => {
+      if (bookings.length === 0) return <EmptyState title="No sessions yet" description="Sessions you book will appear here, with their payment status and scheduled time." />;
+      const { upcoming, past } = splitSessions(bookings, new Date());
+      return <>
+        <SessionSection id={`${persona}-upcoming-sessions`} title="Upcoming sessions" empty="No upcoming sessions." bookings={upcoming} persona={persona} returnedId={returnedId} />
+        <SessionSection id={`${persona}-past-sessions`} title="Past sessions" empty="No past sessions." bookings={past} persona={persona} returnedId={returnedId} />
+      </>;
+    }}
     </ResourcePanel>
     <SessionIsTextNotice />
   </section>;

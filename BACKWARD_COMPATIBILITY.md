@@ -55,6 +55,7 @@ a different GitHub account). An `AppError` may carry optional
 
 - `POST /api/payments/webhook` is a new deliberate non-enveloped exception: bounded raw signed body, plain 200 after durable handling, plain 400 for invalid input/signature, 503 for unavailable configuration/provider and 500 for transient processing failure. It is the only mutation with `apiHandler` CSRF disabled; Stripe's verified signature replaces browser-session authorization. Browser success/cancel redirects never mutate payment state.
 - `GET /api/bookings?role=mentee|mentor` is a bounded role-and-owner-scoped participant projection (default mentee); `POST /api/bookings/[id]/checkout` is owned mentee-only. Operator payment review/reconciliation/resolution routes require a live operator session and standard CSRF on mutations.
+- `GET /api/notifications` and `POST /api/notifications` are new, additive and session-scoped (any signed-in role, own rows only, standard envelope, central CSRF on the mutation). GET returns `{ unreadCount, items }` (at most 50, newest first, no addresses or user ids); POST takes `{ ids }` (1–50 uuids), changes only the caller's own unread rows and answers `{ updated }`, so a foreign id is indistinguishable from a read one. `GET /api/bookings?role=` is unchanged and remains the only sessions list; `/home` and `/mentor` render it as Upcoming and Past sections, and `/home?booked=<uuid>` only marks that booking.
 - `GET /api/payments/report` is a new operator-only aggregate. It returns both weekly views, recorded-payment total and valid-timing median for one server-derived twelve-booking-week cohort in Europe/Warsaw. No participant/provider identities are returned; callback delivery cannot multiply a booking row. Both week definitions remain labelled observations rather than a selected official D16 metric.
 - Starting Checkout changes the original unpaid hold once: its immutable 31-minute payment window ends at least 30 minutes before session start, and unresolved provider state retains occupancy until verified terminal resolution. Q1/Q2 were owner-approved on 2026-11-06. Existing unpaid holds without payment attempts retain their original 30-minute expiry. Expired history is retained rather than deleted. All booking/removal/public-availability consumers share the payment occupancy rule.
 
@@ -198,6 +199,8 @@ the change spans several concepts; note it in the PR body.
 
 ### 3. Database schema, migrations, and seed data (`packages/db/`)
 
+Notifications add `notifications` (one row per user, kind and booking under a unique constraint so a replayed event is idempotent; nullable `read_at` and `email_sent_at`; restrictive foreign keys to `users` and `bookings`). The migration is additive with a down; no existing row changes. Rollback: stop the `bookings.booking.confirmed` consumer, then drop the table; past notifications are not regenerated.
+
 Payments add `payment_attempts` (one immutable provider attempt per booking with submission/rejection counters and indexed reconciliation state), `processed_webhook_events` (unique event identity/outcome), and `payment_resolutions` (operator evidence/audit). Bookings gain nullable payment identity/amount/time fields and `payment_pending` default false. Existing rows remain unpaid. Preserve history and unique payment/session identities; use the generated reversible migrations. Before rollback, stop payment entry, reconcile all provider sessions and export payment/audit history; do not drop unresolved money records. See `docs/payments-operations.md`.
 
 - Tables: `users` (`id` uuid, `created_at`, `updated_at`, `email` unique,
@@ -280,6 +283,8 @@ maintainer updates the ruleset before the PR merges, otherwise the PR blocks its
 ### 6. Domain events (`packages/core/src/events/event-map.ts`)
 
 `bookings.booking.confirmed` adds `{ bookingId: string }`, emitted after the durable payment-confirmation transaction commits. The existing in-process emitter offers no durable downstream delivery; future consumers must not infer a notification queue or exactly-once external delivery from payment idempotency.
+
+`bookings.booking.confirmed` now has an in-process consumer that writes one notification and sends one email per participant (best effort: a failing handler is logged and swallowed, a process crash between the payment commit and the consumer loses the notification, and there is no outbox or sweep yet). The payload and emission point are unchanged.
 
 Event ids follow `concept.entity.action`. Today: `auth.user.created` with payload
 `{ userId, email }`, and `auth.user.roles_changed` with payload

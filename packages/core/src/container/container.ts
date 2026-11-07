@@ -28,6 +28,7 @@ import { InvitationService } from '../services/invitations/invitation.service';
 import { MentorProfileService } from '../services/mentors/mentor-profile.service';
 import { SlotService } from '../services/availability/slot.service';
 import { BookingService } from '../services/bookings/booking.service';
+import { NotificationService } from '../services/notifications/notification.service';
 import { PaymentService } from '../services/payments/payment.service';
 import { PaymentReportService } from '../services/payments/payment-report.service';
 import type { PaymentGateway } from '../services/payments/payment-gateway.port';
@@ -146,6 +147,7 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     mentorProfileService: asClass(MentorProfileService).scoped(),
     slotService: asClass(SlotService).scoped(),
     bookingService: asClass(BookingService).scoped(),
+    notificationService: asClass(NotificationService).scoped(),
     paymentGateway: asFunction(({ env, clock }: Cradle) =>
       env.PAYMENT_GATEWAY_ADAPTER === 'mock' && env.INTEGRATION_TEST_RUN
         ? new MockPaymentGateway({ clock })
@@ -170,6 +172,18 @@ async function build(): Promise<AwilixContainer<Cradle>> {
   });
   container.cradle.eventBus.on('auth.user.roles_changed', ({ userId, added, removed }) => {
     container.cradle.logger.info({ userId, added, removed }, 'auth.user.roles_changed');
+  });
+
+  // Tell both participants about a confirmed booking. It gets a system scope (no session)
+  // of its own, because the emitter's request scope may already be disposed. The bus logs
+  // and swallows a failure, so this can never fail the payment that emitted the event.
+  container.cradle.eventBus.on('bookings.booking.confirmed', async ({ bookingId }) => {
+    const scope = container.createScope<Cradle>();
+    try {
+      await scope.cradle.notificationService.onBookingConfirmed(bookingId);
+    } finally {
+      await scope.dispose();
+    }
   });
 
   return container;

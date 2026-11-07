@@ -1,0 +1,71 @@
+'use client';
+
+import { useState } from 'react';
+import { Button, Card } from '@devmentor/ui';
+import { apiCall, EmptyState, ResourcePanel, useApiResource } from '@devmentor/ui/backend';
+import { LocalTime } from '@devmentor/ui/time';
+
+export interface NotificationItem {
+  id: string;
+  kind: 'booking_confirmed';
+  audience: 'mentee' | 'mentor';
+  counterpartName: string;
+  startsAt: string;
+  lengthMinutes: number;
+  readAt: string | null;
+  createdAt: string;
+}
+
+interface NotificationList {
+  unreadCount: number;
+  items: NotificationItem[];
+}
+
+function unreadLine(count: number) {
+  return count === 0 ? 'No unread notifications.' : `You have ${count} unread notification${count === 1 ? '' : 's'}.`;
+}
+
+/**
+ * The signed-in user's notifications, shared by both role homes. It sits above the sessions
+ * panel, which carries the text-session notice (R03). The start shown is the slot's start
+ * (D22). Marking read sends only ids the server itself listed; the server re-scopes them.
+ */
+export function NotificationsPanel() {
+  const resource = useApiResource<NotificationList>('/api/notifications');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function markAllRead(items: NotificationItem[]) {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await apiCall('/api/notifications', { method: 'POST', body: { ids: items.filter(item => item.readAt === null).map(item => item.id) } });
+      if (result.ok) resource.reload();
+      else setError(result.error.message);
+    } catch {
+      setError('Notifications could not be marked as read. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <section aria-label="Notifications" className="dm-product-stack">
+    <h2 className="dm-product-title">Notifications</h2>
+    <ResourcePanel resource={resource}>{({ unreadCount, items }) => <>
+      <div className="dm-product-row">
+        <p role="status">{unreadLine(unreadCount)}</p>
+        <Button type="button" intent="neutral" appearance="stroke" disabled={busy || unreadCount === 0} onClick={() => markAllRead(items)}>Mark all as read</Button>
+      </div>
+      {error && <p role="alert">{error}</p>}
+      {items.length === 0
+        ? <EmptyState title="Nothing new" description="We tell you here, and by email, when a session is confirmed." />
+        : <ul className="grid min-w-0 gap-3">{items.map(item => <li key={item.id}><Card className="dm-product-panel" data-unread={item.readAt === null ? 'true' : undefined}>
+          <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.audience === 'mentee'
+            ? <>Your session with {item.counterpartName} is confirmed.</>
+            : <>{item.counterpartName} booked a session with you.</>}</p>
+          <p className="dm-product-muted">Starts <LocalTime value={item.startsAt} />, {item.lengthMinutes} minutes.</p>
+        </Card></li>)}</ul>}
+    </>}
+    </ResourcePanel>
+  </section>;
+}

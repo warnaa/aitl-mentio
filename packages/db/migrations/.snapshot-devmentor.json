@@ -150,14 +150,16 @@
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": 3,
+          "length": null,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [],
-          "mappedType": "string"
+          "enumItems": [
+            "PLN"
+          ],
+          "mappedType": "enum"
         },
         "expires_at": {
           "name": "expires_at",
@@ -302,7 +304,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": false,
+          "unique": true,
           "length": null,
           "precision": null,
           "scale": null,
@@ -337,14 +339,19 @@
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": 16,
+          "length": null,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [],
-          "mappedType": "string"
+          "enumItems": [
+            "pending",
+            "confirmed",
+            "cancelled",
+            "expired"
+          ],
+          "mappedType": "enum"
         },
         "stripe_checkout_session_id": {
           "name": "stripe_checkout_session_id",
@@ -400,13 +407,15 @@
       },
       "indexes": [
         {
-          "columnNames": [],
+          "columnNames": [
+            "slot_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "bookings_active_slot_unique",
           "primary": false,
-          "unique": false,
-          "expression": "create unique index \"bookings_active_slot_unique\" on \"bookings\" (\"slot_id\") where status in ('pending', 'confirmed')"
+          "unique": true,
+          "where": "(status)::text = ANY ((ARRAY['pending'::character varying, 'confirmed'::character varying])::text[])"
         },
         {
           "columnNames": [
@@ -453,31 +462,32 @@
       "checks": [
         {
           "name": "bookings_currency_check",
-          "expression": "currency = 'PLN'",
-          "definition": "check (currency = 'PLN')",
+          "expression": "\"currency\" in ('PLN')",
+          "definition": "check (\"currency\" in ('PLN'))",
           "columnName": "currency"
         },
         {
           "name": "bookings_length_minutes_check",
-          "expression": "length_minutes in (25, 50)",
-          "definition": "check (length_minutes in (25, 50))",
+          "expression": "length_minutes = ANY (ARRAY[25, 50])",
+          "definition": "CHECK ((length_minutes = ANY (ARRAY[25, 50])))",
           "columnName": "length_minutes"
         },
         {
           "name": "bookings_pending_expiry_check",
-          "expression": "status <> 'pending' or expires_at is not null",
-          "definition": "check (status <> 'pending' or expires_at is not null)"
+          "expression": "(status <> 'pending'::text) OR (expires_at IS NOT NULL)",
+          "definition": "CHECK ((((status)::text <> 'pending'::text) OR (expires_at IS NOT NULL)))",
+          "columnName": "expires_at"
         },
         {
           "name": "bookings_price_cents_check",
           "expression": "price_cents > 0",
-          "definition": "check (price_cents > 0)",
+          "definition": "CHECK ((price_cents > 0))",
           "columnName": "price_cents"
         },
         {
           "name": "bookings_status_check",
-          "expression": "status in ('pending', 'confirmed', 'cancelled', 'expired')",
-          "definition": "check (status in ('pending', 'confirmed', 'cancelled', 'expired'))",
+          "expression": "\"status\" in ('pending', 'confirmed', 'cancelled', 'expired')",
+          "definition": "check (\"status\" in ('pending', 'confirmed', 'cancelled', 'expired'))",
           "columnName": "status"
         }
       ],
@@ -598,7 +608,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": false,
+          "unique": true,
           "length": 255,
           "precision": null,
           "scale": null,
@@ -750,26 +760,28 @@
           "unique": true
         },
         {
-          "columnNames": [],
+          "columnNames": [
+            "email"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "invitations_unresolved_email_unique",
           "primary": false,
-          "unique": false,
-          "expression": "create unique index \"invitations_unresolved_email_unique\" on \"invitations\" (\"email\") where accepted_at is null and revoked_at is null"
+          "unique": true,
+          "where": "(accepted_at IS NULL) AND (revoked_at IS NULL)"
         }
       ],
       "checks": [
         {
           "name": "invitations_accepted_at_check",
-          "expression": "(accepted_at is null) = (accepted_by_id is null)",
-          "definition": "check ((accepted_at is null) = (accepted_by_id is null))",
+          "expression": "(accepted_at IS NULL) = (accepted_by_id IS NULL)",
+          "definition": "CHECK (((accepted_at IS NULL) = (accepted_by_id IS NULL)))",
           "columnName": "accepted_at"
         },
         {
           "name": "invitations_stack_tags_check",
-          "expression": "array_position(stack_tags, null) is null and stack_tags <@ array['typescript', 'react', 'python', 'ai-agents']::text[]",
-          "definition": "check (array_position(stack_tags, null) is null and stack_tags <@ array['typescript', 'react', 'python', 'ai-agents']::text[])",
+          "expression": "(array_position(stack_tags, NULL::text) IS NULL) AND (stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text])",
+          "definition": "CHECK (((array_position(stack_tags, NULL::text) IS NULL) AND (stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text])))",
           "columnName": "stack_tags"
         }
       ],
@@ -1085,24 +1097,25 @@
         {
           "name": "mentor_profiles_price_25_cents_check",
           "expression": "price_25_cents > 0",
-          "definition": "check (price_25_cents > 0)",
+          "definition": "CHECK ((price_25_cents > 0))",
           "columnName": "price_25_cents"
         },
         {
           "name": "mentor_profiles_price_50_cents_check",
           "expression": "price_50_cents > 0",
-          "definition": "check (price_50_cents > 0)",
+          "definition": "CHECK ((price_50_cents > 0))",
           "columnName": "price_50_cents"
         },
         {
           "name": "mentor_profiles_published_slug_check",
-          "expression": "published_at is null or slug is not null",
-          "definition": "check (published_at is null or slug is not null)"
+          "expression": "(published_at IS NULL) OR (slug IS NOT NULL)",
+          "definition": "CHECK (((published_at IS NULL) OR (slug IS NOT NULL)))",
+          "columnName": "published_at"
         },
         {
           "name": "mentor_profiles_stack_tags_check",
-          "expression": "stack_tags <@ array['typescript','react','python','ai-agents']::text[] and array_position(stack_tags, null) is null",
-          "definition": "check (stack_tags <@ array['typescript','react','python','ai-agents']::text[] and array_position(stack_tags, null) is null)",
+          "expression": "(stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text]) AND (array_position(stack_tags, NULL::text) IS NULL)",
+          "definition": "CHECK (((stack_tags <@ ARRAY['typescript'::text, 'react'::text, 'python'::text, 'ai-agents'::text]) AND (array_position(stack_tags, NULL::text) IS NULL)))",
           "columnName": "stack_tags"
         }
       ],
@@ -1119,6 +1132,219 @@
           ],
           "referencedTableName": "public.users",
           "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "notifications",
+      "schema": "public",
+      "columns": {
+        "booking_id": {
+          "name": "booking_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "email_sent_at": {
+          "name": "email_sent_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "kind": {
+          "name": "kind",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "booking_confirmed"
+          ],
+          "mappedType": "enum"
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "notifications_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "user_id",
+            "created_at"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "notifications_user_created_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "user_id",
+            "kind",
+            "booking_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "notifications_user_kind_booking_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "notifications_kind_check",
+          "expression": "\"kind\" in ('booking_confirmed')",
+          "definition": "check (\"kind\" in ('booking_confirmed'))",
+          "columnName": "kind"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "notifications_booking_id_foreign": {
+          "columnNames": [
+            "booking_id"
+          ],
+          "constraintName": "notifications_booking_id_foreign",
+          "localTableName": "public.notifications",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.bookings"
+        },
+        "notifications_user_id_foreign": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "notifications_user_id_foreign",
+          "localTableName": "public.notifications",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users"
         }
       },
       "comment": null
@@ -1305,14 +1531,20 @@
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": 255,
+          "length": null,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [],
-          "mappedType": "string"
+          "enumItems": [
+            "creating",
+            "open",
+            "confirmed",
+            "expired",
+            "review"
+          ],
+          "mappedType": "enum"
         },
         "submission_count": {
           "name": "submission_count",
@@ -1422,8 +1654,8 @@
       "checks": [
         {
           "name": "payment_attempts_state_check",
-          "expression": "state in ('creating', 'open', 'confirmed', 'expired', 'review')",
-          "definition": "check (state in ('creating', 'open', 'confirmed', 'expired', 'review'))",
+          "expression": "\"state\" in ('creating', 'open', 'confirmed', 'expired', 'review')",
+          "definition": "check (\"state\" in ('creating', 'open', 'confirmed', 'expired', 'review'))",
           "columnName": "state"
         }
       ],
@@ -1455,14 +1687,17 @@
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": 255,
+          "length": null,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [],
-          "mappedType": "string"
+          "enumItems": [
+            "confirm",
+            "release"
+          ],
+          "mappedType": "enum"
         },
         "actor_id": {
           "name": "actor_id",
@@ -1616,8 +1851,8 @@
       "checks": [
         {
           "name": "payment_resolutions_action_check",
-          "expression": "action in ('confirm', 'release')",
-          "definition": "check (action in ('confirm', 'release'))",
+          "expression": "\"action\" in ('confirm', 'release')",
+          "definition": "check (\"action\" in ('confirm', 'release'))",
           "columnName": "action"
         }
       ],
@@ -1890,7 +2125,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": false,
+          "unique": true,
           "length": null,
           "precision": null,
           "scale": null,
@@ -1954,13 +2189,16 @@
       },
       "indexes": [
         {
-          "columnNames": [],
-          "composite": false,
+          "columnNames": [
+            "mentor_profile_id",
+            "starts_at"
+          ],
+          "composite": true,
           "constraint": false,
           "keyName": "slots_active_mentor_start_unique",
           "primary": false,
-          "unique": false,
-          "expression": "create unique index \"slots_active_mentor_start_unique\" on \"slots\" (\"mentor_profile_id\", \"starts_at\") where removed_at is null"
+          "unique": true,
+          "where": "removed_at IS NULL"
         },
         {
           "columnNames": [
@@ -2246,8 +2484,8 @@
       "checks": [
         {
           "name": "users_roles_check",
-          "expression": "cardinality(roles) > 0 and array_ndims(roles) = 1 and array_position(roles, null) is null and roles <@ array['mentee', 'mentor', 'operator']::text[]",
-          "definition": "check (cardinality(roles) > 0 and array_ndims(roles) = 1 and array_position(roles, null) is null and roles <@ array['mentee', 'mentor', 'operator']::text[])",
+          "expression": "(cardinality(roles) > 0) AND (array_ndims(roles) = 1) AND (array_position(roles, NULL::text) IS NULL) AND (roles <@ ARRAY['mentee'::text, 'mentor'::text, 'operator'::text])",
+          "definition": "CHECK (((cardinality(roles) > 0) AND (array_ndims(roles) = 1) AND (array_position(roles, NULL::text) IS NULL) AND (roles <@ ARRAY['mentee'::text, 'mentor'::text, 'operator'::text])))",
           "columnName": "roles"
         }
       ],
