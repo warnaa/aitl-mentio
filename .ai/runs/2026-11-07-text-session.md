@@ -59,7 +59,7 @@ Video/audio, the written answer (#46), notes (#47/#48), operator access and disp
 
 ### Phase 3: Verification
 
-- [ ] 3.1 Integration scenarios and QA document
+- [x] 3.1 Integration scenarios and QA document — 7a94278
 - [ ] 3.2 `BACKWARD_COMPATIBILITY.md`, lessons, full gate, independent review
 
 ## Outcome
