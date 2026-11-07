@@ -34,3 +34,6 @@ After #46 lands, update this worktree to the approved prerequisite, resolve or a
 - Next: independent skeptical review of spec, address findings and prepare sanitized spec PR draft and defaults comment. Before remote publication the user's explicit remote-write guard requires approval. No source implementation or remote claim yet.
 
 - Independent spec review a7ce2438 requested two medium fixes: reachable notification repair after send and deterministic client response ordering. Added awaiting-state Notify mentee, replay/readAt guarantees, request-generation invalidation, current dirty-state checks and delayed-response acceptance tests. Reviewer branch has no diff; no source or runtime test changes. Re-review pending.
+
+- Independent re-review 247ff468 approved the specification, closing M1 and M2 with no new material finding. Verified its branch diff is empty; git diff --check passed. Updated the concrete spec PR draft with the verdict. Runtime tests and implementation remain unperformed, correctly outside this design-only milestone.
+- Awaiting explicit approval to publish the separate design-only spec PR, its defaults/rationale comments and issue claim/release updates; no remote writes yet. The original #47 implementation objective remains unfinished. After publication, continue only slice A through om-auto-implement-spec; #48 stays deferred.

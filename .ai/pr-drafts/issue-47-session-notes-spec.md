@@ -28,7 +28,7 @@ Mockups/current screenshots skipped: no generated test-environment descriptor ex
 
 ## Validation
 
-Whitespace/diff inspection passed for the initial draft. Independent review and final validation outcomes will be recorded before publishing. No runtime tests ran for this design-only change.
+Whitespace/diff inspection passed. Independent reviewer a7ce2438 found two medium gaps (notification recovery and client response ordering); both were addressed. Independent re-review 247ff468 approved the specification, closing both findings without new material defects. The review branches contain no edits. No runtime tests ran for this design-only change; implementation and human QA have not been verified.
 
 ## Breaking changes
 
