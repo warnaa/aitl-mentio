@@ -524,3 +524,12 @@ describe('request scopes and the scoped session', () => {
     await expect(withScope((cradle) => cradle.session)).rejects.toThrow(/session/);
   });
 });
+
+it('wires the session note consumer in a disposable system scope', async () => {
+  const container = await getContainer();
+  const onNoteSent = vi.fn().mockResolvedValue(undefined);
+  container.register({ notificationService: asValue({ onNoteSent }) });
+  const payload = { bookingId: 'b1', noteId: 'n1', version: 1 };
+  await container.cradle.eventBus.emit('notes.note.sent', payload);
+  expect(onNoteSent).toHaveBeenCalledExactlyOnceWith(payload);
+});

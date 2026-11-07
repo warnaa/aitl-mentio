@@ -56,6 +56,7 @@ export default defineConfig({
         'packages/core/src/services/notifications/notification.service.ts',
         'packages/core/src/validators/notifications/*.ts',
         'packages/app/src/app/api/notifications/route.ts',
+        'packages/app/src/app/api/notes/**/*.ts',
         'packages/app/src/components/notifications/*.tsx',
         'packages/app/src/components/sessions/*.ts',
         'packages/app/src/lib/payments/*.ts',

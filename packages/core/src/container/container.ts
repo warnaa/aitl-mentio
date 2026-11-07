@@ -201,6 +201,15 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     }
   });
 
+  container.cradle.eventBus.on('notes.note.sent', async payload => {
+    const scope = container.createScope<Cradle>();
+    try {
+      await scope.cradle.notificationService.onNoteSent(payload);
+    } finally {
+      await scope.dispose();
+    }
+  });
+
   return container;
 }
 
