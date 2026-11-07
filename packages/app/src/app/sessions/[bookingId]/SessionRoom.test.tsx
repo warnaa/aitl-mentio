@@ -9,7 +9,7 @@ const message = (n: number, own: boolean) => ({ id: `m${n}`, authorRole: own ? '
 const session = (over: Partial<SessionDto> = {}): SessionDto => ({
   booking: { id, startsAt: '2026-11-12T14:00:00.000Z', endsAt: '2026-11-12T14:25:00.000Z', lengthMinutes: 25 },
   window: 'open', serverNow: '2026-11-12T14:05:00.000Z', viewerRole: 'mentee', counterpartName: 'Alex Mentor', truncated: false,
-  messages: [message(1, true), message(2, false)], ...over,
+  messages: [message(1, true), message(2, false)], answer: null, answerOwed: false, ...over,
 });
 const ok = (data: unknown, status = 200) => new Response(JSON.stringify({ ok: true, data }), { status });
 const fail = (status: number, code: string, message: string) => new Response(JSON.stringify({ ok: false, error: { code, message } }), { status });

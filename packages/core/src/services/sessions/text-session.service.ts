@@ -1,9 +1,11 @@
 import { Booking, SessionMessage, type EntityManager, type IBooking, type ISessionMessage } from '@devmentor/db';
+import type { EventBus } from '../../events/event-bus';
 import type { Session } from '../../http/auth';
 import { parseWith } from '../../http/body';
-import { ConflictError, NotFoundError, UnauthorizedError } from '../../http/errors';
+import { ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '../../http/errors';
 import type { RateLimitPolicy, RateLimiter } from '../../http/rate-limit';
 import type { Clock } from '../../time/clock';
+import { answerUpdateSchema } from '../../validators/sessions/answer-update.schema';
 import { messageCreateSchema } from '../../validators/sessions/message-create.schema';
 import { sessionBookingIdSchema } from '../../validators/sessions/session-id.schema';
 import { MINUTE_MS } from '../bookings/occupancy';
@@ -12,6 +14,8 @@ import { MINUTE_MS } from '../bookings/occupancy';
 export const POST_MESSAGE_POLICY: RateLimitPolicy = { scope: 'session-messages', kind: 'account', limit: 30, windowMs: 60_000 };
 /** Sized for several open tabs polling every five seconds. */
 export const READ_SESSION_POLICY: RateLimitPolicy = { scope: 'session-reads', kind: 'account', limit: 120, windowMs: 60_000 };
+/** Saving the written answer; generous for drafting, bounded like posting. */
+export const POST_ANSWER_POLICY: RateLimitPolicy = { scope: 'session-answers', kind: 'account', limit: 30, windowMs: 60_000 };
 /** The newest messages a read returns; older ones are flagged with `truncated`. */
 export const MESSAGE_PAGE = 500;
 
@@ -33,6 +37,17 @@ export interface TextSessionServiceDeps {
   session: Promise<Session | null>;
   clock: Clock;
   rateLimiter: Pick<RateLimiter, 'consumeFor'>;
+  eventBus: Pick<EventBus, 'emit'>;
+}
+
+/** The mentor's written answer as both parties see it; `postedAt` is the latest save. */
+export interface WrittenAnswerDto {
+  body: string;
+  postedAt: string;
+}
+
+function toAnswerDto(booking: Pick<IBooking, 'writtenAnswer' | 'writtenAnswerAt'>): WrittenAnswerDto | null {
+  return booking.writtenAnswer && booking.writtenAnswerAt ? { body: booking.writtenAnswer, postedAt: booking.writtenAnswerAt.toISOString() } : null;
 }
 
 function toMessageDto(row: ISessionMessage, booking: IBooking, userId: string) {
@@ -74,6 +89,7 @@ export class TextSessionService {
     const now = this.deps.clock.now();
     const rows = await this.deps.em.find(SessionMessage, { booking: booking.id }, { populate: ['author'], orderBy: { createdAt: 'desc', id: 'desc' }, limit: MESSAGE_PAGE + 1 });
     const { window, endsAt } = sessionWindow(booking, now);
+    const answer = toAnswerDto(booking);
     return {
       booking: { id: booking.id, startsAt: booking.startsAt.toISOString(), endsAt: endsAt.toISOString(), lengthMinutes: booking.lengthMinutes },
       window,
@@ -82,6 +98,8 @@ export class TextSessionService {
       counterpartName: role === 'mentee' ? booking.mentorProfile.user.displayName : booking.mentee.displayName,
       truncated: rows.length > MESSAGE_PAGE,
       messages: rows.slice(0, MESSAGE_PAGE).reverse().map(row => toMessageDto(row, booking, userId)),
+      answer,
+      answerOwed: window === 'ended' && answer === null,
     };
   }
 
@@ -98,6 +116,26 @@ export class TextSessionService {
     this.deps.em.persist(row);
     await this.deps.em.flush();
     return toMessageDto(row, booking, userId);
+  }
+
+  /**
+   * Saves the booking's written answer, replacing an earlier one. Only the booking's mentor may,
+   * and only once the session has started; there is no deadline after the end. The update is
+   * one statement scoped to a still-confirmed booking, so a cancellation that lands after the
+   * party check stores nothing. Every save emits `sessions.answer.posted`; the notification side
+   * makes repeats harmless.
+   */
+  async postAnswer(bookingId: unknown, input: unknown): Promise<WrittenAnswerDto> {
+    const { booking, role, userId } = await this.party(bookingId);
+    if (role !== 'mentor') throw new ForbiddenError('Only the mentor can post the written answer.');
+    await this.deps.rateLimiter.consumeFor(POST_ANSWER_POLICY, userId);
+    const { body } = parseWith(answerUpdateSchema, input);
+    const now = this.deps.clock.now();
+    if (sessionWindow(booking, now).window === 'not_started') throw new ConflictError('You can post the written answer when the session starts.');
+    const updated = await this.deps.em.nativeUpdate(Booking, { id: booking.id, status: 'confirmed' }, { writtenAnswer: body, writtenAnswerAt: now, updatedAt: now });
+    if (updated === 0) throw new NotFoundError('Session not found');
+    await this.deps.eventBus.emit('sessions.answer.posted', { bookingId: booking.id });
+    return { body, postedAt: now.toISOString() };
   }
 }
 
