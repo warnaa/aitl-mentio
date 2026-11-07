@@ -59,6 +59,8 @@ it('before the start it explains when writing opens and offers no composer, keep
   noticesShown();
   expect(screen.getByText(/You can write here when the session starts/)).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Send message' })).toBeNull();
+  const locked = screen.getByLabelText('Message to Alex') as HTMLTextAreaElement;
+  expect(locked.disabled).toBe(true);
   expect(screen.getByText('Upcoming')).toBeTruthy();
 });
 
@@ -186,4 +188,55 @@ it('ignores a failed refresh after a post without claiming the session ended', a
   await send();
   expect(screen.getByText('Reconnecting…')).toBeTruthy();
   expect(screen.queryByText(/ended before your message/)).toBeNull();
+});
+
+it('keeps an unsent draft readable when a poll finds the session ended under it', async () => {
+  render(<SessionRoom initial={session()} />);
+  type('a long paste I was still writing');
+  fetchMock.mockResolvedValue(ok(session({ window: 'ended' })));
+  await tick();
+  expect(screen.getByText(/ended before your message was sent/)).toBeTruthy();
+  expect((screen.getByLabelText(/Message to Alex/) as HTMLTextAreaElement).value).toBe('a long paste I was still writing');
+  expect(screen.getByText('Awaiting answer')).toBeTruthy();
+});
+
+it('closes the composer when the session ends and there is no draft', async () => {
+  render(<SessionRoom initial={session()} />);
+  type('x');
+  type('');
+  fetchMock.mockResolvedValue(ok(session({ window: 'ended' })));
+  await tick();
+  expect(screen.queryByLabelText(/Message to Alex/)).toBeNull();
+  expect(screen.getByText('You can still read the conversation above.')).toBeTruthy();
+});
+
+it('puts the cursor back in the empty composer after a message is sent', async () => {
+  render(<SessionRoom initial={session()} />);
+  fetchMock.mockImplementation(async (url, init) => (init?.method === 'POST' ? ok(message(3, true), 201) : ok(session())));
+  type('hello');
+  await send();
+  expect(document.activeElement).toBe(screen.getByLabelText(/Message to Alex/));
+  expect(screen.getByText('Message sent.')).toBeTruthy();
+});
+
+it('lets only the newest request change the screen, so a slow older poll cannot undo a newer one', async () => {
+  render(<SessionRoom initial={session()} />);
+  let releaseSlow!: (response: Response) => void;
+  fetchMock.mockImplementationOnce(() => new Promise<Response>(resolve => { releaseSlow = resolve; }));
+  await tick();
+  fetchMock.mockResolvedValueOnce(ok(session({ messages: [message(1, true), message(2, false), message(3, false)] })));
+  await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
+  expect(screen.getByText(/line 3/)).toBeTruthy();
+  await act(async () => { releaseSlow(ok(session())); });
+  expect(screen.getByText(/line 3/)).toBeTruthy();
+});
+
+it.each([[401, 'unauthorized'], [404, 'not_found']])('stops polling and says so when the answer is permanent (%i)', async (status, code) => {
+  render(<SessionRoom initial={session()} />);
+  fetchMock.mockResolvedValue(fail(status, code, 'gone'));
+  await tick();
+  expect(screen.getByRole('alert').textContent).toContain('no longer available');
+  expect(screen.queryByText('Reconnecting…')).toBeNull();
+  await tick(POLL_MS * 3);
+  expect(calls(`/api/sessions/${id}`)).toHaveLength(1);
 });

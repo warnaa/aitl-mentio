@@ -4,6 +4,8 @@ import { NotFoundError } from '@devmentor/core';
 import { ErrorMessage } from '@devmentor/ui/backend';
 import { notFound } from 'next/navigation';
 import { admit, deny, GuardRedirect, guards } from '../../../test/page-guards';
+import { SessionIsTextNotice, ShareRuleNotice } from '@devmentor/ui';
+import { findByType } from '../../../test/element-tree';
 import { SessionRoom } from './SessionRoom';
 
 const scope = vi.hoisted(() => ({ withPageScope: vi.fn(), getForParticipant: vi.fn() }));
@@ -53,8 +55,9 @@ describe('/sessions/[bookingId]', () => {
   it('renders a readable error, not a stack trace, when the session cannot be read', async () => {
     scope.getForParticipant.mockRejectedValue(new Error('database down'));
     const tree = await render();
-    expect(tree.type).toBe(ErrorMessage);
-    expect(String((tree.props as { message: string }).message)).toContain('unavailable');
+    expect(String((findByType(tree, ErrorMessage).props as { message: string }).message)).toContain('unavailable');
+    expect(findByType(tree, SessionIsTextNotice)).toBeTruthy();
+    expect(findByType(tree, ShareRuleNotice)).toBeTruthy();
     expect(notFound).not.toHaveBeenCalled();
   });
 

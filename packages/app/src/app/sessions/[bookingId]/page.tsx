@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { NotFoundError } from '@devmentor/core';
+import { SessionIsTextNotice, ShareRuleNotice } from '@devmentor/ui';
 import { ErrorMessage } from '@devmentor/ui/backend';
 import { requirePageSignedIn, withPageScope } from '../../../lib/session';
 import { SessionRoom } from './SessionRoom';
@@ -22,7 +23,14 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
     initial = await withPageScope(path, ({ textSessionService }) => textSessionService.getForParticipant(bookingId));
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
-    return <ErrorMessage message="This session is unavailable. Please try again later." />;
+    // The notices belong to every state of the session screen, the error state included.
+    return (
+      <div className="dm-product-stack">
+        <ErrorMessage message="This session is unavailable. Please try again later." />
+        <SessionIsTextNotice />
+        <ShareRuleNotice />
+      </div>
+    );
   }
   return <SessionRoom initial={initial} />;
 }

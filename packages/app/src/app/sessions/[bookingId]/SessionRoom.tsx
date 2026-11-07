@@ -1,16 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { SessionDto } from '@devmentor/core';
 import { messageCreateSchema } from '@devmentor/core/validators/sessions/message-create.schema';
-import { SessionHeader, SessionIsTextNotice, SessionTranscript, ShareRuleNotice, WrittenAnswer, type SessionMessage } from '@devmentor/ui';
+import { Label, SessionHeader, SessionIsTextNotice, SessionTranscript, ShareRuleNotice, Textarea, WrittenAnswer, type SessionMessage } from '@devmentor/ui';
 import { apiCall, CrudForm } from '@devmentor/ui/backend';
 import { formatInstant, useViewerTimeZone } from '@devmentor/ui/time';
 
 /** How often an open tab asks for new messages. */
 export const POLL_MS = 5000;
 const HEADER_STATE = { not_started: 'upcoming', open: 'open', ended: 'ended' } as const;
+/** Answers that will not change by asking again: stop polling and say so. */
+const PERMANENT = new Set(['unauthorized', 'not_found']);
 
 function firstName(name: string) {
   return name.trim().split(/\s+/)[0]!;
@@ -25,27 +27,31 @@ function firstName(name: string) {
 export function SessionRoom({ initial }: { initial: SessionDto }) {
   const [data, setData] = useState(initial);
   const [stale, setStale] = useState(false);
+  const [gone, setGone] = useState(false);
   const [sentCount, setSentCount] = useState(0);
-  const [refused, setRefused] = useState(false);
-  const succeeded = useRef(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const latest = useRef(0);
+  const composer = useRef<HTMLDivElement>(null);
   const zone = useViewerTimeZone();
   const path = `/api/sessions/${initial.booking.id}`;
   const ended = data.window === 'ended';
 
-  /** `afterFailedPost`: when the session turns out to have ended, say the draft missed it (set in the same update, so the composer never unmounts). */
-  const refresh = useCallback(async (afterFailedPost = false) => {
+  /** Only the newest request may change the screen, so a slow older answer never undoes a newer one. */
+  const refresh = useCallback(async () => {
+    const request = ++latest.current;
     const result = await apiCall<SessionDto>(path);
+    if (request !== latest.current) return;
     if (!result.ok) {
-      setStale(true);
+      if (PERMANENT.has(result.error.code)) setGone(true);
+      else setStale(true);
       return;
     }
     setData(result.data);
     setStale(false);
-    if (afterFailedPost && result.data.window === 'ended') setRefused(true);
   }, [path]);
 
   useEffect(() => {
-    if (ended) return;
+    if (ended || gone) return;
     const poll = () => {
       if (document.visibilityState === 'visible') void refresh();
     };
@@ -55,10 +61,15 @@ export function SessionRoom({ initial }: { initial: SessionDto }) {
       clearInterval(timer);
       document.removeEventListener('visibilitychange', poll);
     };
-  }, [ended, refresh]);
+  }, [ended, gone, refresh]);
+
+  // After a post the form is remounted empty; put the cursor back where the next message goes.
+  useEffect(() => {
+    if (sentCount > 0) composer.current?.querySelector('textarea')?.focus();
+  }, [sentCount]);
 
   const counterpart = firstName(data.counterpartName);
-  const timeFormat = new Intl.DateTimeFormat('en-GB', { timeStyle: 'short', timeZone: zone });
+  const timeFormat = useMemo(() => new Intl.DateTimeFormat('en-GB', { timeStyle: 'short', timeZone: zone }), [zone]);
   const messages: SessionMessage[] = data.messages.map(message => ({
     id: message.id,
     author: message.authorName,
@@ -68,37 +79,42 @@ export function SessionRoom({ initial }: { initial: SessionDto }) {
     body: <span className="whitespace-pre-wrap break-words">{message.body}</span>,
     delivery: 'sent',
   }));
+  const label = `Message to ${counterpart}`;
+  const placeholder = 'Write a message or paste a code example...';
 
   const form = (
-    <div>
+    <div ref={composer} onChange={event => setHasDraft((event.target as unknown as { value: string }).value.length > 0)}>
       <CrudForm
         key={sentCount}
         schema={messageCreateSchema}
-        fields={[{ name: 'body', label: `Message to ${counterpart}`, type: 'textarea', required: true, placeholder: 'Write a message or paste a code example...' }]}
+        fields={[{ name: 'body', label, type: 'textarea', required: true, placeholder }]}
         endpoint={`${path}/messages`}
         submitLabel="Send message"
-        onSuccess={() => { succeeded.current = true; setRefused(false); setSentCount(count => count + 1); }}
-        onSubmittingChange={submitting => {
-          if (submitting) { succeeded.current = false; return; }
-          void refresh(!succeeded.current);
-        }}
+        onSuccess={() => { setHasDraft(false); setSentCount(count => count + 1); }}
+        onSubmittingChange={submitting => { if (!submitting) void refresh(); }}
       />
       <p className="dm-product-caption">Enter for a new line. Ctrl or ⌘ + Enter to send.</p>
-      {sentCount > 0 && <span className="sr-only" role="status">Message sent.</span>}
+      <span className="sr-only" role="status">{sentCount > 0 ? 'Message sent.' : ''}</span>
     </div>
   );
 
-  // One stable tree: the form keeps its position, so a draft survives the window closing under it.
-  const composer = (
+  // One stable tree: the form keeps its position, so an unsent draft survives the window closing under it.
+  const body = (
     <div className="dm-product-stack">
-      {data.window === 'not_started' && <p className="dm-product-callout" role="status">You can write here when the session starts, {formatInstant(data.booking.startsAt, zone)}.</p>}
+      {data.window === 'not_started' && (
+        <div className="dm-field">
+          <Label htmlFor="session-composer-locked">{label}</Label>
+          <Textarea id="session-composer-locked" className="w-full" disabled placeholder={placeholder} />
+          <p className="dm-product-callout" role="status">You can write here when the session starts, {formatInstant(data.booking.startsAt, zone)}.</p>
+        </div>
+      )}
       {ended && (
         <div role="status">
           <h2 className="dm-product-title">This session has ended</h2>
-          <p>{refused ? 'This session ended before your message was sent. Your draft is kept below so you can copy it.' : 'You can still read the conversation above.'}</p>
+          <p>{hasDraft ? 'This session ended before your message was sent. Your draft is kept below so you can copy it.' : 'You can still read the conversation above.'}</p>
         </div>
       )}
-      {(data.window === 'open' || (ended && refused)) && form}
+      {(data.window === 'open' || (ended && hasDraft)) && form}
     </div>
   );
 
@@ -115,8 +131,9 @@ export function SessionRoom({ initial }: { initial: SessionDto }) {
       <SessionIsTextNotice />
       <ShareRuleNotice />
       {stale && <p className="dm-product-caption" role="status">Reconnecting…</p>}
+      {gone && <p className="dm-product-callout" role="alert">This session is no longer available. Reload the page or go back to My sessions.</p>}
       {data.truncated && <p className="dm-product-caption">Earlier messages are not shown.</p>}
-      <SessionTranscript messages={messages} composer={composer} />
+      <SessionTranscript messages={messages} composer={body} />
       {ended && <WrittenAnswer state="owed" mentorName={data.viewerRole === 'mentee' ? data.counterpartName : 'you'} body={null} />}
     </div>
   );
