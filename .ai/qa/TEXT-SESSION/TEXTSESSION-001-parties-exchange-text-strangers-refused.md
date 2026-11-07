@@ -36,5 +36,6 @@ The fixture deletes owned session messages, notifications, payment evidence, boo
 ## Verification and review
 
 - **Latest execution:** Passed on 2026-11-07 with `npx vitest run --config vitest.integration.config.mts tests/integration/text-session.integration.test.ts` (2 tests). See [the run log](../../runs/2026-11-07-text-session.md) for the full gate.
-- **Not covered by this case:** the polling composer in a real browser (unit tests drive it with fake timers), and the desktop and 320px screenshots against prototype screen s7.
+- **Browser evidence:** the polling composer, the not-started, open and ended states, the 320 px layout and the stranger's not-found page were driven in a real browser; see [the PR #75 verification report](../artifacts_pr75/report.md) and its screenshots.
+- **Not covered by this case:** a side-by-side screenshot comparison with prototype screen s7 (the prototype's picker did not leave its auth-gated sign-in screen; the report compares composition from source instead).
 - **Human review:** pending.

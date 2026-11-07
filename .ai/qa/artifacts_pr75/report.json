@@ -1,0 +1,25 @@
+{
+  "pr": 75,
+  "issue": 45,
+  "verdict": "PASS_WITH_GAP",
+  "environment": { "runner": ".ai/scripts/test-env-up.ps1", "browser": "agent-browser 0.36.0 (chrome)", "database": "disposable postgres:17", "payments": "mock provider", "auth": "mock GitHub sign-in", "data": "synthetic" },
+  "steps": [
+    { "n": 1, "name": "open state, desktop", "result": "pass", "screenshot": "step-01-open-empty-desktop.png" },
+    { "n": 2, "name": "composer filled", "result": "pass", "screenshot": "step-02-composer-filled-desktop.png" },
+    { "n": 3, "name": "message sent, focus returns, status announced", "result": "pass", "screenshot": "step-03-message-sent-desktop.png" },
+    { "n": 4, "name": "mentor sees the message", "result": "pass", "screenshot": "step-04-mentor-sees-message-desktop.png" },
+    { "n": 5, "name": "mentor replies", "result": "pass", "screenshot": "step-05-mentor-replied-desktop.png" },
+    { "n": 6, "name": "mentee tab receives the reply by polling", "result": "pass", "screenshot": "step-06-mentee-polled-reply-desktop.png" },
+    { "n": 7, "name": "320px viewport, no horizontal scroll", "result": "pass", "screenshot": "step-07-open-mobile-320.png" },
+    { "n": 8, "name": "non-party user gets not-found", "result": "pass", "screenshot": "step-08-stranger-not-found-desktop.png" },
+    { "n": "8b", "name": "signed-out visitor redirected to sign-in with returnTo", "result": "pass", "screenshot": null },
+    { "n": 9, "name": "not-started state with disabled composer", "result": "pass", "screenshot": "step-09-not-started-desktop.png" },
+    { "n": 10, "name": "ended state detected by polling, written answer owed", "result": "pass", "screenshot": "step-10-ended-desktop.png" }
+  ],
+  "notExercised": [
+    "side-by-side screenshots of prototype s7 (picker did not leave the auth-gated sign-in screen)",
+    "browser-level post after the end and the 31st post in a minute (covered by integration and unit tests)",
+    "dark mode and real-device touch"
+  ],
+  "hasUiTest": false
+}
