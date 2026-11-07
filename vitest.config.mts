@@ -35,6 +35,8 @@ export default defineConfig({
         'packages/db/migrations/Migration20261106132627_payment_submissions.ts',
         'packages/db/migrations/Migration20261106153514_notifications.ts',
         'packages/db/src/entities/notifications/*.ts',
+        'packages/db/migrations/Migration20261107080310_sessions.ts',
+        'packages/db/src/entities/sessions/*.ts',
         'packages/core/src/services/notifications/booking-confirmed-mail.ts',
         'packages/core/src/services/notifications/notification.service.ts',
         'packages/core/src/validators/notifications/*.ts',
