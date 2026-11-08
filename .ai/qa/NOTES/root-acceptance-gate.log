@@ -16,7 +16,7 @@ npm run test:unit:coverage: exit=0, seconds=36.17
       Tests  1786 passed (1786)
    Duration  31.58s (transform 15.24s, setup 0ms, import 233.79s, tests 53.63s, environment 103.81s)
  % Coverage report from v8
-File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
 Statements   : 100% ( 3835/3835 )
 Branches     : 100% ( 2332/2332 )
 Functions    : 100% ( 1105/1105 )
