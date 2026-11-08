@@ -124,4 +124,3 @@ export function SessionNotePanel({ bookingId, viewerRole, counterpartName, hasAn
     <p role="status" className="dm-product-caption">{message}</p>
   </section>;
 }
-

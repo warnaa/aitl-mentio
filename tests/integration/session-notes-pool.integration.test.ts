@@ -39,21 +39,28 @@ it('NOTES-010 completes six competing create saves after all five app connection
     let release!: () => void;
     const released = new Promise<void>(resolve => { release = resolve; });
     let locked!: (pid: number) => void;
-    const acquired = new Promise<number>(resolve => { locked = resolve; });
+    let lockFailed!: (reason: unknown) => void;
+    const acquired = new Promise<number>((resolve, reject) => { locked = resolve; lockFailed = reject; });
     const blocker = f.em.fork().transactional(async em => {
+      await em.execute("set local lock_timeout = '5s'");
       await em.findOneOrFail(Booking, { id: f.booking.id }, { lockMode: LockMode.PESSIMISTIC_WRITE });
       const [row] = await em.execute<{ pid: number }[]>('select pg_backend_pid() as pid');
       locked(row!.pid);
       await released;
     });
+    void blocker.catch(lockFailed);
+    const acquisitionDeadline = setTimeout(() => lockFailed(new Error('Fixture booking lock acquisition timed out')), 10_000);
     let requests: Promise<number>[] = [];
+    let responses = Promise.resolve<PromiseSettledResult<number>[]>([]);
     const controller = new AbortController();
     try {
       const pid = await acquired;
+      clearTimeout(acquisitionDeadline);
       requests = Array.from({ length: 6 }, (_, index) => fetch(`${f.base}/api/notes/${f.booking.id}`, {
         method: 'PUT', headers: f.mentor, body: JSON.stringify({ body: `Contender ${index}`, expectedRevision: null }),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)]),
       }).then(async response => { await response.arrayBuffer(); return response.status; }));
+      responses = Promise.allSettled(requests);
       // Include indirect transaction-id/tuple lock chains, all rooted at our holder.
       await expect.poll(async () => {
         const [row] = await f.em.execute<{ count: number }[]>(`with recursive blocked(pid) as (
@@ -64,14 +71,18 @@ it('NOTES-010 completes six competing create saves after all five app connection
       }, { timeout: 10_000 }).toBe(5);
       release();
       await blocker;
-      expect((await Promise.all(requests)).sort()).toEqual([200, 409, 409, 409, 409, 409]);
+      const statuses = (await responses).map(result => {
+        if (result.status === 'rejected') throw result.reason;
+        return result.value;
+      });
+      expect(statuses.sort()).toEqual([200, 409, 409, 409, 409, 409]);
       expect(await f.em.fork().count(SessionNote, { booking: f.booking.id })).toBe(1);
       expect(await f.em.fork().findOneOrFail(SessionNote, { booking: f.booking.id })).toMatchObject({ version: 1, revision: 1, status: 'draft' });
     } finally {
+      clearTimeout(acquisitionDeadline);
       release();
       controller.abort();
-      await blocker;
-      await Promise.allSettled(requests);
+      await Promise.allSettled([blocker, responses]);
     }
   });
 });
