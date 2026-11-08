@@ -62,8 +62,16 @@ Fresh max-one and saturated-pool assertions passed both focused and full runs. A
 
 ## Final local disposition
 
-A1-A6 implementation and automated acceptance are complete. Production behavior is reviewed at9aff0c6; review-driven test cleanup and EOF whitespace are reviewed atffffcd6. All subsequent source-test/script hygiene is BOM removal only, verified by normalized-content comparison. Root acceptance, inherited spec-history isolation and human QA remain required before merge/publication. No qa-approved/self-signoff or remote operation occurred.
+A1-A6 implementation and automated acceptance are complete. Production behavior is reviewed at9aff0c6; review-driven test cleanup and EOF whitespace are reviewed atffffcd6. All subsequent source-test/script hygiene is BOM removal only, verified by normalized-content comparison. The parent has accepted the implementation and isolated the spec history on the final feature branch. Publication approval and human QA remain pending. No qa-approved/self-signoff or remote implementation operation occurred.
 
 Final snapshot is restored byte-for-byte (normalized line endings) to reviewed b07cd72/da85393/a50a704. Cleanup inventory found zero non-agent processes referencing this checkout, and Docker contains only the pre-existing devmentor-postgres/eaca8b923987 (untouched). Native app/database/browser resources and both review tasks' owned processes are stopped. Runtime descriptors, raw app/mail/cookie logs and credentials remain ignored.
 
 The earlier source666df13 gate passed but missed pool starvation; it is historical, not final acceptance. The old full integration failure/interruption and intermittent unchanged focus failure remain disclosed. Fresh runs did not reproduce those unrelated failures, so no unrelated repair was made. Human review of AI-authored scenarios is pending. No additional broad tests were run after the passing full gate/full integration; only typecheck/lint and the affected pool file were repeated for the independent review finding.
+
+## Parent acceptance of the final branch
+
+On 2026-11-08 the parent replayed only the child implementation commits onto a clean main-based branch and merged the result locally without fast-forward. Source/tests/configuration/compatibility are identical to accepted child f70c6cd; the spec PR's files and ancestry are excluded, leaving #78 design-only. Original task branches are preserved.
+
+The parent's own fresh ordered typecheck, lint, test, build and unit coverage all exited 0: 210 files and 1,786 tests, 100% per-file coverage across all four metrics. Two existing lint warnings remain. The parent verified the committed full integration JSON (50 files, 102 passed, zero failures/skips) and reran both real-pool regressions plus migration up/down/up: 2 files, 3 tests passed, exit 0, 54.01 seconds. See [gate summary](root-acceptance-gate.log) and [focused integration summary](root-acceptance-pool-integration.log). Snapshot churn from migration testing was restored to the accepted schema snapshot.
+
+Changed-record BOM, sensitive-file-path and credential-pattern checks passed. Desktop/320px evidence was inspected. Human QA/scenario review remains pending; this report grants no QA sign-off or merge permission.

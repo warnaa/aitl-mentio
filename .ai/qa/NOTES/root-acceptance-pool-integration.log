@@ -1,0 +1,7 @@
+Parent focused pool and migration acceptance
+Command: npm run test:integration -- tests/integration/session-notes-pool.integration.test.ts tests/integration/session-notes-migration.integration.test.ts
+Exit: 0
+Seconds: 54.01
+ Test Files  2 passed (2)
+      Tests  3 passed (3)
+   Duration  46.43s (transform 720ms, setup 0ms, import 2.78s, tests 15.05s, environment 0ms)

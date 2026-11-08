@@ -5,7 +5,7 @@ Refs #48
 Refs #78
 Source doc: .ai/specs/2026-11-07-session-notes.md (design-only PR #78, separate branch)
 Tracking plan: .ai/runs/2026-11-07-issue-47-session-notes.md
-Status: complete locally; root acceptance and human QA pending; local draft only, no publication authorized
+Status: complete; accepted locally; human QA pending
 
 A booking's mentor can save a private session-note draft after posting the written answer and send its exact saved revision. Both parties read that immutable submission awaiting approval. The mentee has no body editor or inactive decision controls. Approval, decline, redraft, operator counts and answer freeze are deferred to #48.
 
@@ -15,4 +15,10 @@ Validation at source 9aff0c6: fresh ordered typecheck/lint/test/build and test:u
 
 Rollback and additive contracts are documented in BACKWARD_COMPATIBILITY.md. No spec document is staged by implementation commits. No pushes, tracker mutations, external uploads or deployments performed.
 
-Proposed publication labels (not applied): review, feature, needs-qa, priority-medium, risk-high. Independent source review and final cleanup review approve; parent acceptance and human QA remain pending.
+## Parent verification of the integrated branch
+
+The parent replayed only the child implementation commits onto a clean main-based branch, then merged that branch with no fast-forward into `feat/issue-47-session-notes`. Production source, tests, configuration and compatibility records are identical to the accepted child result. The feature branch excludes the design PR's files and ancestry; #78 remains open and design-only.
+
+The parent's fresh ordered typecheck, lint, test and build all passed, followed by per-file 100% coverage: 210 files and 1,786 tests. Lint has two existing warnings and no errors. The full 102-test integration result was verified from its committed machine-readable summary. The parent also reran both real-pool tests and the migration up/down/up test on this integrated branch: 2 files, 3 tests passed, exit 0 (54.01 seconds). Generated migration-test snapshot churn was restored to the accepted snapshot. Final acceptance results are recorded in the run log and parent acceptance logs.
+
+Proposed publication labels (not applied): review, feature, needs-qa, priority-medium, risk-high. Independent source review and final cleanup review approve. Human QA is still required; no QA approval or merge is requested by this publication.
