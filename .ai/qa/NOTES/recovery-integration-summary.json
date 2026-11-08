@@ -1,0 +1,835 @@
+{
+  "kind": "full native integration",
+  "productionCommit": "9aff0c648926eb72dc0d510e7a078bc5dc5f397d",
+  "command": "npm run test:integration -- --reporter=default --reporter=json --outputFile=test-results/integration/final-results.json",
+  "exit": 0,
+  "success": true,
+  "durationSeconds": 940.92,
+  "files": 50,
+  "passed": 102,
+  "failed": 0,
+  "pending": 0,
+  "results": [
+    {
+      "file": "tests/integration/admin.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-ADMIN-001 admin panel basics shows a connected dashboard and the seeded users table to a signed-in operator",
+          "status": "passed",
+          "durationMs": 5877.7392
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-AUTH-001 a cancelled GitHub authorisation explains that nothing was created, and creates nothing",
+          "status": "passed",
+          "durationMs": 5366.428199999999
+        },
+        {
+          "title": "TC-AUTH-002 GitHub sign-in lands on the role home signs a mentee in to /home with a secure, httpOnly session cookie",
+          "status": "passed",
+          "durationMs": 3240.2048999999997
+        },
+        {
+          "title": "TC-AUTH-002 GitHub sign-in lands on the role home signs the seeded mentor in to /mentor",
+          "status": "passed",
+          "durationMs": 2522.3312000000005
+        },
+        {
+          "title": "TC-AUTH-002 GitHub sign-in lands on the role home signs the mentor/operator in to /admin",
+          "status": "passed",
+          "durationMs": 7447.885899999999
+        },
+        {
+          "title": "TC-AUTH-003 an invalid session on a signed-in screen redirects to sign-in and shows nothing of the user",
+          "status": "passed",
+          "durationMs": 27295.453100000002
+        },
+        {
+          "title": "TC-AUTH-004 a signed-out deep link survives sign-in returns the operator to /admin/users through the email form, not to the admin layout's /admin",
+          "status": "passed",
+          "durationMs": 10071.134599999998
+        },
+        {
+          "title": "TC-AUTH-005 sign-out ends every session, including a copied cookie refuses a sign-out without the CSRF header, then signs out and kills the copy",
+          "status": "passed",
+          "durationMs": 3585.6786999999968
+        },
+        {
+          "title": "TC-AUTH-006 a failed email sign-in says nothing about which part was wrong shows one generic message for a wrong password and an unknown address, and sets no cookie",
+          "status": "passed",
+          "durationMs": 5390.729100000004
+        },
+        {
+          "title": "TC-AUTH-006 a failed email sign-in says nothing about which part was wrong answers 429 with Retry-After once an address has used its attempts (edge case 17)",
+          "status": "passed",
+          "durationMs": 1743.9337000000014
+        },
+        {
+          "title": "TC-AUTH-007 email registration, end to end registers, refuses sign-in until the emailed link is opened, then lands on the mentee home",
+          "status": "passed",
+          "durationMs": 6576.177499999991
+        },
+        {
+          "title": "TC-AUTH-008 GitHub and email accounts for the same address links nothing when a GitHub email matches an unverified registration, and says why (edge case 4)",
+          "status": "passed",
+          "durationMs": 2623.872199999998
+        },
+        {
+          "title": "TC-AUTH-008 GitHub and email accounts for the same address refuses to register an address tied to a GitHub account, pointing to GitHub (edge case 14)",
+          "status": "passed",
+          "durationMs": 4886.258600000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/availability.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-AVAILABILITY-001 scopes writes, serializes duplicates and preserves removed history",
+          "status": "passed",
+          "durationMs": 72076.5052
+        },
+        {
+          "title": "TC-AVAILABILITY-002 publishes locally entered time and shows it signed out",
+          "status": "passed",
+          "durationMs": 47311.338
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-authorization.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-004 denies unsigned, wrong-role and CSRF-less booking requests",
+          "status": "passed",
+          "durationMs": 427.06500000000005
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-cancelled-history.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-015 releases cancelled occupancy while preserving the original booking snapshot",
+          "status": "passed",
+          "durationMs": 490.1590000000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-concurrency.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-005 gives two concurrent mentees one reservation and one conflict",
+          "status": "passed",
+          "durationMs": 718.3031000000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-duration-viability.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-010 exposes only viable durations and allows adjacent sessions",
+          "status": "passed",
+          "durationMs": 461.2080000000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-expired-contention.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-006 replaces an expired hold under contention while preserving its history",
+          "status": "passed",
+          "durationMs": 375.83619999999996
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-length.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-002 reserves a 50-minute pending session at its distinct mentor price",
+          "status": "passed",
+          "durationMs": 357.8012000000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-lock-order.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-014 orders mentor and slot locks during an adverse removal interleaving",
+          "status": "passed",
+          "durationMs": 439.66329999999994
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-notifications.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "NOTIFY-001 tells the mentor and the mentee once, in the product and by email, and a replay adds nothing",
+          "status": "passed",
+          "durationMs": 545.4629
+        },
+        {
+          "title": "NOTIFY-002 sends nothing for a booking that was never confirmed, including a mismatched paid callback held for review",
+          "status": "passed",
+          "durationMs": 313.8798999999999
+        },
+        {
+          "title": "NOTIFY-003 lets a user mark only their own notifications read and denies anonymous or cross-site calls",
+          "status": "passed",
+          "durationMs": 407.82079999999996
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-overlap-race.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-009 refuses overlapping concurrent reservations across different slot IDs",
+          "status": "passed",
+          "durationMs": 355.2256
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-price-tampering.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-007 snapshots a changed server price and ignores forged money and identity fields",
+          "status": "passed",
+          "durationMs": 333.58230000000003
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-removal-race.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-008 serializes booking against removal so only one operation succeeds",
+          "status": "passed",
+          "durationMs": 307.5354
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-retry.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-011 recovers a lost-response retry without extending or duplicating the hold",
+          "status": "passed",
+          "durationMs": 376.6992
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-sign-in-return.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-012 restores the signed-out slot and duration then shows an unpaid reservation",
+          "status": "passed",
+          "durationMs": 5932.2047
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-throttle.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-013 throttles repeated account attempts without creating a booking",
+          "status": "passed",
+          "durationMs": 427.99530000000004
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking-validation.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-003 rejects invalid, too-near, removed and unbookable selections without writing",
+          "status": "passed",
+          "durationMs": 421.9578
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/booking.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "BOOKING-001 reserves a 25-minute pending session at the mentor price",
+          "status": "passed",
+          "durationMs": 286.3729000000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/home.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-HOME-001 public home page renders the designed homepage with actions only to pages that exist",
+          "status": "passed",
+          "durationMs": 2973.6222
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/invitations.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-INVITATION-001 accepting an invitation makes a signed-in user a mentor lands on the mentor home with the publish-by date and stays signed in with both roles",
+          "status": "passed",
+          "durationMs": 38750.9236
+        },
+        {
+          "title": "TC-INVITATION-002 invalid invitations grant nothing shows one sentence for an unknown token, whoever opens it",
+          "status": "passed",
+          "durationMs": 2055.939600000005
+        },
+        {
+          "title": "TC-INVITATION-002 invalid invitations grant nothing refuses another verified account, leaving the invitation for its owner",
+          "status": "passed",
+          "durationMs": 35512.7159
+        },
+        {
+          "title": "TC-INVITATION-002 invalid invitations grant nothing lets exactly one of two simultaneous acceptances win",
+          "status": "passed",
+          "durationMs": 35007.64570000001
+        },
+        {
+          "title": "TC-INVITATION-002 invalid invitations grant nothing refuses acceptance without the CSRF header",
+          "status": "passed",
+          "durationMs": 34863.19880000001
+        },
+        {
+          "title": "TC-INVITATION-003 a signed-in user finds no path to become a mentor (R07) offers a mentee no invitation, application or mentor link",
+          "status": "passed",
+          "durationMs": 2454.9094999999797
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/mail.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-MAIL-001 waitForMail returns the first message to the address since the given time, ignoring noise",
+          "status": "passed",
+          "durationMs": 4.6240999999999985
+        },
+        {
+          "title": "TC-MAIL-001 waitForMail waits for a message that arrives while polling",
+          "status": "passed",
+          "durationMs": 188.3275
+        },
+        {
+          "title": "TC-MAIL-001 waitForMail times out with how many messages it saw, also when the log does not exist yet",
+          "status": "passed",
+          "durationMs": 203.09490000000005
+        },
+        {
+          "title": "TC-MAIL-001 waitForMail refuses a mail without a link",
+          "status": "passed",
+          "durationMs": 0.5446999999999207
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/mentor-page.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-MENTOR-PAGE-001 a mentor publishes a page a signed-out visitor can open completes, publishes and shares the page through the profile screen",
+          "status": "passed",
+          "durationMs": 41562.418099999995
+        },
+        {
+          "title": "TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary refuses an incomplete page, then publishes, unpublishes and republishes under the same slug",
+          "status": "passed",
+          "durationMs": 35127.837100000004
+        },
+        {
+          "title": "TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary gives two mentors whose names make the same slug distinct share links when they publish at once",
+          "status": "passed",
+          "durationMs": 69975.02879999999
+        },
+        {
+          "title": "TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary keeps owner routes behind the mentor role",
+          "status": "passed",
+          "durationMs": 1850.8121999999858
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/mentor-profile-technology.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-MENTOR-PAGE-003 refuses profile publication when no technology is selected",
+          "status": "passed",
+          "durationMs": 38081.6933
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/migrations.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-MIGRATION-001 auth-identity migration round trip applies up, down and up again, preserving rows and enforcing the roles check",
+          "status": "passed",
+          "durationMs": 10836.4511
+        },
+        {
+          "title": "TC-MIGRATION-002 auth-password migration round trip adds a nullable text password_hash, drops it on down, and keeps every row",
+          "status": "passed",
+          "durationMs": 9806.272700000001
+        },
+        {
+          "title": "TC-MIGRATION-003 auth-rate-limit migration round trip creates the counter table with its index, drops it on down, and creates it again",
+          "status": "passed",
+          "durationMs": 9777.349699999999
+        },
+        {
+          "title": "TC-MIGRATION-004 invitations migration round trip creates invitations with its constraints and the first deadline, drops both on down, and recreates them",
+          "status": "passed",
+          "durationMs": 10541.4372
+        },
+        {
+          "title": "TC-MIGRATION-005 mentor-page migration round trip adds the page columns and checks, drops them on down keeping profiles, and adds them again",
+          "status": "passed",
+          "durationMs": 10378.3318
+        },
+        {
+          "title": "TC-MIGRATION-006 availability migration round trip preserves history, permits republishing removed starts and reverses the schema",
+          "status": "passed",
+          "durationMs": 7896.28409999999
+        },
+        {
+          "title": "TC-MIGRATION-007 mentor-prices migration round trip adds nullable positive integer prices, rejects nonpositive values, and reverses cleanly",
+          "status": "passed",
+          "durationMs": 7809.6103999999905
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-ambiguous-creation.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-009 retains ambiguous paid inventory when creation recovery exceeds the fixed margin",
+          "status": "passed",
+          "durationMs": 247.3762999999999
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-amount.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-013 quarantines a paid amount mismatch without confirming or reselling the time",
+          "status": "passed",
+          "durationMs": 420.419
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-authorization.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-014 denies unsigned wrong-role CSRF-less and foreign-owner Checkout without writes",
+          "status": "passed",
+          "durationMs": 324.3726999999999
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-checkout-concurrency.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-015 gives concurrent Checkout retries one provider session and one fixed deadline",
+          "status": "passed",
+          "durationMs": 447.93279999999993
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-confirmation.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-011 confirms one exact payment despite repeated callbacks and shows it to both participants",
+          "status": "passed",
+          "durationMs": 477.5514999999999
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-expiry.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-016 releases verified unpaid Checkout expiry while preserving reservation history",
+          "status": "passed",
+          "durationMs": 426.97670000000016
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-late-webhook.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-017 retains payment occupancy past local expiry until a delayed paid callback confirms",
+          "status": "passed",
+          "durationMs": 451.84940000000006
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-lost-response.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-008 recovers a lost Checkout creation response with one payable provider session",
+          "status": "passed",
+          "durationMs": 278.47670000000005
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-migration.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "MIGRATION-015 adds payment evidence, preserves unpaid history and reverses up down up",
+          "status": "passed",
+          "durationMs": 17133.5673
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-rejected-creation.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-020 releases a definitively rejected creation with durable submission evidence",
+          "status": "passed",
+          "durationMs": 201.96890000000008
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-report-api.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-021 restricts the paid-session report to operators and exposes both views without double counting",
+          "status": "passed",
+          "durationMs": 461.8685999999999
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-report.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-019 counts recorded payments once in both Warsaw week views and computes the valid timing median",
+          "status": "passed",
+          "durationMs": 249.20579999999995
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-signature.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-012 rejects a forged webhook signature without recording or confirming payment",
+          "status": "passed",
+          "durationMs": 328.7455
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-stale-refund.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-010 refuses a stale paid callback after an authoritative full refund and audits operator release",
+          "status": "passed",
+          "durationMs": 279.6106000000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/payments-unknown-session.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "PAYMENTS-018 safely quarantines verified unknown provider metadata for operator review",
+          "status": "passed",
+          "durationMs": 402.6653
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/prices.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-PRICES-001 enforces exact bounds, atomic two-price updates and live ownership",
+          "status": "passed",
+          "durationMs": 68621.92360000001
+        },
+        {
+          "title": "TC-PRICES-002 edits raw decimals, shows readiness and exposes prices signed out",
+          "status": "passed",
+          "durationMs": 41688.98390000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/rate-limit.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting counts every attempt and refuses past the limit, with the seconds left",
+          "status": "passed",
+          "durationMs": 30.028200000000652
+        },
+        {
+          "title": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting starts a new window once the old one has passed",
+          "status": "passed",
+          "durationMs": 13.031699999999546
+        },
+        {
+          "title": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting keeps per-IP and per-email counters independent",
+          "status": "passed",
+          "durationMs": 17.284700000000157
+        },
+        {
+          "title": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting is atomic: concurrent attempts on one key each get a distinct count",
+          "status": "passed",
+          "durationMs": 64.71709999999985
+        },
+        {
+          "title": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting purges every other key whose window is older than the longest policy",
+          "status": "passed",
+          "durationMs": 5.866300000001502
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/roles.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-ROLES-001 a wrong-role screen sends the user to their own home sends a mentee who opens the mentor or admin screen to /home (edge case 19)",
+          "status": "passed",
+          "durationMs": 3790.3387000000002
+        },
+        {
+          "title": "TC-ROLES-001 a wrong-role screen sends the user to their own home refuses /admin to a mentor, sending them to /mentor without any admin content (edge case 20)",
+          "status": "passed",
+          "durationMs": 3402.7396999999996
+        },
+        {
+          "title": "TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07) 'mock-mentee' sees exactly its permitted links and no \"become a mentor\" path",
+          "status": "passed",
+          "durationMs": 2301.5164999999997
+        },
+        {
+          "title": "TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07) 'mock-mentor' sees exactly its permitted links and no \"become a mentor\" path",
+          "status": "passed",
+          "durationMs": 2412.101199999999
+        },
+        {
+          "title": "TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07) 'mock-operator' sees exactly its permitted links and no \"become a mentor\" path",
+          "status": "passed",
+          "durationMs": 2441.0362000000005
+        },
+        {
+          "title": "TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07) lets the combined mentor/operator open both workspaces from one navigation",
+          "status": "passed",
+          "durationMs": 3079.001399999999
+        },
+        {
+          "title": "TC-ROLES-003 the user list is operator-only, in the page and the API shows the operator the users list and answers a mentee 403 from /api/users",
+          "status": "passed",
+          "durationMs": 4366.4467
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes-migration.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "NOTES-007 migrates session notes up down up with restrictive lifecycle constraints and preserved existing notifications",
+          "status": "passed",
+          "durationMs": 13685.9019
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes-pool.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "NOTES-009 saves and replays a sent note with one shared service and limiter pool connection",
+          "status": "passed",
+          "durationMs": 879.8643000000002
+        },
+        {
+          "title": "NOTES-010 completes six competing create saves after all five app connections wait on an external booking lock",
+          "status": "passed",
+          "durationMs": 592.8184000000001
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "NOTES-001 saves a private draft and submits exactly its saved revision, readable by both parties with one notification",
+          "status": "passed",
+          "durationMs": 677.9594999999999
+        },
+        {
+          "title": "NOTES-002 denies outsiders and mentee writes and rejects invalid or premature drafts without disclosure",
+          "status": "passed",
+          "durationMs": 678.3311999999999
+        },
+        {
+          "title": "NOTES-003 serializes concurrent first saves and save versus send without lost edits or mutable submissions",
+          "status": "passed",
+          "durationMs": 498.1701000000003
+        },
+        {
+          "title": "NOTES-004 recovers a committed send after subscriber failure through the reloaded awaiting Notify mentee action",
+          "status": "passed",
+          "durationMs": 2767.5682
+        },
+        {
+          "title": "NOTES-005 bounds account reads and writes after party authorization",
+          "status": "passed",
+          "durationMs": 3680.095900000001
+        },
+        {
+          "title": "NOTES-006 mentor saves and sends through the UI and the ended mentee refreshes an immutable read-only note at desktop and 320px",
+          "status": "passed",
+          "durationMs": 11216.5263
+        },
+        {
+          "title": "NOTES-008 keeps the session readable and retries a temporarily unavailable note without leaking driver text",
+          "status": "passed",
+          "durationMs": 5748.492400000003
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/sessions-list.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "SESSIONS-001 lists each mentor only the sessions booked with them, and each mentee only their own",
+          "status": "passed",
+          "durationMs": 566.8492
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/setup.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TC-SETUP-001 setup is idempotent leaves exactly one sample mentor after the seeder ran twice",
+          "status": "passed",
+          "durationMs": 1779.413
+        },
+        {
+          "title": "TC-SETUP-001 setup is idempotent still renders a single seeded row on the admin users page",
+          "status": "passed",
+          "durationMs": 2625.2482
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/text-session.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "TEXTSESSION-001 lets the two parties exchange text in the open window and refuses everyone else",
+          "status": "passed",
+          "durationMs": 641.9988000000001
+        },
+        {
+          "title": "TEXTSESSION-002 keeps posting inside the booked window and an unconfirmed booking closed",
+          "status": "passed",
+          "durationMs": 377.5791999999999
+        }
+      ]
+    },
+    {
+      "file": "tests/integration/written-answer.integration.test.ts",
+      "status": "passed",
+      "cases": [
+        {
+          "title": "WRITTENANSWER-001 the mentor posts the answer, the mentee keeps it and is told once; everyone else is refused",
+          "status": "passed",
+          "durationMs": 646.3737999999998
+        },
+        {
+          "title": "WRITTENANSWER-002 the mentor of a different session cannot post an answer to this one",
+          "status": "passed",
+          "durationMs": 333.5962999999999
+        }
+      ]
+    }
+  ],
+  "postReviewCleanup": {
+    "commit": "ffffcd6120ce15e86f35feb0efd19bfbf3b91dae",
+    "typecheckExit": 0,
+    "lintExit": 0,
+    "integrationExit": 0,
+    "files": 1,
+    "passed": 2,
+    "failed": 0,
+    "durationSeconds": 34.39,
+    "review": "03ed4a4c APPROVE"
+  }
+}

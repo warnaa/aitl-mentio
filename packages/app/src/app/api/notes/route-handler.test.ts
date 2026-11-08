@@ -1,4 +1,4 @@
-﻿import { expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vitest';
 const state = vi.hoisted(() => ({ error: vi.fn() }));
 vi.mock('../../../../../core/src/logger', () => ({ createLogger: () => state }));
 import { noteHandler } from './route-handler';

@@ -1,4 +1,4 @@
-﻿import { readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { SessionNote, Notification, entities, MikroORM } from '@devmentor/db';
 import { runAgentBrowser } from '../../../tests/integration/agent-browser';
 const descriptor = JSON.parse(await readFile('.ai/qa/test-env.json', 'utf8'));

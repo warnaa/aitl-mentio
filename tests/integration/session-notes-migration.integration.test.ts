@@ -1,4 +1,4 @@
-﻿import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { expect, it } from 'vitest';
 import { integrationChildEnvironment } from './environment';
 import { runNpm } from './npm';

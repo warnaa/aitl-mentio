@@ -1,4 +1,4 @@
-﻿# Session note slice A local verification
+# Session note slice A local verification
 
 Issue 47 only. Spec PR 78 remains design-only; this is local implementation evidence. Human QA and fresh parent implementation review are pending; no qa-approved/self-QA signoff is claimed.
 
@@ -10,7 +10,9 @@ Prior green source 666df13 still had pool starvation; its gate did not cover sat
 - Fresh full per-file coverage: exit 0; statements3835/3835, branches2332/2332, functions1105/1105, lines3432/3432. [Changed-file table](coverage.md).
 - Focused native PostgreSQL integration: exit 0; 3 passed / 99 excluded, 99.57s, NOTES-007 migration and NOTES-009/010 real pool regressions. [Output](recovery-focused.log).
 - Regression sensitivity: old fc35d32 service intentionally fails NOTES-009 in RateLimiter connection acquisition within 2.59s (1 failed / 101 excluded, command exit1). Corrected committed source restored in finally before fresh gate. [Intentional pre-fix failure](recovery-regression.log).
-- Fresh full 102-test integration and independent read-only final source review fb4c4657 are pending. Historical interrupted run has no final JSON; empty old mentor publish diagnostics are insufficient to assign cause. Human QA remains pending.
+- Fresh FULL integration exited 0: **50 files / 102 tests passed, zero failed/skipped, 940.92s**. [Complete output](recovery-integration.log), [sanitized per-case JSON](recovery-integration-summary.json). All note cases, migration up/down/up and pool regressions passed. Prior mentor-page publishing failure did not reproduce; all four mentor-page cases passed. The prior focus failure did not reproduce in either fresh whole-unit run or independent reviewer run. No unrelated production/test repair was made for those historical failures.
+- Independent reviewer fb4c4657 **APPROVE** production/test/migration source ce6c182..9aff0c6, no blocker/major. Its clean branch is exactly 9aff0c6; merge reports already up to date. Its independently installed ordered gate and coverage all exit0,1786 tests/100%. Detailed report is cockpit units/fb4c4657/review.md; no human QA or full integration claim from that reviewer.
+- Addressed its minor saturation-test failure-cleanup recommendation in test-only commit ffffcd6 and removed EOF whitespace. Fresh typecheck/lint and affected native pool integration all exited0: 1 file/2 tests passed in34.39s. Narrow static reviewer03ed4a4c APPROVE exact ffffcd6 diff, no remaining findings. [Post-review checks](recovery-cleanup.log), [production review](recovery-source-review.md), [cleanup review](recovery-test-cleanup-review.md). Production behavior is unchanged from reviewed9aff0c6. Historical interrupted run still has no final JSON and is not called green. Human QA remains pending.
 - Snapshot structural comparison with ce6c182: session_notes alone added, no removed tables, notifications alone changed and all other schema root keys identical. No shared QA descriptor exists in fresh checkout; documented native runner owns isolated ephemeral app/database and cleanup. Old worktree read only; its processes were not touched.
 
 | Run/check | Result | Evidence / resolution |
@@ -46,4 +48,22 @@ The explicit local-only override replaces all remote skill phases with this repo
 
 Shared environment used `.ai/scripts/test-env-up.ps1` and `.ai/qa/test-env.json`, local pinned agent-browser 0.36.0/Chrome 157 and synthetic mock identities. It was stopped via `.ai/scripts/test-env-down.ps1`; all three exploration browser sessions were closed; disposable A1 migration container was removed by exact name. Runtime descriptors, cookies, mail logs and environment files remain ignored. Integration owns separate random-port PostgreSQL/app and browser sessions with finally cleanup.
 
-The old final full run on source666df13 was interrupted; its final JSON is absent. A fresh recovery full run is now running against corrected source9aff0c6. No full integration pass is claimed until it finishes.
+The old final full run on source666df13 was interrupted; its final JSON is absent. The fresh corrected-source9aff0c6 recovery full run passed all102 tests; its JSON and output are preserved above.
+
+## Fresh recovery browser evidence
+
+All images contain owned synthetic personas and fake content. Existing state-matrix screenshots are retained. These images were captured by the fresh passing full suite:
+
+- Awaiting: [desktop](recovery-notes-awaiting-desktop.png), [mentor 320px](recovery-notes-mentor-awaiting-mobile.png), [mentee 320px](recovery-notes-mentee-awaiting-mobile.png).
+- Pending save: [desktop](recovery-notes-saving-desktop.png), [320px](recovery-notes-saving-mobile.png).
+- Private storage error and retry: [desktop](recovery-notes-storage-error-desktop.png), [320px](recovery-notes-storage-error-mobile.png).
+
+Fresh max-one and saturated-pool assertions passed both focused and full runs. All mobile images are exactly320px wide; NOTES-006/008 perform actual no-overflow assertions. No new navigation benchmark or human accessibility review is claimed.
+
+## Final local disposition
+
+A1-A6 implementation and automated acceptance are complete. Production behavior is reviewed at9aff0c6; review-driven test cleanup and EOF whitespace are reviewed atffffcd6. All subsequent source-test/script hygiene is BOM removal only, verified by normalized-content comparison. Root acceptance, inherited spec-history isolation and human QA remain required before merge/publication. No qa-approved/self-signoff or remote operation occurred.
+
+Final snapshot is restored byte-for-byte (normalized line endings) to reviewed b07cd72/da85393/a50a704. Cleanup inventory found zero non-agent processes referencing this checkout, and Docker contains only the pre-existing devmentor-postgres/eaca8b923987 (untouched). Native app/database/browser resources and both review tasks' owned processes are stopped. Runtime descriptors, raw app/mail/cookie logs and credentials remain ignored.
+
+The earlier source666df13 gate passed but missed pool starvation; it is historical, not final acceptance. The old full integration failure/interruption and intermittent unchanged focus failure remain disclosed. Fresh runs did not reproduce those unrelated failures, so no unrelated repair was made. Human review of AI-authored scenarios is pending. No additional broad tests were run after the passing full gate/full integration; only typecheck/lint and the affected pool file were repeated for the independent review finding.

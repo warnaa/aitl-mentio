@@ -1,4 +1,4 @@
-﻿import { expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { Booking, LockMode, Notification, SessionNote, User } from '@devmentor/db';
 import { EventBus, RateLimiter, SessionNoteService, createLogger } from '@devmentor/core';
 import type { NoteDto, NoteView } from '@devmentor/core';

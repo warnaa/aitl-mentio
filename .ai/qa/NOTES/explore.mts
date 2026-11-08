@@ -1,4 +1,4 @@
-﻿/** Local synthetic exploration. Runtime state/cookies stay in ignored test-env-runtime. */
+/** Local synthetic exploration. Runtime state/cookies stay in ignored test-env-runtime. */
 import { readFile, writeFile } from 'node:fs/promises';
 import { Booking, MentorProfile, Slot, User, SessionNote, Notification, entities, MikroORM } from '@devmentor/db';
 import { runAgentBrowser, signInAs, closeAgentBrowser } from '../../../tests/integration/agent-browser';

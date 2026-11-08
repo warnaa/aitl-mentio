@@ -2,13 +2,14 @@
 import { spawn, execFileSync } from 'node:child_process';
 import { createWriteStream } from 'node:fs';
 const modes = {
+  cleanup: ['typecheck', 'lint', 'test:integration -- tests/integration/session-notes-pool.integration.test.ts --reporter=default --reporter=json --outputFile=test-results/integration/cleanup-results.json'],
   regression: ['test:integration -- --testNamePattern=NOTES-009 --reporter=default --reporter=json --outputFile=test-results/integration/pool-before-fix.json'],
   gate: ['typecheck', 'lint', 'test', 'build', 'test:unit:coverage'],
   focused: ['test:integration -- --testNamePattern=NOTES-00[79]|NOTES-010 --reporter=default --reporter=json --outputFile=test-results/integration/pool-results.json'],
   integration: ['test:integration -- --reporter=default --reporter=json --outputFile=test-results/integration/final-results.json'],
 };
 const mode = process.argv[2];
-if (!Object.hasOwn(modes, mode)) throw new Error('Expected gate, focused, regression or integration');
+if (!Object.hasOwn(modes, mode)) throw new Error('Expected gate, focused, regression, cleanup or integration');
 const log = createWriteStream(new URL(`recovery-${mode}.log`, import.meta.url));
 const write = value => { log.write(value); process.stdout.write(value); };
 for (const command of modes[mode]) {

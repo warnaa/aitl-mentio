@@ -1,4 +1,4 @@
-﻿import { readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { runAgentBrowser, sessionCookie, cookieHeader } from '../../../tests/integration/agent-browser';
 const { base, bookingId } = JSON.parse(await readFile('.ai/qa/test-env-runtime/notes-fixture.json','utf8'));
 const cookie = await sessionCookie('notes-mentor'); if(!cookie) throw new Error('Missing mentor session');

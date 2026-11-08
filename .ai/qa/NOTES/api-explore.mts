@@ -1,4 +1,4 @@
-﻿import { readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { sessionCookie, cookieHeader } from '../../../tests/integration/agent-browser';
 const { base, bookingId } = JSON.parse(await readFile('.ai/qa/test-env-runtime/notes-fixture.json','utf8'));
 for (const [who, method, body] of [['notes-mentor','GET',null],['notes-mentee','PUT',{body:'forbidden',expectedRevision:1}],['notes-outsider','GET',null],['notes-mentor','PUT',{body:' ',expectedRevision:1}],['notes-mentor','PUT',{body:'stale',expectedRevision:null}]] as const) {

@@ -1,0 +1,28 @@
+Independent review: APPROVE the issue #47 slice A source at 9aff0c648926eb72dc0d510e7a078bc5dc5f397d. No blocker or major production finding. This is a source-review verdict, not merge readiness, publication approval, full integration completion or human QA.
+
+Scope: reviewed production, tests, migration and snapshot changes ce6c182..9aff0c6 on fork cez/fb4c4657 (review subject cez/cd442146). Read brief, order, handoff, root/unit/test instructions, CODE_REVIEW, BACKWARD_COMPATIBILITY, lessons, shared session-notes spec and existing run record. Inherited spec-publication history is parent-owned and excluded from implementation acceptance. No #48 implementation accepted or added.
+
+Findings, ranked:
+1. MINOR - tests/integration/session-notes-pool.integration.test.ts:42-52,70-74. The acquisition waiter only resolves. If the blocker transaction rejects before locked(pid), await acquired never completes and this function's finally is not entered; the outer Vitest timeout does not cancel that suspended function. Also, finally awaits blocker before draining requests, so blocker rejection skips draining them, and early fetch rejection has no immediate handler during waiter observation. Minimal correction: propagate blocker rejection to acquired (or race with blocker), bound acquisition, install rejection/settlement handlers immediately, and drain blocker plus requests together in finally. Keep the independent blocker, five observed app waiters, exact one200/five409 and single-version assertions unchanged. An isolated 50ms promise reproduction confirmed acquired remains pending after blocker rejection. This is a failure-diagnostic/cleanup robustness issue; the successful regression meaningfully tests the pool fix.
+2. NIT - packages/app/src/app/sessions/[bookingId]/SessionNotePanel.tsx:127. One extra blank line at EOF makes git diff --check ce6c182..9aff0c6 exit 2. Remove that blank line when next touching the file. No runtime effect.
+
+Correctness/security assessment:
+- Advisory confirmed-party/mentor authorization precedes the account limiter; limiter consumption precedes opening the write transaction. Fresh fork and ID-only Booking FOR UPDATE then repeat current confirmed/party/mentor checks, answer requirement, latest-note status and expected revision. Separate limiter connection no longer depends on a held booking connection; new max-one service/limiter and six-request saturation tests address the original pool-starvation mechanism.
+- Booking-first serialization and create-only null revisions prevent competing first versions. Saves increment revision; send accepts only the exact saved version/revision, freezes body, replays awaiting without changing timestamps, and emits only IDs after transaction resolution.
+- Outsider/unknown/unconfirmed 404 and mentee-write 403 remain server enforced. DTOs are allowlisted; central CSRF and private no-store error/success responses remain. Unexpected note driver errors are masked before shared HTTP logging. Notification consumer checks persisted submission identity and uses existing unique recording, preserving readAt on replay and avoiding email/body excerpts.
+- Dirty forms retain their original expectedRevision until deliberate discard; late GETs are invalidated by writes, dirty-at-response and monotonic parent-state handling prevent stale responses reopening a sent editor. Reachable awaiting Notify mentee supports repair after reload. Controlled-promise tests exercise these paths.
+- Migration adds only session_notes and the notification-kind widening, with lifecycle/length/revision checks, booking/version uniqueness and restrictive FK. Down removes new-kind notifications before narrowing and drops the new table. Existing contracts are additive and documented. No unrelated table/constraint changes or #48 decisions/redrafts/counts/answer freeze found.
+
+Independent commands and results (300-second cap per gate):
+- npm ci --ignore-scripts --prefer-offline --no-audit --no-fund: exit 0, 861 packages. Local workspace links point at this reviewer checkout.
+- npm run typecheck: exit 0.
+- npm run lint: exit 0.
+- npm run test: exit 0; 210 files, 1786 tests passed (plus native change-scope tests). Existing MentorProfileEditor focus flake did not reproduce.
+- npm run build: exit 0.
+- npm run test:unit:coverage: exit 0; 210 files, 1786 tests; statements 3835/3835, branches 2332/2332, functions 1105/1105, lines 3432/3432, all 100%.
+- git diff --check ce6c182..9aff0c6: exit 2 for the nit above.
+- git status --porcelain=v1: exit 0, empty; git diff --exit-code and git diff --cached --exit-code: both exit 0. Branch cez/fb4c4657, HEAD exactly 9aff0c6.
+
+Initial checks before local installation resolved ancestor workspace packages and were discarded as invalid source evidence. An offline install failed ENOTCACHED; an unpinned package-lock-disabled install attempt was stopped by its exact owned PID before replacing it with the successful pinned npm ci. No tracked source/docs/config changes resulted. Complete valid gate logs are in this cockpit unit directory under valid-*.stdout/stderr.log and valid-results.log.
+
+Full integration/browser startup deliberately not run, as ordered; parent owns the expensive fresh suite. The reported earlier filtered NOTES007/009/010 pass is not counted as independently executed here. No human QA claimed. No server, browser, container, remote write, merge or commit was started by this review. All owned command processes finished or were stopped by exact PID; final process inventory found zero processes referencing this review worktree. PID reuse was checked rather than killing an unrelated process. Working/staged tree is clean.

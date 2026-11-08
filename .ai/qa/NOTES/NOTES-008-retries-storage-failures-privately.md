@@ -36,6 +36,6 @@ Finally restores the table name, removes trigger/function and closes the isolate
 
 ## Verification and review
 
-- **Latest execution:** Passed 2026-11-07: `npm run test:integration -- --testNamePattern=NOTES-00[78]` (2 passed; 98 excluded by filter). Final full-suite run pending.
-- **Observed result and evidence:** Actual migration lifecycle/rollback checks and real-browser initial-load Retry, pending controls, failed-save retention and private driver-log masking passed. Desktop/320px evidence is linked from [the report](report.md).
-- **Human review:** Pending.
+- **Latest execution:** Passed in fresh FULL `npm run test:integration -- --reporter=default --reporter=json --outputFile=test-results/integration/final-results.json`, 2026-11-08: all 50 files / 102 tests passed, zero failed/skipped; command exit 0, 940.92s.
+- **Observed result and evidence:** This exact executable case passed. [Full output](recovery-integration.log), [sanitized per-case result](recovery-integration-summary.json), [state matrix and screenshots](report.md). Prior failures remain historical; this is fresh corrected-source evidence.
+- **Human review:** Pending. Automated execution and agent review are not human QA.

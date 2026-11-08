@@ -33,6 +33,6 @@ Owned fixture records are removed by withPaymentFixture. Max-one ORM closes in f
 
 ## Verification and review
 
-- **Latest execution:** Passed focused `node .ai/qa/NOTES/verify.mjs focused`, 2026-11-08 (3 passed / 99 excluded); full suite pending.
-- **Observed result and evidence:** Real shared max-one pool save/send/replay passed. The same test failed against old fc35d32 service in RateLimiter connection acquisition; see recovery-regression.log and recovery-focused.log.
-- **Human review:** Pending.
+- **Latest execution:** Passed in fresh FULL `npm run test:integration -- --reporter=default --reporter=json --outputFile=test-results/integration/final-results.json`, 2026-11-08: all 50 files / 102 tests passed, zero failed/skipped; command exit 0, 940.92s.
+- **Observed result and evidence:** This exact executable case passed. [Full output](recovery-integration.log), [sanitized per-case result](recovery-integration-summary.json), [state matrix and screenshots](report.md). Prior failures remain historical; this is fresh corrected-source evidence.
+- **Human review:** Pending. Automated execution and agent review are not human QA.
