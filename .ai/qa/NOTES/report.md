@@ -2,6 +2,17 @@
 
 Issue 47 only. Spec PR 78 remains design-only; this is local implementation evidence. Human QA and fresh parent implementation review are pending; no qa-approved/self-QA signoff is claimed.
 
+## Recovery status (2026-11-08)
+
+Prior green source 666df13 still had pool starvation; its gate did not cover saturated pools and is not final acceptance. Imported fc35d32, restored intended snapshot in b07cd72 and corrected service/tests in 9aff0c6 after root-forwarded focused skeptical plan APPROVE (3b2f2a89).
+
+- Fresh ordered typecheck/lint/test/build: all exit 0; 210 files / 1786 unit tests, plus four native classifier tests. Lint retains two existing warnings. [Complete fresh gate output](recovery-gate.log).
+- Fresh full per-file coverage: exit 0; statements3835/3835, branches2332/2332, functions1105/1105, lines3432/3432. [Changed-file table](coverage.md).
+- Focused native PostgreSQL integration: exit 0; 3 passed / 99 excluded, 99.57s, NOTES-007 migration and NOTES-009/010 real pool regressions. [Output](recovery-focused.log).
+- Regression sensitivity: old fc35d32 service intentionally fails NOTES-009 in RateLimiter connection acquisition within 2.59s (1 failed / 101 excluded, command exit1). Corrected committed source restored in finally before fresh gate. [Intentional pre-fix failure](recovery-regression.log).
+- Fresh full 102-test integration and independent read-only final source review fb4c4657 are pending. Historical interrupted run has no final JSON; empty old mentor publish diagnostics are insufficient to assign cause. Human QA remains pending.
+- Snapshot structural comparison with ce6c182: session_notes alone added, no removed tables, notifications alone changed and all other schema root keys identical. No shared QA descriptor exists in fresh checkout; documented native runner owns isolated ephemeral app/database and cleanup. Old worktree read only; its processes were not touched.
+
 | Run/check | Result | Evidence / resolution |
 | --- | --- | --- |
 | Reviewer-checkout baseline | Dependency-related failures reported by plan reviewer | Clean `npm ci --no-audit --no-fund` in implementation checkout followed by `npm run test:unit`: 202 files / 1743 tests passed. No unrelated source repair. |
@@ -35,4 +46,4 @@ The explicit local-only override replaces all remote skill phases with this repo
 
 Shared environment used `.ai/scripts/test-env-up.ps1` and `.ai/qa/test-env.json`, local pinned agent-browser 0.36.0/Chrome 157 and synthetic mock identities. It was stopped via `.ai/scripts/test-env-down.ps1`; all three exploration browser sessions were closed; disposable A1 migration container was removed by exact name. Runtime descriptors, cookies, mail logs and environment files remain ignored. Integration owns separate random-port PostgreSQL/app and browser sessions with finally cleanup.
 
-Final full `npm run test:integration -- --reporter=default --reporter=json --outputFile=test-results/integration/final-results.json` is running against source 666df13. No completion claim until that command finishes.
+The old final full run on source666df13 was interrupted; its final JSON is absent. A fresh recovery full run is now running against corrected source9aff0c6. No full integration pass is claimed until it finishes.

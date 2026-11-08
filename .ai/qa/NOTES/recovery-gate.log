@@ -1,0 +1,172 @@
+
+2026-11-08T02:09:07.403Z npm run typecheck
+
+> devmentor@0.1.0 typecheck
+> tsc --noEmit
+
+Exit 0
+
+2026-11-08T02:09:29.540Z npm run lint
+
+> devmentor@0.1.0 lint
+> eslint
+
+
+D:\repos\aitl-mentio\.ai\cezar\worktrees\cd442146-d534-4c01-bd9e-1e0e106e7f80\packages\core\src\services\auth\user.service.test.ts
+  172:37  warning  '_message' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\repos\aitl-mentio\.ai\cezar\worktrees\cd442146-d534-4c01-bd9e-1e0e106e7f80\prototypes\devmentor-journey\LandingScreen.tsx
+  35:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+✖ 2 problems (0 errors, 2 warnings)
+
+Exit 0
+
+2026-11-08T02:09:47.102Z npm run test
+
+> devmentor@0.1.0 test
+> npm run test:unit
+
+
+> devmentor@0.1.0 test:unit
+> node --test scripts/ci/change-scope.test.mjs && vitest run --config vitest.config.mts
+
+✔ documentation and artifact-policy changes use lightweight checks (1.2032ms)
+✔ code, configuration, dependencies, executable MDX and unknown paths run application checks (0.2653ms)
+✔ missing or invalid SHAs fail instead of classifying as documentation (0.7137ms)
+✔ real Git history covers whole PRs, deletions, renames and filenames with newlines (3021.0001ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3158.5204
+
+ RUN  v4.1.11 D:/repos/aitl-mentio/.ai/cezar/worktrees/cd442146-d534-4c01-bd9e-1e0e106e7f80
+
+
+ Test Files  210 passed (210)
+      Tests  1786 passed (1786)
+   Start at  03:09:52
+   Duration  31.78s (transform 18.22s, setup 0ms, import 325.85s, tests 50.83s, environment 161.71s)
+
+Exit 0
+
+2026-11-08T02:10:24.473Z npm run build
+
+> devmentor@0.1.0 build
+> npm run build --workspace @devmentor/app
+
+
+> @devmentor/app@0.1.0 build
+> cross-env NODE_ENV=production next build
+
+▲ Next.js 16.3.3 (Turbopack)
+✓ Running next.config.ts took 61ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.0s
+  Running TypeScript ...
+  Finished TypeScript in 9.1s ...
+  Collecting page data using 23 workers ...
+  Generating static pages using 23 workers (0/3) ...
+✓ Generating static pages using 23 workers (3/3) in 205ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/users
+├ ƒ /api/auth/github
+├ ƒ /api/auth/github/callback
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/register
+├ ƒ /api/auth/verify-email
+├ ƒ /api/availability/slots
+├ ƒ /api/availability/slots/[id]
+├ ƒ /api/bookings
+├ ƒ /api/bookings/[id]/checkout
+├ ƒ /api/health
+├ ƒ /api/invitations/[token]
+├ ƒ /api/invitations/[token]/accept
+├ ƒ /api/mentors/[slug]
+├ ƒ /api/mentors/me
+├ ƒ /api/mentors/me/onboarding
+├ ƒ /api/mentors/me/prices
+├ ƒ /api/mentors/me/publish
+├ ƒ /api/mentors/me/unpublish
+├ ƒ /api/notes/[bookingId]
+├ ƒ /api/notes/[bookingId]/send
+├ ƒ /api/notifications
+├ ƒ /api/payments/reconcile
+├ ƒ /api/payments/report
+├ ƒ /api/payments/review
+├ ƒ /api/payments/review/[id]
+├ ƒ /api/payments/webhook
+├ ƒ /api/sessions/[bookingId]
+├ ƒ /api/sessions/[bookingId]/answer
+├ ƒ /api/sessions/[bookingId]/messages
+├ ƒ /api/users
+├ ƒ /home
+├ ƒ /invitation/[token]
+├ ƒ /m/[slug]
+├ ƒ /mentor
+├ ƒ /mentor/prices
+├ ƒ /mentor/profile
+├ ƒ /mentor/slots
+├ ƒ /register
+├ ƒ /sessions/[bookingId]
+└ ƒ /sign-in
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+Exit 0
+
+2026-11-08T02:10:49.101Z npm run test:unit:coverage
+
+> devmentor@0.1.0 test:unit:coverage
+> node --test scripts/ci/change-scope.test.mjs && vitest run --config vitest.config.mts --coverage
+
+✔ documentation and artifact-policy changes use lightweight checks (2.1208ms)
+✔ code, configuration, dependencies, executable MDX and unknown paths run application checks (0.2906ms)
+✔ missing or invalid SHAs fail instead of classifying as documentation (0.6883ms)
+✔ real Git history covers whole PRs, deletions, renames and filenames with newlines (2456.0961ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2584.5477
+
+ RUN  v4.1.11 D:/repos/aitl-mentio/.ai/cezar/worktrees/cd442146-d534-4c01-bd9e-1e0e106e7f80
+      Coverage enabled with v8
+
+
+ Test Files  210 passed (210)
+      Tests  1786 passed (1786)
+   Start at  03:10:53
+   Duration  33.56s (transform 13.99s, setup 0ms, import 248.55s, tests 55.69s, environment 119.58s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 3835/3835 )
+Branches     : 100% ( 2332/2332 )
+Functions    : 100% ( 1105/1105 )
+Lines        : 100% ( 3432/3432 )
+================================================================================
+Exit 0
