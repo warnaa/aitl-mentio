@@ -1,0 +1,7 @@
+{
+  "command": "npm run test:integration -- --reporter=default --reporter=json --outputFile=test-results/integration/pr79-double-check.json",
+  "head": "b70a309cfde8dba67e5a2f8661b0d844230a271c",
+  "exit": 0,
+  "durationSeconds": 948.323,
+  "rawLogStoredOutsideRepository": true
+}

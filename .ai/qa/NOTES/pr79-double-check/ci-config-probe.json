@@ -1,0 +1,18 @@
+{
+  "head": "b70a309cfde8dba67e5a2f8661b0d844230a271c",
+  "mockAdapter": true,
+  "integrationSignalPresent": false,
+  "probeExit": 0,
+  "observed": {
+    "loggerCreated": false,
+    "errorName": "ZodError",
+    "issues": [
+      {
+        "path": [
+          "PAYMENT_GATEWAY_ADAPTER"
+        ],
+        "message": "Mock payments are refused unless INTEGRATION_TEST_RUN=1"
+      }
+    ]
+  }
+}

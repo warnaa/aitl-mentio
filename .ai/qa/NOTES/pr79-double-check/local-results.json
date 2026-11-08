@@ -1,0 +1,1039 @@
+{
+  "head": "b70a309cfde8dba67e5a2f8661b0d844230a271c",
+  "command": "npm run test:integration -- --reporter=default --reporter=json --outputFile=test-results/integration/pr79-double-check.json",
+  "exit": 0,
+  "durationSeconds": 948.323,
+  "success": true,
+  "files": 50,
+  "totalTests": 102,
+  "passed": 102,
+  "failed": 0,
+  "pending": 0,
+  "scenarioDocumentCount": 102,
+  "caseMappingGaps": [],
+  "cases": [
+    {
+      "file": "tests/integration/admin.integration.test.ts",
+      "title": "shows a connected dashboard and the seeded users table to a signed-in operator",
+      "fullName": "TC-ADMIN-001 admin panel basics shows a connected dashboard and the seeded users table to a signed-in operator",
+      "status": "passed",
+      "durationMs": 3422.7149999999997,
+      "scenarioDocuments": [
+        ".ai/qa/ADMIN/ADMIN-002-show-operator-dashboard-and-users.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "explains that nothing was created, and creates nothing",
+      "fullName": "TC-AUTH-001 a cancelled GitHub authorisation explains that nothing was created, and creates nothing",
+      "status": "passed",
+      "durationMs": 6110.9468,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-009-cancel-github-without-account.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "signs a mentee in to /home with a secure, httpOnly session cookie",
+      "fullName": "TC-AUTH-002 GitHub sign-in lands on the role home signs a mentee in to /home with a secure, httpOnly session cookie",
+      "status": "passed",
+      "durationMs": 3073.032900000001,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-010-sign-in-mentee-to-home.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "signs the seeded mentor in to /mentor",
+      "fullName": "TC-AUTH-002 GitHub sign-in lands on the role home signs the seeded mentor in to /mentor",
+      "status": "passed",
+      "durationMs": 2781.3315000000002,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-011-sign-in-mentor-to-workspace.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "signs the mentor/operator in to /admin",
+      "fullName": "TC-AUTH-002 GitHub sign-in lands on the role home signs the mentor/operator in to /admin",
+      "status": "passed",
+      "durationMs": 2740.8854999999985,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-012-sign-in-operator-to-admin.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "redirects to sign-in and shows nothing of the user",
+      "fullName": "TC-AUTH-003 an invalid session on a signed-in screen redirects to sign-in and shows nothing of the user",
+      "status": "passed",
+      "durationMs": 3513.536900000001,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-013-reject-tampered-session.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "returns the operator to /admin/users through the email form, not to the admin layout's /admin",
+      "fullName": "TC-AUTH-004 a signed-out deep link survives sign-in returns the operator to /admin/users through the email form, not to the admin layout's /admin",
+      "status": "passed",
+      "durationMs": 3942.423300000002,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-014-restore-admin-deep-link.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "refuses a sign-out without the CSRF header, then signs out and kills the copy",
+      "fullName": "TC-AUTH-005 sign-out ends every session, including a copied cookie refuses a sign-out without the CSRF header, then signs out and kills the copy",
+      "status": "passed",
+      "durationMs": 3314.1755999999987,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-015-invalidate-copied-session-on-sign-out.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "shows one generic message for a wrong password and an unknown address, and sets no cookie",
+      "fullName": "TC-AUTH-006 a failed email sign-in says nothing about which part was wrong shows one generic message for a wrong password and an unknown address, and sets no cookie",
+      "status": "passed",
+      "durationMs": 5366.945299999999,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-016-hide-email-account-existence.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "answers 429 with Retry-After once an address has used its attempts (edge case 17)",
+      "fullName": "TC-AUTH-006 a failed email sign-in says nothing about which part was wrong answers 429 with Retry-After once an address has used its attempts (edge case 17)",
+      "status": "passed",
+      "durationMs": 1678.7460999999967,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-017-throttle-email-sign-in.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "registers, refuses sign-in until the emailed link is opened, then lands on the mentee home",
+      "fullName": "TC-AUTH-007 email registration, end to end registers, refuses sign-in until the emailed link is opened, then lands on the mentee home",
+      "status": "passed",
+      "durationMs": 7540.4804,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-018-verify-registration-before-sign-in.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "links nothing when a GitHub email matches an unverified registration, and says why (edge case 4)",
+      "fullName": "TC-AUTH-008 GitHub and email accounts for the same address links nothing when a GitHub email matches an unverified registration, and says why (edge case 4)",
+      "status": "passed",
+      "durationMs": 2693.449099999998,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-019-refuse-unverified-email-linking.md"
+      ]
+    },
+    {
+      "file": "tests/integration/auth.integration.test.ts",
+      "title": "refuses to register an address tied to a GitHub account, pointing to GitHub (edge case 14)",
+      "fullName": "TC-AUTH-008 GitHub and email accounts for the same address refuses to register an address tied to a GitHub account, pointing to GitHub (edge case 14)",
+      "status": "passed",
+      "durationMs": 5484.2503,
+      "scenarioDocuments": [
+        ".ai/qa/AUTH/AUTH-020-refuse-duplicate-github-registration.md"
+      ]
+    },
+    {
+      "file": "tests/integration/availability.integration.test.ts",
+      "title": "TC-AVAILABILITY-001 scopes writes, serializes duplicates and preserves removed history",
+      "fullName": "TC-AVAILABILITY-001 scopes writes, serializes duplicates and preserves removed history",
+      "status": "passed",
+      "durationMs": 70063.8636,
+      "scenarioDocuments": [
+        ".ai/qa/AVAILABILITY/AVAILABILITY-003-serialize-slot-publication-and-preserve-removal.md"
+      ]
+    },
+    {
+      "file": "tests/integration/availability.integration.test.ts",
+      "title": "TC-AVAILABILITY-002 publishes locally entered time and shows it signed out",
+      "fullName": "TC-AVAILABILITY-002 publishes locally entered time and shows it signed out",
+      "status": "passed",
+      "durationMs": 41973.173899999994,
+      "scenarioDocuments": [
+        ".ai/qa/AVAILABILITY/AVAILABILITY-004-publish-local-time-and-remove-through-ui.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-authorization.integration.test.ts",
+      "title": "BOOKING-004 denies unsigned, wrong-role and CSRF-less booking requests",
+      "fullName": "BOOKING-004 denies unsigned, wrong-role and CSRF-less booking requests",
+      "status": "passed",
+      "durationMs": 318.68360000000007,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-004-deny-unauthorized-booking.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-cancelled-history.integration.test.ts",
+      "title": "BOOKING-015 releases cancelled occupancy while preserving the original booking snapshot",
+      "fullName": "BOOKING-015 releases cancelled occupancy while preserving the original booking snapshot",
+      "status": "passed",
+      "durationMs": 356.62469999999985,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-015-rebook-after-cancelled-history.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-concurrency.integration.test.ts",
+      "title": "BOOKING-005 gives two concurrent mentees one reservation and one conflict",
+      "fullName": "BOOKING-005 gives two concurrent mentees one reservation and one conflict",
+      "status": "passed",
+      "durationMs": 384.05539999999996,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-005-serialize-same-slot-contenders.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-duration-viability.integration.test.ts",
+      "title": "BOOKING-010 exposes only viable durations and allows adjacent sessions",
+      "fullName": "BOOKING-010 exposes only viable durations and allows adjacent sessions",
+      "status": "passed",
+      "durationMs": 420.9033999999999,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-010-project-duration-viability-and-adjacency.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-expired-contention.integration.test.ts",
+      "title": "BOOKING-006 replaces an expired hold under contention while preserving its history",
+      "fullName": "BOOKING-006 replaces an expired hold under contention while preserving its history",
+      "status": "passed",
+      "durationMs": 452.1621,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-006-replace-expired-hold-under-contention.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-length.integration.test.ts",
+      "title": "BOOKING-002 reserves a 50-minute pending session at its distinct mentor price",
+      "fullName": "BOOKING-002 reserves a 50-minute pending session at its distinct mentor price",
+      "status": "passed",
+      "durationMs": 488.52700000000016,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-002-reserve-50-minute-session.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-lock-order.integration.test.ts",
+      "title": "BOOKING-014 orders mentor and slot locks during an adverse removal interleaving",
+      "fullName": "BOOKING-014 orders mentor and slot locks during an adverse removal interleaving",
+      "status": "passed",
+      "durationMs": 427.24660000000017,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-014-order-locks-under-adverse-interleaving.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-notifications.integration.test.ts",
+      "title": "NOTIFY-001 tells the mentor and the mentee once, in the product and by email, and a replay adds nothing",
+      "fullName": "NOTIFY-001 tells the mentor and the mentee once, in the product and by email, and a replay adds nothing",
+      "status": "passed",
+      "durationMs": 657.2792999999999,
+      "scenarioDocuments": [
+        ".ai/qa/NOTIFICATIONS/NOTIFY-001-notifies-both-parties-once.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-notifications.integration.test.ts",
+      "title": "NOTIFY-002 sends nothing for a booking that was never confirmed, including a mismatched paid callback held for review",
+      "fullName": "NOTIFY-002 sends nothing for a booking that was never confirmed, including a mismatched paid callback held for review",
+      "status": "passed",
+      "durationMs": 307.106,
+      "scenarioDocuments": [
+        ".ai/qa/NOTIFICATIONS/NOTIFY-002-nothing-for-unconfirmed-booking.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-notifications.integration.test.ts",
+      "title": "NOTIFY-003 lets a user mark only their own notifications read and denies anonymous or cross-site calls",
+      "fullName": "NOTIFY-003 lets a user mark only their own notifications read and denies anonymous or cross-site calls",
+      "status": "passed",
+      "durationMs": 438.5661,
+      "scenarioDocuments": [
+        ".ai/qa/NOTIFICATIONS/NOTIFY-003-marks-only-own-notifications-read.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-overlap-race.integration.test.ts",
+      "title": "BOOKING-009 refuses overlapping concurrent reservations across different slot IDs",
+      "fullName": "BOOKING-009 refuses overlapping concurrent reservations across different slot IDs",
+      "status": "passed",
+      "durationMs": 662.5939999999998,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-009-serialize-overlapping-slot-ids.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-price-tampering.integration.test.ts",
+      "title": "BOOKING-007 snapshots a changed server price and ignores forged money and identity fields",
+      "fullName": "BOOKING-007 snapshots a changed server price and ignores forged money and identity fields",
+      "status": "passed",
+      "durationMs": 398.0866000000001,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-007-ignore-stale-and-forged-prices.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-removal-race.integration.test.ts",
+      "title": "BOOKING-008 serializes booking against removal so only one operation succeeds",
+      "fullName": "BOOKING-008 serializes booking against removal so only one operation succeeds",
+      "status": "passed",
+      "durationMs": 327.8435999999999,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-008-serialize-booking-versus-removal.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-retry.integration.test.ts",
+      "title": "BOOKING-011 recovers a lost-response retry without extending or duplicating the hold",
+      "fullName": "BOOKING-011 recovers a lost-response retry without extending or duplicating the hold",
+      "status": "passed",
+      "durationMs": 399.3497,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-011-recover-own-hold-on-retry.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-sign-in-return.integration.test.ts",
+      "title": "BOOKING-012 restores the signed-out slot and duration then shows an unpaid reservation",
+      "fullName": "BOOKING-012 restores the signed-out slot and duration then shows an unpaid reservation",
+      "status": "passed",
+      "durationMs": 7371.9427,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-012-restore-selection-through-sign-in.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-throttle.integration.test.ts",
+      "title": "BOOKING-013 throttles repeated account attempts without creating a booking",
+      "fullName": "BOOKING-013 throttles repeated account attempts without creating a booking",
+      "status": "passed",
+      "durationMs": 476.02430000000004,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-013-throttle-account-attempts.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking-validation.integration.test.ts",
+      "title": "BOOKING-003 rejects invalid, too-near, removed and unbookable selections without writing",
+      "fullName": "BOOKING-003 rejects invalid, too-near, removed and unbookable selections without writing",
+      "status": "passed",
+      "durationMs": 435.1334999999999,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-003-reject-invalid-selections.md"
+      ]
+    },
+    {
+      "file": "tests/integration/booking.integration.test.ts",
+      "title": "BOOKING-001 reserves a 25-minute pending session at the mentor price",
+      "fullName": "BOOKING-001 reserves a 25-minute pending session at the mentor price",
+      "status": "passed",
+      "durationMs": 377.6214,
+      "scenarioDocuments": [
+        ".ai/qa/BOOKING/BOOKING-001-reserve-25-minute-session.md"
+      ]
+    },
+    {
+      "file": "tests/integration/home.integration.test.ts",
+      "title": "renders the designed homepage with actions only to pages that exist",
+      "fullName": "TC-HOME-001 public home page renders the designed homepage with actions only to pages that exist",
+      "status": "passed",
+      "durationMs": 3255.4284000000002,
+      "scenarioDocuments": [
+        ".ai/qa/HOME/HOME-002-render-existing-public-actions.md"
+      ]
+    },
+    {
+      "file": "tests/integration/invitations.integration.test.ts",
+      "title": "lands on the mentor home with the publish-by date and stays signed in with both roles",
+      "fullName": "TC-INVITATION-001 accepting an invitation makes a signed-in user a mentor lands on the mentor home with the publish-by date and stays signed in with both roles",
+      "status": "passed",
+      "durationMs": 39978.990699999995,
+      "scenarioDocuments": [
+        ".ai/qa/INVITATION/INVITATION-004-accept-invitation-and-refresh-session.md"
+      ]
+    },
+    {
+      "file": "tests/integration/invitations.integration.test.ts",
+      "title": "shows one sentence for an unknown token, whoever opens it",
+      "fullName": "TC-INVITATION-002 invalid invitations grant nothing shows one sentence for an unknown token, whoever opens it",
+      "status": "passed",
+      "durationMs": 2442.3274999999994,
+      "scenarioDocuments": [
+        ".ai/qa/INVITATION/INVITATION-005-hide-unknown-invitation-details.md"
+      ]
+    },
+    {
+      "file": "tests/integration/invitations.integration.test.ts",
+      "title": "refuses another verified account, leaving the invitation for its owner",
+      "fullName": "TC-INVITATION-002 invalid invitations grant nothing refuses another verified account, leaving the invitation for its owner",
+      "status": "passed",
+      "durationMs": 36227.05000000001,
+      "scenarioDocuments": [
+        ".ai/qa/INVITATION/INVITATION-006-deny-invitation-to-other-email.md"
+      ]
+    },
+    {
+      "file": "tests/integration/invitations.integration.test.ts",
+      "title": "lets exactly one of two simultaneous acceptances win",
+      "fullName": "TC-INVITATION-002 invalid invitations grant nothing lets exactly one of two simultaneous acceptances win",
+      "status": "passed",
+      "durationMs": 35683.12049999999,
+      "scenarioDocuments": [
+        ".ai/qa/INVITATION/INVITATION-007-serialize-simultaneous-acceptance.md"
+      ]
+    },
+    {
+      "file": "tests/integration/invitations.integration.test.ts",
+      "title": "refuses acceptance without the CSRF header",
+      "fullName": "TC-INVITATION-002 invalid invitations grant nothing refuses acceptance without the CSRF header",
+      "status": "passed",
+      "durationMs": 35305.255900000004,
+      "scenarioDocuments": [
+        ".ai/qa/INVITATION/INVITATION-008-deny-invitation-without-csrf.md"
+      ]
+    },
+    {
+      "file": "tests/integration/invitations.integration.test.ts",
+      "title": "offers a mentee no invitation, application or mentor link",
+      "fullName": "TC-INVITATION-003 a signed-in user finds no path to become a mentor (R07) offers a mentee no invitation, application or mentor link",
+      "status": "passed",
+      "durationMs": 2619.9807000000146,
+      "scenarioDocuments": [
+        ".ai/qa/INVITATION/INVITATION-009-hide-self-service-mentor-grant.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mail.integration.test.ts",
+      "title": "returns the first message to the address since the given time, ignoring noise",
+      "fullName": "TC-MAIL-001 waitForMail returns the first message to the address since the given time, ignoring noise",
+      "status": "passed",
+      "durationMs": 5.660499999999985,
+      "scenarioDocuments": [
+        ".ai/qa/MAIL/MAIL-002-filter-mail-log-by-recipient-and-time.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mail.integration.test.ts",
+      "title": "waits for a message that arrives while polling",
+      "fullName": "TC-MAIL-001 waitForMail waits for a message that arrives while polling",
+      "status": "passed",
+      "durationMs": 185.1258,
+      "scenarioDocuments": [
+        ".ai/qa/MAIL/MAIL-003-observe-mail-arriving-during-poll.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mail.integration.test.ts",
+      "title": "times out with how many messages it saw, also when the log does not exist yet",
+      "fullName": "TC-MAIL-001 waitForMail times out with how many messages it saw, also when the log does not exist yet",
+      "status": "passed",
+      "durationMs": 199.9216,
+      "scenarioDocuments": [
+        ".ai/qa/MAIL/MAIL-004-report-mail-timeout-and-missing-log.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mail.integration.test.ts",
+      "title": "refuses a mail without a link",
+      "fullName": "TC-MAIL-001 waitForMail refuses a mail without a link",
+      "status": "passed",
+      "durationMs": 0.9832000000000107,
+      "scenarioDocuments": [
+        ".ai/qa/MAIL/MAIL-005-refuse-message-without-verification-link.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mentor-page.integration.test.ts",
+      "title": "completes, publishes and shares the page through the profile screen",
+      "fullName": "TC-MENTOR-PAGE-001 a mentor publishes a page a signed-out visitor can open completes, publishes and shares the page through the profile screen",
+      "status": "passed",
+      "durationMs": 44580.994600000005,
+      "scenarioDocuments": [
+        ".ai/qa/MENTOR-PAGE/MENTOR-PAGE-004-publish-profile-and-open-share-link.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mentor-page.integration.test.ts",
+      "title": "refuses an incomplete page, then publishes, unpublishes and republishes under the same slug",
+      "fullName": "TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary refuses an incomplete page, then publishes, unpublishes and republishes under the same slug",
+      "status": "passed",
+      "durationMs": 35423.344900000004,
+      "scenarioDocuments": [
+        ".ai/qa/MENTOR-PAGE/MENTOR-PAGE-005-preserve-slug-through-publication-lifecycle.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mentor-page.integration.test.ts",
+      "title": "gives two mentors whose names make the same slug distinct share links when they publish at once",
+      "fullName": "TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary gives two mentors whose names make the same slug distinct share links when they publish at once",
+      "status": "passed",
+      "durationMs": 71310.8917,
+      "scenarioDocuments": [
+        ".ai/qa/MENTOR-PAGE/MENTOR-PAGE-006-resolve-concurrent-slug-collision.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mentor-page.integration.test.ts",
+      "title": "keeps owner routes behind the mentor role",
+      "fullName": "TC-MENTOR-PAGE-002 publication keeps one slug and a private boundary keeps owner routes behind the mentor role",
+      "status": "passed",
+      "durationMs": 1856.0187999999907,
+      "scenarioDocuments": [
+        ".ai/qa/MENTOR-PAGE/MENTOR-PAGE-007-deny-owner-api-without-mentor-role.md"
+      ]
+    },
+    {
+      "file": "tests/integration/mentor-profile-technology.integration.test.ts",
+      "title": "TC-MENTOR-PAGE-003 refuses profile publication when no technology is selected",
+      "fullName": "TC-MENTOR-PAGE-003 refuses profile publication when no technology is selected",
+      "status": "passed",
+      "durationMs": 38609.5698,
+      "scenarioDocuments": [
+        ".ai/qa/MENTOR-PAGE/MENTOR-PAGE-003-refuses-publication-without-technology.md"
+      ]
+    },
+    {
+      "file": "tests/integration/migrations.integration.test.ts",
+      "title": "applies up, down and up again, preserving rows and enforcing the roles check",
+      "fullName": "TC-MIGRATION-001 auth-identity migration round trip applies up, down and up again, preserving rows and enforcing the roles check",
+      "status": "passed",
+      "durationMs": 11869.132300000001,
+      "scenarioDocuments": [
+        ".ai/qa/MIGRATION/MIGRATION-008-round-trip-auth-identity-schema.md"
+      ]
+    },
+    {
+      "file": "tests/integration/migrations.integration.test.ts",
+      "title": "adds a nullable text password_hash, drops it on down, and keeps every row",
+      "fullName": "TC-MIGRATION-002 auth-password migration round trip adds a nullable text password_hash, drops it on down, and keeps every row",
+      "status": "passed",
+      "durationMs": 10935.876800000002,
+      "scenarioDocuments": [
+        ".ai/qa/MIGRATION/MIGRATION-009-round-trip-password-column.md"
+      ]
+    },
+    {
+      "file": "tests/integration/migrations.integration.test.ts",
+      "title": "creates the counter table with its index, drops it on down, and creates it again",
+      "fullName": "TC-MIGRATION-003 auth-rate-limit migration round trip creates the counter table with its index, drops it on down, and creates it again",
+      "status": "passed",
+      "durationMs": 11372.756099999999,
+      "scenarioDocuments": [
+        ".ai/qa/MIGRATION/MIGRATION-010-round-trip-rate-limit-schema.md"
+      ]
+    },
+    {
+      "file": "tests/integration/migrations.integration.test.ts",
+      "title": "creates invitations with its constraints and the first deadline, drops both on down, and recreates them",
+      "fullName": "TC-MIGRATION-004 invitations migration round trip creates invitations with its constraints and the first deadline, drops both on down, and recreates them",
+      "status": "passed",
+      "durationMs": 11566.649000000005,
+      "scenarioDocuments": [
+        ".ai/qa/MIGRATION/MIGRATION-011-round-trip-invitation-schema.md"
+      ]
+    },
+    {
+      "file": "tests/integration/migrations.integration.test.ts",
+      "title": "adds the page columns and checks, drops them on down keeping profiles, and adds them again",
+      "fullName": "TC-MIGRATION-005 mentor-page migration round trip adds the page columns and checks, drops them on down keeping profiles, and adds them again",
+      "status": "passed",
+      "durationMs": 11437.304800000005,
+      "scenarioDocuments": [
+        ".ai/qa/MIGRATION/MIGRATION-012-round-trip-mentor-page-schema.md"
+      ]
+    },
+    {
+      "file": "tests/integration/migrations.integration.test.ts",
+      "title": "preserves history, permits republishing removed starts and reverses the schema",
+      "fullName": "TC-MIGRATION-006 availability migration round trip preserves history, permits republishing removed starts and reverses the schema",
+      "status": "passed",
+      "durationMs": 8476.286200000002,
+      "scenarioDocuments": [
+        ".ai/qa/MIGRATION/MIGRATION-013-round-trip-availability-schema.md"
+      ]
+    },
+    {
+      "file": "tests/integration/migrations.integration.test.ts",
+      "title": "adds nullable positive integer prices, rejects nonpositive values, and reverses cleanly",
+      "fullName": "TC-MIGRATION-007 mentor-prices migration round trip adds nullable positive integer prices, rejects nonpositive values, and reverses cleanly",
+      "status": "passed",
+      "durationMs": 8727.48520000001,
+      "scenarioDocuments": [
+        ".ai/qa/MIGRATION/MIGRATION-014-round-trip-mentor-price-schema.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-ambiguous-creation.integration.test.ts",
+      "title": "PAYMENTS-009 retains ambiguous paid inventory when creation recovery exceeds the fixed margin",
+      "fullName": "PAYMENTS-009 retains ambiguous paid inventory when creation recovery exceeds the fixed margin",
+      "status": "passed",
+      "durationMs": 248.55899999999997,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-009-retains-ambiguous-checkout-after-margin.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-amount.integration.test.ts",
+      "title": "PAYMENTS-013 quarantines a paid amount mismatch without confirming or reselling the time",
+      "fullName": "PAYMENTS-013 quarantines a paid amount mismatch without confirming or reselling the time",
+      "status": "passed",
+      "durationMs": 597.4134000000001,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-013-quarantines-amount-mismatch.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-authorization.integration.test.ts",
+      "title": "PAYMENTS-014 denies unsigned wrong-role CSRF-less and foreign-owner Checkout without writes",
+      "fullName": "PAYMENTS-014 denies unsigned wrong-role CSRF-less and foreign-owner Checkout without writes",
+      "status": "passed",
+      "durationMs": 366.43110000000013,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-014-denies-unauthorized-checkout.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-checkout-concurrency.integration.test.ts",
+      "title": "PAYMENTS-015 gives concurrent Checkout retries one provider session and one fixed deadline",
+      "fullName": "PAYMENTS-015 gives concurrent Checkout retries one provider session and one fixed deadline",
+      "status": "passed",
+      "durationMs": 489.1229000000001,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-015-deduplicates-concurrent-checkout.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-confirmation.integration.test.ts",
+      "title": "PAYMENTS-011 confirms one exact payment despite repeated callbacks and shows it to both participants",
+      "fullName": "PAYMENTS-011 confirms one exact payment despite repeated callbacks and shows it to both participants",
+      "status": "passed",
+      "durationMs": 530.5804,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-011-confirms-paid-session-once.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-expiry.integration.test.ts",
+      "title": "PAYMENTS-016 releases verified unpaid Checkout expiry while preserving reservation history",
+      "fullName": "PAYMENTS-016 releases verified unpaid Checkout expiry while preserving reservation history",
+      "status": "passed",
+      "durationMs": 412.5879,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-016-releases-verified-unpaid-expiry.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-late-webhook.integration.test.ts",
+      "title": "PAYMENTS-017 retains payment occupancy past local expiry until a delayed paid callback confirms",
+      "fullName": "PAYMENTS-017 retains payment occupancy past local expiry until a delayed paid callback confirms",
+      "status": "passed",
+      "durationMs": 506.1006,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-017-retains-slot-for-delayed-webhook.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-lost-response.integration.test.ts",
+      "title": "PAYMENTS-008 recovers a lost Checkout creation response with one payable provider session",
+      "fullName": "PAYMENTS-008 recovers a lost Checkout creation response with one payable provider session",
+      "status": "passed",
+      "durationMs": 326.6895999999999,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-008-recovers-lost-checkout-response.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-migration.integration.test.ts",
+      "title": "MIGRATION-015 adds payment evidence, preserves unpaid history and reverses up down up",
+      "fullName": "MIGRATION-015 adds payment evidence, preserves unpaid history and reverses up down up",
+      "status": "passed",
+      "durationMs": 19354.6244,
+      "scenarioDocuments": [
+        ".ai/qa/MIGRATION/MIGRATION-015-round-trip-payment-evidence-schema.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-rejected-creation.integration.test.ts",
+      "title": "PAYMENTS-020 releases a definitively rejected creation with durable submission evidence",
+      "fullName": "PAYMENTS-020 releases a definitively rejected creation with durable submission evidence",
+      "status": "passed",
+      "durationMs": 268.4469,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-020-definitive-creation-rejection.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-report-api.integration.test.ts",
+      "title": "PAYMENTS-021 restricts the paid-session report to operators and exposes both views without double counting",
+      "fullName": "PAYMENTS-021 restricts the paid-session report to operators and exposes both views without double counting",
+      "status": "passed",
+      "durationMs": 540.3499999999999,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-021-restricts-operator-report-and-counts-both-views.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-report.integration.test.ts",
+      "title": "PAYMENTS-019 counts recorded payments once in both Warsaw week views and computes the valid timing median",
+      "fullName": "PAYMENTS-019 counts recorded payments once in both Warsaw week views and computes the valid timing median",
+      "status": "passed",
+      "durationMs": 192.0911000000001,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-019-dual-week-reporting.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-signature.integration.test.ts",
+      "title": "PAYMENTS-012 rejects a forged webhook signature without recording or confirming payment",
+      "fullName": "PAYMENTS-012 rejects a forged webhook signature without recording or confirming payment",
+      "status": "passed",
+      "durationMs": 1442.2722999999999,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-012-rejects-forged-signature.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-stale-refund.integration.test.ts",
+      "title": "PAYMENTS-010 refuses a stale paid callback after an authoritative full refund and audits operator release",
+      "fullName": "PAYMENTS-010 refuses a stale paid callback after an authoritative full refund and audits operator release",
+      "status": "passed",
+      "durationMs": 325.4803999999999,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-010-rejects-stale-paid-event-after-refund.md"
+      ]
+    },
+    {
+      "file": "tests/integration/payments-unknown-session.integration.test.ts",
+      "title": "PAYMENTS-018 safely quarantines verified unknown provider metadata for operator review",
+      "fullName": "PAYMENTS-018 safely quarantines verified unknown provider metadata for operator review",
+      "status": "passed",
+      "durationMs": 464.88239999999996,
+      "scenarioDocuments": [
+        ".ai/qa/PAYMENTS/PAYMENTS-018-quarantines-unknown-provider-metadata.md"
+      ]
+    },
+    {
+      "file": "tests/integration/prices.integration.test.ts",
+      "title": "TC-PRICES-001 enforces exact bounds, atomic two-price updates and live ownership",
+      "fullName": "TC-PRICES-001 enforces exact bounds, atomic two-price updates and live ownership",
+      "status": "passed",
+      "durationMs": 69354.41709999999,
+      "scenarioDocuments": [
+        ".ai/qa/PRICES/PRICES-003-enforce-price-bounds-and-owner-scope.md"
+      ]
+    },
+    {
+      "file": "tests/integration/prices.integration.test.ts",
+      "title": "TC-PRICES-002 edits raw decimals, shows readiness and exposes prices signed out",
+      "fullName": "TC-PRICES-002 edits raw decimals, shows readiness and exposes prices signed out",
+      "status": "passed",
+      "durationMs": 42335.60279999999,
+      "scenarioDocuments": [
+        ".ai/qa/PRICES/PRICES-004-edit-decimals-and-display-readiness.md"
+      ]
+    },
+    {
+      "file": "tests/integration/rate-limit.integration.test.ts",
+      "title": "counts every attempt and refuses past the limit, with the seconds left",
+      "fullName": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting counts every attempt and refuses past the limit, with the seconds left",
+      "status": "passed",
+      "durationMs": 20.328800000001138,
+      "scenarioDocuments": [
+        ".ai/qa/RATE-LIMIT/RATE-LIMIT-002-count-refused-attempt-and-retry-delay.md"
+      ]
+    },
+    {
+      "file": "tests/integration/rate-limit.integration.test.ts",
+      "title": "starts a new window once the old one has passed",
+      "fullName": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting starts a new window once the old one has passed",
+      "status": "passed",
+      "durationMs": 14.854200000001583,
+      "scenarioDocuments": [
+        ".ai/qa/RATE-LIMIT/RATE-LIMIT-003-reset-expired-rate-window.md"
+      ]
+    },
+    {
+      "file": "tests/integration/rate-limit.integration.test.ts",
+      "title": "keeps per-IP and per-email counters independent",
+      "fullName": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting keeps per-IP and per-email counters independent",
+      "status": "passed",
+      "durationMs": 25.813899999999194,
+      "scenarioDocuments": [
+        ".ai/qa/RATE-LIMIT/RATE-LIMIT-004-separate-ip-and-email-counters.md"
+      ]
+    },
+    {
+      "file": "tests/integration/rate-limit.integration.test.ts",
+      "title": "is atomic: concurrent attempts on one key each get a distinct count",
+      "fullName": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting is atomic: concurrent attempts on one key each get a distinct count",
+      "status": "passed",
+      "durationMs": 115.28290000000015,
+      "scenarioDocuments": [
+        ".ai/qa/RATE-LIMIT/RATE-LIMIT-005-serialize-concurrent-rate-limit-attempts.md"
+      ]
+    },
+    {
+      "file": "tests/integration/rate-limit.integration.test.ts",
+      "title": "purges every other key whose window is older than the longest policy",
+      "fullName": "TC-RATE-LIMIT-001 PostgreSQL-backed rate limiting purges every other key whose window is older than the longest policy",
+      "status": "passed",
+      "durationMs": 7.393099999999322,
+      "scenarioDocuments": [
+        ".ai/qa/RATE-LIMIT/RATE-LIMIT-006-purge-counters-older-than-longest-window.md"
+      ]
+    },
+    {
+      "file": "tests/integration/roles.integration.test.ts",
+      "title": "sends a mentee who opens the mentor or admin screen to /home (edge case 19)",
+      "fullName": "TC-ROLES-001 a wrong-role screen sends the user to their own home sends a mentee who opens the mentor or admin screen to /home (edge case 19)",
+      "status": "passed",
+      "durationMs": 4042.5285000000003,
+      "scenarioDocuments": [
+        ".ai/qa/ROLES/ROLES-004-redirect-mentee-from-privileged-pages.md"
+      ]
+    },
+    {
+      "file": "tests/integration/roles.integration.test.ts",
+      "title": "refuses /admin to a mentor, sending them to /mentor without any admin content (edge case 20)",
+      "fullName": "TC-ROLES-001 a wrong-role screen sends the user to their own home refuses /admin to a mentor, sending them to /mentor without any admin content (edge case 20)",
+      "status": "passed",
+      "durationMs": 3678.8360999999995,
+      "scenarioDocuments": [
+        ".ai/qa/ROLES/ROLES-005-redirect-mentor-from-admin-pages.md"
+      ]
+    },
+    {
+      "file": "tests/integration/roles.integration.test.ts",
+      "title": "'mock-mentee' sees exactly its permitted links and no \"become a mentor\" path",
+      "fullName": "TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07) 'mock-mentee' sees exactly its permitted links and no \"become a mentor\" path",
+      "status": "passed",
+      "durationMs": 2566.7199999999993,
+      "scenarioDocuments": [
+        ".ai/qa/ROLES/ROLES-006-show-only-mentee-navigation.md"
+      ],
+      "scenarioMappingNote": "Matched documented parameter value after Vitest quote rendering; exact runtime title retained."
+    },
+    {
+      "file": "tests/integration/roles.integration.test.ts",
+      "title": "'mock-mentor' sees exactly its permitted links and no \"become a mentor\" path",
+      "fullName": "TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07) 'mock-mentor' sees exactly its permitted links and no \"become a mentor\" path",
+      "status": "passed",
+      "durationMs": 3292.1352000000006,
+      "scenarioDocuments": [
+        ".ai/qa/ROLES/ROLES-007-show-only-mentor-navigation.md"
+      ],
+      "scenarioMappingNote": "Matched documented parameter value after Vitest quote rendering; exact runtime title retained."
+    },
+    {
+      "file": "tests/integration/roles.integration.test.ts",
+      "title": "'mock-operator' sees exactly its permitted links and no \"become a mentor\" path",
+      "fullName": "TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07) 'mock-operator' sees exactly its permitted links and no \"become a mentor\" path",
+      "status": "passed",
+      "durationMs": 2616.548500000001,
+      "scenarioDocuments": [
+        ".ai/qa/ROLES/ROLES-008-show-union-of-operator-and-mentor-navigation.md"
+      ],
+      "scenarioMappingNote": "Matched documented parameter value after Vitest quote rendering; exact runtime title retained."
+    },
+    {
+      "file": "tests/integration/roles.integration.test.ts",
+      "title": "lets the combined mentor/operator open both workspaces from one navigation",
+      "fullName": "TC-ROLES-002 navigation follows the union of roles, with no way to gain one (R07) lets the combined mentor/operator open both workspaces from one navigation",
+      "status": "passed",
+      "durationMs": 3570.209200000001,
+      "scenarioDocuments": [
+        ".ai/qa/ROLES/ROLES-009-navigate-combined-role-workspaces.md"
+      ]
+    },
+    {
+      "file": "tests/integration/roles.integration.test.ts",
+      "title": "shows the operator the users list and answers a mentee 403 from /api/users",
+      "fullName": "TC-ROLES-003 the user list is operator-only, in the page and the API shows the operator the users list and answers a mentee 403 from /api/users",
+      "status": "passed",
+      "durationMs": 4926.6479,
+      "scenarioDocuments": [
+        ".ai/qa/ROLES/ROLES-010-restrict-user-list-to-operator.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes-migration.integration.test.ts",
+      "title": "NOTES-007 migrates session notes up down up with restrictive lifecycle constraints and preserved existing notifications",
+      "fullName": "NOTES-007 migrates session notes up down up with restrictive lifecycle constraints and preserved existing notifications",
+      "status": "passed",
+      "durationMs": 14116.8295,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-007-reverses-note-migration-safely.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes-pool.integration.test.ts",
+      "title": "NOTES-009 saves and replays a sent note with one shared service and limiter pool connection",
+      "fullName": "NOTES-009 saves and replays a sent note with one shared service and limiter pool connection",
+      "status": "passed",
+      "durationMs": 511.20910000000003,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-009-saves-with-one-shared-pool-connection.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes-pool.integration.test.ts",
+      "title": "NOTES-010 completes six competing create saves after all five app connections wait on an external booking lock",
+      "fullName": "NOTES-010 completes six competing create saves after all five app connections wait on an external booking lock",
+      "status": "passed",
+      "durationMs": 443.7581,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-010-completes-six-saves-after-five-lock-waiters.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes.integration.test.ts",
+      "title": "NOTES-001 saves a private draft and submits exactly its saved revision, readable by both parties with one notification",
+      "fullName": "NOTES-001 saves a private draft and submits exactly its saved revision, readable by both parties with one notification",
+      "status": "passed",
+      "durationMs": 986.3651,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-001-saves-and-sends-exact-revision.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes.integration.test.ts",
+      "title": "NOTES-002 denies outsiders and mentee writes and rejects invalid or premature drafts without disclosure",
+      "fullName": "NOTES-002 denies outsiders and mentee writes and rejects invalid or premature drafts without disclosure",
+      "status": "passed",
+      "durationMs": 739.6091999999999,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-002-denies-unauthorized-and-invalid-drafts.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes.integration.test.ts",
+      "title": "NOTES-003 serializes concurrent first saves and save versus send without lost edits or mutable submissions",
+      "fullName": "NOTES-003 serializes concurrent first saves and save versus send without lost edits or mutable submissions",
+      "status": "passed",
+      "durationMs": 541.2309000000005,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-003-serializes-competing-saves-and-send.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes.integration.test.ts",
+      "title": "NOTES-004 recovers a committed send after subscriber failure through the reloaded awaiting Notify mentee action",
+      "fullName": "NOTES-004 recovers a committed send after subscriber failure through the reloaded awaiting Notify mentee action",
+      "status": "passed",
+      "durationMs": 3447.2068,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-004-repairs-failed-notification-after-reload.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes.integration.test.ts",
+      "title": "NOTES-005 bounds account reads and writes after party authorization",
+      "fullName": "NOTES-005 bounds account reads and writes after party authorization",
+      "status": "passed",
+      "durationMs": 4063.549900000001,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-005-bounds-party-account-requests.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes.integration.test.ts",
+      "title": "NOTES-006 mentor saves and sends through the UI and the ended mentee refreshes an immutable read-only note at desktop and 320px",
+      "fullName": "NOTES-006 mentor saves and sends through the UI and the ended mentee refreshes an immutable read-only note at desktop and 320px",
+      "status": "passed",
+      "durationMs": 12160.354,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-006-shows-real-private-note-flow-at-320.md"
+      ]
+    },
+    {
+      "file": "tests/integration/session-notes.integration.test.ts",
+      "title": "NOTES-008 keeps the session readable and retries a temporarily unavailable note without leaking driver text",
+      "fullName": "NOTES-008 keeps the session readable and retries a temporarily unavailable note without leaking driver text",
+      "status": "passed",
+      "durationMs": 6647.993999999999,
+      "scenarioDocuments": [
+        ".ai/qa/NOTES/NOTES-008-retries-storage-failures-privately.md"
+      ]
+    },
+    {
+      "file": "tests/integration/sessions-list.integration.test.ts",
+      "title": "SESSIONS-001 lists each mentor only the sessions booked with them, and each mentee only their own",
+      "fullName": "SESSIONS-001 lists each mentor only the sessions booked with them, and each mentee only their own",
+      "status": "passed",
+      "durationMs": 570.3618000000001,
+      "scenarioDocuments": [
+        ".ai/qa/NOTIFICATIONS/SESSIONS-001-scopes-session-lists.md"
+      ]
+    },
+    {
+      "file": "tests/integration/setup.integration.test.ts",
+      "title": "leaves exactly one sample mentor after the seeder ran twice",
+      "fullName": "TC-SETUP-001 setup is idempotent leaves exactly one sample mentor after the seeder ran twice",
+      "status": "passed",
+      "durationMs": 2024.8076000000003,
+      "scenarioDocuments": [
+        ".ai/qa/SETUP/SETUP-002-keep-one-seeded-mentor-through-api.md"
+      ]
+    },
+    {
+      "file": "tests/integration/setup.integration.test.ts",
+      "title": "still renders a single seeded row on the admin users page",
+      "fullName": "TC-SETUP-001 setup is idempotent still renders a single seeded row on the admin users page",
+      "status": "passed",
+      "durationMs": 3056.0183,
+      "scenarioDocuments": [
+        ".ai/qa/SETUP/SETUP-003-keep-one-seeded-mentor-in-table.md"
+      ]
+    },
+    {
+      "file": "tests/integration/text-session.integration.test.ts",
+      "title": "TEXTSESSION-001 lets the two parties exchange text in the open window and refuses everyone else",
+      "fullName": "TEXTSESSION-001 lets the two parties exchange text in the open window and refuses everyone else",
+      "status": "passed",
+      "durationMs": 710.6945000000001,
+      "scenarioDocuments": [
+        ".ai/qa/TEXT-SESSION/TEXTSESSION-001-parties-exchange-text-strangers-refused.md"
+      ]
+    },
+    {
+      "file": "tests/integration/text-session.integration.test.ts",
+      "title": "TEXTSESSION-002 keeps posting inside the booked window and an unconfirmed booking closed",
+      "fullName": "TEXTSESSION-002 keeps posting inside the booked window and an unconfirmed booking closed",
+      "status": "passed",
+      "durationMs": 375.7193000000002,
+      "scenarioDocuments": [
+        ".ai/qa/TEXT-SESSION/TEXTSESSION-002-window-and-unconfirmed-booking.md"
+      ]
+    },
+    {
+      "file": "tests/integration/written-answer.integration.test.ts",
+      "title": "WRITTENANSWER-001 the mentor posts the answer, the mentee keeps it and is told once; everyone else is refused",
+      "fullName": "WRITTENANSWER-001 the mentor posts the answer, the mentee keeps it and is told once; everyone else is refused",
+      "status": "passed",
+      "durationMs": 712.0997,
+      "scenarioDocuments": [
+        ".ai/qa/WRITTEN-ANSWER/WRITTENANSWER-001-mentor-posts-mentee-keeps-and-is-told.md"
+      ]
+    },
+    {
+      "file": "tests/integration/written-answer.integration.test.ts",
+      "title": "WRITTENANSWER-002 the mentor of a different session cannot post an answer to this one",
+      "fullName": "WRITTENANSWER-002 the mentor of a different session cannot post an answer to this one",
+      "status": "passed",
+      "durationMs": 400.0182,
+      "scenarioDocuments": [
+        ".ai/qa/WRITTEN-ANSWER/WRITTENANSWER-002-other-sessions-mentor-refused.md"
+      ]
+    }
+  ]
+}

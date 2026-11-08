@@ -36,3 +36,5 @@ Native withPaymentFixture and booking fixture remove owned notes before restrict
 - **Latest execution:** Passed in fresh FULL `npm run test:integration -- --reporter=default --reporter=json --outputFile=test-results/integration/final-results.json`, 2026-11-08: all 50 files / 102 tests passed, zero failed/skipped; command exit 0, 940.92s.
 - **Observed result and evidence:** This exact executable case passed. [Full output](recovery-integration.log), [sanitized per-case result](recovery-integration-summary.json), [state matrix and screenshots](report.md). Prior failures remain historical; this is fresh corrected-source evidence.
 - **Human review:** Pending. Automated execution and agent review are not human QA.
+
+Latest run-only verification (2026-11-08): passed in the full 102-test local suite at b70a309. GitHub fails this case before behavioral assertions because its worker logger rejects mock payments without the integration signal; the same configuration error was independently reproduced locally. See [double-check report](pr79-double-check/report.md). Human scenario review remains pending.
