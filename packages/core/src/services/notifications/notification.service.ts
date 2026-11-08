@@ -1,4 +1,4 @@
-import { Booking, Notification, UniqueConstraintViolationException, User, type EntityManager, type IBooking, type INotification } from '@devmentor/db';
+import { Booking, SessionNote, Notification, UniqueConstraintViolationException, User, type EntityManager, type IBooking, type INotification } from '@devmentor/db';
 import type { AppEnv } from '../../config/env';
 import type { Session } from '../../http/auth';
 import { parseWith } from '../../http/body';
@@ -10,7 +10,7 @@ import { answerPostedMail } from './answer-posted-mail';
 import { bookingConfirmedMail, type Audience } from './booking-confirmed-mail';
 import type { Mailer } from './mailer.port';
 
-export type NotificationKind = 'booking_confirmed' | 'answer_posted';
+export type NotificationKind = 'booking_confirmed' | 'answer_posted' | 'note_awaiting_approval';
 const PAGE = 50;
 
 export interface NotificationServiceDeps {
@@ -115,6 +115,16 @@ export class NotificationService {
       await this.deps.em.fork().nativeUpdate(Notification, { id: row.id, emailSentAt: claimedAt }, { emailSentAt: null });
       this.deps.logger.warn({ err: error, notificationId: row.id }, 'notifications.email_failed');
     }
+  }
+
+  /** Validates persisted submission identity; in-product only, with no note text in the event or row. */
+  async onNoteSent({ bookingId, noteId, version }: { bookingId: string; noteId: string; version: number }): Promise<void> {
+    const note = await this.deps.em.fork().findOne(SessionNote, { id: noteId, booking: bookingId, version, status: 'awaiting_approval' });
+    if (!note) return;
+    const booking = await this.deps.em.fork().findOne(Booking, { id: bookingId, status: 'confirmed' }, { populate: ['mentee'] });
+    if (!booking) return;
+    // record finds an existing notification without updating it, preserving readAt on replay.
+    await this.record(booking.mentee.id, bookingId, 'note_awaiting_approval');
   }
 
   /** The existing row, a new one, or null when a concurrent consumer inserted it first. */

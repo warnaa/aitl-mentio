@@ -23,7 +23,7 @@ export const Notification = defineSingletonEntity('Notification', () =>
       ...baseProperties,
       user: () => p.manyToOne(User).deleteRule('no action'),
       booking: () => p.manyToOne(Booking).deleteRule('no action'),
-      kind: p.string().length(32).check("kind in ('booking_confirmed', 'answer_posted')"),
+      kind: p.string().length(32).check("kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval')"),
       readAt: p.datetime().nullable(),
       emailSentAt: p.datetime().nullable(),
     },

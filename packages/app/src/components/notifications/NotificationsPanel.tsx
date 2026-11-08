@@ -8,7 +8,7 @@ import { LocalTime } from '@devmentor/ui/time';
 
 export interface NotificationItem {
   id: string;
-  kind: 'booking_confirmed' | 'answer_posted';
+  kind: 'booking_confirmed' | 'answer_posted' | 'note_awaiting_approval';
   audience: 'mentee' | 'mentor';
   counterpartName: string;
   startsAt: string;
@@ -61,9 +61,12 @@ export function NotificationsPanel() {
       </div>
       {error && <p role="alert">{error}</p>}
       {items.length === 0
-        ? <EmptyState title="Nothing new" description="We tell you here, and by email, when a session is confirmed or its written answer arrives." />
+        ? <EmptyState title="Nothing new" description="We tell you here, and by email, when a session is confirmed or its written answer arrives. Private note notifications appear here only." />
         : <ul className="grid min-w-0 gap-3">{items.map(item => <li key={item.id}><Card className="dm-product-panel" data-unread={item.readAt === null ? 'true' : undefined}>
-          {item.kind === 'answer_posted' ? <>
+          {item.kind === 'note_awaiting_approval' ? <>
+            <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.counterpartName} sent a private session note for your approval.</p>
+            <Link href={item.sessionPath}>Read the private session note</Link>
+          </> : item.kind === 'answer_posted' ? <>
             <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.counterpartName} posted the written answer for your session on <LocalTime value={item.startsAt} />.</p>
             <Link href={item.sessionPath}>Read the written answer</Link>
           </> : <>

@@ -29,6 +29,7 @@ import { MentorProfileService } from '../services/mentors/mentor-profile.service
 import { SlotService } from '../services/availability/slot.service';
 import { BookingService } from '../services/bookings/booking.service';
 import { NotificationService } from '../services/notifications/notification.service';
+import { SessionNoteService } from '../services/notes/session-note.service';
 import { TextSessionService } from '../services/sessions/text-session.service';
 import { PaymentService } from '../services/payments/payment.service';
 import { PaymentReportService } from '../services/payments/payment-report.service';
@@ -150,6 +151,7 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     bookingService: asClass(BookingService).scoped(),
     notificationService: asClass(NotificationService).scoped(),
     textSessionService: asClass(TextSessionService).scoped(),
+    sessionNoteService: asClass(SessionNoteService).scoped(),
     paymentGateway: asFunction(({ env, clock }: Cradle) =>
       env.PAYMENT_GATEWAY_ADAPTER === 'mock' && env.INTEGRATION_TEST_RUN
         ? new MockPaymentGateway({ clock })
@@ -194,6 +196,15 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     const scope = container.createScope<Cradle>();
     try {
       await scope.cradle.notificationService.onAnswerPosted(bookingId);
+    } finally {
+      await scope.dispose();
+    }
+  });
+
+  container.cradle.eventBus.on('notes.note.sent', async payload => {
+    const scope = container.createScope<Cradle>();
+    try {
+      await scope.cradle.notificationService.onNoteSent(payload);
     } finally {
       await scope.dispose();
     }
