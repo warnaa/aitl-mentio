@@ -21,6 +21,17 @@ The mentor interviewed on 2026-08-22 keeps a private notes file which becomes st
 
 No assumption authorizes publication, co-editing, operator access to note content or changing an active product rule. Defaults must be posted for override on the spec PR and subject issue before implementation is published.
 
+### Slice B decisions (#48)
+
+| Question | Choice | Reason |
+| --- | --- | --- |
+| What does a decision target? | `POST /api/notes/[bookingId]/approve` takes `{ version }`; `/decline` takes `{ version, comment }`. Only the latest `awaiting_approval` version can be decided. An identical replay succeeds and re-emits; anything else is 409. | The mentee decides the text they read, and a lost event stays repairable. |
+| How does a redraft start? | `PUT` gains optional `expectedVersion`. On a declined note it must equal the declined version and `expectedRevision` its revision; the result is `version + 1`, revision 1. | A stale tab cannot start or overwrite a redraft. |
+| Answer freeze | Once a booking has an approved note, the written answer cannot be replaced (409). Answer saves take the same booking lock as decisions. | The approved note is read beside that answer; D05 keeps both as the session's record. |
+| Notification identity | `notifications.note_version`: 0 for non-note kinds, the note version for note kinds. Unique on user, kind, booking and note version. | Each later version gets its own notification; booking and answer uniqueness is unchanged. |
+| Decision notifications | The mentor gets one in-product `note_approved` or `note_declined` per version, with no text. No email. | Same privacy limit as slice A. |
+| Operator scoping exception | The operator reads an aggregate: session start, party names and the count of declined versions, on `/admin/sessions`. Never a body or a comment, and note routes stay 404 for operators. | D20's co-editing signal needs the count only. |
+
 ## Proposed Solution
 
 Use one versioned SessionNote resource per confirmed booking. In slice A a mentor saves version 1, can revise that unsent draft, and explicitly sends the saved revision. The mentee reads the same body, with a distinct awaiting state. Slice B adds decisions and new drafts after decline, preserving the declined record.
