@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "passed": 2,
+  "failed": 0,
+  "filteredOut": 100,
+  "executed": [
+    {
+      "file": "D:/repos/aitl-mentio/.ai/cezar/worktrees/091229c4-432e-442b-a02f-a2299112e3fb/tests/integration/session-notes-pool.integration.test.ts",
+      "name": "NOTES-009 saves and replays a sent note with one shared service and limiter pool connection",
+      "status": "passed"
+    },
+    {
+      "file": "D:/repos/aitl-mentio/.ai/cezar/worktrees/091229c4-432e-442b-a02f-a2299112e3fb/tests/integration/session-notes.integration.test.ts",
+      "name": "NOTES-004 recovers a committed send after subscriber failure through the reloaded awaiting Notify mentee action",
+      "status": "passed"
+    }
+  ]
+}

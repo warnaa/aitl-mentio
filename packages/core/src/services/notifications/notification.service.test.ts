@@ -4,7 +4,7 @@ import type { Session } from '../../http/auth';
 import { NotificationService } from './notification.service';
 
 const { UniqueError } = vi.hoisted(() => ({ UniqueError: class extends Error {} }));
-vi.mock('@devmentor/db', () => ({ Booking: 'Booking', Notification: 'Notification', User: 'User', UniqueConstraintViolationException: UniqueError }));
+vi.mock('@devmentor/db', () => ({ Booking: 'Booking', SessionNote: 'SessionNote', Notification: 'Notification', User: 'User', UniqueConstraintViolationException: UniqueError }));
 
 type Row = Record<string, unknown> & { id: string };
 const now = new Date('2026-11-06T12:00:00Z');
@@ -13,6 +13,7 @@ const menteeUser = { id: 'mentee', email: 'mentee@example.com', displayName: 'Sa
 const mentorUser = { id: 'mentor', email: 'mentor@example.com', displayName: 'Alex Mentor' };
 let session: Session | null;
 let booking: Row | null;
+let note: Row | null;
 let notifications: Row[];
 let insertError: Error | null;
 const send = vi.fn();
@@ -22,7 +23,7 @@ const matches = (row: Row, where: Record<string, unknown>) =>
   Object.entries(where).every(([key, value]) => typeof value === 'object' && value && '$in' in value ? (value.$in as unknown[]).includes(row[key]) : row[key] === value);
 const em = {
   fork: () => em,
-  findOne: vi.fn(async (entity: string, where: Record<string, unknown>) => entity === 'Booking' ? booking : notifications.find(row => matches(row, where)) ?? null),
+  findOne: vi.fn(async (entity: string, where: Record<string, unknown>) => entity === 'Booking' ? booking : entity === 'SessionNote' ? (note && matches(note, where) ? note : null) : notifications.find(row => matches(row, where)) ?? null),
   find: vi.fn(async (_entity: string, where: Record<string, unknown>) => notifications.filter(row => matches(row, where))),
   count: vi.fn(async (_entity: string, where: Record<string, unknown>) => notifications.filter(row => matches(row, where)).length),
   create: vi.fn((_entity: string, values: Record<string, unknown>): Row => ({ id: `n${notifications.length + 1}`, ...values })),
@@ -44,6 +45,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   session = { userId: 'mentee', roles: ['mentee'] };
   booking = confirmed();
+  note = null;
   notifications = [];
   insertError = null;
   send.mockResolvedValue(undefined);
@@ -216,4 +218,30 @@ describe('onAnswerPosted', () => {
     notifications[0]!.booking = booking!;
     expect((await service().listMine()).items[0]).toMatchObject({ kind: 'answer_posted', audience: 'mentee', counterpartName: 'Alex Mentor', sessionPath: `/sessions/${bookingId}` });
   });
+});
+
+
+it('records only a persisted sent note for the mentee, with replay preserving readAt and no email', async () => {
+  const payload = { bookingId, noteId: 'note1', version: 1 };
+  await service().onNoteSent(payload);
+  note = { id: 'note1', booking: bookingId, version: 1, status: 'draft' };
+  await service().onNoteSent(payload);
+  expect(notifications).toEqual([]);
+  note.status = 'awaiting_approval';
+  const existingBooking = booking;
+  booking = null;
+  await service().onNoteSent(payload);
+  expect(notifications).toEqual([]);
+  booking = existingBooking;
+  await service().onNoteSent({ ...payload, version: 2 });
+  expect(notifications).toEqual([]);
+  await service().onNoteSent(payload);
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0]).toMatchObject({ user: 'mentee', booking: bookingId, kind: 'note_awaiting_approval', emailSentAt: null });
+  notifications[0]!.readAt = now;
+  await service().onNoteSent(payload);
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0]!.readAt).toEqual(now);
+  expect(send).not.toHaveBeenCalled();
+  expect(nativeUpdate).not.toHaveBeenCalled();
 });

@@ -9,6 +9,12 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-08 — User correction: make the straightforward workflow correction in the current PR when asked, rather than handing the owner manual GitHub setup instructions for a change the agent can implement and validate.
+
+- 2026-11-08 — Integration child-process environment does not configure the Vitest worker. A CI job selecting mock payments must also set INTEGRATION_TEST_RUN=1 for in-worker createLogger/getEnv calls; keep the flag integration-job-scoped and preserve the production mock-adapter guard.
+
+- 2026-11-08 ? MikroORM forks default to useContext:false, so a separately scoped RateLimiter does not borrow another fork's transaction connection. Consuming its limit inside a booking-locked transaction starves max-one or saturated pools. Preauthorize, consume outside the transaction, then repeat current authorization under a fresh ID-only booking lock; retain real max-one and saturated-pool regressions.
+
 - 2026-11-07 — **An event emitted only on the "first" write loses its side effect for good when that one handler fails.** The written answer first emitted `sessions.answer.posted` only when the stored answer was null, so a failed mentee email could never be retried. Emit on every write and make the consumer idempotent instead: the unique notification row absorbs repeats, and the email is claimed atomically (`nativeUpdate(..., { emailSentAt: null }, { emailSentAt: now })`, only the caller that changed one row sends) and released on failure. Also: `nativeUpdate` bypasses the identity map, so build the response from the input, not the loaded entity.
 
 - 2026-11-07 — **A server page that reads through a session-scoped service must use `withPageScope` (session-cookie scope), not `withScope`.** The plain scope has no cookie, so `session` resolves to `null` and the service answers 401 even for a signed-in user; `lib/session.ts` now has `withPageScope(returnTo, fn)` and `requirePageSignedIn(returnTo)` (any role, for pages whose access is decided per record, like `/sessions/[bookingId]`).

@@ -1,0 +1,14 @@
+Command: npm run test:integration -- --testNamePattern=NOTES-00[78]
+Exit: 0
+
+> devmentor@0.1.0 test:integration
+> vitest run --config vitest.integration.config.mts --testNamePattern=NOTES-00[78]
+
+
+ RUN  v4.1.11 [repo]
+
+
+ Test Files  2 passed | 47 skipped (49)
+      Tests  2 passed | 98 skipped (100)
+   Start at  18:56:41
+   Duration  97.08s (transform 1.21s, setup 0ms, import 36.72s, tests 19.76s, environment 5ms)

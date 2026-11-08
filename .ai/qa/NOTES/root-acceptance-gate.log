@@ -1,0 +1,23 @@
+Parent acceptance after clean implementation-only replay and no-ff integration.
+npm run typecheck: exit=0, seconds=14.03
+
+npm run lint: exit=0, seconds=15.26
+  172:37  warning  '_message' is defined but never used  @typescript-eslint/no-unused-vars
+  35:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+✖ 2 problems (0 errors, 2 warnings)
+npm run test: exit=0, seconds=25.75
+ Test Files  210 passed (210)
+      Tests  1786 passed (1786)
+   Duration  21.47s (transform 16.36s, setup 0ms, import 223.90s, tests 47.26s, environment 106.46s)
+npm run build: exit=0, seconds=22.61
+
+npm run test:unit:coverage: exit=0, seconds=36.17
+ Test Files  210 passed (210)
+      Tests  1786 passed (1786)
+   Duration  31.58s (transform 15.24s, setup 0ms, import 233.79s, tests 53.63s, environment 103.81s)
+ % Coverage report from v8
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+Statements   : 100% ( 3835/3835 )
+Branches     : 100% ( 2332/2332 )
+Functions    : 100% ( 1105/1105 )
+Lines        : 100% ( 3432/3432 )

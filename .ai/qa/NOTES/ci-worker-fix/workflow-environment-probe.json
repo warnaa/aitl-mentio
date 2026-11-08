@@ -1,0 +1,24 @@
+{
+  "before": {
+    "exit": 1,
+    "observed": {
+      "ok": false,
+      "issues": [
+        {
+          "path": [
+            "PAYMENT_GATEWAY_ADAPTER"
+          ],
+          "message": "Mock payments are refused unless INTEGRATION_TEST_RUN=1"
+        }
+      ]
+    }
+  },
+  "after": {
+    "exit": 0,
+    "observed": {
+      "ok": true
+    }
+  },
+  "flagScopedToIntegrationJob": true,
+  "workflowBlob": "eb2a6431b39e9dfad52a7eabc98c848daba64f37"
+}

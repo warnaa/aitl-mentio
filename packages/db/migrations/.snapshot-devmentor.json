@@ -1361,8 +1361,8 @@
       "checks": [
         {
           "name": "notifications_kind_check",
-          "expression": "kind in ('booking_confirmed', 'answer_posted')",
-          "definition": "check (kind in ('booking_confirmed', 'answer_posted'))",
+          "expression": "\"kind\" in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval')",
+          "definition": "check (\"kind\" in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval'))",
           "columnName": "kind"
         }
       ],
@@ -2282,6 +2282,263 @@
           ],
           "constraintName": "session_messages_booking_id_foreign",
           "localTableName": "public.session_messages",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.bookings"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "session_notes",
+      "schema": "public",
+      "columns": {
+        "body": {
+          "name": "body",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "booking_id": {
+          "name": "booking_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "decided_at": {
+          "name": "decided_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "decline_comment": {
+          "name": "decline_comment",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "revision": {
+          "name": "revision",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 32,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "version": {
+          "name": "version",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "booking_id",
+            "version"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "session_notes_booking_version_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "session_notes_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "session_notes_body_check",
+          "expression": "(char_length(btrim(body)) >= 1) AND (char_length(btrim(body)) <= 20000)",
+          "definition": "CHECK (((char_length(btrim(body)) >= 1) AND (char_length(btrim(body)) <= 20000)))",
+          "columnName": "body"
+        },
+        {
+          "name": "session_notes_revision_check",
+          "expression": "revision >= 1",
+          "definition": "CHECK ((revision >= 1))",
+          "columnName": "revision"
+        },
+        {
+          "name": "session_notes_state_check",
+          "expression": "((status = 'draft'::text) AND (sent_at IS NULL) AND (decided_at IS NULL) AND (decline_comment IS NULL)) OR ((status = 'awaiting_approval'::text) AND (sent_at IS NOT NULL) AND (decided_at IS NULL) AND (decline_comment IS NULL)) OR ((status = 'approved'::text) AND (sent_at IS NOT NULL) AND (decided_at IS NOT NULL) AND (decline_comment IS NULL)) OR ((status = 'declined'::text) AND (sent_at IS NOT NULL) AND (decided_at IS NOT NULL) AND (decline_comment IS NOT NULL) AND ((char_length(btrim(decline_comment)) >= 1) AND (char_length(btrim(decline_comment)) <= 2000)))",
+          "definition": "CHECK (((((status)::text = 'draft'::text) AND (sent_at IS NULL) AND (decided_at IS NULL) AND (decline_comment IS NULL)) OR (((status)::text = 'awaiting_approval'::text) AND (sent_at IS NOT NULL) AND (decided_at IS NULL) AND (decline_comment IS NULL)) OR (((status)::text = 'approved'::text) AND (sent_at IS NOT NULL) AND (decided_at IS NOT NULL) AND (decline_comment IS NULL)) OR (((status)::text = 'declined'::text) AND (sent_at IS NOT NULL) AND (decided_at IS NOT NULL) AND (decline_comment IS NOT NULL) AND ((char_length(btrim(decline_comment)) >= 1) AND (char_length(btrim(decline_comment)) <= 2000)))))",
+          "columnName": "decided_at"
+        },
+        {
+          "name": "session_notes_version_check",
+          "expression": "version >= 1",
+          "definition": "CHECK ((version >= 1))",
+          "columnName": "version"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "session_notes_booking_id_foreign": {
+          "columnNames": [
+            "booking_id"
+          ],
+          "constraintName": "session_notes_booking_id_foreign",
+          "localTableName": "public.session_notes",
           "referencedColumnNames": [
             "id"
           ],

@@ -78,3 +78,11 @@ it('keeps the notifications visible and explains a rejected or failed request', 
   expect(resource.reload).not.toHaveBeenCalled();
   expect(screen.getByText(/Your session with Alex Mentor/)).toBeTruthy();
 });
+
+it.each([null, '2026-11-07T15:00:00Z'])('links a private note without any body excerpt and preserves read status %s', readAt => {
+  resource.data = { unreadCount: readAt ? 0 : 1, items: [item({ kind: 'note_awaiting_approval', readAt })] };
+  render(<NotificationsPanel />);
+  expect(screen.getByText(/Alex Mentor sent a private session note for your approval/)).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Read the private session note' }).getAttribute('href')).toBe('/sessions/b1');
+  expect(screen.queryByText('New:') !== null).toBe(readAt === null);
+});

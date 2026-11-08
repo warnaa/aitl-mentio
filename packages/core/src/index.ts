@@ -83,3 +83,5 @@ export * from './domain/readiness';
 export * from './money/money';
 export * from './domain/vocabularies/session-lengths';
 export * from './http/owned-route';
+
+export { SessionNoteService, type NoteDto, type NoteView } from './services/notes/session-note.service';

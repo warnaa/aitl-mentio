@@ -2,17 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import type { SessionDto } from '@devmentor/core';
+import type { NoteView, SessionDto } from '@devmentor/core';
 import { messageCreateSchema } from '@devmentor/core/validators/sessions/message-create.schema';
 import { Label, SessionHeader, SessionIsTextNotice, SessionTranscript, ShareRuleNotice, Textarea, type SessionMessage } from '@devmentor/ui';
 import { apiCall, CrudForm } from '@devmentor/ui/backend';
 import { formatInstant, useViewerTimeZone } from '@devmentor/ui/time';
+import { SessionNotePanel } from './SessionNotePanel';
 import { WrittenAnswerPanel } from './WrittenAnswerPanel';
 
 /** How often an open tab asks for new messages. */
 export const POLL_MS = 5000;
 const HEADER_STATE = { not_started: 'upcoming', open: 'open', ended: 'ended' } as const;
 /** Answers that will not change by asking again: stop polling and say so. */
+const EMPTY_NOTE: NoteView = { current: null, history: [] };
 const PERMANENT = new Set(['unauthorized', 'not_found']);
 
 function firstName(name: string) {
@@ -25,7 +27,7 @@ function firstName(name: string) {
  * over, and posts through `CrudForm`. The two notices stay outside the polled region, so
  * neither disappears while loading or after an error.
  */
-export function SessionRoom({ initial }: { initial: SessionDto }) {
+export function SessionRoom({ initial, initialNote = EMPTY_NOTE }: { initial: SessionDto; initialNote?: NoteView | null }) {
   const [data, setData] = useState(initial);
   const [stale, setStale] = useState(false);
   const [gone, setGone] = useState(false);
@@ -136,6 +138,7 @@ export function SessionRoom({ initial }: { initial: SessionDto }) {
       {data.truncated && <p className="dm-product-caption">Earlier messages are not shown.</p>}
       <SessionTranscript messages={messages} composer={body} />
       <WrittenAnswerPanel session={data} zone={zone} onSaved={answer => { setData(current => ({ ...current, answer, answerOwed: false })); void refresh(); }} />
+      <SessionNotePanel bookingId={data.booking.id} viewerRole={data.viewerRole} counterpartName={data.counterpartName} hasAnswer={data.answer !== null} initial={initialNote} zone={zone} />
     </div>
   );
 }

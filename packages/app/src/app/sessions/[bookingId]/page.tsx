@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { NotFoundError } from '@devmentor/core';
+import { NotFoundError, type NoteView } from '@devmentor/core';
 import { SessionIsTextNotice, ShareRuleNotice } from '@devmentor/ui';
 import { ErrorMessage } from '@devmentor/ui/backend';
 import { requirePageSignedIn, withPageScope } from '../../../lib/session';
@@ -20,7 +20,18 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
   await requirePageSignedIn(path);
   let initial;
   try {
-    initial = await withPageScope(path, ({ textSessionService }) => textSessionService.getForParticipant(bookingId));
+    initial = await withPageScope(path, async ({ textSessionService, sessionNoteService }) => {
+      const session = await textSessionService.getForParticipant(bookingId);
+      let note: NoteView | null = null;
+      try {
+        note = await sessionNoteService.getForParticipant(bookingId);
+      } catch (error) {
+        // Keep the readable session and offer the note panel's Retry after a transient failure.
+        // A cancelled/foreign booking still follows the page's normal not-found path.
+        if (error instanceof NotFoundError) throw error;
+      }
+      return { session, note };
+    });
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
     // The notices belong to every state of the session screen, the error state included.
@@ -32,5 +43,5 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
       </div>
     );
   }
-  return <SessionRoom initial={initial} />;
+  return <SessionRoom initial={initial.session} initialNote={initial.note} />;
 }
