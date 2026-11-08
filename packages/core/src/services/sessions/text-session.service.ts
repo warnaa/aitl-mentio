@@ -90,7 +90,6 @@ export class TextSessionService {
     const rows = await this.deps.em.find(SessionMessage, { booking: booking.id }, { populate: ['author'], orderBy: { createdAt: 'desc', id: 'desc' }, limit: MESSAGE_PAGE + 1 });
     const { window, endsAt } = sessionWindow(booking, now);
     const answer = toAnswerDto(booking);
-    const answerFrozen = await this.deps.em.count(SessionNote, { booking: booking.id, status: 'approved' }) > 0;
     return {
       booking: { id: booking.id, startsAt: booking.startsAt.toISOString(), endsAt: endsAt.toISOString(), lengthMinutes: booking.lengthMinutes },
       window,
@@ -101,8 +100,6 @@ export class TextSessionService {
       messages: rows.slice(0, MESSAGE_PAGE).reverse().map(row => toMessageDto(row, booking, userId)),
       answer,
       answerOwed: window === 'ended' && answer === null,
-      /** An approved note closes the answer it was written beside. */
-      answerFrozen,
     };
   }
 

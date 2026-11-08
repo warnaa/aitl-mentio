@@ -240,12 +240,6 @@ describe('the written answer on the read', () => {
   });
 });
 
-it('tells the reader whether an approved note froze the answer', async () => {
-  expect(await service().getForParticipant(bookingId)).toMatchObject({ answerFrozen: false });
-  approvedNotes = 2;
-  expect(await service().getForParticipant(bookingId)).toMatchObject({ answerFrozen: true });
-});
-
 describe('postAnswer', () => {
   beforeEach(() => {
     session = { userId: 'mentor-id', roles: ['mentor'] };

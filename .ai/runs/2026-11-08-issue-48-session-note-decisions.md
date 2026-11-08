@@ -2,7 +2,7 @@
 
 Source doc: .ai/specs/2026-11-07-session-notes.md
 Issue: #48 (slice B; slice A #47 merged in ce53ea3)
-Status: in-progress
+Status: complete
 
 ## Goal
 
@@ -34,23 +34,27 @@ Phase 1 delivers B1, Phase 2 B2, Phase 3 B3. Phase 4 runs the gate and integrati
 
 ### Phase 1: Decisions and redraft
 
-- [ ] 1.1 Decision validators and optional expectedVersion
-- [ ] 1.2 Approve, decline, redraft and history in SessionNoteService
-- [ ] 1.3 Approve and decline routes
+- [x] 1.1 Decision validators and optional expectedVersion
+- [x] 1.2 Approve, decline, redraft and history in SessionNoteService
+- [x] 1.3 Approve and decline routes
 
 ### Phase 2: Notifications, freeze and operator report
 
-- [ ] 2.1 Version-aware notification migration and new kinds
-- [ ] 2.2 Decision events and notification consumers
-- [ ] 2.3 Answer freeze on approval
-- [ ] 2.4 Aggregate operator decline report
+- [x] 2.1 Version-aware notification migration and new kinds
+- [x] 2.2 Decision events and notification consumers
+- [x] 2.3 Answer freeze on approval
+- [x] 2.4 Aggregate operator decline report
 
 ### Phase 3: Screens
 
-- [ ] 3.1 Mentee decision, mentor redraft, history and approved states
-- [ ] 3.2 Frozen answer, notification copy, operator page and navigation
+- [x] 3.1 Mentee decision, mentor redraft, history and approved states
+- [x] 3.2 Frozen answer, notification copy, operator page and navigation
 
 ### Phase 4: Verification
 
-- [ ] 4.1 Integration scenarios and compatibility record
-- [ ] 4.2 Full gate, coverage and run outcome
+- [x] 4.1 Integration scenarios and compatibility record
+- [x] 4.2 Full gate, coverage and run outcome
+
+## Outcome
+
+All steps implemented on feat/issue-48-session-note-decisions, last implementation commit before this record b2377d6 plus the session-read fix. Verification and one unexplained intermittent NOTES-012 failure are in .ai/qa/NOTE-DECISIONS/report.md. Follow-up: human QA.

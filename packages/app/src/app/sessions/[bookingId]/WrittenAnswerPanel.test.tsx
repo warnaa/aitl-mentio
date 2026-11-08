@@ -7,11 +7,11 @@ const id = '11111111-1111-4111-8111-111111111111';
 const saved = { body: 'Use a union.\nNarrow on ok.', postedAt: '2026-11-12T14:30:00.000Z' };
 const base: WrittenAnswerPanelProps['session'] = {
   booking: { id, startsAt: '2026-11-12T14:00:00.000Z', endsAt: '2026-11-12T14:25:00.000Z', lengthMinutes: 25 },
-  window: 'ended', viewerRole: 'mentee', counterpartName: 'Alex Mentor', answer: null, answerOwed: true, answerFrozen: false,
+  window: 'ended', viewerRole: 'mentee', counterpartName: 'Alex Mentor', answer: null, answerOwed: true,
 };
 const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>();
 const onSaved = vi.fn();
-const view = (over: Partial<WrittenAnswerPanelProps['session']> = {}) => <WrittenAnswerPanel session={{ ...base, ...over }} zone="UTC" onSaved={onSaved} />;
+const view = (over: Partial<WrittenAnswerPanelProps['session']> = {}, answerFrozen?: boolean) => <WrittenAnswerPanel session={{ ...base, ...over }} answerFrozen={answerFrozen} zone="UTC" onSaved={onSaved} />;
 const asMentor = (over: Partial<WrittenAnswerPanelProps['session']> = {}) => view({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', ...over });
 const textarea = () => screen.getByLabelText(/Written answer/) as HTMLTextAreaElement;
 const submit = async (name: string) => { await act(async () => { fireEvent.click(screen.getByRole('button', { name })); }); };
@@ -116,7 +116,7 @@ it('keeps unsaved edits when a newer answer arrives and says that saving replace
 });
 
 it('replaces the mentor form with the final answer once a note is approved', () => {
-  render(view({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', answer: saved, answerOwed: false, answerFrozen: true }));
+  render(view({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', answer: saved, answerOwed: false }, true));
   expect(screen.getByText('Sam approved the private session note, so this written answer is final.')).toBeTruthy();
   expect(screen.queryByRole('textbox')).toBeNull();
   expect(screen.queryByRole('button', { name: /written answer/ })).toBeNull();
@@ -124,9 +124,9 @@ it('replaces the mentor form with the final answer once a note is approved', () 
 
 it('keeps unsaved text on screen when an approval lands under it', () => {
   const live = { viewerRole: 'mentor' as const, counterpartName: 'Sam Mentee', answer: saved, answerOwed: false };
-  const { rerender } = render(view({ ...live, answerFrozen: false }));
+  const { rerender } = render(view(live, false));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: 'unsaved replacement' } });
-  rerender(view({ ...live, answerFrozen: true }));
+  rerender(view(live, true));
   expect(screen.getByRole<HTMLTextAreaElement>('textbox').value).toBe('unsaved replacement');
   expect(screen.getByText(/so this written answer is final/)).toBeTruthy();
 });

@@ -9,7 +9,7 @@ const message = (n: number, own: boolean) => ({ id: `m${n}`, authorRole: own ? '
 const session = (over: Partial<SessionDto> = {}): SessionDto => ({
   booking: { id, startsAt: '2026-11-12T14:00:00.000Z', endsAt: '2026-11-12T14:25:00.000Z', lengthMinutes: 25 },
   window: 'open', serverNow: '2026-11-12T14:05:00.000Z', viewerRole: 'mentee', counterpartName: 'Alex Mentor', truncated: false,
-  messages: [message(1, true), message(2, false)], answer: null, answerOwed: false, answerFrozen: false, ...over,
+  messages: [message(1, true), message(2, false)], answer: null, answerOwed: false, ...over,
 });
 const ok = (data: unknown, status = 200) => new Response(JSON.stringify({ ok: true, data }), { status });
 const fail = (status: number, code: string, message: string) => new Response(JSON.stringify({ ok: false, error: { code, message } }), { status });
@@ -254,4 +254,10 @@ it.each([[401, 'unauthorized'], [404, 'not_found']])('stops polling and says so 
   expect(screen.queryByText('Reconnecting…')).toBeNull();
   await tick(POLL_MS * 3);
   expect(calls(`/api/sessions/${id}`)).toHaveLength(1);
+});
+
+it('shows the written answer as final when the loaded note is approved', () => {
+  const note = { id: 'n', version: 1, revision: 1, body: 'x', status: 'approved' as const, declineComment: null, sentAt: '2026-11-07T15:00:00Z', decidedAt: '2026-11-07T16:00:00Z', updatedAt: '2026-11-07T16:00:00Z', private: true as const };
+  render(<SessionRoom initial={session({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', window: 'ended', answer: { body: 'Final', postedAt: '2026-11-07T14:00:00Z' } })} initialNote={{ current: note, history: [] }} />);
+  expect(screen.getByText(/so this written answer is final/)).toBeTruthy();
 });
