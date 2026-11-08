@@ -62,7 +62,7 @@ Fresh max-one and saturated-pool assertions passed both focused and full runs. A
 
 ## Final local disposition
 
-A1-A6 implementation and automated acceptance are complete. Production behavior is reviewed at9aff0c6; review-driven test cleanup and EOF whitespace are reviewed atffffcd6. All subsequent source-test/script hygiene is BOM removal only, verified by normalized-content comparison. The parent has accepted the implementation and isolated the spec history on the final feature branch. Publication approval and human QA remain pending. No qa-approved/self-signoff or remote implementation operation occurred.
+A1-A6 implementation and automated acceptance are complete. Production behavior is reviewed at9aff0c6; review-driven test cleanup and EOF whitespace are reviewed atffffcd6. All subsequent source-test/script hygiene is BOM removal only, verified by normalized-content comparison. The parent has accepted the implementation and isolated the spec history on the final feature branch. The owner explicitly approved publication, and ready [implementation PR #79](https://github.com/warnaa/aitl-mentio/pull/79) is open. Human QA remains pending. No qa-approved/self-signoff or merge is granted.
 
 Final snapshot is restored byte-for-byte (normalized line endings) to reviewed b07cd72/da85393/a50a704. Cleanup inventory found zero non-agent processes referencing this checkout, and Docker contains only the pre-existing devmentor-postgres/eaca8b923987 (untouched). Native app/database/browser resources and both review tasks' owned processes are stopped. Runtime descriptors, raw app/mail/cookie logs and credentials remain ignored.
 
@@ -75,3 +75,9 @@ On 2026-11-08 the parent replayed only the child implementation commits onto a c
 The parent's own fresh ordered typecheck, lint, test, build and unit coverage all exited 0: 210 files and 1,786 tests, 100% per-file coverage across all four metrics. Two existing lint warnings remain. The parent verified the committed full integration JSON (50 files, 102 passed, zero failures/skips) and reran both real-pool regressions plus migration up/down/up: 2 files, 3 tests passed, exit 0, 54.01 seconds. See [gate summary](root-acceptance-gate.log) and [focused integration summary](root-acceptance-pool-integration.log). Snapshot churn from migration testing was restored to the accepted schema snapshot.
 
 Changed-record BOM, sensitive-file-path and credential-pattern checks passed. Desktop/320px evidence was inspected. Human QA/scenario review remains pending; this report grants no QA sign-off or merge permission.
+
+## Published evidence
+
+After explicit owner approval, the implementation was published as [PR #79](https://github.com/warnaa/aitl-mentio/pull/79), separately from design PR #78. The PR has review, feature, needs-qa, priority-medium and risk-high, with local review/validation summary and [inline synthetic screenshot evidence](https://github.com/warnaa/aitl-mentio/pull/79#issuecomment-6721994774). Public image rendering uses the tracker-prescribed dedicated evidence branch, `qa-evidence-pr79-session-notes`.
+
+GitHub self-approval is unavailable because the authenticated user authored the PR; local independent approval is documented without fabricating an approving GitHub review. Initial publication CI had passed lint/unit while build/integration continued; no final-head CI success or continuing monitor is claimed. Human QA/scenario review and repository approval remain external merge gates.
