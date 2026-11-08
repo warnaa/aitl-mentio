@@ -1,4 +1,4 @@
-import { Booking, SessionMessage, type EntityManager, type IBooking, type ISessionMessage } from '@devmentor/db';
+import { Booking, LockMode, SessionMessage, SessionNote, type EntityManager, type IBooking, type ISessionMessage } from '@devmentor/db';
 import type { EventBus } from '../../events/event-bus';
 import type { Session } from '../../http/auth';
 import { parseWith } from '../../http/body';
@@ -90,6 +90,7 @@ export class TextSessionService {
     const rows = await this.deps.em.find(SessionMessage, { booking: booking.id }, { populate: ['author'], orderBy: { createdAt: 'desc', id: 'desc' }, limit: MESSAGE_PAGE + 1 });
     const { window, endsAt } = sessionWindow(booking, now);
     const answer = toAnswerDto(booking);
+    const answerFrozen = await this.deps.em.count(SessionNote, { booking: booking.id, status: 'approved' }) > 0;
     return {
       booking: { id: booking.id, startsAt: booking.startsAt.toISOString(), endsAt: endsAt.toISOString(), lengthMinutes: booking.lengthMinutes },
       window,
@@ -100,6 +101,8 @@ export class TextSessionService {
       messages: rows.slice(0, MESSAGE_PAGE).reverse().map(row => toMessageDto(row, booking, userId)),
       answer,
       answerOwed: window === 'ended' && answer === null,
+      /** An approved note closes the answer it was written beside. */
+      answerFrozen,
     };
   }
 
@@ -122,7 +125,8 @@ export class TextSessionService {
    * Saves the booking's written answer, replacing an earlier one. Only the booking's mentor may,
    * and only once the session has started; there is no deadline after the end. The update is
    * one statement scoped to a still-confirmed booking, so a cancellation that lands after the
-   * party check stores nothing. Every save emits `sessions.answer.posted`; the notification side
+   * party check stores nothing. It holds the booking lock a note decision takes, so an approval
+   * and a replacement cannot cross: once a note is approved the answer is final. Every save emits `sessions.answer.posted`; the notification side
    * makes repeats harmless.
    */
   async postAnswer(bookingId: unknown, input: unknown): Promise<WrittenAnswerDto> {
@@ -132,8 +136,12 @@ export class TextSessionService {
     const { body } = parseWith(answerUpdateSchema, input);
     const now = this.deps.clock.now();
     if (sessionWindow(booking, now).window === 'not_started') throw new ConflictError('You can post the written answer when the session starts.');
-    const updated = await this.deps.em.nativeUpdate(Booking, { id: booking.id, status: 'confirmed' }, { writtenAnswer: body, writtenAnswerAt: now, updatedAt: now });
-    if (updated === 0) throw new NotFoundError('Session not found');
+    await this.deps.em.fork().transactional(async em => {
+      const locked = await em.findOne(Booking, { id: booking.id, status: 'confirmed' }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
+      if (!locked) throw new NotFoundError('Session not found');
+      if (await em.count(SessionNote, { booking: booking.id, status: 'approved' }) > 0) throw new ConflictError('The session note was approved, so the written answer is final.');
+      await em.nativeUpdate(Booking, { id: booking.id }, { writtenAnswer: body, writtenAnswerAt: now, updatedAt: now });
+    });
     await this.deps.eventBus.emit('sessions.answer.posted', { bookingId: booking.id });
     return { body, postedAt: now.toISOString() };
   }

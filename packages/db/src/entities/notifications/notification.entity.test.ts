@@ -7,8 +7,8 @@ it('discovers per-user, per-booking notifications with idempotent uniqueness and
   try {
     expect(entities).toContain(Notification);
     const sql = await orm.schema.getCreateSchemaSQL({ wrap: false });
-    for (const name of ['notifications_user_kind_booking_unique', 'notifications_user_created_index']) expect(sql).toContain(name);
-    expect(sql).toContain("kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval')");
+    for (const name of ['notifications_user_kind_booking_version_unique', 'notifications_note_version_check', 'notifications_user_created_index']) expect(sql).toContain(name);
+    expect(sql).toContain("kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined')");
     const properties = orm.getMetadata().get(Notification).properties;
     expect(properties.user.deleteRule).toBe('no action');
     expect(properties.booking.deleteRule).toBe('no action');
