@@ -51,7 +51,7 @@ export class SessionNoteService {
 
   private async party(em: EntityManager, booking: IBooking | null, userId: string, write: boolean) {
     if (!booking || booking.status !== 'confirmed') throw new NotFoundError('Session not found');
-    // Load parties AFTER the ID-only booking lock, never a joined FOR UPDATE.
+    // Populate separately: the authoritative write check follows an ID-only lock.
     await em.populate(booking, ['mentee', 'mentorProfile.user']);
     const mentor = booking.mentorProfile.user.id === userId;
     if (!mentor && booking.mentee.id !== userId) throw new NotFoundError('Session not found');
@@ -78,9 +78,13 @@ export class SessionNoteService {
 
   private async mutate<T>(bookingId: unknown, policy: RateLimitPolicy, fn: (em: EntityManager, booking: IBooking, note: ISessionNote | null) => Promise<T>) {
     const { id, userId } = await this.caller(bookingId);
+    const advisory = this.deps.em.fork();
+    await this.party(advisory, await advisory.findOne(Booking, { id }), userId, true);
+    // The limiter owns a separate scoped EM. Never await its connection while
+    // holding the booking transaction's connection (even a max-one pool must work).
+    await this.deps.rateLimiter.consumeFor(policy, userId);
     return this.deps.em.fork().transactional(async em => {
       const booking = await this.party(em, await em.findOne(Booking, { id }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true }), userId, true);
-      await this.deps.rateLimiter.consumeFor(policy, userId);
       if (!booking.writtenAnswerAt) throw new ConflictError('Post the written answer before drafting a session note.');
       return fn(em, booking, await this.latest(em, id, true));
     });

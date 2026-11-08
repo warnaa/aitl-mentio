@@ -72,16 +72,35 @@ it.each(['save', 'send'])('requires the written answer for %s and propagates the
   consumeFor.mockRejectedValueOnce(new Error('rate limit'));
   await expect(attempt(kind)).rejects.toThrow('rate limit');
 });
-it('creates version one only for null expected revision, locks booking before parties and note, and advances exact saves', async () => {
+it('authorizes and limits before the transaction, then locks booking before current parties and note', async () => {
   expect(await attempt('save')).toMatchObject({ version: 1, revision: 1, body: 'edited', status: 'draft' });
-  expect(em.findOne.mock.calls[0]).toEqual(['Booking', { id }, { lockMode: 'write', refresh: true }]);
+  expect(em.findOne.mock.calls[0]).toEqual(['Booking', { id }]);
+  expect(consumeFor.mock.invocationCallOrder[0]).toBeLessThan(em.transactional.mock.invocationCallOrder[0]!);
+  expect(em.populate.mock.invocationCallOrder[0]).toBeLessThan(consumeFor.mock.invocationCallOrder[0]!);
+  expect(em.findOne.mock.calls[1]).toEqual(['Booking', { id }, { lockMode: 'write', refresh: true }]);
   expect(em.findOne.mock.invocationCallOrder[0]).toBeLessThan(em.populate.mock.invocationCallOrder[0]!);
-  expect(em.populate.mock.invocationCallOrder[0]).toBeLessThan(em.findOne.mock.invocationCallOrder[1]!);
-  expect(em.findOne.mock.calls[1]).toEqual(['SessionNote', { booking: id }, { orderBy: { version: 'desc' }, refresh: true, lockMode: 'write' }]);
+  expect(em.findOne.mock.invocationCallOrder[1]).toBeLessThan(em.populate.mock.invocationCallOrder[1]!);
+  expect(em.populate.mock.invocationCallOrder[1]).toBeLessThan(em.findOne.mock.invocationCallOrder[2]!);
+  expect(em.findOne.mock.calls[2]).toEqual(['SessionNote', { booking: id }, { orderBy: { version: 'desc' }, refresh: true, lockMode: 'write' }]);
   expect(em.persist).toHaveBeenCalledOnce();
   note = saved();
   expect(await service().saveDraft(id, { body: '  changed\r\ntext ', expectedRevision: 1 })).toMatchObject({ body: 'changed\ntext', revision: 2, version: 1 });
   expect(emit).not.toHaveBeenCalled();
+});
+it.each(['save', 'send'])('rechecks a distinct cancelled booking after preauthorization on %s', async kind => {
+  const cancelled = { ...booking!, status: 'cancelled' } as IBooking;
+  em.findOne.mockResolvedValueOnce(booking).mockResolvedValueOnce(cancelled);
+  await expect(attempt(kind)).rejects.toMatchObject({ status: 404 });
+  expect(booking!.status).toBe('confirmed');
+  expect(consumeFor).toHaveBeenCalledOnce();
+  expect(em.findOne).toHaveBeenCalledTimes(2);
+  expect(em.flush).not.toHaveBeenCalled();
+  expect(emit).not.toHaveBeenCalled();
+});
+it('does not start a booking transaction when the limiter refuses the attempt', async () => {
+  consumeFor.mockRejectedValueOnce(new Error('limited'));
+  await expect(attempt('save')).rejects.toThrow('limited');
+  expect(em.transactional).not.toHaveBeenCalled();
 });
 it('rejects create-only overwrites, missing and stale revisions, invalid inputs and writes to a sent note', async () => {
   await expect(service().saveDraft(id, { body: 'x', expectedRevision: 1 })).rejects.toMatchObject({ status: 409 });
