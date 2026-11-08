@@ -1,0 +1,7 @@
+{
+  "command": "npm run test:integration -- --testNamePattern=\"NOTES-004|NOTES-009\" --reporter=default --reporter=json --outputFile=test-results/integration/ci-worker-fix.json",
+  "exit": 0,
+  "durationSeconds": 91.083,
+  "environmentFrom": ".github/workflows/ci.yml jobs.integration.env",
+  "snapshotRestored": true
+}

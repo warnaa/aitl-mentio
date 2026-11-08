@@ -111,12 +111,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The auth configuration for the app under test (a per-run SESSION_SECRET,
-    # AUTH_IDENTITY_ADAPTER=mock and MAILER_ADAPTER=log + INTEGRATION_TEST_RUN=1, this allowlist) is set by
-    # tests/integration/environment.ts, which owns it. The allowlist is repeated here so
+    # AUTH_IDENTITY_ADAPTER=mock and MAILER_ADAPTER=log, this allowlist) is set by
+    # tests/integration/environment.ts, which owns child configuration. The worker
+    # also needs INTEGRATION_TEST_RUN=1 because its job selects mock payments.
+    # The allowlist is repeated here so
     # this file visibly holds only a fake address: real operator emails live in
     # deployment configuration alone. The Build job deliberately sets no auth env —
     # a production build must not need any.
     env:
+      INTEGRATION_TEST_RUN: '1'
       OPERATOR_EMAILS: mock-operator@devmentor.test
       PLATFORM_CURRENCY: 'PLN'
       PLATFORM_PRICE_BOUNDS: '{"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}'

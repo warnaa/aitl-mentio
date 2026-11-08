@@ -42,4 +42,6 @@ The parent's fresh ordered typecheck, lint, test and build all passed, followed 
 
 ## Progress
 
+The first GitHub integration run exposed a worker-environment mismatch: its job selected mock payments without the integration signal, so NOTES-004 and NOTES-009 failed while constructing their logger. The workflow now sets `INTEGRATION_TEST_RUN: '1'` only for the integration job. Actual old/new workflow-environment probes are red/green, and both failed cases pass under the corrected workflow environment (2 passed, 100 filter-excluded). The production guard and test assertions are unchanged. See `.ai/qa/NOTES/ci-worker-fix/report.md`; the new full GitHub run is not yet claimed green.
+
 See the completed A1-A6 checklist in the tracking plan. Publication labels are review, feature, needs-qa, priority-medium and risk-high. Independent local source review and final cleanup review approve; these are not a GitHub approving review from the author. Human QA and scenario review remain required; no QA approval or merge is requested by this publication.
