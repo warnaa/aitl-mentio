@@ -72,6 +72,8 @@ export interface CrudFormProps<T> {
   submitLabel?: string;
   onSuccess?: (data: unknown) => void;
   onCancel?: () => void;
+  /** Keeps the submit button disabled until the current values can be sent. The schema stays the authority. */
+  canSubmit?: (values: Record<string, unknown>) => boolean;
   /** Lets a composition disable competing actions while this request is pending. */
   onSubmittingChange?: (submitting: boolean) => void;
   /** Errors from a related action (such as a refused publish), shown until this form reports its own. */
@@ -111,6 +113,7 @@ export function CrudForm<T>({
   submitLabel = 'Save',
   onSuccess,
   onCancel,
+  canSubmit,
   onSubmittingChange,
   externalFieldErrors = {},
 }: CrudFormProps<T>) {
@@ -345,7 +348,7 @@ export function CrudForm<T>({
             Cancel
           </Button>
         ) : null}
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" disabled={submitting || canSubmit?.(values) === false}>
           {submitting ? 'Saving…' : submitLabel}
         </Button>
       </div>

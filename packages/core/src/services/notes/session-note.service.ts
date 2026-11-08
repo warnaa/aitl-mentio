@@ -180,6 +180,7 @@ export class SessionNoteService {
     const declined = await em.find(SessionNote, { status: 'declined', booking: { status: 'confirmed' } }, { fields: ['booking'] });
     const counts = new Map<string, number>();
     for (const note of declined) counts.set(note.booking.id, (counts.get(note.booking.id) ?? 0) + 1);
+    if (counts.size === 0) return [];
     const bookings = await em.find(Booking, { id: { $in: [...counts.keys()] } }, { populate: ['mentee', 'mentorProfile.user'], orderBy: { startsAt: 'desc' }, limit: DECLINE_REPORT_PAGE });
     return bookings.map(booking => ({ bookingId: booking.id, startsAt: booking.startsAt.toISOString(), mentorName: booking.mentorProfile.user.displayName, menteeName: booking.mentee.displayName, declineCount: counts.get(booking.id)! }));
   }

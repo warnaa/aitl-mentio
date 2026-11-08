@@ -86,3 +86,16 @@ it.each([null, '2026-11-07T15:00:00Z'])('links a private note without any body e
   expect(screen.getByRole('link', { name: 'Read the private session note' }).getAttribute('href')).toBe('/sessions/b1');
   expect(screen.queryByText('New:') !== null).toBe(readAt === null);
 });
+
+it.each([['note_approved', 'approved your private session note.'], ['note_declined', 'asked for changes to your private session note.']] as const)('tells the mentor about %s and links to the session', (kind, copy) => {
+  resource.data = { unreadCount: 1, items: [item({ kind, audience: 'mentor', readAt: null })] };
+  render(<NotificationsPanel />);
+  expect(screen.getByText(new RegExp(copy))).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Read the private session note' })).toBeTruthy();
+});
+
+it('does not repeat the unread prefix on a read decision notification', () => {
+  resource.data = { unreadCount: 0, items: [item({ kind: 'note_approved', audience: 'mentor', readAt: '2026-11-07T15:00:00Z' })] };
+  render(<NotificationsPanel />);
+  expect(screen.queryByText('New:')).toBeNull();
+});

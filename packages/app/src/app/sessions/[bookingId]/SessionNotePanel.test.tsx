@@ -24,7 +24,7 @@ it('requires an answer for the mentor and hides the panel for an unanswered ment
   rerender(<SessionNotePanel {...p} viewerRole="mentee" />);
   expect(screen.queryByRole('region')).toBeNull();
 });
-it('shows mentee empty/draft/awaiting read-only states and no decision controls, rendering text escaped', () => {
+it('shows mentee empty/draft read-only states and offers decisions only on a sent note, rendering text escaped', () => {
   const p = props();
   const { rerender, container } = render(<SessionNotePanel {...p} viewerRole="mentee" />);
   expect(screen.getByText('No session note yet')).toBeTruthy();
@@ -35,7 +35,10 @@ it('shows mentee empty/draft/awaiting read-only states and no decision controls,
   expect(screen.queryByRole('textbox')).toBeNull();
   rerender(<SessionNotePanel {...p} viewerRole="mentee" initial={{ current: note({ status: 'awaiting_approval' }), history: [] }} />);
   expect(screen.getByText('Awaiting your approval')).toBeTruthy();
-  expect(screen.queryByRole('button', { name: /Approve|Decline|Send for approval/ })).toBeNull();
+  expect(button('Approve the full note')).toBeTruthy();
+  expect(button('Request changes')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: /Send for approval/ })).toBeNull();
+  expect(screen.queryByRole('textbox')).toBeNull();
 });
 it('saves a normalized draft with create-only revision and sends the exact saved revision, with reachable replay', async () => {
   render(<SessionNotePanel {...props()} />);
@@ -43,7 +46,7 @@ it('saves a normalized draft with create-only revision and sends the exact saved
   fetchMock.mockResolvedValueOnce(ok(note({ body: 'private\ntext' })));
   fireEvent.keyDown(text(), { key: 'Enter', ctrlKey: true });
   await waitFor(() => expect(button('Send for approval').disabled).toBe(false));
-  expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ body: 'private\ntext', expectedRevision: null });
+  expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ body: 'private\ntext', expectedRevision: null, expectedVersion: null });
   const sent = note({ body: 'private\ntext', status: 'awaiting_approval', sentAt: '2026-11-07T15:01:00Z' });
   fetchMock.mockResolvedValueOnce(ok(sent));
   fireEvent.click(button('Send for approval'));
@@ -177,4 +180,131 @@ it('does not regress a newer parent revision when an older successful save respo
   expect(screen.getByText('third revision accepted first')).toBeTruthy();
   expect(button('Send for approval').disabled).toBe(true);
   expect(button('Reload saved draft')).toBeTruthy();
+});
+
+const sentNote = (over: Partial<NoteDto> = {}) => note({ status: 'awaiting_approval', sentAt: '2026-11-07T15:01:00Z', ...over });
+const declinedNote = (over: Partial<NoteDto> = {}) => sentNote({ status: 'declined', decidedAt: '2026-11-07T16:00:00Z', declineComment: 'Add the error case', ...over });
+const approvedNote = (over: Partial<NoteDto> = {}) => sentNote({ status: 'approved', decidedAt: '2026-11-07T16:00:00Z', ...over });
+const menteeProps = (current: NoteDto) => ({ ...props(current), viewerRole: 'mentee' as const });
+
+it('approves the exact displayed version and shows it as private to both parties', async () => {
+  render(<SessionNotePanel {...menteeProps(sentNote({ version: 3 }))} />);
+  fetchMock.mockResolvedValueOnce(ok(approvedNote({ version: 3 })));
+  fireEvent.click(button('Approve the full note'));
+  await waitFor(() => expect(screen.getByText('Session note approved. It stays private.')).toBeTruthy());
+  expect(fetchMock.mock.calls[0]![0]).toBe(`/api/notes/${id}/approve`);
+  expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ version: 3 });
+  expect(screen.getByText('Private: kept by you and Sam; nothing is published.')).toBeTruthy();
+  expect(screen.getByText('Approved')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Approve the full note' })).toBeNull();
+});
+
+it('keeps the note undecided and blocks a double approval when the approval fails', async () => {
+  render(<SessionNotePanel {...menteeProps(sentNote())} />);
+  const pending = deferred<Response>(); fetchMock.mockReturnValueOnce(pending.promise);
+  const approve = button('Approve the full note');
+  act(() => { approve.dispatchEvent(new MouseEvent('click', { bubbles: true })); approve.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  await act(async () => pending.resolve(fail('Already decided')));
+  expect(screen.getByRole('alert').textContent).toContain('Already decided');
+  expect(button('Approve the full note').disabled).toBe(false);
+});
+
+it('requires a comment to decline, sends it with the version, and can be cancelled', async () => {
+  render(<SessionNotePanel {...menteeProps(sentNote({ version: 2 }))} />);
+  fireEvent.click(button('Request changes'));
+  expect(button('Send requested changes').disabled).toBe(true);
+  fireEvent.click(button('Cancel'));
+  expect(button('Approve the full note')).toBeTruthy();
+  fireEvent.click(button('Request changes'));
+  const comment = screen.getByRole<HTMLTextAreaElement>('textbox', { name: /What should Sam change/ });
+  fireEvent.change(comment, { target: { value: '   ' } });
+  expect(button('Send requested changes').disabled).toBe(true);
+  fireEvent.change(comment, { target: { value: ' Add the error case ' } });
+  fetchMock.mockResolvedValueOnce(ok(declinedNote({ version: 2 })));
+  fireEvent.click(button('Send requested changes'));
+  await waitFor(() => expect(screen.getByText('Your requested changes were sent.')).toBeTruthy());
+  expect(fetchMock.mock.calls[0]![0]).toBe(`/api/notes/${id}/decline`);
+  expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ version: 2, comment: 'Add the error case' });
+  expect(screen.getByText('Changes requested')).toBeTruthy();
+  expect(screen.getByText('You asked for changes. Sam can send a new version.')).toBeTruthy();
+  expect(screen.queryByText(/nothing is published\.$/)).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Approve the full note' })).toBeNull();
+});
+
+it('shows the mentor the comment, then opens a redraft of the declined version as the next version', async () => {
+  render(<SessionNotePanel {...props(declinedNote())} />);
+  expect(screen.getByText('Add the error case')).toBeTruthy();
+  expect(screen.getByText('Sam asked for changes. Redraft the note to send a new version.')).toBeTruthy();
+  expect(screen.queryByRole('textbox')).toBeNull();
+  fireEvent.click(button('Redraft'));
+  const body = screen.getByRole<HTMLTextAreaElement>('textbox', { name: /Revised private note/ });
+  expect(body.value).toBe('Saved private text');
+  expect(screen.getByRole('heading', { name: 'Respond to Sam’s feedback' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Redraft' })).toBeNull();
+  fireEvent.change(body, { target: { value: 'Second try' } });
+  fetchMock.mockResolvedValueOnce(ok(note({ version: 2, body: 'Second try' })));
+  fireEvent.click(button('Save draft'));
+  await waitFor(() => expect(button('Send for approval').disabled).toBe(false));
+  expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ body: 'Second try', expectedRevision: 1, expectedVersion: 1 });
+  expect(screen.getByRole('heading', { name: 'Respond to Sam’s feedback' })).toBeTruthy();
+  expect(screen.getByRole('region', { name: 'Note version history' }).textContent).toContain('Requested changes: Add the error case');
+});
+
+it('asks before a redraft discards unsaved edits', () => {
+  const p = props(note());
+  const { rerender } = render(<SessionNotePanel {...p} />);
+  fireEvent.change(text(), { target: { value: 'unsaved words' } });
+  rerender(<SessionNotePanel {...p} initial={{ current: declinedNote({ revision: 2 }), history: [] }} />);
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+  fireEvent.click(button('Redraft'));
+  expect(screen.getByLabelText('Unsaved session note').textContent).toBe('unsaved words');
+  fireEvent.click(button('Redraft'));
+  expect(screen.getByRole<HTMLTextAreaElement>('textbox', { name: /Revised/ }).value).toBe('Saved private text');
+  confirm.mockRestore();
+});
+
+it('lists declined versions as history from a read and never as approved', async () => {
+  const history = [declinedNote()];
+  render(<SessionNotePanel {...menteeProps(sentNote({ version: 2 }))} initial={{ current: sentNote({ version: 2 }), history }} />);
+  const region = screen.getByRole('region', { name: 'Note version history' });
+  expect(region.textContent).toContain('Version 1');
+  expect(region.textContent).toContain('Changes requested');
+  expect(region.textContent).not.toContain('Approved');
+  fetchMock.mockResolvedValueOnce(ok({ current: sentNote({ version: 2 }), history: [declinedNote({ declineComment: 'Refreshed comment' })] }));
+  fireEvent.click(button('Refresh note'));
+  await waitFor(() => expect(region.textContent).toContain('Refreshed comment'));
+});
+
+it('labels a history entry without a comment and takes history from a newer parent or read', async () => {
+  const older = note({ status: 'approved', declineComment: null });
+  const p = props(sentNote({ version: 2 }));
+  const { rerender } = render(<SessionNotePanel {...p} initial={{ current: sentNote({ version: 2 }), history: [older] }} />);
+  expect(screen.getByText('Replaced by a newer version.')).toBeTruthy();
+  rerender(<SessionNotePanel {...p} initial={{ current: sentNote({ version: 3 }), history: [declinedNote({ version: 2, declineComment: 'From the parent' })] }} />);
+  expect(screen.getByText('Requested changes: From the parent')).toBeTruthy();
+  fetchMock.mockResolvedValueOnce(ok({ current: sentNote({ version: 2 }), history: [] }));
+  fireEvent.click(button('Refresh note'));
+  await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+  await waitFor(() => expect(button('Refresh note').disabled).toBe(false));
+  expect(screen.getByText('Requested changes: From the parent')).toBeTruthy();
+});
+
+it('does not let a stale read undo a decision', async () => {
+  render(<SessionNotePanel {...menteeProps(sentNote())} />);
+  const read = deferred<Response>(); fetchMock.mockReturnValueOnce(read.promise);
+  fireEvent.click(button('Refresh note'));
+  fetchMock.mockResolvedValueOnce(ok(approvedNote()));
+  fireEvent.click(button('Approve the full note'));
+  await waitFor(() => expect(screen.getByText('Approved')).toBeTruthy());
+  await act(async () => read.resolve(ok({ current: sentNote(), history: [] })));
+  expect(screen.getByText('Approved')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Approve the full note' })).toBeNull();
+});
+
+it('shows the approved note read-only to the mentor with no action', () => {
+  render(<SessionNotePanel {...props(approvedNote())} />);
+  expect(screen.getByText('Private: kept by you and Sam; nothing is published.')).toBeTruthy();
+  expect(screen.queryByRole('textbox')).toBeNull();
+  expect(screen.queryByRole('button', { name: /Redraft|Notify|Send/ })).toBeNull();
 });

@@ -30,6 +30,7 @@ export const guards = {
   requirePageRole: vi.fn<(role: Role, returnTo: string) => Promise<Session>>(),
   requirePageAccount: vi.fn<(role: Role, returnTo: string) => Promise<{ session: Session; user: UserDto }>>(),
   requirePageSignedIn: vi.fn<(returnTo: string) => Promise<{ session: Session; user: UserDto }>>(),
+  withPageScope: vi.fn<(returnTo: string, fn: (cradle: never) => Promise<object>) => Promise<object>>(),
 };
 
 /** Let both guards admit a caller holding `roles`. */

@@ -348,6 +348,14 @@ describe('CrudForm', () => {
     expect(request).not.toHaveBeenCalled();
   });
 
+  it('keeps submit disabled until canSubmit accepts the current values', () => {
+    render(<CrudForm schema={textSchema} fields={textFields} endpoint="/api/profile" submitLabel="Send" canSubmit={values => Object.values(values).some(Boolean)} />);
+    const submit = screen.getByRole<HTMLButtonElement>('button', { name: 'Send' });
+    expect(submit.disabled).toBe(true);
+    fireEvent.change(screen.getAllByRole('textbox')[0]!, { target: { value: 'typed' } });
+    expect(submit.disabled).toBe(false);
+  });
+
   it('places Cancel before submit in keyboard order and cancels without submitting', () => {
     const onCancel = vi.fn();
     render(<CrudForm schema={textSchema} fields={textFields} endpoint="/api/profile" onCancel={onCancel} />);

@@ -8,7 +8,7 @@ import { CrudForm } from '@devmentor/ui/backend';
 import { formatInstant } from '@devmentor/ui/time';
 
 export interface WrittenAnswerPanelProps {
-  session: Pick<SessionDto, 'booking' | 'window' | 'viewerRole' | 'counterpartName' | 'answer' | 'answerOwed'>;
+  session: Pick<SessionDto, 'booking' | 'window' | 'viewerRole' | 'counterpartName' | 'answer' | 'answerOwed' | 'answerFrozen'>;
   zone: string;
   /** Called with the saved answer so the screen shows it without waiting for a poll. */
   onSaved: (answer: WrittenAnswerDto) => void;
@@ -54,7 +54,9 @@ export function WrittenAnswerPanel({ session, zone, onSaved }: WrittenAnswerPane
   const mentee = firstName(session.counterpartName);
   return (
     <div className="dm-product-stack">
-      <Card className="dm-product-panel">
+      {session.answerFrozen && <p className="dm-product-callout" role="status">{mentee} approved the private session note, so this written answer is final.</p>}
+      {/* Unsaved text stays on screen when an approval lands under it; the server refuses to save it. */}
+      {(!session.answerFrozen || dirty) && <Card className="dm-product-panel">
         <h2 className="dm-product-title">Written answer for {mentee}</h2>
         <p className="dm-product-muted">{mentee} sees it on this page as soon as you post it.</p>
         <div onChange={() => setDirty(true)}>
@@ -72,7 +74,7 @@ export function WrittenAnswerPanel({ session, zone, onSaved }: WrittenAnswerPane
         </div>
         {dirty && formKey !== latest && <p className="dm-product-callout" role="status">A newer written answer was saved, for example in another tab. Saving replaces it with the text above.</p>}
         <p className="dm-product-caption" role="status">{saved ? 'Written answer saved.' : ''}</p>
-      </Card>
+      </Card>}
       {posted}
     </div>
   );

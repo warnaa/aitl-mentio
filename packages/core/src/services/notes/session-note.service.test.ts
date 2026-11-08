@@ -244,6 +244,9 @@ it('reports declined-version counts to operators only, with no text', async () =
   await expect(service().declineReport()).rejects.toMatchObject({ status: 403 });
   session = { userId: 'op', roles: ['operator'] };
   booking = { ...booking!, startsAt: now, mentee: { displayName: 'Sam' }, mentorProfile: { user: { displayName: 'Alex' } } } as unknown as IBooking;
+  note = null;
+  expect(await service().declineReport()).toEqual([]);
+  em.find.mockClear();
   em.find.mockResolvedValueOnce([{ booking: { id } }, { booking: { id } }]);
   const report = await service().declineReport();
   expect(report).toEqual([{ bookingId: id, startsAt: now.toISOString(), mentorName: 'Alex', menteeName: 'Sam', declineCount: 2 }]);

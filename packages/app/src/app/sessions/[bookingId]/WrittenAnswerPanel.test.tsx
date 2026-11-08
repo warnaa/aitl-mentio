@@ -7,7 +7,7 @@ const id = '11111111-1111-4111-8111-111111111111';
 const saved = { body: 'Use a union.\nNarrow on ok.', postedAt: '2026-11-12T14:30:00.000Z' };
 const base: WrittenAnswerPanelProps['session'] = {
   booking: { id, startsAt: '2026-11-12T14:00:00.000Z', endsAt: '2026-11-12T14:25:00.000Z', lengthMinutes: 25 },
-  window: 'ended', viewerRole: 'mentee', counterpartName: 'Alex Mentor', answer: null, answerOwed: true,
+  window: 'ended', viewerRole: 'mentee', counterpartName: 'Alex Mentor', answer: null, answerOwed: true, answerFrozen: false,
 };
 const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>();
 const onSaved = vi.fn();
@@ -113,4 +113,20 @@ it('keeps unsaved edits when a newer answer arrives and says that saving replace
   rerender(asMentor({ answer: { body: 'Saved in another tab.', postedAt: '2026-11-12T15:00:00.000Z' }, answerOwed: false }));
   expect(textarea().value).toBe('My edit');
   expect(screen.getByText(/A newer written answer was saved/)).toBeTruthy();
+});
+
+it('replaces the mentor form with the final answer once a note is approved', () => {
+  render(view({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', answer: saved, answerOwed: false, answerFrozen: true }));
+  expect(screen.getByText('Sam approved the private session note, so this written answer is final.')).toBeTruthy();
+  expect(screen.queryByRole('textbox')).toBeNull();
+  expect(screen.queryByRole('button', { name: /written answer/ })).toBeNull();
+});
+
+it('keeps unsaved text on screen when an approval lands under it', () => {
+  const live = { viewerRole: 'mentor' as const, counterpartName: 'Sam Mentee', answer: saved, answerOwed: false };
+  const { rerender } = render(view({ ...live, answerFrozen: false }));
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: 'unsaved replacement' } });
+  rerender(view({ ...live, answerFrozen: true }));
+  expect(screen.getByRole<HTMLTextAreaElement>('textbox').value).toBe('unsaved replacement');
+  expect(screen.getByText(/so this written answer is final/)).toBeTruthy();
 });

@@ -22,6 +22,7 @@ describe('WorkspaceNav', () => {
     expect(linkNames()).toEqual([
       ['Operator home', '/admin'],
       ['Users', '/admin/users'],
+      ['Note declines', '/admin/sessions'],
       ['Mentor workspace', '/mentor'],
       ['Edit profile', '/mentor/profile'],
     ]);

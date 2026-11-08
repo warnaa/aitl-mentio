@@ -383,6 +383,16 @@ Issue #40 adds POST /api/bookings with the existing envelope, live mentee author
 
 The additive bookings migration has up/down. A partial unique slot index reserves only pending/confirmed rows; expired/cancelled rows remain history. Mentor locking prevents overlapping active intervals across different start times. Slot removal now answers 409 while an active booking occupies that exact slot. Rollback requires stopping booking writes and exporting history before dropping the new table; there are no existing-row rewrites. Payment and cancellation APIs remain out of scope.
 
+### Private session note decisions (E04-S04, slice B)
+
+Additive routes: `POST /api/notes/[bookingId]/approve` takes `{ version }`; `POST /api/notes/[bookingId]/decline` takes `{ version, comment }` (1-2,000 characters, required: 422 with `fieldErrors.comment`). Mentee only (mentor 403, outsiders 404), 30/minute/account, private no-store. Only the latest `awaiting_approval` version can be decided; an identical replay succeeds, anything else is 409. Approved is final. `PUT /api/notes/[bookingId]` gains optional `expectedVersion`: starting a redraft on a declined note requires it to equal the declined version, and creates `version + 1`. `GET` now fills `history` with older versions, newest first. No public or list payload contains a note, and R02/D05 are unchanged: nothing is published.
+
+`PUT /api/sessions/[bookingId]/answer` now returns 409 once the booking has an approved note; before approval it is unchanged. `SessionDto` gains `answerFrozen`. `Cradle` and events gain `notes.note.approved` and `notes.note.declined` (identifiers only), consumed in-process. `CrudForm` gains the optional `canSubmit` prop. `/admin/sessions` is a new operator page showing session start, party names and a count of declined versions; never a body or comment.
+
+Migration `Migration20261108224443_note_decisions` adds `notifications.note_version` (0 for non-note kinds, backfilled to 1 for existing `note_awaiting_approval` rows), replaces `notifications_user_kind_booking_unique` with `notifications_user_kind_booking_version_unique`, and widens `Notification.kind` to `note_approved` and `note_declined`. Consumers switching on kind must accept both. Booking and answer notification uniqueness is unchanged.
+
+Rollback: run this migration down before reverting code. It deletes `note_approved`, `note_declined` and later-version notifications, then restores the old identity. Note rows, including approved and declined versions, stay in `session_notes`; after a code rollback slice A treats a non-draft latest note as locked.
+
 ### Private session notes (E04-S03, slice A)
 
 Additive routes: `GET /api/notes/[bookingId]` returns `{ current, history }` (empty history in slice A); `PUT` takes `{ body, expectedRevision: positive integer | null }`; `POST /api/notes/[bookingId]/send` takes `{ version, revision }`. Standard envelopes/CSRF and live sessions apply. All note responses, including errors, carry `Cache-Control: private, no-store`. Parties to a confirmed booking can read; only its mentor can write (mentee 403, outsiders/unknown/unconfirmed booking 404). Reads are limited to 120/minute/account, saves and sends to 30/minute/account independently.
