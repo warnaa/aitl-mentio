@@ -30,6 +30,8 @@ Phase 1 delivers B1, Phase 2 B2, Phase 3 B3. Phase 4 runs the gate and integrati
 
 ## Progress
 
+PR: #80
+
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.
 
 ### Phase 1: Decisions and redraft
