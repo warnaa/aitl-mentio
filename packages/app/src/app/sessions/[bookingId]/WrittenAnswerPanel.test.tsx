@@ -11,7 +11,7 @@ const base: WrittenAnswerPanelProps['session'] = {
 };
 const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>();
 const onSaved = vi.fn();
-const view = (over: Partial<WrittenAnswerPanelProps['session']> = {}) => <WrittenAnswerPanel session={{ ...base, ...over }} zone="UTC" onSaved={onSaved} />;
+const view = (over: Partial<WrittenAnswerPanelProps['session']> = {}, answerFrozen?: boolean) => <WrittenAnswerPanel session={{ ...base, ...over }} answerFrozen={answerFrozen} zone="UTC" onSaved={onSaved} />;
 const asMentor = (over: Partial<WrittenAnswerPanelProps['session']> = {}) => view({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', ...over });
 const textarea = () => screen.getByLabelText(/Written answer/) as HTMLTextAreaElement;
 const submit = async (name: string) => { await act(async () => { fireEvent.click(screen.getByRole('button', { name })); }); };
@@ -113,4 +113,20 @@ it('keeps unsaved edits when a newer answer arrives and says that saving replace
   rerender(asMentor({ answer: { body: 'Saved in another tab.', postedAt: '2026-11-12T15:00:00.000Z' }, answerOwed: false }));
   expect(textarea().value).toBe('My edit');
   expect(screen.getByText(/A newer written answer was saved/)).toBeTruthy();
+});
+
+it('replaces the mentor form with the final answer once a note is approved', () => {
+  render(view({ viewerRole: 'mentor', counterpartName: 'Sam Mentee', answer: saved, answerOwed: false }, true));
+  expect(screen.getByText('Sam approved the private session note, so this written answer is final.')).toBeTruthy();
+  expect(screen.queryByRole('textbox')).toBeNull();
+  expect(screen.queryByRole('button', { name: /written answer/ })).toBeNull();
+});
+
+it('keeps unsaved text on screen when an approval lands under it', () => {
+  const live = { viewerRole: 'mentor' as const, counterpartName: 'Sam Mentee', answer: saved, answerOwed: false };
+  const { rerender } = render(view(live, false));
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: 'unsaved replacement' } });
+  rerender(view(live, true));
+  expect(screen.getByRole<HTMLTextAreaElement>('textbox').value).toBe('unsaved replacement');
+  expect(screen.getByText(/so this written answer is final/)).toBeTruthy();
 });

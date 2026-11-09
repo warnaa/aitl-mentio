@@ -172,7 +172,9 @@ it('NOTES-006 mentor saves and sends through the UI and the ended mentee refresh
       await runAgentBrowser(mentor, 'wait', '--text', 'Notification requested.');
       await runAgentBrowser(mentee, 'find', 'role', 'button', 'click', '--name', 'Refresh note');
       await runAgentBrowser(mentee, 'wait', '--text', 'Awaiting your approval');
-      expect(await runAgentBrowser(mentee, 'snapshot', '-i')).not.toMatch(/textbox|button "Approve|button "Decline/);
+      const menteeControls = await runAgentBrowser(mentee, 'snapshot', '-i');
+      expect(menteeControls).not.toContain('textbox');
+      expect(menteeControls).toContain('button "Approve the full note"');
       expect(await runAgentBrowser(mentee, 'eval', `document.querySelector('[aria-label="Private session note"]')?.querySelector('script') === null`)).toBe('true');
       expect(await readNote(f)).toMatchObject({ body, status: 'awaiting_approval' });
       await runAgentBrowser(mentee, 'screenshot', resolve(integrationArtifactsDirectory, 'notes-awaiting-desktop.png'), '--full');
@@ -231,5 +233,144 @@ it('NOTES-008 keeps the session readable and retries a temporarily unavailable n
       await f.em.execute('drop function if exists notes_fixture_failure()');
       await closeAgentBrowser(browser);
     }
+  });
+});
+
+const decide = (f: PaymentFixture, kind: 'approve' | 'decline', body: unknown, headers: Record<string, string> = f.first) => fetch(`${url(f)}/${kind}`, { method: 'POST', headers, body: JSON.stringify(body) }).then(async response => ({ status: response.status, payload: await response.json() as { ok: boolean; data: NoteDto; error?: { fieldErrors?: Record<string, string[]> } } }));
+const redraft = (f: PaymentFixture, body: string, expectedRevision: number, expectedVersion: number) => request(f, f.mentor, 'PUT', { body, expectedRevision, expectedVersion });
+
+it('NOTES-011 approves one sent version as a private record both parties keep, absent from every other surface, and freezes the answer', async () => {
+  await withPaymentFixture('n-011', async f => {
+    await confirmBooking(f); await answer(f);
+    const marker = 'approved-private-note-marker';
+    await save(f, marker, null);
+    expect((await decide(f, 'approve', { version: 1 })).status).toBe(409);
+    await send(f, 1);
+    expect((await decide(f, 'approve', { version: 1 }, f.mentor)).status).toBe(403);
+    expect((await decide(f, 'approve', { version: 1 }, f.second)).status).toBe(404);
+    const approved = await decide(f, 'approve', { version: 1 });
+    expect(approved.status).toBe(200);
+    expect(approved.payload.data).toMatchObject({ status: 'approved', private: true, declineComment: null });
+    expect((await decide(f, 'approve', { version: 1 })).payload.data).toEqual(approved.payload.data);
+    expect((await decide(f, 'decline', { version: 1, comment: 'too late' })).status).toBe(409);
+    expect((await save(f, 'edited after approval', 1)).status).toBe(409);
+    for (const headers of [f.first, f.mentor]) expect((await request(f, headers)).payload.data.current).toEqual(approved.payload.data);
+    expect((await request(f, f.second)).status).toBe(404);
+    const operator = await bookingPersona(f.base, 'mock-operator');
+    expect((await request(f, operator)).status).toBe(404);
+    for (const path of [`/api/mentors/${f.slug}`, '/api/mentors', `/mentors/${f.slug}`]) {
+      const response = await fetch(f.base + path);
+      expect(response.status, path).toBeLessThan(500);
+      expect(await response.text()).not.toContain(marker);
+    }
+    for (const headers of [f.first, f.mentor]) {
+      const response = await fetch(`${f.base}/api/bookings?role=${headers === f.mentor ? 'mentor' : 'mentee'}`, { headers });
+      expect(await response.text()).not.toContain(marker);
+    }
+    const mentorNotes = (await listNotifications(f, f.mentor)).body;
+    expect(mentorNotes.data.items.filter(n => n.kind === 'note_approved')).toHaveLength(1);
+    expect(JSON.stringify(mentorNotes)).not.toContain(marker);
+    const frozen = await fetch(`${f.base}/api/sessions/${f.booking.id}/answer`, { method: 'PUT', headers: f.mentor, body: JSON.stringify({ body: 'Replaced answer.' }) });
+    expect(frozen.status).toBe(409);
+    expect((await f.em.fork().findOneOrFail(Booking, { id: f.booking.id })).writtenAnswer).toBe('Synthetic written answer.');
+  });
+});
+
+it('NOTES-012 requires a decline comment, redrafts as new versions, notifies per version and counts declines for the operator without text', async () => {
+  await withPaymentFixture('n-012', async f => {
+    await confirmBooking(f); await answer(f);
+    await save(f, 'first body', null); await send(f, 1);
+    const blank = await decide(f, 'decline', { version: 1, comment: '   ' });
+    expect(blank.status).toBe(422);
+    expect(blank.payload.error!.fieldErrors!.comment).toBeTruthy();
+    expect((await readNote(f))!.status).toBe('awaiting_approval');
+    const comment = 'private-decline-comment-marker';
+    expect((await decide(f, 'decline', { version: 1, comment })).payload.data).toMatchObject({ status: 'declined', declineComment: comment });
+    expect(await readNote(f)).toMatchObject({ status: 'declined', declineComment: comment, body: 'first body' });
+    expect((await save(f, 'no version given', 1)).status).toBe(409);
+    expect((await redraft(f, 'stale tab', 1, 2)).status).toBe(409);
+    expect((await redraft(f, 'second body', 1, 1)).payload.data).toMatchObject({ version: 2, revision: 1, status: 'draft' });
+    expect((await redraft(f, 'second tab', 1, 1)).status).toBe(409);
+    expect((await decide(f, 'decline', { version: 1, comment })).status).toBe(409);
+    await send(f, 1, 2);
+    expect((await listNotifications(f, f.first)).body.data.items.filter(n => n.kind === 'note_awaiting_approval')).toHaveLength(2);
+    await decide(f, 'decline', { version: 2, comment: 'still missing' });
+    const view = (await request(f, f.mentor)).payload.data;
+    expect(view.current).toMatchObject({ version: 2, status: 'declined' });
+    expect(view.history).toEqual([expect.objectContaining({ version: 1, status: 'declined', declineComment: comment, body: 'first body' })]);
+    expect((await listNotifications(f, f.mentor)).body.data.items.filter(n => n.kind === 'note_declined')).toHaveLength(2);
+    const browser = `notes-operator-${process.pid}`;
+    try {
+      await signInAs(browser, f.base, 'mock-operator');
+      await runAgentBrowser(browser, 'open', `${f.base}/admin/sessions`);
+      await runAgentBrowser(browser, 'wait', '--text', 'Private note declines');
+      const html = await runAgentBrowser(browser, 'get', 'html', 'main');
+      expect(html).toMatch(/>2<\/td>/);
+      expect(html).not.toContain(comment);
+      expect(html).not.toContain('first body');
+      await runAgentBrowser(browser, 'screenshot', resolve(integrationArtifactsDirectory, 'notes-operator-declines-desktop.png'), '--full');
+      await expectFitsMobile(browser, 'notes-operator-declines');
+    } finally { await closeAgentBrowser(browser); }
+    expect((await fetch(`${f.base}/admin/sessions`, { headers: f.first, redirect: 'manual' })).status).toBeGreaterThanOrEqual(300);
+  });
+});
+
+it('NOTES-013 serializes approve against decline and approval against an answer replacement', async () => {
+  await withPaymentFixture('n-013', async f => {
+    await confirmBooking(f); await answer(f);
+    await save(f, 'contended', null); await send(f, 1);
+    const raced = await Promise.all([decide(f, 'approve', { version: 1 }), decide(f, 'decline', { version: 1, comment: 'contender' }), fetch(`${f.base}/api/sessions/${f.booking.id}/answer`, { method: 'PUT', headers: f.mentor, body: JSON.stringify({ body: 'Racing answer.' }) })]);
+    expect([raced[0].status, raced[1].status].sort()).toEqual([200, 409]);
+    const note = await readNote(f);
+    expect(note!.status).toBe(raced[0].status === 200 ? 'approved' : 'declined');
+    expect(await f.em.fork().count(SessionNote, { booking: f.booking.id })).toBe(1);
+    const answerStored = (await f.em.fork().findOneOrFail(Booking, { id: f.booking.id })).writtenAnswer;
+    if (note!.status === 'approved' && raced[2].status === 409) expect(answerStored).toBe('Synthetic written answer.');
+    else expect(raced[2].status).toBe(200);
+  });
+});
+
+it('NOTES-014 mentee declines and approves through the UI, mentor redrafts, at desktop and 320px', async () => {
+  await withPaymentFixture('n-014', async f => {
+    await confirmBooking(f); await answer(f);
+    await save(f, 'Browser first version', null); await send(f, 1);
+    const browsers = [`notes-d-mentor-${process.pid}`, `notes-d-mentee-${process.pid}`];
+    const logins = await Promise.all([f.mentorId, f.firstId].map(id => f.em.fork().findOneOrFail(User, { id })));
+    try {
+      for (let i = 0; i < browsers.length; i++) {
+        await signInAs(browsers[i]!, f.base, logins[i]!.githubLogin!);
+        await runAgentBrowser(browsers[i]!, 'open', `${f.base}/sessions/${f.booking.id}`);
+      }
+      const [mentor, mentee] = browsers as [string, string];
+      await runAgentBrowser(mentee, 'find', 'role', 'button', 'click', '--name', 'Request changes');
+      expect(await runAgentBrowser(mentee, 'snapshot', '-i')).toMatch(/button "Send requested changes".*disabled/);
+      await expectFitsMobile(mentee, 'notes-decline-form');
+      await runAgentBrowser(mentee, 'find', 'role', 'textbox', 'fill', 'Please add the error case.');
+      await runAgentBrowser(mentee, 'find', 'role', 'button', 'click', '--name', 'Send requested changes');
+      await runAgentBrowser(mentee, 'wait', '--text', 'Your requested changes were sent.');
+      await runAgentBrowser(mentor, 'find', 'role', 'button', 'click', '--name', 'Refresh note');
+      await runAgentBrowser(mentor, 'wait', '--text', 'Please add the error case.');
+      await runAgentBrowser(mentor, 'find', 'role', 'button', 'click', '--name', 'Redraft');
+      await runAgentBrowser(mentor, 'wait', '--text', 'Revised private note');
+      await expectFitsMobile(mentor, 'notes-redraft');
+      await runAgentBrowser(mentor, 'screenshot', resolve(integrationArtifactsDirectory, 'notes-redraft-desktop.png'), '--full');
+      await runAgentBrowser(mentor, 'find', 'label', 'Revised private note', 'fill', 'Browser second version');
+      await runAgentBrowser(mentor, 'press', 'Control+Enter');
+      await runAgentBrowser(mentor, 'wait', '--text', 'Session note saved. Review it before sending.');
+      await runAgentBrowser(mentor, 'find', 'role', 'button', 'click', '--name', 'Send for approval');
+      await runAgentBrowser(mentor, 'wait', '--text', 'Notification requested.');
+      await runAgentBrowser(mentee, 'find', 'role', 'button', 'click', '--name', 'Refresh note');
+      await runAgentBrowser(mentee, 'wait', '--text', 'Browser second version');
+      await runAgentBrowser(mentee, 'find', 'role', 'button', 'click', '--name', 'Approve the full note');
+      await runAgentBrowser(mentee, 'wait', '--text', 'nothing is published');
+      await runAgentBrowser(mentee, 'screenshot', resolve(integrationArtifactsDirectory, 'notes-approved-desktop.png'), '--full');
+      await expectFitsMobile(mentee, 'notes-approved');
+      await runAgentBrowser(mentor, 'open', `${f.base}/sessions/${f.booking.id}`);
+      await runAgentBrowser(mentor, 'wait', '--text', 'nothing is published');
+      const snapshot = await runAgentBrowser(mentor, 'snapshot', '-i');
+      expect(snapshot).not.toContain('textbox');
+      expect(await runAgentBrowser(mentor, 'snapshot')).toContain('so this written answer is final');
+      expect(await readNote(f)).toMatchObject({ version: 2, status: 'approved', body: 'Browser second version' });
+    } finally { for (const browser of browsers) await closeAgentBrowser(browser); }
   });
 });

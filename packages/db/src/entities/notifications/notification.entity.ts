@@ -18,12 +18,15 @@ export const Notification = defineSingletonEntity('Notification', () =>
     name: 'Notification',
     tableName: 'notifications',
     indexes: [{ name: 'notifications_user_created_index', properties: ['user', 'createdAt'] }],
-    uniques: [{ name: 'notifications_user_kind_booking_unique', properties: ['user', 'kind', 'booking'] }],
+    uniques: [{ name: 'notifications_user_kind_booking_version_unique', properties: ['user', 'kind', 'booking', 'noteVersion'] }],
+    checks: [{ name: 'notifications_note_version_check', expression: "(kind like 'note_%' and note_version >= 1) or (kind not like 'note_%' and note_version = 0)" }],
     properties: {
       ...baseProperties,
       user: () => p.manyToOne(User).deleteRule('no action'),
       booking: () => p.manyToOne(Booking).deleteRule('no action'),
-      kind: p.string().length(32).check("kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval')"),
+      kind: p.string().length(32).check("kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined')"),
+      /** 0 for non-note kinds; the note version otherwise, so each version gets its own message. */
+      noteVersion: p.integer().default(0),
       readAt: p.datetime().nullable(),
       emailSentAt: p.datetime().nullable(),
     },

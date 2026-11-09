@@ -19,7 +19,7 @@ it('NOTES-007 migrates session notes up down up with restrictive lifecycle const
       select gen_random_uuid(), now(), now(), slots.id, users.id, mentor_profiles.id, 25, 8000, 'PLN', 'confirmed', slots.starts_at, null from slots cross join users cross join mentor_profiles;
       insert into session_notes (id, created_at, updated_at, booking_id, version, revision, body, status) select gen_random_uuid(), now(), now(), id, 1, 1, 'private draft', 'draft' from bookings;
       insert into notifications (id, created_at, updated_at, user_id, booking_id, kind) select gen_random_uuid(), now(), now(), mentee_id, id, 'booking_confirmed' from bookings;
-      insert into notifications (id, created_at, updated_at, user_id, booking_id, kind) select gen_random_uuid(), now(), now(), mentee_id, id, 'note_awaiting_approval' from bookings;
+      insert into notifications (id, created_at, updated_at, user_id, booking_id, kind, note_version) select gen_random_uuid(), now(), now(), mentee_id, id, 'note_awaiting_approval', 1 from bookings;
     `);
     expect(seeded.exitCode, seeded.stderr).toBe(0);
     for (const change of ["status = 'unknown'", 'revision = 0', 'version = 0', "body = ''", "status = 'awaiting_approval'", "status = 'approved', sent_at = now()", "status = 'declined', sent_at = now(), decided_at = now(), decline_comment = ' '"]) {
@@ -28,6 +28,18 @@ it('NOTES-007 migrates session notes up down up with restrictive lifecycle const
     expect((await psql(`insert into session_notes select gen_random_uuid(), created_at, updated_at, booking_id, version, revision, body, status, decline_comment, sent_at, decided_at from session_notes`)).exitCode).not.toBe(0);
     expect((await psql(`update session_notes set status = 'awaiting_approval', sent_at = now()`)).exitCode).toBe(0);
     expect((await psql('delete from bookings')).exitCode).not.toBe(0);
+    expect(await query(`select json_agg(note_version order by note_version) from notifications`)).toEqual([0, 1]);
+    expect((await psql(`update notifications set note_version = 0 where kind = 'note_awaiting_approval'`)).exitCode).not.toBe(0);
+    expect((await psql(`update notifications set note_version = 1 where kind = 'booking_confirmed'`)).exitCode).not.toBe(0);
+    const later = await psql(`
+      insert into notifications (id, created_at, updated_at, user_id, booking_id, kind, note_version) select gen_random_uuid(), now(), now(), mentee_id, id, 'note_awaiting_approval', 2 from bookings;
+      insert into notifications (id, created_at, updated_at, user_id, booking_id, kind, note_version) select gen_random_uuid(), now(), now(), mentee_id, id, 'note_declined', 1 from bookings;
+    `);
+    expect(later.exitCode, later.stderr).toBe(0);
+    expect((await psql(`insert into notifications select gen_random_uuid(), created_at, updated_at, user_id, booking_id, kind, read_at, email_sent_at, note_version from notifications where note_version = 2`)).exitCode).not.toBe(0);
+    await runNpm(['run', 'db:migrate:down'], environment);
+    expect(await query(`select count(*) from notifications where kind = 'note_awaiting_approval'`)).toBe(1);
+    expect((await psql(`update notifications set kind = 'note_declined' where kind = 'booking_confirmed'`)).exitCode).not.toBe(0);
     await runNpm(['run', 'db:migrate:down'], environment);
     expect(await query(`select to_json(to_regclass('public.session_notes'))`)).toBeNull();
     expect(await query('select json_agg(kind) from notifications')).toEqual(['booking_confirmed']);

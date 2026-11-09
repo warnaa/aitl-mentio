@@ -9,5 +9,7 @@ export const noteDraftSchema = z.object({
       .refine(value => !value.includes('\u0000'), 'The note contains a character that cannot be saved.'),
   ),
   expectedRevision: z.number().int().positive().nullable(),
+  /** The version the editor was opened on. Required to start a redraft after a decline. */
+  expectedVersion: z.number().int().positive().nullable().optional(),
 });
 export const noteSendSchema = z.object({ version: z.number().int().positive(), revision: z.number().int().positive() });

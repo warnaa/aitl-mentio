@@ -9,6 +9,8 @@ import { formatInstant } from '@devmentor/ui/time';
 
 export interface WrittenAnswerPanelProps {
   session: Pick<SessionDto, 'booking' | 'window' | 'viewerRole' | 'counterpartName' | 'answer' | 'answerOwed'>;
+  /** The loaded note is approved. Display only: the server refuses a replacement either way. */
+  answerFrozen?: boolean;
   zone: string;
   /** Called with the saved answer so the screen shows it without waiting for a poll. */
   onSaved: (answer: WrittenAnswerDto) => void;
@@ -26,7 +28,7 @@ function firstName(name: string) {
  * (another tab's save, or the server's trimmed copy of this one); with them it keeps the draft and
  * says that a newer answer exists, so an older text is never put back unnoticed.
  */
-export function WrittenAnswerPanel({ session, zone, onSaved }: WrittenAnswerPanelProps) {
+export function WrittenAnswerPanel({ session, answerFrozen = false, zone, onSaved }: WrittenAnswerPanelProps) {
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const { answer } = session;
@@ -54,7 +56,9 @@ export function WrittenAnswerPanel({ session, zone, onSaved }: WrittenAnswerPane
   const mentee = firstName(session.counterpartName);
   return (
     <div className="dm-product-stack">
-      <Card className="dm-product-panel">
+      {answerFrozen && <p className="dm-product-callout" role="status">{mentee} approved the private session note, so this written answer is final.</p>}
+      {/* Unsaved text stays on screen when an approval lands under it; the server refuses to save it. */}
+      {(!answerFrozen || dirty) && <Card className="dm-product-panel">
         <h2 className="dm-product-title">Written answer for {mentee}</h2>
         <p className="dm-product-muted">{mentee} sees it on this page as soon as you post it.</p>
         <div onChange={() => setDirty(true)}>
@@ -72,7 +76,7 @@ export function WrittenAnswerPanel({ session, zone, onSaved }: WrittenAnswerPane
         </div>
         {dirty && formKey !== latest && <p className="dm-product-callout" role="status">A newer written answer was saved, for example in another tab. Saving replaces it with the text above.</p>}
         <p className="dm-product-caption" role="status">{saved ? 'Written answer saved.' : ''}</p>
-      </Card>
+      </Card>}
       {posted}
     </div>
   );

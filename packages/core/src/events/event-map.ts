@@ -10,6 +10,9 @@ import type { Role } from '../services/auth/roles';
  */
 export interface EventMap {
   'notes.note.sent': { bookingId: string; noteId: string; version: number };
+  /** The mentee's decision on one version. IDs only: never the body or the comment. */
+  'notes.note.approved': { bookingId: string; noteId: string; version: number };
+  'notes.note.declined': { bookingId: string; noteId: string; version: number };
   'bookings.booking.confirmed': { bookingId: string };
   'availability.slot.published': { mentorProfileId: string; slotId: string; startsAt: string };
   'auth.user.created': { userId: string; email: string };

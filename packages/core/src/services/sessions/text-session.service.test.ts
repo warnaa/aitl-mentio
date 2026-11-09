@@ -4,7 +4,7 @@ import type { Session } from '../../http/auth';
 import { TooManyRequestsError } from '../../http/errors';
 import { MESSAGE_PAGE, POST_ANSWER_POLICY, POST_MESSAGE_POLICY, READ_SESSION_POLICY, sessionWindow, TextSessionService } from './text-session.service';
 
-vi.mock('@devmentor/db', () => ({ Booking: 'Booking', SessionMessage: 'SessionMessage' }));
+vi.mock('@devmentor/db', () => ({ Booking: 'Booking', SessionMessage: 'SessionMessage', SessionNote: 'SessionNote', LockMode: { PESSIMISTIC_WRITE: 'write' } }));
 
 // Loose test rows stand in for entities.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,14 +19,17 @@ let booking: Row | null;
 let newestFirst: Row[];
 const consumeFor = vi.fn();
 const emit = vi.fn();
-let updatedRows: number;
+let approvedNotes: number;
 const em = {
   findOne: vi.fn(async (_entity: string, where: Row) => (booking && where.id === booking.id && where.status === booking.status ? booking : null)),
   find: vi.fn(async (_entity: string, _where: Row, options: Row) => newestFirst.slice(0, options.limit)),
   create: vi.fn((_entity: string, values: Row): Row => ({ id: 'new-message', ...values })),
   persist: vi.fn(),
   flush: vi.fn(),
-  nativeUpdate: vi.fn(async () => updatedRows),
+  nativeUpdate: vi.fn(async () => 1),
+  count: vi.fn(async () => approvedNotes),
+  fork: () => em,
+  transactional: vi.fn(async (fn: (scoped: unknown) => unknown) => fn(em)),
 };
 const service = () => new TextSessionService({ em: em as unknown as EntityManager, session: Promise.resolve(session), clock: { now: () => now }, rateLimiter: { consumeFor }, eventBus: { emit } });
 const confirmed = (length = 25): Row => ({ id: bookingId, status: 'confirmed', mentee, mentorProfile: { user: mentor }, startsAt: start, lengthMinutes: length });
@@ -40,7 +43,7 @@ beforeEach(() => {
   booking = confirmed();
   newestFirst = [];
   consumeFor.mockResolvedValue(undefined);
-  updatedRows = 1;
+  approvedNotes = 0;
 });
 
 describe('sessionWindow', () => {
@@ -246,7 +249,7 @@ describe('postAnswer', () => {
     now = at(offset);
     const dto = await service().postAnswer(bookingId, { body: '  Use a union.\r\nNarrow on ok.  ', extra: 1 });
     expect(dto).toEqual({ body: 'Use a union.\nNarrow on ok.', postedAt: now.toISOString() });
-    expect(em.nativeUpdate).toHaveBeenCalledWith('Booking', { id: bookingId, status: 'confirmed' }, { writtenAnswer: 'Use a union.\nNarrow on ok.', writtenAnswerAt: now, updatedAt: now });
+    expect(em.nativeUpdate).toHaveBeenCalledWith('Booking', { id: bookingId }, { writtenAnswer: 'Use a union.\nNarrow on ok.', writtenAnswerAt: now, updatedAt: now });
     expect(emit).toHaveBeenCalledWith('sessions.answer.posted', { bookingId });
     expect(consumeFor).toHaveBeenCalledWith(POST_ANSWER_POLICY, 'mentor-id');
   });
@@ -286,8 +289,19 @@ describe('postAnswer', () => {
   });
 
   it('answers 404 and emits nothing when the booking stopped being confirmed before the write', async () => {
-    updatedRows = 0;
+    em.findOne.mockResolvedValueOnce(booking).mockResolvedValueOnce(null);
     await expect(service().postAnswer(bookingId, { body: 'x' })).rejects.toMatchObject({ status: 404, message: 'Session not found' });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('checks for an approved note under the booking lock and refuses to replace a frozen answer', async () => {
+    booking = { ...confirmed(), writtenAnswer: 'Final.', writtenAnswerAt: at(60_000) };
+    approvedNotes = 1;
+    await expect(service().postAnswer(bookingId, { body: 'Changed.' })).rejects.toMatchObject({ status: 409, message: 'The session note was approved, so the written answer is final.' });
+    expect(em.findOne).toHaveBeenLastCalledWith('Booking', { id: bookingId, status: 'confirmed' }, { lockMode: 'write', refresh: true });
+    expect(em.count).toHaveBeenCalledWith('SessionNote', { booking: bookingId, status: 'approved' });
+    expect(em.nativeUpdate).not.toHaveBeenCalled();
     expect(emit).not.toHaveBeenCalled();
   });
 

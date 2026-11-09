@@ -104,7 +104,7 @@ describe('TC-ROLES-002 navigation follows the union of roles, with no way to gai
       login: 'mock-operator',
       home: '/admin',
       heading: 'Operator workspace',
-      links: ['Operator home', 'Users', 'Mentor workspace', 'Edit profile'],
+      links: ['Operator home', 'Users', 'Note declines', 'Mentor workspace', 'Edit profile'],
     },
   ] as const;
 
@@ -141,7 +141,7 @@ describe('TC-ROLES-002 navigation follows the union of roles, with no way to gai
       expect((await currentUrl(session)).pathname).toBe('/mentor');
       const mentor = await runAgentBrowser(session, 'snapshot');
       expect(mentor).toContain('heading "Mentor workspace"');
-      expect(workspaceLinks(mentor)).toEqual(['Operator home', 'Users', 'Mentor workspace', 'Edit profile']);
+      expect(workspaceLinks(mentor)).toEqual(['Operator home', 'Users', 'Note declines', 'Mentor workspace', 'Edit profile']);
 
       await runAgentBrowser(session, 'find', 'role', 'link', 'click', '--name', 'Users');
       await runAgentBrowser(session, 'wait', '--text', 'Ada Lovelace');

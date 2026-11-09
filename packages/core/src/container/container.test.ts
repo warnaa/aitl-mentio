@@ -533,3 +533,13 @@ it('wires the session note consumer in a disposable system scope', async () => {
   await container.cradle.eventBus.emit('notes.note.sent', payload);
   expect(onNoteSent).toHaveBeenCalledExactlyOnceWith(payload);
 });
+
+it('wires both decision events to the notification consumer', async () => {
+  const container = await getContainer();
+  const onNoteDecided = vi.fn().mockResolvedValue(undefined);
+  container.register({ notificationService: asValue({ onNoteDecided }) });
+  const payload = { bookingId: 'b1', noteId: 'n1', version: 2 };
+  await container.cradle.eventBus.emit('notes.note.approved', payload);
+  await container.cradle.eventBus.emit('notes.note.declined', payload);
+  expect(onNoteDecided.mock.calls).toEqual([['approved', payload], ['declined', payload]]);
+});

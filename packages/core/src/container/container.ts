@@ -210,6 +210,17 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     }
   });
 
+  for (const status of ['approved', 'declined'] as const) {
+    container.cradle.eventBus.on(`notes.note.${status}`, async payload => {
+      const scope = container.createScope<Cradle>();
+      try {
+        await scope.cradle.notificationService.onNoteDecided(status, payload);
+      } finally {
+        await scope.dispose();
+      }
+    });
+  }
+
   return container;
 }
 

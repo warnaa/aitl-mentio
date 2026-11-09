@@ -137,7 +137,7 @@ export function SessionRoom({ initial, initialNote = EMPTY_NOTE }: { initial: Se
       {gone && <p className="dm-product-callout" role="alert">This session is no longer available. Reload the page or go back to My sessions.</p>}
       {data.truncated && <p className="dm-product-caption">Earlier messages are not shown.</p>}
       <SessionTranscript messages={messages} composer={body} />
-      <WrittenAnswerPanel session={data} zone={zone} onSaved={answer => { setData(current => ({ ...current, answer, answerOwed: false })); void refresh(); }} />
+      <WrittenAnswerPanel session={data} answerFrozen={initialNote?.current?.status === 'approved'} zone={zone} onSaved={answer => { setData(current => ({ ...current, answer, answerOwed: false })); void refresh(); }} />
       <SessionNotePanel bookingId={data.booking.id} viewerRole={data.viewerRole} counterpartName={data.counterpartName} hasAnswer={data.answer !== null} initial={initialNote} zone={zone} />
     </div>
   );

@@ -237,11 +237,39 @@ it('records only a persisted sent note for the mentee, with replay preserving re
   expect(notifications).toEqual([]);
   await service().onNoteSent(payload);
   expect(notifications).toHaveLength(1);
-  expect(notifications[0]).toMatchObject({ user: 'mentee', booking: bookingId, kind: 'note_awaiting_approval', emailSentAt: null });
+  expect(notifications[0]).toMatchObject({ user: 'mentee', booking: bookingId, kind: 'note_awaiting_approval', noteVersion: 1, emailSentAt: null });
   notifications[0]!.readAt = now;
   await service().onNoteSent(payload);
   expect(notifications).toHaveLength(1);
   expect(notifications[0]!.readAt).toEqual(now);
   expect(send).not.toHaveBeenCalled();
   expect(nativeUpdate).not.toHaveBeenCalled();
+});
+
+it('gives each sent version its own notification', async () => {
+  note = { id: 'note', booking: bookingId, version: 1, status: 'awaiting_approval' };
+  await service().onNoteSent({ bookingId, noteId: 'note', version: 1 });
+  note = { id: 'note2', booking: bookingId, version: 2, status: 'awaiting_approval' };
+  await service().onNoteSent({ bookingId, noteId: 'note2', version: 2 });
+  expect(notifications.map(row => row.noteVersion)).toEqual([1, 2]);
+});
+
+it.each([['approved', 'note_approved'], ['declined', 'note_declined']] as const)('tells the mentor once per version when a note is %s, with no text', async (status, kind) => {
+  note = { id: 'note', booking: bookingId, version: 1, status, body: 'private body', declineComment: 'private comment' };
+  const payload = { bookingId, noteId: 'note', version: 1 };
+  await service().onNoteDecided(status, payload);
+  await service().onNoteDecided(status, payload);
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0]).toMatchObject({ user: 'mentor', booking: bookingId, kind, noteVersion: 1, emailSentAt: null });
+  expect(JSON.stringify(notifications)).not.toContain('private');
+  expect(send).not.toHaveBeenCalled();
+});
+
+it('records no decision notification for a mismatched note or an unconfirmed booking', async () => {
+  note = { id: 'note', booking: bookingId, version: 1, status: 'awaiting_approval' };
+  await service().onNoteDecided('approved', { bookingId, noteId: 'note', version: 1 });
+  note = { id: 'note', booking: bookingId, version: 1, status: 'approved' };
+  booking = null;
+  await service().onNoteDecided('approved', { bookingId, noteId: 'note', version: 1 });
+  expect(notifications).toHaveLength(0);
 });

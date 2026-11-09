@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import type { EntityManager, IBooking, ISessionNote } from '@devmentor/db';
 import type { Session } from '../../http/auth';
-import { READ_NOTE_POLICY, SAVE_NOTE_POLICY, SEND_NOTE_POLICY, SessionNoteService } from './session-note.service';
+import { DECIDE_NOTE_POLICY, READ_NOTE_POLICY, SAVE_NOTE_POLICY, SEND_NOTE_POLICY, SessionNoteService } from './session-note.service';
 
 vi.mock('@devmentor/db', () => ({ Booking: 'Booking', SessionNote: 'SessionNote', LockMode: { PESSIMISTIC_WRITE: 'write' } }));
 const id = '11111111-1111-4111-8111-111111111111';
@@ -15,6 +15,7 @@ const em = {
   fork: () => em,
   transactional: vi.fn(async (fn: (em: unknown) => unknown) => fn(em)),
   findOne: vi.fn(async (entity: string) => entity === 'Booking' ? booking : note),
+  find: vi.fn(async (entity: string): Promise<unknown[]> => entity === 'Booking' ? (booking ? [booking] : []) : note ? [note] : []),
   populate: vi.fn(),
   persist: vi.fn(),
   create: vi.fn((_entity: string, values: object) => ({ id: 'note-id', ...values })),
@@ -139,4 +140,116 @@ it('does not emit after a failed flush, and surfaces read failures without leaki
   expect(emit).not.toHaveBeenCalled();
   consumeFor.mockRejectedValueOnce(new Error('reads limited'));
   await expect(service().getForParticipant(id)).rejects.toThrow('reads limited');
+});
+
+const asMentee = () => { session = { userId: 'mentee', roles: ['mentee'] }; };
+const sent = (values: Partial<ISessionNote> = {}) => saved({ status: 'awaiting_approval', sentAt: now, ...values });
+const later = new Date('2026-11-08T10:00:00Z');
+const decided = (status: string, comment: string | null) => saved({ status, sentAt: now, decidedAt: later, updatedAt: later, declineComment: comment });
+
+it('returns older versions, newest first, as history', async () => {
+  const older = decided('declined', 'add context');
+  const newest = saved({ id: 'second', version: 2 });
+  em.find.mockResolvedValueOnce([newest, older]);
+  const view = await service().getForParticipant(id);
+  expect(view.current).toMatchObject({ id: 'second', version: 2 });
+  expect(view.history).toEqual([expect.objectContaining({ version: 1, status: 'declined', declineComment: 'add context' })]);
+  expect(em.find.mock.calls[0]).toEqual(['SessionNote', { booking: id }, { orderBy: { version: 'desc' }, refresh: true }]);
+});
+
+it('approves the exact sent version after commit, emitting identifiers only', async () => {
+  note = sent(); asMentee();
+  const result = await service().approve(id, { version: 1 });
+  expect(result).toMatchObject({ status: 'approved', decidedAt: now.toISOString(), declineComment: null, private: true });
+  expect(consumeFor).toHaveBeenCalledWith(DECIDE_NOTE_POLICY, 'mentee');
+  expect(em.flush.mock.invocationCallOrder[0]).toBeLessThan(emit.mock.invocationCallOrder[0]!);
+  expect(emit).toHaveBeenCalledExactlyOnceWith('notes.note.approved', { bookingId: id, noteId: 'note-id', version: 1 });
+});
+
+it('declines with a normalized comment and never reads as approved', async () => {
+  note = sent(); asMentee();
+  const result = await service().decline(id, { version: 1, comment: ' add\r\ncontext ' });
+  expect(result).toMatchObject({ status: 'declined', declineComment: 'add\ncontext', decidedAt: now.toISOString() });
+  expect(emit).toHaveBeenCalledExactlyOnceWith('notes.note.declined', { bookingId: id, noteId: 'note-id', version: 1 });
+  expect(JSON.stringify(emit.mock.calls)).not.toContain('context');
+});
+
+it('refuses a decline without a comment as a field error and changes nothing', async () => {
+  note = sent(); asMentee();
+  await expect(service().decline(id, { version: 1, comment: '  ' })).rejects.toMatchObject({ status: 422, fieldErrors: { comment: expect.any(Array) } });
+  expect(note.status).toBe('awaiting_approval');
+  expect(emit).not.toHaveBeenCalled();
+});
+
+it('does not let the mentor decide, and hides the decision from outsiders', async () => {
+  note = sent();
+  await expect(service().approve(id, { version: 1 })).rejects.toMatchObject({ status: 403 });
+  await expect(service().decline(id, { version: 1, comment: 'x' })).rejects.toMatchObject({ status: 403 });
+  session = { userId: 'stranger', roles: ['operator'] };
+  await expect(service().approve(id, { version: 1 })).rejects.toMatchObject({ status: 404 });
+  expect(note.status).toBe('awaiting_approval');
+  expect(consumeFor).not.toHaveBeenCalled();
+});
+
+it('replays an identical decision without changing dates so a lost notification can be repaired', async () => {
+  asMentee();
+  note = decided('approved', null);
+  expect(await service().approve(id, { version: 1 })).toMatchObject({ decidedAt: later.toISOString() });
+  note = decided('declined', 'same');
+  expect(await service().decline(id, { version: 1, comment: 'same' })).toMatchObject({ decidedAt: later.toISOString(), declineComment: 'same' });
+  expect(em.flush).not.toHaveBeenCalled();
+  expect(emit).toHaveBeenCalledTimes(2);
+});
+
+it('refuses decisions on a draft, a stale or missing version, a conflicting decision or a changed comment', async () => {
+  asMentee();
+  await expect(service().approve(id, { version: 1 })).rejects.toMatchObject({ status: 409 });
+  note = saved();
+  await expect(service().approve(id, { version: 1 })).rejects.toMatchObject({ status: 409 });
+  note = sent({ version: 2 });
+  await expect(service().approve(id, { version: 1 })).rejects.toMatchObject({ status: 409 });
+  note = decided('approved', null);
+  await expect(service().decline(id, { version: 1, comment: 'x' })).rejects.toMatchObject({ status: 409 });
+  note = decided('declined', 'x');
+  await expect(service().approve(id, { version: 1 })).rejects.toMatchObject({ status: 409 });
+  await expect(service().decline(id, { version: 1, comment: 'different' })).rejects.toMatchObject({ status: 409 });
+  expect(em.flush).not.toHaveBeenCalled();
+  expect(emit).not.toHaveBeenCalled();
+});
+
+it('starts a redraft as the next version and leaves the declined version untouched', async () => {
+  note = decided('declined', 'add context');
+  const declined = note;
+  expect(await service().saveDraft(id, { body: 'second try', expectedRevision: 1, expectedVersion: 1 })).toMatchObject({ version: 2, revision: 1, status: 'draft', body: 'second try', declineComment: null });
+  expect(declined).toMatchObject({ version: 1, status: 'declined', body: 'private', declineComment: 'add context' });
+  expect(em.persist).toHaveBeenCalledOnce();
+});
+
+it('refuses a redraft from a stale editor and a second tab overwriting the new version', async () => {
+  note = decided('declined', 'add context');
+  for (const stale of [{ expectedRevision: 1 }, { expectedRevision: 1, expectedVersion: null }, { expectedRevision: 2, expectedVersion: 1 }, { expectedRevision: 1, expectedVersion: 2 }]) {
+    await expect(service().saveDraft(id, { body: 'x', ...stale })).rejects.toMatchObject({ status: 409 });
+  }
+  note = saved({ version: 2 });
+  await expect(service().saveDraft(id, { body: 'x', expectedRevision: 1, expectedVersion: 1 })).rejects.toMatchObject({ status: 409 });
+  expect(await service().saveDraft(id, { body: 'edited', expectedRevision: 1, expectedVersion: 2 })).toMatchObject({ version: 2, revision: 2 });
+  note = decided('approved', null);
+  await expect(service().saveDraft(id, { body: 'x', expectedRevision: 1, expectedVersion: 1 })).rejects.toMatchObject({ status: 409 });
+});
+
+it('reports declined-version counts to operators only, with no text', async () => {
+  session = null;
+  await expect(service().declineReport()).rejects.toMatchObject({ status: 401 });
+  session = { userId: 'mentor', roles: ['mentor', 'mentee'] };
+  await expect(service().declineReport()).rejects.toMatchObject({ status: 403 });
+  session = { userId: 'op', roles: ['operator'] };
+  booking = { ...booking!, startsAt: now, mentee: { displayName: 'Sam' }, mentorProfile: { user: { displayName: 'Alex' } } } as unknown as IBooking;
+  note = null;
+  expect(await service().declineReport()).toEqual([]);
+  em.find.mockClear();
+  em.find.mockResolvedValueOnce([{ booking: { id } }, { booking: { id } }]);
+  const report = await service().declineReport();
+  expect(report).toEqual([{ bookingId: id, startsAt: now.toISOString(), mentorName: 'Alex', menteeName: 'Sam', declineCount: 2 }]);
+  expect(em.find.mock.calls[0]).toEqual(['SessionNote', { status: 'declined', booking: { status: 'confirmed' } }, { fields: ['booking'] }]);
+  expect((em.find.mock.calls[1] as unknown[])[2]).toMatchObject({ limit: 100, orderBy: { startsAt: 'desc' } });
 });

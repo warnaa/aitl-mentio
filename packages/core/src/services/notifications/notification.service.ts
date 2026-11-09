@@ -10,7 +10,7 @@ import { answerPostedMail } from './answer-posted-mail';
 import { bookingConfirmedMail, type Audience } from './booking-confirmed-mail';
 import type { Mailer } from './mailer.port';
 
-export type NotificationKind = 'booking_confirmed' | 'answer_posted' | 'note_awaiting_approval';
+export type NotificationKind = 'booking_confirmed' | 'answer_posted' | 'note_awaiting_approval' | 'note_approved' | 'note_declined';
 const PAGE = 50;
 
 export interface NotificationServiceDeps {
@@ -124,19 +124,28 @@ export class NotificationService {
     const booking = await this.deps.em.fork().findOne(Booking, { id: bookingId, status: 'confirmed' }, { populate: ['mentee'] });
     if (!booking) return;
     // record finds an existing notification without updating it, preserving readAt on replay.
-    await this.record(booking.mentee.id, bookingId, 'note_awaiting_approval');
+    await this.record(booking.mentee.id, bookingId, 'note_awaiting_approval', version);
+  }
+
+  /** Tells the mentor about the mentee's decision on one version; in-product only, with no note text or comment. */
+  async onNoteDecided(status: 'approved' | 'declined', { bookingId, noteId, version }: { bookingId: string; noteId: string; version: number }): Promise<void> {
+    const note = await this.deps.em.fork().findOne(SessionNote, { id: noteId, booking: bookingId, version, status });
+    if (!note) return;
+    const booking = await this.deps.em.fork().findOne(Booking, { id: bookingId, status: 'confirmed' }, { populate: ['mentorProfile.user'] });
+    if (!booking) return;
+    await this.record(booking.mentorProfile.user.id, bookingId, `note_${status}`, version);
   }
 
   /** The existing row, a new one, or null when a concurrent consumer inserted it first. */
-  private async record(userId: string, bookingId: string, kind: NotificationKind): Promise<INotification | null> {
+  private async record(userId: string, bookingId: string, kind: NotificationKind, noteVersion = 0): Promise<INotification | null> {
     const em = this.deps.em.fork();
-    const existing = await em.findOne(Notification, { user: userId, kind, booking: bookingId });
+    const existing = await em.findOne(Notification, { user: userId, kind, booking: bookingId, noteVersion });
     if (existing) return existing;
     try {
       const now = this.deps.clock.now();
       const row = em.create(Notification, {
         user: em.getReference(User, userId), booking: em.getReference(Booking, bookingId),
-        kind, readAt: null, emailSentAt: null, createdAt: now, updatedAt: now,
+        kind, noteVersion, readAt: null, emailSentAt: null, createdAt: now, updatedAt: now,
       });
       em.persist(row);
       await em.flush();

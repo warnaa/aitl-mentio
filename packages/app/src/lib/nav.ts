@@ -1,4 +1,4 @@
-import { CalendarDays, ShieldCheck, SlidersHorizontal, UserRound, Users, type LucideIcon } from 'lucide-react';
+import { CalendarDays, MessageSquareWarning, ShieldCheck, SlidersHorizontal, UserRound, Users, type LucideIcon } from 'lucide-react';
 import type { Role, RoleSet } from '@devmentor/core';
 
 /** One workspace navigation link. The icon is decorative; the label names the page. */
@@ -18,6 +18,7 @@ const NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
   operator: [
     { href: '/admin', label: 'Operator home', icon: ShieldCheck },
     { href: '/admin/users', label: 'Users', icon: Users },
+    { href: '/admin/sessions', label: 'Note declines', icon: MessageSquareWarning },
   ],
   mentee: [{ href: '/home', label: 'My sessions', icon: CalendarDays }],
   mentor: [
