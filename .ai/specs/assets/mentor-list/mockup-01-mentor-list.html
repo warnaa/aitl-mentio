@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mockup — /mentors (illustrative)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 Inter, system-ui, sans-serif; color: #0f172a; background: #f8fafc; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; background: #fff; border-bottom: 1px solid #e2e8f0; }
+  .wordmark { font-family: "DM Mono", ui-monospace, monospace; font-weight: 600; }
+  .wordmark span { color: #2563eb; }
+  .btn { display: inline-block; padding: 8px 14px; border-radius: 8px; border: 1px solid #cbd5e1; color: #0f172a; text-decoration: none; font-weight: 500; background: #fff; }
+  .btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px; }
+  h1 { margin: 0 0 4px; font-size: 28px; }
+  .lead { margin: 0 0 20px; color: #475569; }
+  nav.filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  nav.filter a { padding: 6px 12px; border-radius: 999px; border: 1px solid #cbd5e1; text-decoration: none; color: #334155; background: #fff; font-weight: 500; }
+  nav.filter a[aria-current] { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; }
+  ul.grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  article { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; height: 100%; }
+  .identity { display: flex; gap: 12px; align-items: center; }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: grid; place-items: center; font-weight: 600; }
+  .identity h2 { margin: 0; font-size: 17px; }
+  .identity a { font-size: 13px; color: #2563eb; }
+  .bio { margin: 0; color: #334155; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 13px; padding: 2px 10px; border-radius: 999px; border: 1px solid #cbd5e1; color: #1e40af; font-weight: 600; }
+  .facts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .fact { font-size: 13px; padding: 2px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; }
+  .next { font-size: 14px; color: #0f172a; margin: 0; }
+  .next strong { font-weight: 600; }
+  article .btn { align-self: flex-start; margin-top: auto; }
+  .note { margin-top: 28px; font-size: 12px; color: #64748b; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <span class="wordmark">DevMentor<span>✦</span></span>
+  <span><a class="btn" href="#">Sign in</a> <a class="btn primary" href="#">Create an account</a></span>
+</header>
+<main>
+  <h1>Find a mentor</h1>
+  <p class="lead">Mentors with open times, newest availability first.</p>
+  <nav class="filter" aria-label="Filter by stack">
+    <a href="#">All stacks</a>
+    <a href="#" aria-current="page">TypeScript</a>
+    <a href="#">React</a>
+    <a href="#">Python</a>
+    <a href="#">AI agents</a>
+  </nav>
+  <ul class="grid">
+    <li><article>
+      <div class="identity"><span class="avatar">SN</span><div><h2>Sam Nowak</h2><a href="#">github.com/sample-sam ↗</a></div></div>
+      <p class="bio">I build typed APIs and help teams untangle generics, narrowing and the error-handling patterns that grow around them. Bring the code you are stuck on.</p>
+      <div class="chips"><span class="chip">TypeScript</span><span class="chip">React</span></div>
+      <div class="facts"><span class="fact">25 min: €40</span><span class="fact">50 min: €70</span></div>
+      <p class="next">Next open time: <strong>Thu 12 Nov, 10:00</strong></p>
+      <a class="btn" href="#">View profile →</a>
+    </article></li>
+    <li><article>
+      <div class="identity"><span class="avatar">RK</span><div><h2>Riya Kapoor</h2><a href="#">riya.example.dev ↗</a></div></div>
+      <p class="bio">Backend developer who moved a large codebase to strict TypeScript. I can help with tsconfig, module boundaries and testing typed code.</p>
+      <div class="chips"><span class="chip">TypeScript</span><span class="chip">AI agents</span></div>
+      <div class="facts"><span class="fact">25 min: €35</span><span class="fact">50 min: €60</span></div>
+      <p class="next">Next open time: <strong>Fri 13 Nov, 18:30</strong></p>
+      <a class="btn" href="#">View profile →</a>
+    </article></li>
+    <li><article>
+      <div class="identity"><span class="avatar">TB</span><div><h2>Tomás Berg</h2><a href="#">github.com/sample-tomas ↗</a></div></div>
+      <p class="bio">Frontend lead. Type-safe forms, data fetching and the point where a component should be split in two.</p>
+      <div class="chips"><span class="chip">TypeScript</span><span class="chip">React</span></div>
+      <div class="facts"><span class="fact">25 min: €45</span><span class="fact">50 min: €80</span></div>
+      <p class="next">Next open time: <strong>Mon 16 Nov, 08:00</strong></p>
+      <a class="btn" href="#">View profile →</a>
+    </article></li>
+  </ul>
+  <p class="note">Illustrative mockup for spec 2026-11-09-mentor-list — placeholder people, prices and times. No search box, no rating, no featured section (R13, N02).</p>
+</main>
+</body>
+</html>
