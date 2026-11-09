@@ -6,7 +6,7 @@ import { ConflictError, ServiceUnavailableError, UnauthorizedError } from '../..
 import type { Logger } from '../../logger';
 import { MAX_CENTS } from '../../money/money';
 import type { Clock } from '../../time/clock';
-import { platformSettingsUpdateSchema, type PlatformSettingsUpdateInput } from '../../validators/operator/platform-settings-update.schema';
+import { platformSettingsUpdateSchema } from '../../validators/operator/platform-settings-update.schema';
 
 /** D11/R10: the platform keeps 20 % of a session until the operator saves another fee. */
 export const DEFAULT_FEE_PERCENT = 20;
@@ -75,7 +75,7 @@ export class PlatformSettingsService {
    * insert ignores a conflict and the loser fails the version check). `version` must match what
    * the operator loaded, so one founder never silently overwrites the other.
    */
-  async update(input: PlatformSettingsUpdateInput): Promise<PlatformSettingsView> {
+  async update(input: unknown): Promise<PlatformSettingsView> {
     const session = await this.operator();
     const data = parseWith(platformSettingsUpdateSchema, input);
     const previous = await this.view().catch(() => null);
