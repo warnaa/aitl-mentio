@@ -19,7 +19,7 @@ import {
 import { parseWith } from '../../http/body';
 import { mentorOfferReady, mentorPagePublishable } from './readiness';
 import { parseMajorAmount, withinBounds } from '../../money/money';
-import type { PlatformSettings, PlatformSettingsService } from '../operator/platform-settings.service';
+import type { PricePolicy } from '../operator/platform-settings.service';
 import { mentorPricesUpdateSchema, type MentorPricesUpdate } from '../../validators/mentors/mentor-prices-update.schema';
 import { activeOccupancy, MIN_LEAD_MINUTES, MINUTE_MS, overlappingInterval, viableLengths } from '../bookings/occupancy';
 
@@ -38,32 +38,45 @@ function ownerFields(profile: IMentorProfile) {
     readiness: mentorPagePublishable.evaluate(profile),
   };
 }
-function pricesDto(profile: IMentorProfile, settings: PlatformSettings) {
+function pricesDto(profile: IMentorProfile, settings: PricePolicy) {
   return profile.price25Cents != null && profile.price50Cents != null && withinBounds(profile.price25Cents, settings.priceBounds.p25) && withinBounds(profile.price50Cents, settings.priceBounds.p50)
     ? { price25Cents: profile.price25Cents, price50Cents: profile.price50Cents, currency: settings.currency }
     : null;
 }
 // Keep the existing one-argument projections source-compatible; HTTP reads always supply settings.
 export function toPublicDto(profile: IMentorProfile): ReturnType<typeof publicFields>;
-export function toPublicDto(profile: IMentorProfile, settings: PlatformSettings): ReturnType<typeof publicFields> & { prices: ReturnType<typeof pricesDto> };
-export function toPublicDto(profile: IMentorProfile, settings?: PlatformSettings) {
+export function toPublicDto(profile: IMentorProfile, settings: PricePolicy): ReturnType<typeof publicFields> & { prices: ReturnType<typeof pricesDto> };
+export function toPublicDto(profile: IMentorProfile, settings?: PricePolicy) {
   const fields = publicFields(profile);
   return settings ? { ...fields, prices: pricesDto(profile, settings) } : fields;
 }
 export function toOwnerDto(profile: IMentorProfile): ReturnType<typeof ownerFields>;
-export function toOwnerDto(profile: IMentorProfile, settings: PlatformSettings): ReturnType<typeof ownerFields> & { prices: ReturnType<typeof pricesDto>; priceBounds: PlatformSettings['priceBounds'] };
-export function toOwnerDto(profile: IMentorProfile, settings?: PlatformSettings) {
+export function toOwnerDto(profile: IMentorProfile, settings: PricePolicy): ReturnType<typeof ownerFields> & { prices: ReturnType<typeof pricesDto>; priceBounds: PricePolicy['priceBounds'] };
+export function toOwnerDto(profile: IMentorProfile, settings?: PricePolicy) {
   const fields = ownerFields(profile);
   return settings ? { ...fields, prices: pricesDto(profile, settings), priceBounds: settings.priceBounds } : fields;
 }
 export type MentorPublicDto = ReturnType<typeof toPublicDto> & { offerReady: boolean; offerReadiness: ReturnType<typeof mentorOfferReady.evaluate>; slots: { id: string; startsAt: string; meetsLeadTime: boolean; viableLengths: (25 | 50)[] }[] };
 export type MentorOwnerDto = ReturnType<typeof toOwnerDto> & { offerReadiness: ReturnType<typeof mentorOfferReady.evaluate> };
 
+/** At most this many flagged mentors are listed; `total` still counts all of them. */
+export const OUT_OF_BOUNDS_LIMIT = 200;
+export interface OutOfBoundsMentor {
+  mentorProfileId: string;
+  displayName: string;
+  slug: string | null;
+  published: boolean;
+  price25Cents: number | null;
+  price50Cents: number | null;
+  breaches: ('price25' | 'price50')[];
+}
+export interface OutOfBoundsMentors { total: number; mentors: OutOfBoundsMentor[] }
+
 export interface MentorProfileServiceDeps {
   em: EntityManager;
   session: Promise<Session | null>;
   clock: Clock;
-  platformSettingsService: Pick<PlatformSettingsService, 'get'>;
+  platformSettingsService: { get(): Promise<PricePolicy> };
   eventBus: Pick<EventBus, 'emit'>;
 }
 
@@ -74,6 +87,41 @@ export class MentorProfileService {
     const session = await this.deps.session;
     if (!session) throw new UnauthorizedError();
     return requireRole(session, 'mentor').userId;
+  }
+
+  /**
+   * Operator only (E05-S02, R08): mentors whose stored price lies outside `settings`. Read-only —
+   * their prices are never changed here; they are held to the bounds on their next save and
+   * are not offer-ready until then. A mentor with no price yet is not flagged.
+   */
+  async listOutOfBounds(settings: PricePolicy): Promise<OutOfBoundsMentors> {
+    const session = await this.deps.session;
+    if (!session) throw new UnauthorizedError();
+    requireRole(session, 'operator');
+    const { p25, p50 } = settings.priceBounds;
+    // SQL comparisons with NULL are not true, so unpriced mentors drop out on their own.
+    const [rows, total] = await this.deps.em.findAndCount(
+      MentorProfile,
+      { $or: [
+        { price25Cents: { $lt: p25.minCents } }, { price25Cents: { $gt: p25.maxCents } },
+        { price50Cents: { $lt: p50.minCents } }, { price50Cents: { $gt: p50.maxCents } },
+      ] },
+      { populate: ['user'], orderBy: { user: { displayName: 'asc' }, id: 'asc' }, limit: OUT_OF_BOUNDS_LIMIT },
+    );
+    return {
+      total,
+      mentors: rows.map(profile => ({
+        mentorProfileId: profile.id,
+        displayName: profile.user.displayName,
+        slug: profile.slug ?? null,
+        published: !!profile.publishedAt,
+        price25Cents: profile.price25Cents ?? null,
+        price50Cents: profile.price50Cents ?? null,
+        breaches: ([['price25', profile.price25Cents, p25], ['price50', profile.price50Cents, p50]] as const)
+          .filter(([, cents, bounds]) => cents != null && !withinBounds(cents, bounds))
+          .map(([key]) => key),
+      })),
+    };
   }
 
   private async profile(em: EntityManager, userId: string, lock = false): Promise<IMentorProfile> {
@@ -90,8 +138,15 @@ export class MentorProfileService {
     return profile;
   }
 
-  private async ownerDto(em: EntityManager, profile: IMentorProfile): Promise<MentorOwnerDto> {
-    const settings = this.deps.platformSettingsService.get();
+  /**
+   * Settings are read by each caller before it opens a transaction, so a settings read never waits
+   * for a second pooled connection while the transaction holds the mentor's row lock.
+   */
+  private settings(): Promise<PricePolicy> {
+    return this.deps.platformSettingsService.get();
+  }
+
+  private async ownerDto(em: EntityManager, profile: IMentorProfile, settings: PricePolicy): Promise<MentorOwnerDto> {
     const hasFutureSlots = await em.count(Slot, { mentorProfile: profile.id, removedAt: null, startsAt: { $gt: this.deps.clock.now() } }) > 0;
     return { ...toOwnerDto(profile, settings), offerReadiness: mentorOfferReady.evaluate({ ...profile, settings, hasFutureSlots }) };
   }
@@ -99,9 +154,9 @@ export class MentorProfileService {
   async updatePrices(input: MentorPricesUpdate): Promise<MentorOwnerDto> {
     const userId = await this.ownerId();
     const data = parseWith(mentorPricesUpdateSchema, input);
+    const settings = await this.settings();
     return this.deps.em.fork().transactional(async em => {
       const profile = await this.profile(em, userId, true);
-      const settings = this.deps.platformSettingsService.get();
       const fieldErrors: Record<string, string[]> = {};
       const cents: Partial<Record<'price25' | 'price50', number>> = {};
       for (const [key, raw, bounds] of [
@@ -119,16 +174,18 @@ export class MentorProfileService {
       profile.price50Cents = cents.price50!;
       profile.updatedAt = this.deps.clock.now();
       await em.flush();
-      return this.ownerDto(em, profile);
+      return this.ownerDto(em, profile, settings);
     });
   }
   async getMine(): Promise<MentorOwnerDto> {
-    return this.ownerDto(this.deps.em, await this.profile(this.deps.em, await this.ownerId()));
+    const profile = await this.profile(this.deps.em, await this.ownerId());
+    return this.ownerDto(this.deps.em, profile, await this.settings());
   }
 
   async update(input: MentorProfileUpdate): Promise<MentorOwnerDto> {
     const userId = await this.ownerId();
     const data = parseWith(mentorProfileUpdateSchema, input);
+    const settings = await this.settings();
     return this.deps.em.fork().transactional(async (em) => {
       const profile = await this.profile(em, userId, true);
       Object.assign(profile, data);
@@ -139,12 +196,13 @@ export class MentorProfileService {
       }
       profile.updatedAt = this.deps.clock.now();
       await em.flush();
-      return this.ownerDto(em, profile);
+      return this.ownerDto(em, profile, settings);
     });
   }
 
   async publish(): Promise<MentorOwnerDto> {
     const userId = await this.ownerId();
+    const settings = await this.settings();
     const occupied = new Set<string>();
     for (let attempt = 0; attempt < MAX_SLUG_ATTEMPTS; attempt += 1) {
       let candidate: string | undefined;
@@ -152,18 +210,18 @@ export class MentorProfileService {
         // Never reuse a rolled-back identity map or an enclosing failed transaction.
         const result = await this.deps.em.fork().transactional(async (em) => {
           const profile = await this.profile(em, userId, true);
-          if (profile.publishedAt) return { dto: await this.ownerDto(em, profile), changed: false };
+          if (profile.publishedAt) return { dto: await this.ownerDto(em, profile, settings), changed: false };
           mentorPagePublishable.assert(profile);
           if (!profile.slug) {
             candidate = uniqueSlug(profile.user.displayName, occupied);
             const collision = await em.findOne(MentorProfile, { slug: candidate });
-            if (collision) return { dto: await this.ownerDto(em, profile), changed: false, collision: candidate };
+            if (collision) return { dto: await this.ownerDto(em, profile, settings), changed: false, collision: candidate };
             profile.slug = candidate;
           }
           profile.publishedAt = this.deps.clock.now();
           profile.updatedAt = profile.publishedAt;
           await em.flush();
-          return { dto: await this.ownerDto(em, profile), changed: true };
+          return { dto: await this.ownerDto(em, profile, settings), changed: true };
         });
         if (result.collision) {
           occupied.add(result.collision);
@@ -190,12 +248,13 @@ export class MentorProfileService {
 
   async unpublish(): Promise<MentorOwnerDto> {
     const userId = await this.ownerId();
+    const settings = await this.settings();
     return this.deps.em.fork().transactional(async (em) => {
       const profile = await this.profile(em, userId, true);
       profile.publishedAt = null;
       profile.updatedAt = this.deps.clock.now();
       await em.flush();
-      return this.ownerDto(em, profile);
+      return this.ownerDto(em, profile, settings);
     });
   }
 
@@ -211,7 +270,7 @@ export class MentorProfileService {
     if (!profile) throw new NotFoundError('Mentor page not found');
     const now = this.deps.clock.now();
     const slots = await this.deps.em.find(Slot, { mentorProfile: profile.id, removedAt: null, startsAt: { $gt: now } }, { orderBy: { startsAt: 'asc' }, limit: 50 });
-    const settings = this.deps.platformSettingsService.get();
+    const settings = await this.settings();
     const offerReadiness = mentorOfferReady.evaluate({ ...profile, settings, hasFutureSlots: slots.length > 0 });
     const occupied = slots.length ? await this.deps.em.find(Booking, {
       mentorProfile: profile.id,
