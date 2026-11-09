@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { platformSettingsUpdateSchema } from './platform-settings-update.schema';
+import { platformSettingsFieldsSchema, platformSettingsUpdateSchema } from './platform-settings-update.schema';
 
 const valid = { price25Min: '80.00', price25Max: '600', price50Min: '160.5', price50Max: '1200.00', feePercent: 20, version: 3 };
 const issues = (input: unknown) => {
@@ -21,7 +21,7 @@ it('accepts the fee edges and equal minimum and maximum', () => {
 });
 
 it('refuses a minimum above its maximum, keyed to the maximum', () => {
-  expect(issues({ ...valid, price25Min: '601' })).toEqual({ price25Max: 'The maximum must be at least the minimum (601.00).' });
+  expect(issues({ ...valid, price25Min: '601' })).toEqual({ price25Max: 'The maximum must be at least the minimum (PLN 601.00).' });
   expect(issues({ ...valid, price50Min: '1200.01' })).toHaveProperty('price50Max');
 });
 
@@ -35,4 +35,12 @@ it('refuses zero, oversized and malformed amounts and a missing version', () => 
   for (const bad of ['80.001', '-80', '1e3', '', ' 80', 80]) expect(issues({ ...valid, price25Max: bad })).toHaveProperty('price25Max');
   expect(issues({ ...valid, version: undefined })).toHaveProperty('version');
   expect(issues({ ...valid, version: -1 })).toHaveProperty('version');
+});
+
+it('validates the client form fields with the same rules, without a version', () => {
+  const { version: _version, ...fields } = valid;
+  expect(platformSettingsFieldsSchema.parse({ ...fields, version: 9 })).toEqual(fields);
+  expect(platformSettingsFieldsSchema.safeParse({ ...fields, price50Min: '1300' }).success).toBe(false);
+  const missingFee = platformSettingsFieldsSchema.safeParse({ ...fields, feePercent: undefined });
+  expect(missingFee.success ? null : missingFee.error.issues[0]!.message).toBe('Enter a whole percent from 0 to 100.');
 });
