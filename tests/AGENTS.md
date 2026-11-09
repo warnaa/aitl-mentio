@@ -40,3 +40,5 @@ authoritative runner configuration and CI commands.
   classification; application changes also run ESLint, Build, Unit tests and
   Integration tests. Documentation-only changes skip application checks. The four
   existing check names remain stable for repository rulesets.
+- Secret scan runs on every ready PR; Dependency audit and CodeQL run on application
+  changes.

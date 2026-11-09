@@ -3,20 +3,34 @@ flowchart LR
     Mentor[Mentor or attacker]
     Visitor[Anonymous visitor]
     Mentee[Mentee or attacker]
+    Operator[Operator]
   end
   subgraph app [Trusted application]
+    Auth(Accounts, sessions and invitations)
     API(Owned routes and SlotService)
     Public(Published mentor projection)
     Booking(Booking route and service)
     Payments(Checkout and verified webhook service)
     Recovery(Bounded reconciliation runner)
+    Talk(Text sessions and notifications)
   end
-  subgraph provider [External payment provider]
+  subgraph provider [External providers]
     Stripe[Stripe Checkout and API]
+    GitHub[GitHub OAuth]
+    Mail[Resend mail]
   end
   subgraph data [Trusted storage]
     DB[(PostgreSQL)]
   end
+  Visitor -->|"credentials, display name, invitation token T26-T30 T34 T36"| Auth
+  Auth -->|"identity, role and rate-limit rows T26 T27 T28 T37 T38"| DB
+  Auth -->|"code exchange, verified primary email T26"| GitHub
+  Auth -->|"verification link and display name T26 T29"| Mail
+  Operator -->|"cookie, CSRF, review decision T31 T35 T38"| Payments
+  Mentee -->|"cookie, CSRF, booking ID, message T32 T33 T34"| Talk
+  Mentor -->|"cookie, CSRF, booking ID, message T32 T33 T34"| Talk
+  Talk -->|"party-scoped messages and notifications T32"| DB
+  Talk -->|"booking-confirmed mail"| Mail
   Mentor -->|"cookie, CSRF header, instant, slot ID (T01-T04,T09-T11)"| API
   API -->|"owner-scoped queries and transactional publication (T02,T05,T06)"| DB
   Visitor -->|"slug (T07,T08)"| Public
@@ -27,10 +41,9 @@ flowchart LR
   Public -->|"bounded active intervals and viable lengths T14 T17"| DB
   Mentee -->|"owned booking, cookie, CSRF T19 T23"| Payments
   Payments -->|"idempotent session request T20 T24 T25"| Stripe
-  Stripe -->|"raw signed event T19 T22 T23"| Payments
-  Payments -->|"atomic payment identity and confirmation T20 T21 T22"| DB
+  Stripe -->|"raw signed event T19 T22 T23 T35"| Payments
+  Payments -->|"atomic payment identity and confirmation T20 T21 T22 T35"| DB
   Recovery -->|"bounded pending attempts T21 T25"| DB
   Recovery -->|"verified session retrieval and expiry T20 T21 T25"| Stripe
   classDef boundary stroke-dasharray: 5 5
   class internet,app,data,provider boundary
-

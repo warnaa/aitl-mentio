@@ -1,6 +1,6 @@
-# Threat model: E02 availability
+# Threat model: DevMentor
 
-Scope: Slice 3. Updated: 2026-11-05. Owner: implementation team; no risk acceptance is inferred from this model.
+Scope: whole system since 2026-11-09 (see "System-wide review" at the end, start there); earlier sections are the dated per-slice records, beginning with E02 availability. Updated: 2026-11-09. Owner: implementation team; the only accepted risks are those listed under "Decisions — 2026-11-09" at the end.
 
 ## System profile
 Next.js 16 / React 19 browser app and HTTP API, TypeScript services, MikroORM PostgreSQL. Single application; core/ui/db are shared libraries. Deployment target is not assumed. Signed session cookies reload live roles; owner identity comes from the session, never request data. There is no organization tenant: mentor profiles are the ownership boundary. No AI or external integration is introduced; AI Rule of Two is inapplicable.
@@ -15,20 +15,34 @@ flowchart LR
     Mentor[Mentor or attacker]
     Visitor[Anonymous visitor]
     Mentee[Mentee or attacker]
+    Operator[Operator]
   end
   subgraph app [Trusted application]
+    Auth(Accounts, sessions and invitations)
     API(Owned routes and SlotService)
     Public(Published mentor projection)
     Booking(Booking route and service)
     Payments(Checkout and verified webhook service)
     Recovery(Bounded reconciliation runner)
+    Talk(Text sessions and notifications)
   end
-  subgraph provider [External payment provider]
+  subgraph provider [External providers]
     Stripe[Stripe Checkout and API]
+    GitHub[GitHub OAuth]
+    Mail[Resend mail]
   end
   subgraph data [Trusted storage]
     DB[(PostgreSQL)]
   end
+  Visitor -->|"credentials, display name, invitation token T26-T30 T34 T36"| Auth
+  Auth -->|"identity, role and rate-limit rows T26 T27 T28 T37 T38"| DB
+  Auth -->|"code exchange, verified primary email T26"| GitHub
+  Auth -->|"verification link and display name T26 T29"| Mail
+  Operator -->|"cookie, CSRF, review decision T31 T35 T38"| Payments
+  Mentee -->|"cookie, CSRF, booking ID, message T32 T33 T34"| Talk
+  Mentor -->|"cookie, CSRF, booking ID, message T32 T33 T34"| Talk
+  Talk -->|"party-scoped messages and notifications T32"| DB
+  Talk -->|"booking-confirmed mail"| Mail
   Mentor -->|"cookie, CSRF header, instant, slot ID (T01-T04,T09-T11)"| API
   API -->|"owner-scoped queries and transactional publication (T02,T05,T06)"| DB
   Visitor -->|"slug (T07,T08)"| Public
@@ -39,8 +53,8 @@ flowchart LR
   Public -->|"bounded active intervals and viable lengths T14 T17"| DB
   Mentee -->|"owned booking, cookie, CSRF T19 T23"| Payments
   Payments -->|"idempotent session request T20 T24 T25"| Stripe
-  Stripe -->|"raw signed event T19 T22 T23"| Payments
-  Payments -->|"atomic payment identity and confirmation T20 T21 T22"| DB
+  Stripe -->|"raw signed event T19 T22 T23 T35"| Payments
+  Payments -->|"atomic payment identity and confirmation T20 T21 T22 T35"| DB
   Recovery -->|"bounded pending attempts T21 T25"| DB
   Recovery -->|"verified session retrieval and expiry T20 T21 T25"| Stripe
   classDef boundary stroke-dasharray: 5 5
@@ -132,3 +146,109 @@ Payment test scope: synthetic local ephemeral PostgreSQL and isolated test adapt
 STRIDE across browser/app, provider/app and app/storage: S verified provider identity/live sessions; T locked state/amount/expiry; R durable normalized markers and transitions; I DTO/log minimization; D bounded inputs/I/O/recovery; E role/ownership/operator guards. All high threats have planned mitigations and concrete tests. Residual policy risks: unresolved provider state temporarily retains inventory; paid anomalies need operator action; in-process confirmation events have no durable delivery guarantee. Q1/Q2 owner confirmation gates implementation. These are assumptions, not accepted risks or completed controls.
 
 Changelog: 2026-11-06 added payment design threats T19–T25, preserving T01–T18 and existing scopes.
+
+## System-wide review — 2026-11-09
+
+Scope: the whole application as committed at `f5408a4`, read from code. It adds surfaces no earlier section modelled (accounts, sessions, invitations, operator tools, text sessions, notifications) and replaces "planned" with the status of the payment controls. T01–T25 keep their IDs and text above. The main diagram and `threat-model.mmd` now show the whole system.
+
+**Most important today:** T26, because someone who never held the mailbox can end up with a working password on a real account, and the product has no password reset to remove it; and T27, because per-IP limits are off unless deployment sets a value nothing enforces.
+
+### System profile
+
+| Application | Type | Stack | Deployed as | Auth | Tenancy | AI |
+| --- | --- | --- | --- | --- | --- | --- |
+| `@devmentor/app` | Browser web app + HTTP API | Next.js 16.3, React 19, MikroORM, PostgreSQL, Stripe SDK 23 | Not defined in the repository | Stateless HS256 session cookie (24 h), revoked by `sessionVersion`, roles reloaded per request; GitHub OAuth or email + scrypt password | None. Ownership per mentor profile, booking party and user | None at runtime (no LLM SDK in `packages/`) |
+| `npm run payments:reconcile` | Scheduled CLI | Node, same services | External scheduler, not provisioned | None: trusts host environment | System scope | None |
+
+`core`, `db` and `ui` are libraries, modelled through the app. Events are in-process, with no queue. External systems: Stripe (payments), GitHub (identity), Resend (mail). AI Rule of Two: not applicable. The agent tooling in `.agents/` is development-time and out of scope.
+
+**Assets added:** account credentials and sessions, `SESSION_SECRET`, operator authority, invitation tokens, private session messages, mail sender reputation. **Actors added:** anonymous registrant, stranger with a mentee account, operator, party to a booking attacking the other party.
+
+**Entry points added:** `POST /api/auth/{login,register,logout}`, `GET /api/auth/verify-email`, `GET /api/auth/github` and its callback, `GET /api/invitations/{token}`, `POST …/accept`, `GET /api/users`, `GET|POST /api/payments/{report,review,review/{id},reconcile}`, `GET /api/sessions/{bookingId}`, `POST …/messages`, `GET|POST /api/notifications`, `GET /api/health`.
+
+**Boundaries:** browser ↔ app; Stripe, GitHub and Resend ↔ app; app ↔ PostgreSQL; scheduler host ↔ app. Note: `src/proxy.ts` is not an auth boundary.
+
+### Status of earlier threats
+
+| IDs | Status on 2026-11-09 |
+| --- | --- |
+| T01–T16, T18 | Controls present; covered by `availability`, `prices` and `booking-*` integration suites. |
+| T17 | Open, and wider than the residual note says. No per-account cap on active holds exists in `BookingService.start`: at 20 attempts per 10 minutes and a 30-minute hold, **one** account can hold about 60 slots continuously. Needs a product decision. |
+| T19, T20, T22, T23 | Implemented (`payment.service.ts`, `stripe-payment-gateway.ts`); covered by `payments-signature`, `-lost-response`, `-ambiguous-creation`, `-confirmation`, `-amount`, `-authorization`. |
+| T21, T25 | Implemented, but depend on deployment: nothing in this repository schedules `payments:reconcile` or registers the webhook (`README.md`). Do not take paid traffic until both exist. |
+| T24 | Implemented: normalized provider fields, generic webhook status codes, pino redaction. |
+
+### New threats
+
+| ID | Threat | STRIDE | Where | L | I | Response | Control today | How we verify | OWASP / CWE |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| T26 | Registrant who does not own an address sets the password on its unverified row; when the owner opens the emailed link the account becomes verified with the registrant's password. The same row makes GitHub sign-in refuse and tell the owner to open that link. No password reset or change exists to evict the password | S, E | `user.service.ts` `claimOrCreate`, `matchOrCreate`, `verifyEmail` | M | H | Mitigate: do not activate a password set before proof of mailbox unless the link opens in the registering browser, otherwise require setting one at verification; let verified GitHub identity take over an unverified row and clear its hash; add password reset and change that bump `sessionVersion` | Partial: claim voids older links; sign-in requires verification | Integration: register as A, verify as the mailbox owner in a separate browser, assert A's password fails; GitHub sign-in on an unverified row succeeds and clears the hash | A07:2025, CWE-287, CWE-640 |
+| T27 | Per-IP limits on sign-in and registration are skipped because `TRUSTED_PROXY_HOPS` defaults to 0, leaving only per-address limits. Varying the address permits password spraying, mail sending at scale and saturation of the two-slot scrypt pool | D, S | `http/rate-limit.ts` `clientIp`, `consumeFor` | H | M | Mitigate: require an explicit value at production boot; add a global registration and mail ceiling; document that a wrong hop count allows spoofing | Partial: per-address limits; one warning per process | Boot test without the value in production; integration test that many addresses from one client are refused once hops are set | API4:2023, CWE-307, CWE-770 |
+| T28 | Anonymous caller keeps a known user out of password sign-in: attempts count per address before the password is checked, and refused attempts count too, so 5 per 15 minutes renews a lockout indefinitely | D | `user.service.ts` `authenticateWithPassword` | H | M | Mitigate: key the lockout on address plus client once T27 is fixed, keep a looser per-address ceiling | None; GitHub sign-in is unaffected | Integration: exhaust from client A, correct password from client B succeeds | A07:2025, CWE-645 |
+| T29 | Anonymous caller sends mail from our domain to any address with 120 attacker-chosen characters in the greeting, including line breaks; `plainName` protects the booking mail but not this one | S, T | `email-verification.service.ts` `message` | M | M | Mitigate: apply `plainName`, or drop the name from this mail; T27's ceiling | Partial: 3 per address per hour, fixed subject | Unit: control characters and line breaks are removed from the body | A06:2025, CWE-93 |
+| T30 | Registration reveals that a verified account exists and whether it is GitHub-only. Sign-in answers are uniform | I | `user.service.ts` `claimOrCreate` | H | L | Owner decision: uniform "check your mail" response, or accept for usability | None by design | Compare responses for unknown, verified and GitHub-only addresses | API2:2023, CWE-204 |
+| T31 | Mentee or mentor reaches operator actions: user list, payment report, review decisions, reconciliation | E | `api/users`, `api/payments/*` | M | H | Mitigate | Route `requireRole`, repeated in the services except `reconcile`, which must stay callable by the CLI; `operator` derives live from the allowlist and a verified address (`roles.ts`) | Existing `payments-authorization`, `admin`, `roles` suites; DAST with mentee and mentor sessions | A01:2025, API5:2023, CWE-862 | 
+| T32 | User who is not a party reads or posts in a text session, or sees whether a booking exists | I, E | `text-session.service.ts` `party` | M | H | Mitigate | Party resolved per booking; same 404 for stranger, unknown ID, unconfirmed booking; notifications scoped to session user | Existing `text-session` suite; manual with three accounts swapping booking IDs | A01:2025, API1:2023, CWE-639 |
+| T33 | A party or mentor stores content that runs in another user's browser through messages, names or the public work link | T, E | `SessionRoom`, `MentorPageView` | M | H | Mitigate | React escaping; no `dangerouslySetInnerHTML` found; `publicWorkUrl` limited to http(s) | SAST rule banning the raw HTML sink; DAST stored-content probe with synthetic data | A05:2025, CWE-79 |
+| T34 | No Content-Security-Policy, frame or HSTS headers, so the booking and Checkout screens can be framed and any future XSS has no second barrier | T, I | `next.config.ts` | M | M | Mitigate: add `headers()` with CSP, `frame-ancestors 'none'`, HSTS, `nosniff`, `Referrer-Policy` | None | Header assertions in the integration suite; DAST header check | A02:2025, CWE-1021, CWE-693 |
+| T35 | Refund or card dispute after confirmation changes nothing: the booking stays confirmed, the session stays open and the report still counts it. Operators cannot reverse it because review requires a pending booking | T, R | `payment.service.ts` `apply`, `resolveReview`; `payment-report.service.ts` | M | M | Mitigate: handle refund and dispute events by flagging the booking for operator review, before any payout feature consumes this data | Partial: refunds before confirmation are caught; the report's gross counting is documented | Integration: signed refund event on a confirmed booking produces a review item | A06:2025, CWE-840 |
+| T36 | Anonymous health check returns the raw database error and the environment name | I | `api/health/route.ts` | M | L | Mitigate: return only up or down, log the reason | None | Integration with the database stopped: response has no error text | A02:2025, CWE-209 |
+| T37 | Production starts with `INTEGRATION_TEST_RUN=1` and mock sign-in, which lets anyone act as anyone, or with the default database password or localhost `APP_URL` | E, S | `config/env.ts`, `container.ts` `assertProductionConfig` | L | H | Mitigate: separate a test-only production flag from real deployment (for example refuse mocks unless the database host is local) and refuse default credentials | Partial: mocks refused without the flag; session secret and mail required | Boot tests for each refused combination | A02:2025, CWE-1188 |
+| T38 | Security-relevant actions cannot be reconstructed: failed sign-ins are not logged and role grants and reconciliation exist only in application logs | R | `user.service.ts`, `invitation.service.ts`, `api/payments/reconcile` | M | M | Mitigate: durable record of actor, time and target for sign-in failures, role changes and invitations | Partial: `PaymentResolution` records operator decisions | Assert a record exists after each action; review logs for absent secrets | A09:2025, CWE-778 |
+| T39 | A vulnerable or compromised dependency, or a committed secret, reaches production unnoticed: CI has no dependency, SAST or secret scan | T, E | `.github/workflows/ci.yml` | M | H | Mitigate: add `npm audit` or equivalent, SAST and secret scanning to CI | Exact versions for key packages | CI job fails on a seeded test finding | A03:2025, CWE-1395 |
+
+STRIDE across the new flows: **S** T26, T27, T29, T37, signed state and purpose-scoped tokens hold; **T** T29, T33–T35; **R** T35, T38; **I** T30, T32, T36; **D** T27, T28; **E** T26, T31–T33, T37, T39. Reviewed and sound in code, so no row: OAuth state bound to the browser (login CSRF), `safeReturnTo` open-redirect handling, invitation tokens stored as hashes, masked in logs and bound to the verified invitee, central CSRF header (only the webhook opts out), no server actions.
+
+### Assumptions and open questions
+
+- [ ] Production hosting, TLS termination and the real `TRUSTED_PROXY_HOPS` are undefined here.
+- [x] Dependency vulnerabilities: the first CI audit (2026-11-09) found 1 critical and 3 high in `next`, `sharp`, `source-map-js` and `zod`; all fixed by #82.
+- [ ] No code path creates, resends or revokes invitations; `InvitationService` exposes them but nothing calls them. How operators invite mentors is unverified.
+- [ ] Session messages and accounts have no retention or deletion path. This needs a privacy decision.
+- [ ] A mentor holding the mentee role is not prevented from booking their own slot, which would inflate paid-session counts. Product decision.
+
+### Test scope
+
+| Method | What to try | Threats |
+| --- | --- | --- |
+| Integration tests | New cases named in "How we verify"; keep existing payment and booking suites green | T26–T29, T34–T38 |
+| SAST and CI scanning | Ban raw HTML sinks; dependency and secret scans | T33, T39 |
+| DAST (no session, then mentee, mentor) | Operator routes, swapped booking IDs, security headers, health response | T30–T34, T36 |
+| Manual, two browsers and three accounts | Registration claim and verification from separate browsers; lockout from a second client; stranger access to a session | T26, T28, T32 |
+
+**Out of scope:** Stripe, GitHub and Resend infrastructure, volumetric DoS, social engineering, production and shared environments, agent development tooling.
+
+**Rules of engagement:** isolated local environment only, synthetic data seeded for at least two mentees, two mentors and one operator, Stripe test mode with separate credentials or the mock gateway. Real accounts and real mail recipients are never used.
+
+### Review checklist
+
+- [x] Every application has a profile row, and every new boundary crossing was walked through STRIDE.
+- [x] AI verdict recorded (no AI component). Cross-role and cross-owner threats present (T31, T32); multi-tenancy is not applicable.
+- [x] Every High-impact threat has a response and a verification. Threat IDs are on the diagram.
+- [x] Assumptions are marked; no attack instructions or payloads; out of scope and rules of engagement are written.
+
+Changelog: 2026-11-09 system-wide review from code at `f5408a4`: added T26–T39, profile, diagram coverage for accounts, operators and text sessions; recorded implementation status of T19–T25 and widened T17. No risk is accepted by this update.
+
+## Decisions — 2026-11-09
+
+Each row of the table above was re-checked against code at `f5408a4`. Damian approved the work order and is the named owner of these acceptances.
+
+| ID | Accepted risk | Reason | Condition or review trigger |
+| --- | --- | --- | --- |
+| T30 | Registration reveals that an account exists | Low impact; a uniform answer would worsen registration | Holds only once T27 ships. Review if user data becomes more sensitive or abuse is seen |
+| T35 | Refund or dispute after confirmation stays manual | No payout feature exists, so no automatic loss; Stripe notifies operators | Must be fixed before any payout feature, or reviewed at the first real dispute |
+| T28 (residual) | Lockout remains possible from many IPs at the higher per-address ceiling, after the T28 fix | Removing the ceiling reopens password guessing; GitHub sign-in is unaffected | Lockout reports |
+| T34 (residual) | No script-level CSP, after the header fix | Needs nonces on every page; React escaping and the T33 lint rule cover the known path | Before rendering any rich user content |
+| T38 (residual) | Structured logs only, no durable audit table, after the log fix | Hosting and retention are undecided; operator payment decisions are already durable | When hosting is chosen, or if compliance requires it |
+
+**Work order:** (1) T39; (2) T26, spec first; (3) T27 then T28; (4) T37, T36, T29; (5) T34; (6) T31 tests, T33 lint rule; (7) T38 logs; (8) T17 product decision. Before paid traffic: items 1–4, plus the scheduler and webhook that T21 and T25 depend on.
+
+**Corrections to the table above:**
+- T26's fix is now in `.ai/specs/2026-11-09-verification-bound-to-browser.md`, using browser binding (decided by Damian).
+- T29: remove the name from the mail, because `plainName` does not remove URLs.
+- T31: the controls hold, but real-session denial tests for `POST /api/payments/reconcile` and `POST /api/payments/review/{id}` were not found. The row overstated coverage.
+- T37: the harness itself runs `NODE_ENV=production` with the flag, so the check is a loopback `APP_URL`, not a local database host.
+
+Changelog: 2026-11-09 recorded owner decisions and work order; T39 scanning added to CI.
+
+Changelog: 2026-11-09 T39: the first audit run found 1 critical and 3 high production dependency findings, cleared by #82 (`next` 16.4.5, `sharp` 0.35.5, `source-map-js` 1.2.2, `zod` 4.6.7). The new jobs do not block merges until they are added to the branch ruleset.
