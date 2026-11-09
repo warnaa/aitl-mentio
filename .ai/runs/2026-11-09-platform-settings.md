@@ -50,9 +50,9 @@ flagged and their prices are not changed.
 
 ### Phase 2: Services
 
-- [ ] 2.1 Service read path (async, DB-backed, env fallback)
-- [ ] 2.2 Service write path (operator, version check, audit)
-- [ ] 2.3 Out-of-bounds list
+- [x] 2.1 Service read path (async, DB-backed, env fallback) — d03385b
+- [x] 2.2 Service write path (operator, version check, audit) — d03385b
+- [x] 2.3 Out-of-bounds list — d03385b
 
 ### Phase 3: HTTP and UI
 
