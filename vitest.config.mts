@@ -182,6 +182,7 @@ export default defineConfig({
         'packages/core/src/validators/auth/password.ts',
         'packages/core/src/validators/auth/register.schema.ts',
         'packages/core/src/validators/mentors/mentor-profile-update.schema.ts',
+        'packages/core/src/validators/mentors/mentor-list-query.schema.ts',
         'packages/core/src/domain/readiness.ts',
         'packages/core/src/domain/slug.ts',
         'packages/core/src/domain/vocabularies/stack-tags.ts',

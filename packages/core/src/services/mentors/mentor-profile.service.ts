@@ -22,6 +22,8 @@ import { parseMajorAmount, withinBounds } from '../../money/money';
 import type { PlatformSettings, PlatformSettingsService } from '../operator/platform-settings.service';
 import { mentorPricesUpdateSchema, type MentorPricesUpdate } from '../../validators/mentors/mentor-prices-update.schema';
 import { activeOccupancy, MIN_LEAD_MINUTES, MINUTE_MS, overlappingInterval, viableLengths } from '../bookings/occupancy';
+import { SessionLengths } from '../../domain/vocabularies/session-lengths';
+import type { StackTag } from '../../domain/vocabularies/stack-tags';
 
 /** Explicit audience allowlists: adding a private entity field cannot widen these. */
 function publicFields(profile: IMentorProfile) {
@@ -57,7 +59,8 @@ export function toOwnerDto(profile: IMentorProfile, settings?: PlatformSettings)
   return settings ? { ...fields, prices: pricesDto(profile, settings), priceBounds: settings.priceBounds } : fields;
 }
 export type MentorPublicDto = ReturnType<typeof toPublicDto> & { offerReady: boolean; offerReadiness: ReturnType<typeof mentorOfferReady.evaluate>; slots: { id: string; startsAt: string; meetsLeadTime: boolean; viableLengths: (25 | 50)[] }[] };
-export type MentorOwnerDto = ReturnType<typeof toOwnerDto> & { offerReadiness: ReturnType<typeof mentorOfferReady.evaluate> };
+export type MentorListItemDto = ReturnType<typeof publicFields> & { prices: NonNullable<ReturnType<typeof pricesDto>>; nextSlotStartsAt: string };
+export type MentorOwnerDto =ReturnType<typeof toOwnerDto> & { offerReadiness: ReturnType<typeof mentorOfferReady.evaluate> };
 
 export interface MentorProfileServiceDeps {
   em: EntityManager;
@@ -196,6 +199,43 @@ export class MentorProfileService {
       profile.updatedAt = this.deps.clock.now();
       await em.flush();
       return this.ownerDto(em, profile);
+    });
+  }
+
+  /**
+   * The public mentor list (R13, spec 2026-11-09-mentor-list): offer-ready mentors with at least
+   * one bookable time, ordered by the denormalised `lastPublishedAvailabilityAt` (B26) and never by
+   * a score. Eligibility reuses the mentor page's readiness and the booking service's lead-time and
+   * occupancy rules, so a listed mentor can always be booked. There is no free-text parameter.
+   */
+  async listPublished(tag?: StackTag): Promise<MentorListItemDto[]> {
+    const { em, clock } = this.deps;
+    const now = clock.now();
+    const settings = this.deps.platformSettingsService.get();
+    const { p25, p50 } = settings.priceBounds;
+    const candidates = (await em.find(
+      MentorProfile,
+      {
+        publishedAt: { $ne: null },
+        price25Cents: { $gte: p25.minCents, $lte: p25.maxCents },
+        price50Cents: { $gte: p50.minCents, $lte: p50.maxCents },
+        ...(tag ? { stackTags: { $contains: [tag] } } : {}),
+      },
+      { populate: ['user'], orderBy: [{ lastPublishedAvailabilityAt: 'desc nulls last' }, { slug: 'asc' }] },
+    )).filter(profile => mentorPagePublishable.evaluate(profile).ready);
+    if (!candidates.length) return [];
+    const ids = candidates.map(profile => profile.id);
+    const earliest = new Date(now.getTime() + MIN_LEAD_MINUTES * MINUTE_MS);
+    const longest = Math.max(...SessionLengths.values);
+    const slots = await em.find(Slot, { mentorProfile: { $in: ids }, removedAt: null, startsAt: { $gte: earliest } }, { orderBy: { startsAt: 'asc' } });
+    const bookings = await em.find(Booking, {
+      mentorProfile: { $in: ids },
+      $and: [activeOccupancy(now), { startsAt: { $gt: new Date(earliest.getTime() - longest * MINUTE_MS) } }],
+    });
+    return candidates.flatMap(profile => {
+      const occupied = bookings.filter(booking => booking.mentorProfile.id === profile.id);
+      const next = slots.find(slot => slot.mentorProfile.id === profile.id &&viableLengths(slot.startsAt, occupied).length > 0);
+      return next ? [{ ...toPublicDto(profile), prices: pricesDto(profile, settings)!, nextSlotStartsAt: next.startsAt.toISOString() }] : [];
     });
   }
 
