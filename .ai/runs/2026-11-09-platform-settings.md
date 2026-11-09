@@ -45,8 +45,8 @@ flagged and their prices are not changed.
 
 ### Phase 1: Storage and validation
 
-- [ ] 1.1 Entity and migration
-- [ ] 1.2 Update schema
+- [x] 1.1 Entity and migration — 070b4ae
+- [x] 1.2 Update schema — 5f6789f
 
 ### Phase 2: Services
 
