@@ -19,7 +19,7 @@ export interface MentorPageData {
   offerReadiness?: { ready: boolean; items: ReadinessItem[] };
 }
 
-const initials = (name: string) => name.split(/\s+/).filter(Boolean).map(word => word[0]).slice(0, 2).join('').toUpperCase();
+export const initials = (name: string) => name.split(/\s+/).filter(Boolean).map(word => word[0]).slice(0, 2).join('').toUpperCase();
 /** Minor units in the stored currency; whole amounts drop the decimals. */
 export const formatPrice = (cents: number, currency: string) =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency, minimumFractionDigits: cents % 100 ? 2 : 0 }).format(cents / 100);
