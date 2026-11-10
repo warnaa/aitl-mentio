@@ -178,6 +178,23 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
+        "fee_percent_applied": {
+          "name": "fee_percent_applied",
+          "type": "smallint",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "smallint"
+        },
         "id": {
           "name": "id",
           "type": "uuid",
@@ -246,6 +263,23 @@
           "enumItems": [],
           "mappedType": "uuid"
         },
+        "mentor_share_cents": {
+          "name": "mentor_share_cents",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
         "paid_at": {
           "name": "paid_at",
           "type": "timestamptz(6)",
@@ -279,6 +313,23 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "boolean"
+        },
+        "platform_fee_cents": {
+          "name": "platform_fee_cents",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
         },
         "price_cents": {
           "name": "price_cents",
@@ -501,10 +552,28 @@
           "columnName": "currency"
         },
         {
+          "name": "bookings_fee_snapshot_pair_check",
+          "expression": "((fee_percent_applied IS NULL) = (platform_fee_cents IS NULL)) AND ((platform_fee_cents IS NULL) = (mentor_share_cents IS NULL))",
+          "definition": "CHECK ((((fee_percent_applied IS NULL) = (platform_fee_cents IS NULL)) AND ((platform_fee_cents IS NULL) = (mentor_share_cents IS NULL))))",
+          "columnName": "fee_percent_applied"
+        },
+        {
+          "name": "bookings_fee_snapshot_values_check",
+          "expression": "(fee_percent_applied IS NULL) OR (((fee_percent_applied >= 0) AND (fee_percent_applied <= 100)) AND (platform_fee_cents >= 0) AND (mentor_share_cents >= 0) AND ((platform_fee_cents + mentor_share_cents) = price_cents))",
+          "definition": "CHECK (((fee_percent_applied IS NULL) OR (((fee_percent_applied >= 0) AND (fee_percent_applied <= 100)) AND (platform_fee_cents >= 0) AND (mentor_share_cents >= 0) AND ((platform_fee_cents + mentor_share_cents) = price_cents))))",
+          "columnName": "fee_percent_applied"
+        },
+        {
           "name": "bookings_length_minutes_check",
           "expression": "length_minutes = ANY (ARRAY[25, 50])",
           "definition": "CHECK ((length_minutes = ANY (ARRAY[25, 50])))",
           "columnName": "length_minutes"
+        },
+        {
+          "name": "bookings_paid_fee_snapshot_check",
+          "expression": "(paid_at IS NULL) OR (fee_percent_applied IS NOT NULL)",
+          "definition": "CHECK (((paid_at IS NULL) OR (fee_percent_applied IS NOT NULL)))",
+          "columnName": "fee_percent_applied"
         },
         {
           "name": "bookings_pending_expiry_check",
@@ -527,12 +596,14 @@
         {
           "name": "bookings_written_answer_length_check",
           "expression": "char_length(written_answer) <= 20000",
-          "definition": "check (char_length(written_answer) <= 20000)"
+          "definition": "CHECK ((char_length(written_answer) <= 20000))",
+          "columnName": "written_answer"
         },
         {
           "name": "bookings_written_answer_pair_check",
-          "expression": "(written_answer is null) = (written_answer_at is null)",
-          "definition": "check ((written_answer is null) = (written_answer_at is null))"
+          "expression": "(written_answer IS NULL) = (written_answer_at IS NULL)",
+          "definition": "CHECK (((written_answer IS NULL) = (written_answer_at IS NULL)))",
+          "columnName": "written_answer"
         }
       ],
       "triggers": [],
@@ -1260,14 +1331,20 @@
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": 32,
+          "length": null,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [],
-          "mappedType": "string"
+          "enumItems": [
+            "booking_confirmed",
+            "answer_posted",
+            "note_awaiting_approval",
+            "note_approved",
+            "note_declined"
+          ],
+          "mappedType": "enum"
         },
         "note_version": {
           "name": "note_version",
@@ -1377,14 +1454,15 @@
       "checks": [
         {
           "name": "notifications_kind_check",
-          "expression": "kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined')",
-          "definition": "check (kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined'))",
+          "expression": "\"kind\" in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined')",
+          "definition": "check (\"kind\" in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined'))",
           "columnName": "kind"
         },
         {
           "name": "notifications_note_version_check",
-          "expression": "(kind like 'note_%' and note_version >= 1) or (kind not like 'note_%' and note_version = 0)",
-          "definition": "check ((kind like 'note_%' and note_version >= 1) or (kind not like 'note_%' and note_version = 0))"
+          "expression": "((kind ~~ 'note_%'::text) AND (note_version >= 1)) OR ((kind !~~ 'note_%'::text) AND (note_version = 0))",
+          "definition": "CHECK (((((kind)::text ~~ 'note_%'::text) AND (note_version >= 1)) OR (((kind)::text !~~ 'note_%'::text) AND (note_version = 0))))",
+          "columnName": "kind"
         }
       ],
       "triggers": [],
@@ -1960,14 +2038,16 @@
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": 3,
+          "length": null,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [],
-          "mappedType": "string"
+          "enumItems": [
+            "PLN"
+          ],
+          "mappedType": "enum"
         },
         "fee_percent": {
           "name": "fee_percent",
@@ -1990,7 +2070,7 @@
           "name": "id",
           "type": "smallint",
           "unsigned": false,
-          "autoincrement": true,
+          "autoincrement": false,
           "primary": true,
           "nullable": false,
           "unique": false,
@@ -2138,28 +2218,33 @@
       "checks": [
         {
           "name": "platform_settings_currency_check",
-          "expression": "currency = 'PLN'",
-          "definition": "check (currency = 'PLN')"
+          "expression": "\"currency\" in ('PLN')",
+          "definition": "check (\"currency\" in ('PLN'))",
+          "columnName": "currency"
         },
         {
           "name": "platform_settings_fee_check",
-          "expression": "fee_percent between 0 and 100",
-          "definition": "check (fee_percent between 0 and 100)"
+          "expression": "(fee_percent >= 0) AND (fee_percent <= 100)",
+          "definition": "CHECK (((fee_percent >= 0) AND (fee_percent <= 100)))",
+          "columnName": "fee_percent"
         },
         {
           "name": "platform_settings_price25_check",
-          "expression": "price25_min_cents > 0 and price25_min_cents <= price25_max_cents",
-          "definition": "check (price25_min_cents > 0 and price25_min_cents <= price25_max_cents)"
+          "expression": "(price25_min_cents > 0) AND (price25_min_cents <= price25_max_cents)",
+          "definition": "CHECK (((price25_min_cents > 0) AND (price25_min_cents <= price25_max_cents)))",
+          "columnName": "price25_max_cents"
         },
         {
           "name": "platform_settings_price50_check",
-          "expression": "price50_min_cents > 0 and price50_min_cents <= price50_max_cents",
-          "definition": "check (price50_min_cents > 0 and price50_min_cents <= price50_max_cents)"
+          "expression": "(price50_min_cents > 0) AND (price50_min_cents <= price50_max_cents)",
+          "definition": "CHECK (((price50_min_cents > 0) AND (price50_min_cents <= price50_max_cents)))",
+          "columnName": "price50_max_cents"
         },
         {
           "name": "platform_settings_singleton_check",
           "expression": "id = 1",
-          "definition": "check (id = 1)"
+          "definition": "CHECK ((id = 1))",
+          "columnName": "id"
         }
       ],
       "triggers": [],

@@ -92,6 +92,7 @@ export default defineConfig({
         'packages/core/src/validators/operator/platform-settings-update.schema.ts',
         'packages/db/src/entities/operator/platform-settings.entity.ts',
         'packages/db/migrations/Migration20261109224703_platform_settings.ts',
+        'packages/db/migrations/Migration20261110103105_fee_split.ts',
         'packages/app/src/app/api/operator/settings/route.ts',
         'packages/app/src/app/admin/settings/page.tsx',
         'packages/app/src/app/admin/settings/PlatformSettingsForm.tsx',
