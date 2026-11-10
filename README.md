@@ -330,3 +330,12 @@ Founder/operator approval on 2026-11-05 sets PLN with two decimal minor units. `
 
 
 The owner availability collection supports `GET /api/availability/slots?past=false&page=1`: 25 server-filtered rows plus `page`/`pageCount`; `past=true` switches to past times. The public mentor page shows the next 50 active future times. Soft removal preserves slot history and permits republishing the same instant with a new slot ID.
+
+### Platform settings (operator)
+
+Operators set the four price bounds and the platform fee on `/admin/settings` (`GET`/`PUT /api/operator/settings`, E05-S02).
+- The first save creates the single `platform_settings` row. From then on, the saved row takes precedence over `PLATFORM_PRICE_BOUNDS`.
+- Until that first save, the env bounds and a 20 % fee are served unchanged. The `PLATFORM_*` variables therefore remain the seed values and the fallback. Removing them needs its own change under `BACKWARD_COMPATIBILITY.md` §4.
+- A save carries the version the form was loaded with, so a stale form gets 409 instead of overwriting another operator's change.
+- Mentors whose stored prices fall outside new bounds are listed on the page. Their prices are not changed, and they are not bookable until they save prices within the bounds.
+- Each save logs `operator.settings.updated` with the actor and the old and new values. That log line is the audit record.

@@ -53,7 +53,7 @@ describe('MentorProfileService', () => {
       em,
       session: Promise.resolve(session),
       clock: { now: () => now },
-      eventBus: { emit }, platformSettingsService: { get: () => settings },
+      eventBus: { emit }, platformSettingsService: { get: async () => settings },
     });
 
   beforeEach(() => {
@@ -289,3 +289,49 @@ describe('MentorProfileService', () => {
     profile.price25Cents = 8000; profile.price50Cents = 1;
     expect(toPublicDto(entity, settings).prices).toBeNull(); expect(toOwnerDto(entity, settings).prices).toBeNull();
   });});
+
+describe('MentorProfileService.listOutOfBounds', () => {
+  const tightened = { currency: 'PLN' as const, priceBounds: { p25: { minCents: 10000, maxCents: 60000 }, p50: { minCents: 16000, maxCents: 100000 } } };
+  const mentorRow = (id: string, price25Cents: number | null, price50Cents: number | null) => ({ id, price25Cents, price50Cents, slug: `${id}-slug`, publishedAt: id === 'a' ? now : null, user: { displayName: `Mentor ${id}` } });
+  const build = (session: Session | null, rows: unknown[] = [], total = rows.length) => {
+    const findAndCount = vi.fn().mockResolvedValue([rows, total]);
+    const flush = vi.fn();
+    const svc = new MentorProfileService({
+      em: { findAndCount, flush } as unknown as EntityManager,
+      session: Promise.resolve(session), clock: { now: () => now }, eventBus: { emit: vi.fn() },
+      platformSettingsService: { get: async () => settings },
+    });
+    return { svc, findAndCount, flush };
+  };
+
+  it('is for operators only', async () => {
+    await expect(build(null).svc.listOutOfBounds(tightened)).rejects.toMatchObject({ status: 401 });
+    const { svc, findAndCount } = build({ userId: 'm', roles: ['mentor'] });
+    await expect(svc.listOutOfBounds(tightened)).rejects.toMatchObject({ status: 403 });
+    expect(findAndCount).not.toHaveBeenCalled();
+  });
+
+  it('queries both bounds of both lengths, capped, and names each breach without changing a price', async () => {
+    const rows = [mentorRow('a', 9000, 16000), mentorRow('b', 12000, 120000), mentorRow('c', 9000, null)];
+    const { svc, findAndCount, flush } = build({ userId: 'op', roles: ['operator'] }, rows, 250);
+    const result = await svc.listOutOfBounds(tightened);
+    expect(findAndCount).toHaveBeenCalledWith('MentorProfile', { $or: [
+      { price25Cents: { $lt: 10000 } }, { price25Cents: { $gt: 60000 } },
+      { price50Cents: { $lt: 16000 } }, { price50Cents: { $gt: 100000 } },
+    ] }, expect.objectContaining({ limit: 200, populate: ['user'] }));
+    expect(result.total).toBe(250);
+    expect(result.mentors).toEqual([
+      { mentorProfileId: 'a', displayName: 'Mentor a', slug: 'a-slug', published: true, price25Cents: 9000, price50Cents: 16000, breaches: ['price25'] },
+      { mentorProfileId: 'b', displayName: 'Mentor b', slug: 'b-slug', published: false, price25Cents: 12000, price50Cents: 120000, breaches: ['price50'] },
+      { mentorProfileId: 'c', displayName: 'Mentor c', slug: 'c-slug', published: false, price25Cents: 9000, price50Cents: null, breaches: ['price25'] },
+    ]);
+    expect(rows[0]).toMatchObject({ price25Cents: 9000 });
+    // Unloaded optional columns read as undefined; the DTO still says null.
+    const sparse = { ...mentorRow('d', null, 120001), slug: undefined, price25Cents: undefined };
+    const { svc: sparseService } = build({ userId: 'op', roles: ['operator'] }, [sparse]);
+    expect((await sparseService.listOutOfBounds(tightened)).mentors).toEqual([
+      { mentorProfileId: 'd', displayName: 'Mentor d', slug: null, published: false, price25Cents: null, price50Cents: 120001, breaches: ['price50'] },
+    ]);
+    expect(flush).not.toHaveBeenCalled();
+  });
+});

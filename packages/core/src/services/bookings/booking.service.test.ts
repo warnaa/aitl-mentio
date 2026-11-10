@@ -17,7 +17,7 @@ const persist = vi.fn();
 const flush = vi.fn();
 const clock = { now: vi.fn(() => now) };
 const em = { findOne, nativeUpdate, persist, flush, create: vi.fn((_entity, values) => ({ id: 'booking', ...values })), getReference: vi.fn((_entity, id) => ({ id })), fork: () => ({ transactional: async (fn: (value: unknown) => unknown) => fn(em) }) };
-const service = () => new BookingService({ em: em as unknown as EntityManager, clock, session: Promise.resolve(session), platformSettingsService: { get: () => settings } });
+const service = () => new BookingService({ em: em as unknown as EntityManager, clock, session: Promise.resolve(session), platformSettingsService: { get: async () => settings } });
 const input = { slotId, lengthMinutes: 25 as const };
 beforeEach(() => {
   vi.clearAllMocks();
@@ -76,4 +76,14 @@ it('refuses an overlapping active session on another slot and propagates storage
   expect(persist).not.toHaveBeenCalled();
   flush.mockRejectedValueOnce(new Error('database unavailable'));
   await expect(service().start(input)).rejects.toThrow('database unavailable');
+});
+it('reads the platform settings before opening the locking transaction (no second pooled connection under lock)', async () => {
+  const order: string[] = [];
+  const tracked = new BookingService({
+    em: { ...em, fork: () => ({ transactional: async (fn: (value: unknown) => unknown) => { order.push('transaction'); return fn(em); } }) } as unknown as EntityManager,
+    clock, session: Promise.resolve(session),
+    platformSettingsService: { get: async () => { order.push('settings'); return settings; } },
+  });
+  await tracked.start(input);
+  expect(order).toEqual(['settings', 'transaction']);
 });

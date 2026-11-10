@@ -8,6 +8,7 @@ const OPERATOR = [
   ['/admin', 'Operator home'],
   ['/admin/users', 'Users'],
   ['/admin/sessions', 'Note declines'],
+  ['/admin/settings', 'Settings'],
 ];
 const MENTEE = [['/home', 'My sessions']];
 const MENTOR = [['/mentor', 'Mentor workspace'], ['/mentor/profile', 'Edit profile']];
@@ -52,7 +53,7 @@ describe('navFor', () => {
   it.each(ROLE_SETS)('offers no way to gain a role for %j (R07)', (...roles) => {
     for (const { href, label } of navFor(roles as unknown as RoleSet)) {
       expect(label).not.toMatch(/become|apply|join|upgrade|invite/i);
-      expect(['/admin', '/admin/users', '/admin/sessions', '/home', '/mentor', '/mentor/profile']).toContain(href);
+      expect(['/admin', '/admin/users', '/admin/sessions', '/admin/settings', '/home', '/mentor', '/mentor/profile']).toContain(href);
     }
   });
 
@@ -70,7 +71,8 @@ describe('currentHref', () => {
     ['/admin', '/admin'],
     ['/admin/users', '/admin/users'],
     ['/admin/users/42', '/admin/users'],
-    ['/admin/settings', '/admin'],
+    ['/admin/settings', '/admin/settings'],
+    ['/admin/payments', '/admin'],
     ['/home', '/home'],
     ['/mentor', '/mentor'],
     ['/mentor/slots', '/mentor'],
