@@ -73,6 +73,23 @@ and leaves framing to #84.
 - `npm run test:integration` rewrote `packages/db/migrations/.snapshot-devmentor.json`
   (known churn); the file was restored and is not part of this change.
 
+## Delivery
+
+- PR #93, opened ready against `main` with `Closes #83`. The chain lock moved from the
+  issue to the PR.
+- Review (`om-auto-review-pr --autofix`): approve, with no blocker or major findings.
+  Two minor documentation findings were fixed in `acf429d`: the `CODE_REVIEW.md` proxy
+  rule and the `./config` export in `BACKWARD_COMPATIBILITY.md`. `next dev` was checked
+  and hydrates with no CSP violations. The review was posted as a comment because the
+  author's account cannot approve its own PR.
+- Labels: `merge-queue`, `security`, `needs-qa`, `priority-high`, `risk-high`. Manual
+  QA instructions are posted on the PR.
+- UI QA (evidence-only): four browser checkpoints passed. Screenshots and
+  `report.md`/`report.json` are in `.ai/qa/issue-83-csp/`, and the screenshots are
+  also on the evidence branch `qa-evidence-pr-93`. `qa-approved` is left for a human.
+- `next dev` rewrites the header of `packages/app/AGENTS.md` when it starts. The
+  change was reverted and not committed.
+
 ## Follow-ups
 
 - #84: add `frame-ancestors` in `buildContentSecurityPolicy`.
