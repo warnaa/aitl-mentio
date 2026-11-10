@@ -1,3 +1,5 @@
+// Next's internal matcher, so `source` is resolved exactly as Next resolves it. If an
+// upgrade moves it, `security-headers.integration.test.ts` still guards the behaviour.
 import { getPathMatch } from 'next/dist/shared/lib/router/utils/path-match';
 import { describe, expect, it, vi } from 'vitest';
 import { securityHeaders } from './security-headers';
