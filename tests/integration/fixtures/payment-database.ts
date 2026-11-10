@@ -38,6 +38,8 @@ export interface PaymentDatabaseFixture {
   gateway: ControlledPaymentGateway;
   clock: { now(): Date };
   setNow(now: string | Date): void;
+  /** The operator fee the service snapshots on confirmation (R10); 20 % unless changed. */
+  setFeePercent(feePercent: number): void;
   confirmations: string[];
   service(session?: Session | null): PaymentService;
 }
@@ -53,6 +55,7 @@ export async function withPaymentDatabaseFixture(caseId: string, run: (fixture: 
   try {
     let now = new Date('2026-11-06T11:00:00.000Z');
     const clock = { now: () => new Date(now) };
+    let feePercent = 20;
     const mentee = em.create(User, { email: emails[0]!, displayName: 'Synthetic payment mentee', roles: ['mentee'] });
     const mentor = em.create(User, { email: emails[1]!, displayName: 'Synthetic payment mentor', roles: ['mentor'] });
     const operator = em.create(User, { email: emails[2]!, displayName: 'Synthetic payment operator', roles: ['operator'] });
@@ -71,7 +74,8 @@ export async function withPaymentDatabaseFixture(caseId: string, run: (fixture: 
       em, booking, gateway, clock, confirmations, profileId,
       menteeId: mentee.id, mentorId: mentor.id, operatorId: operator.id,
       setNow: value => { now = new Date(value); },
-      service: (session = defaultSession) => new PaymentService({ em: em.fork(), clock, paymentGateway: gateway, eventBus: bus, env: { APP_URL: 'https://payment-fixture.invalid' }, session: Promise.resolve(session) }),
+      setFeePercent: value => { feePercent = value; },
+      service: (session = defaultSession) => new PaymentService({ em: em.fork(), clock, paymentGateway: gateway, eventBus: bus, env: { APP_URL: 'https://payment-fixture.invalid' }, session: Promise.resolve(session), platformSettingsService: { get: async () => ({ feePercent }) } }),
     });
   } finally {
     try {
