@@ -6,6 +6,8 @@ import { requireRole, type Session } from '../../http/auth';
 import { parseWith } from '../../http/body';
 import { ConflictError, NotFoundError, UnauthorizedError } from '../../http/errors';
 import type { Clock } from '../../time/clock';
+import { splitFee } from '../../money/fee';
+import type { PlatformSettings } from '../operator/platform-settings.service';
 import type { CheckoutSession, CreateCheckoutSession, PaymentEvent, PaymentGateway } from './payment-gateway.port';
 import { CheckoutNotCreatedError } from './payment-gateway.port';
 
@@ -20,6 +22,8 @@ export interface PaymentServiceDeps {
   env: Pick<AppEnv, 'APP_URL'>;
   paymentGateway: PaymentGateway;
   eventBus: Pick<EventBus, 'emit'>;
+  /** R10: the fee in force at confirmation is snapshotted on the booking. */
+  platformSettingsService: { get(): Promise<Pick<PlatformSettings, 'feePercent'>> };
 }
 
 /** The database owns transitions; external calls never run while row locks are held. */
@@ -91,7 +95,15 @@ export class PaymentService {
       !!session.paymentIntentId && session.refundedCents === 0;
   }
 
-  private async apply(em: EntityManager, attempt: IPaymentAttempt, session: CheckoutSession, operator = false) {
+  /**
+   * Read before any booking lock is taken (the 2026-11-08 lesson): a settings read must never
+   * wait for a second pooled connection while a booking row is locked.
+   */
+  private async feePercent() {
+    return (await this.deps.platformSettingsService.get()).feePercent;
+  }
+
+  private async apply(em: EntityManager, attempt: IPaymentAttempt, session: CheckoutSession, feePercent: number, operator = false) {
     const booking = attempt.booking;
     const now = this.deps.clock.now();
     if (booking.status === 'confirmed') return 'already_confirmed';
@@ -107,6 +119,7 @@ export class PaymentService {
         booking.status = 'confirmed'; booking.bookedAt = now; booking.paidAt = now;
         booking.stripePaymentIntentId = session.paymentIntentId; booking.amountPaidCents = session.amountCents;
         booking.paymentPending = false; booking.updatedAt = now; attempt.state = 'confirmed'; attempt.diagnosticCode = null;
+        Object.assign(booking, splitFee(booking.priceCents, feePercent));
         return 'confirmed';
       }
     }
@@ -120,10 +133,11 @@ export class PaymentService {
   }
 
   private async applyRetrieved(attempt: IPaymentAttempt, session: CheckoutSession) {
+    const feePercent = await this.feePercent();
     const result = await this.locked(attempt.booking.id, async (em, booking) => {
       const current = await em.findOneOrFail(PaymentAttempt, { id: attempt.id }, { refresh: true });
       current.booking = booking;
-      const outcome = await this.apply(em, current, session); await em.flush(); return outcome;
+      const outcome = await this.apply(em, current, session, feePercent); await em.flush(); return outcome;
     });
     if (result === 'confirmed') await this.emitConfirmed(attempt.booking.id);
     return result;
@@ -191,6 +205,7 @@ export class PaymentService {
     // reconfirm a charge that was refunded before this delivery was processed.
     const snapshotMatches = discovered && this.matches(discovered, session) && session.amountCents === discovered.booking.priceCents && session.currency.toUpperCase() === discovered.booking.currency;
     const currentEvidence = snapshotMatches ? await this.deps.paymentGateway.retrieveCheckoutSession(session.id) : session;
+    const feePercent = discovered ? await this.feePercent() : 0;
     let outcome: string;
     try {
       const process = async (em: EntityManager, booking?: IBooking) => {
@@ -199,7 +214,7 @@ export class PaymentService {
         if (discovered && booking) {
           const attempt = await em.findOneOrFail(PaymentAttempt, { id: discovered.id }, { refresh: true });
           attempt.booking = booking;
-          result = await this.apply(em, attempt, currentEvidence);
+          result = await this.apply(em, attempt, currentEvidence, feePercent);
         }
         const now = this.deps.clock.now();
         em.persist(em.create(ProcessedWebhookEvent, { eventId: event.id, type: event.type, receivedAt: now, booking: booking ?? null, sessionId: session.id, outcome: result, createdAt: now, updatedAt: now }));
@@ -239,6 +254,7 @@ export class PaymentService {
     const sessionId = attempt.sessionId ?? data.sessionId;
     if (!sessionId) throw new ConflictError('Provide a provider session identity to reconcile this ambiguous creation.');
     const evidence = await this.deps.paymentGateway.retrieveCheckoutSession(sessionId);
+    const feePercent = data.action === 'confirm' ? await this.feePercent() : 0;
     const outcome = await this.locked(attempt.booking.id, async (em, booking) => {
       const current = await em.findOneOrFail(PaymentAttempt, { id: attemptId }, { refresh: true }); current.booking = booking;
       if (current.state !== 'review' || booking.status !== 'pending' || !this.matches(current, evidence)) throw new ConflictError('Payment state changed or evidence does not match.');
@@ -246,7 +262,7 @@ export class PaymentService {
       let result: string;
       if (data.action === 'confirm') {
         if (!this.exact(current, evidence) || this.deps.clock.now() >= booking.startsAt) throw new ConflictError('The provider does not prove an eligible full payment.');
-        result = await this.apply(em, current, evidence, true);
+        result = await this.apply(em, current, evidence, feePercent, true);
         if (result !== 'confirmed') throw new ConflictError('The payment cannot be confirmed.');
       } else {
         const unpaidExpired = evidence.status === 'expired' && !evidence.paid && evidence.refundedCents === 0;

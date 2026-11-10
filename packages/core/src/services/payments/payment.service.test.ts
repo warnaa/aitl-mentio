@@ -46,7 +46,8 @@ const em = {
   nativeUpdate: vi.fn(async (entity: string, query: unknown, values: Record<string, unknown>) => { for (const row of tables[entity as keyof Tables].filter(row => same(row, query))) Object.assign(row, values); return 1; }),
 };
 const clock = { now: () => current };
-const service = () => new PaymentService({ em: em as unknown as EntityManager, session: Promise.resolve(session), clock, paymentGateway: gateway, env: { APP_URL: 'https://devmentor.example' }, eventBus: { emit } });
+const settingsGet = vi.fn(async () => ({ feePercent: 20 }));
+const service = () => new PaymentService({ em: em as unknown as EntityManager, session: Promise.resolve(session), clock, paymentGateway: gateway, env: { APP_URL: 'https://devmentor.example' }, eventBus: { emit }, platformSettingsService: { get: settingsGet } });
 const attempt = () => tables.Attempt[0]!;
 const evidence = (changes: Partial<CheckoutSession> = {}): CheckoutSession => ({ id: attempt().sessionId as string, bookingId: id, attemptId: attempt().id, amountCents: 8000, currency: 'pln', paymentIntentId: 'pi_paid', paid: true, status: 'complete', livemode: false, refundedCents: 0, url: null, ...changes });
 const event = (changes: Partial<CheckoutSession> = {}, eventId = 'evt_paid'): PaymentEvent => {
@@ -172,6 +173,7 @@ it('confirms once after durable commit and deduplicates both identical and disti
   await checkout();
   expect(await service().handleEvent(event())).toEqual({ outcome: 'confirmed' });
   expect(booking).toMatchObject({ status: 'confirmed', bookedAt: now, paidAt: now, stripePaymentIntentId: 'pi_paid', amountPaidCents: 8000, paymentPending: false });
+  expect(booking).toMatchObject({ feePercentApplied: 20, platformFeeCents: 1600, mentorShareCents: 6400 });
   expect(emit).toHaveBeenCalledWith('bookings.booking.confirmed', { bookingId: id });
   expect(await service().handleEvent(event())).toEqual({ outcome: 'duplicate' });
   expect(await service().handleEvent(event({}, 'another-event'))).toEqual({ outcome: 'already_confirmed' });
@@ -238,6 +240,7 @@ it('requires operator scope and verified evidence for an audited resolution', as
   vi.spyOn(gateway, 'retrieveCheckoutSession').mockResolvedValueOnce(evidence());
   expect(await service().resolveReview(attempt().id, { action: 'confirm', reason: 'Provider payment verified' })).toEqual({ status: 'confirmed' });
   expect(tables.Resolution).toHaveLength(1); expect(tables.Resolution[0]).toMatchObject({ action: 'confirm', actor: { id: 'operator' }, reason: 'Provider payment verified', paymentIntentId: 'pi_paid' });
+  expect(booking).toMatchObject({ feePercentApplied: 20, platformFeeCents: 1600, mentorShareCents: 6400 });
   expect(emit).toHaveBeenCalledTimes(1);
 });
 
@@ -341,4 +344,47 @@ it('cannot override an already-used provider payment intent with an operator con
   vi.spyOn(gateway, 'retrieveCheckoutSession').mockResolvedValue(evidence());
   await expect(service().resolveReview(attempt().id, { action: 'confirm', reason: 'checked' })).rejects.toMatchObject({ status: 409 });
   expect(tables.Resolution).toHaveLength(0); expect(emit).not.toHaveBeenCalled();
+});
+
+it('snapshots the fee in force at confirmation, read before any booking lock (R10)', async () => {
+  await checkout();
+  const order: string[] = [];
+  settingsGet.mockImplementation(async () => { order.push('settings'); return { feePercent: 15 }; });
+  const transactional = em.transactional;
+  em.transactional = async fn => { order.push('lock'); return transactional(fn); };
+  try {
+    expect(await service().handleEvent(event())).toEqual({ outcome: 'confirmed' });
+  } finally { em.transactional = transactional; settingsGet.mockImplementation(async () => ({ feePercent: 20 })); }
+  expect(order.indexOf('settings')).toBeGreaterThanOrEqual(0);
+  expect(order.indexOf('settings')).toBeLessThan(order.indexOf('lock'));
+  expect(booking).toMatchObject({ feePercentApplied: 15, platformFeeCents: 1200, mentorShareCents: 6800 });
+  // A later fee change never touches a booking that is already confirmed.
+  settingsGet.mockResolvedValueOnce({ feePercent: 30 });
+  expect(await service().handleEvent(event({}, 'later-event'))).toEqual({ outcome: 'already_confirmed' });
+  expect(booking).toMatchObject({ feePercentApplied: 15, platformFeeCents: 1200, mentorShareCents: 6800 });
+});
+
+it('snapshots on the reconciliation path and leaves unconfirmed outcomes without a fee', async () => {
+  await checkout();
+  current = new Date(now.getTime() + 61_000);
+  vi.spyOn(gateway, 'retrieveCheckoutSession').mockResolvedValueOnce(evidence({ status: 'open', paid: false, paymentIntentId: null })).mockResolvedValueOnce(evidence());
+  expect(await service().reconcile()).toEqual({ processed: 1, failed: 0 });
+  expect(booking).toMatchObject({ status: 'pending' }); expect(booking.feePercentApplied).toBeUndefined();
+  attempt().nextReconciliationAt = current;
+  expect(await service().reconcile()).toEqual({ processed: 1, failed: 0 });
+  expect(booking).toMatchObject({ status: 'confirmed', feePercentApplied: 20, platformFeeCents: 1600, mentorShareCents: 6400 });
+});
+
+it('does not read the fee for unknown sessions or operator releases, and fails closed when settings are unavailable', async () => {
+  await checkout(); settingsGet.mockClear();
+  expect(await service().handleEvent(event({ id: 'unknown', attemptId: crypto.randomUUID() }))).toEqual({ outcome: 'unknown_session' });
+  expect(settingsGet).not.toHaveBeenCalled();
+  attempt().state = 'review'; session = { userId: 'operator', roles: ['operator'] };
+  vi.spyOn(gateway, 'retrieveCheckoutSession').mockResolvedValueOnce(evidence({ refundedCents: 8000 }));
+  expect(await service().resolveReview(attempt().id, { action: 'release', reason: 'Verified full refund' })).toEqual({ status: 'expired' });
+  expect(settingsGet).not.toHaveBeenCalled();
+  booking.status = 'pending'; booking.paymentPending = true; attempt().state = 'open';
+  settingsGet.mockRejectedValueOnce(Object.assign(new Error('Platform price settings are unavailable.'), { status: 503 }));
+  await expect(service().handleEvent(event({}, 'evt_settings_down'))).rejects.toMatchObject({ status: 503 });
+  expect(booking).toMatchObject({ status: 'pending' }); expect(tables.Event.some(row => row.eventId === 'evt_settings_down')).toBe(false);
 });

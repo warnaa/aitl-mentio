@@ -23,6 +23,11 @@ it('preserves booking history while constraining active occupancy, money and dur
     expect(sql).toContain('"written_answer_at" timestamptz null');
     expect(sql).toContain('(written_answer is null) = (written_answer_at is null)');
     expect(sql).toContain('char_length(written_answer) <= 20000');
+    expect(sql).toContain('"fee_percent_applied" smallint null');
+    expect(sql).toContain('"platform_fee_cents" int null');
+    expect(sql).toContain('"mentor_share_cents" int null');
+    expect(sql).toContain('platform_fee_cents + mentor_share_cents = price_cents');
+    expect(sql).toContain('paid_at is null or fee_percent_applied is not null');
     expect(metadata.properties.slot.kind).toBe('m:1');
     expect(metadata.properties.slot.deleteRule).toBe('no action');
     expect(metadata.properties.mentee.deleteRule).toBe('no action');

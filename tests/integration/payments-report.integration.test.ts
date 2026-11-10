@@ -25,6 +25,7 @@ it('PAYMENTS-019 counts recorded payments once in both Warsaw week views and com
         slot, mentorProfile: slot.mentorProfile, mentee: fixture.em.getReference(User, fixture.menteeId),
         status: 'confirmed', lengthMinutes: 25, priceCents: 8000, currency: 'PLN', startsAt: slot.startsAt,
         bookedAt: new Date(booked!), paidAt: new Date(booked!), amountPaidCents: 8000,
+        feePercentApplied: 20, platformFeeCents: 1600, mentorShareCents: 6400,
         stripeCheckoutSessionId: `cs_report_${id}`, stripePaymentIntentId: `pi_report_${id}`,
       });
       fixture.em.persist([slot, booking]); created.push(booking);

@@ -17,6 +17,11 @@ export const Booking = defineSingletonEntity('Booking', () =>
       // The written answer (E04-S02) and its latest save time exist together or not at all.
       { name: 'bookings_written_answer_pair_check', expression: '(written_answer is null) = (written_answer_at is null)' },
       { name: 'bookings_written_answer_length_check', expression: 'char_length(written_answer) <= 20000' },
+      // E03-S06 (R10): the fee in force at confirmation and the mentor's share, recorded together,
+      // never changed afterwards, and always summing to the price. Every paid booking carries one.
+      { name: 'bookings_fee_snapshot_pair_check', expression: '(fee_percent_applied is null) = (platform_fee_cents is null) and (platform_fee_cents is null) = (mentor_share_cents is null)' },
+      { name: 'bookings_fee_snapshot_values_check', expression: 'fee_percent_applied is null or (fee_percent_applied between 0 and 100 and platform_fee_cents >= 0 and mentor_share_cents >= 0 and platform_fee_cents + mentor_share_cents = price_cents)' },
+      { name: 'bookings_paid_fee_snapshot_check', expression: 'paid_at is null or fee_percent_applied is not null' },
     ],
     indexes: [
       { name: 'bookings_mentor_start_index', properties: ['mentorProfile', 'startsAt'] },
@@ -46,6 +51,9 @@ export const Booking = defineSingletonEntity('Booking', () =>
       // One plain-text answer per session, written by the booking's mentor; replaceable, no history.
       writtenAnswer: p.text().nullable(),
       writtenAnswerAt: p.datetime().nullable(),
+      feePercentApplied: p.smallint().nullable(),
+      platformFeeCents: p.integer().nullable(),
+      mentorShareCents: p.integer().nullable(),
     },
   }),
 );
