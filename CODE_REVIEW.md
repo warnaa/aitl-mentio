@@ -30,8 +30,11 @@ Read the diff in this order. A finding higher on the list outranks everything be
    under it call `requirePageRole`/`requirePageAccount` from
    `packages/app/src/lib/session.ts` (a layout does not re-run on client-side
    navigation), and the service behind it checks the session again. `proxy.ts` only
-   forwards the requested path for the post-sign-in redirect; a PR that makes it an
-   auth check, or relies on it instead of a guard, is a finding. Mutations check ownership of
+   sets the per-request nonce Content-Security-Policy and forwards the requested path
+   for the post-sign-in redirect; a PR that makes it an auth check, or relies on it
+   instead of a guard, is a finding. So is a prerendered page (it would ship scripts
+   without the nonce) or a policy loosened with script `'unsafe-inline'`/`'unsafe-eval'`
+   in production or a new origin without a test. Mutations check ownership of
    the specific record, not just "is logged in". Security decisions fail closed: an
    unexpected error inside an auth or ownership check denies. Write endpoints parse an
    explicit zod schema and never spread the raw request body into `em.create()` or

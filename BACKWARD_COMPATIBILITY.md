@@ -132,8 +132,8 @@ error code is additive as long as existing codes keep their meaning.
 The `exports` maps in each `package.json` and the named exports behind them are the
 API between packages. `npm run typecheck` is the consumer check.
 
-- `@devmentor/core` (`.`, `./container`, `./services`, `./http`, `./events`,
-  `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`,
+- `@devmentor/core` (`.`, `./config` — `getEnv` and `AppEnv` only, for the proxy,
+  `./container`, `./services`, `./http`, `./events`, `./validators/*`): `getEnv`, `createLogger`, `getContainer`, `withScope`,
   `withRequestScope`, `withSessionCookieScope` (reserved for the app's page session
   helper), the `Cradle` keys (`env`, `logger`, `clock`, `orm`, `eventBus`,
   `sessionService`, `tokenService`, `passwordService`, `identity: GithubIdentityPort`, `em`,

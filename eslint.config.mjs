@@ -83,6 +83,10 @@ const eslintConfig = defineConfig([
     "test-results/**",
     "**/next-env.d.ts",
     "packages/db/migrations/**",
+    // Installed agent-skill templates (HTML/JS snippets with placeholders), not
+    // project source; `om-ux-design`'s assets do not parse as JavaScript.
+    ".agents/skills/*/references/assets/**",
+    ".claude/skills/*/references/assets/**",
   ]),
 ]);
 
