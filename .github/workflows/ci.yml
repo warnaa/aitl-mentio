@@ -157,7 +157,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: integration-evidence-${{ github.run_id }}
-          path: test-results/integration/
+          path: .ai/qa/integration/
           if-no-files-found: ignore
           retention-days: 7
 

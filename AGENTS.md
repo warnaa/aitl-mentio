@@ -14,7 +14,9 @@ Package roles and framework details live in the unit instructions below.
   `.ai/runs/` logs, `.ai/qa/` reports and evidence, generated test-environment
   helpers, PR drafts, working references and generated previews. Review and sanitize
   them before staging; redact credentials, tokens, cookies and other sensitive values.
-  Keep secret-bearing env files and disposable test-environment runtime state ignored.
+  Keep secret-bearing env files and disposable test-environment runtime state ignored,
+  as is `.ai/qa/integration/`: every integration run regenerates its screenshots,
+  diagnostics and logs there (CI uploads them); copy out what you commit as evidence.
 - Plan first. If implementation goes sideways, stop and revise the plan/spec.
   For high-stakes plans, get a skeptical staff-engineer subagent review before coding.
 - Before continuing after a user correction, record it in `.ai/lessons.md`;
