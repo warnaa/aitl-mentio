@@ -93,6 +93,8 @@ describe('reading', () => {
   it('shows the operator the version and last editor, and nobody else', async () => {
     expect(await harness({ stored: row() }).service.getForOperator()).toMatchObject({ version: 2, updatedAt: now.toISOString(), updatedBy: { displayName: 'Founder A' } });
     expect(await harness().service.getForOperator()).toMatchObject({ version: 0, updatedAt: null, updatedBy: null, feePercent: 20 });
+    // The editor's account was deleted (on delete set null): the values stay, the name does not.
+    expect(await harness({ stored: row({ updatedBy: null }) }).service.getForOperator()).toMatchObject({ version: 2, updatedAt: now.toISOString(), updatedBy: null });
     await expect(harness({ session: mentor }).service.getForOperator()).rejects.toBeInstanceOf(ForbiddenError);
     await expect(harness({ session: null }).service.getForOperator()).rejects.toBeInstanceOf(UnauthorizedError);
   });

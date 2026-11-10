@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-10 — The configured gate's `npm run test` does not enforce the 100 % per-file coverage thresholds; CI runs `npm run test:unit:coverage` (and `test:prototype`). Files listed in `coverage.include` must have every `??`/ternary branch tested, so run `npm run test:unit:coverage` locally before pushing.
+
 - 2026-11-10 — Pin `fieldName` on camelCase-with-digit properties (`price25MinCents` → `price25min_cents`), and re-check field validity inside a Zod `superRefine`/`transform` before parsing it: Zod still runs them after a field failed. [(details)](lessons/platform-settings-gotchas.md)
 
 - 2026-11-09 — `npm audit fix` can fail with ERESOLVE on the Storybook/`vite` peer ranges even when the vulnerable packages are unrelated. Do not use `--force`; run `npm update <package>` for fixes inside the declared range, and re-run `npm audit --omit=dev --audit-level=high`.

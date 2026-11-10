@@ -326,6 +326,12 @@ describe('MentorProfileService.listOutOfBounds', () => {
       { mentorProfileId: 'c', displayName: 'Mentor c', slug: 'c-slug', published: false, price25Cents: 9000, price50Cents: null, breaches: ['price25'] },
     ]);
     expect(rows[0]).toMatchObject({ price25Cents: 9000 });
+    // Unloaded optional columns read as undefined; the DTO still says null.
+    const sparse = { ...mentorRow('d', null, 120001), slug: undefined, price25Cents: undefined };
+    const { svc: sparseService } = build({ userId: 'op', roles: ['operator'] }, [sparse]);
+    expect((await sparseService.listOutOfBounds(tightened)).mentors).toEqual([
+      { mentorProfileId: 'd', displayName: 'Mentor d', slug: null, published: false, price25Cents: null, price50Cents: 120001, breaches: ['price50'] },
+    ]);
     expect(flush).not.toHaveBeenCalled();
   });
 });
