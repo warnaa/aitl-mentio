@@ -74,9 +74,9 @@ dispute window; multi-currency.
 
 ### Phase 1: Fee snapshot
 
-- [ ] 1.1 splitFee helper
-- [ ] 1.2 Booking snapshot columns and migration
-- [ ] 1.3 Snapshot on confirmation
+- [x] 1.1 splitFee helper — 0e1b78b
+- [x] 1.2 Booking snapshot columns and migration — 6eb3893
+- [x] 1.3 Snapshot on confirmation — 405f906
 
 ### Phase 2: Payout ledger and run
 
