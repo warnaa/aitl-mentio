@@ -235,7 +235,7 @@ npm run test:integration
 The suite creates a fresh PostgreSQL 17 Testcontainer on a random port, applies
 migrations, seeds prerequisites, builds and starts Next.js on another random port,
 waits for database readiness, then tests the home page and admin panel through the
-pinned `agent-browser` CLI. Screenshots and app logs go to `test-results/integration/`;
+pinned `agent-browser` CLI. Screenshots, diagnostics and app logs go to the git-ignored `.ai/qa/integration/`;
 the browser, app process, and container are stopped in teardown. POSIX and native
 PowerShell launchers are also available at `tests/integration/run.sh` and
 `tests/integration/run.ps1`.

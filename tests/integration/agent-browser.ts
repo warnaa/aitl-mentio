@@ -6,7 +6,12 @@ import { resolve } from 'node:path';
 const cliPath = resolve('node_modules/agent-browser/bin/agent-browser.js');
 const commandTimeoutMs = 60_000;
 
-export const integrationArtifactsDirectory = resolve('test-results/integration');
+/**
+ * Every integration screenshot, failure diagnostic, agent-browser command output and the
+ * app log land here, so local runs and the CI evidence upload read one location. The
+ * directory is generated and git-ignored; curated QA reports live beside it in `.ai/qa/`.
+ */
+export const integrationArtifactsDirectory = resolve('.ai/qa/integration');
 const commandOutputDirectory = resolve(integrationArtifactsDirectory, 'agent-browser');
 let commandSequence = 0;
 
