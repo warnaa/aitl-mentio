@@ -64,7 +64,7 @@ Alternatives rejected:
                     ├─ MentorProfileService ─────┼─ Slot (future ≥ now+lead, not removed)
 GET /api/mentors ───┘    .listPublished(tag?)    └─ Booking (activeOccupancy, overlapping those slots)
                               │
-                              └─ MentorListItemDto[] → MentorList / MentorCard (packages/ui)
+                              └─ MentorListItemDto[] → MentorDirectory + MentorCard (packages/ui)
 ```
 
 ### Core: `MentorProfileService.listPublished(tag?: StackTag)`
@@ -103,24 +103,26 @@ fails as `ValidationError` (422). Unknown extra query keys are ignored by readin
   the static segment `route.ts` at `/api/mentors` before the dynamic one.
 - `mentors/page.tsx`: public and `force-dynamic`. It reads `searchParams.tag`, validates it with the same
   schema (a `ValidationError` renders the A4 message), calls the service via `withScope`, maps tags to
-  labels with `StackTags.labelOf`, and renders `PublicPage` → `MentorList`. Any other error renders
+  labels with `StackTags.labelOf`, and renders `PublicPage` → `MentorListFilter` → `MentorCard`s. Any other error renders
   `ErrorMessage` "The mentor list is unavailable. Please try again later.", as `/m/[slug]` does.
 - `page.tsx` (landing): adds the "Browse mentors" secondary actions (A8) and updates the doc comment
   that says the catalogue is not built.
 
 ### UI (`packages/ui/src/components/mentors/`)
 
-- `MentorCard.tsx` is presentational. Its props are plain values: name, initials or avatar URL, bio,
-  public-work URL, stack labels, formatted prices, the next-slot ISO string and the profile `href`. It
-  reuses `TechnologyChips`, `LocalTime`, `Card` and `Badge`. It renders no rating component and has no
-  `searchbox` role.
-- `MentorList.tsx` contains the tag links as a `nav` with `aria-label="Filter by stack"`: "All" plus four
-  links using `aria-current="page"` for the active one. The tag options come in as props, because UI
-  must not import core (platform primitives II, A11 caveat). It also renders the card grid and an
-  `EmptyState` when the list is empty.
-- The price formatter in `MentorPageView` (`Intl.NumberFormat('en-GB', …)`) is extracted to a shared
-  `packages/ui/src/components/mentors/format-price.ts` and used by both components.
-- There are stories for both components (populated, filtered, empty, invalid tag).
+- `MentorCard.tsx` is new and presentational, and renders as an `article`. Its props are plain values:
+  name, bio, public-work URL, stack labels, prices with currency, the next-slot ISO string and the
+  profile `href`. It reuses `MentorIdentity` (initials avatar), `TechnologyChips`, `LocalTime`,
+  `Badge`, and the `formatPrice`/`initials` helpers exported from `MentorPageView`. It renders no rating
+  component and has no `searchbox` role.
+- The filter, result count, card grid and empty slot reuse the existing design-system
+  `MentorDirectory` (in `MentorProfileCard.tsx`, built for #39). It renders "All stacks" plus one button
+  per tag, with `aria-pressed` marking the active one.
+- A small client wrapper, `packages/app/src/app/mentors/MentorListFilter.tsx`, maps the button choice to
+  `router.push('/mentors?tag=<value>')`, so the filtered URL stays shareable. The tag options come in as
+  props, because UI must not import core (platform primitives II, A11 caveat).
+- There are stories for the card and for the list composed with `MentorDirectory` (populated, filtered
+  to empty, empty).
 
 ## 📝 Data Model
 
@@ -157,17 +159,19 @@ rank or rating field, and no user id, email or profile id.
 
 ## 📝 UI/UX
 
-- Route: `/mentors`, plus `/mentors?tag=<value>`. The heading is "Find a mentor", followed by one line
-  of copy: "Mentors with open times, newest availability first."
-- Filtering uses plain links, so it works without JavaScript and the URL can be shared. There is no
-  search input, no sort control, no price filter and no "featured" section.
+- Route: `/mentors`, plus `/mentors?tag=<value>`. The heading is `MentorDirectory`'s "Find a mentor",
+  with its line "Filter by stack. Mentors with the most recently published availability appear
+  first." and an "N mentors available" status. A visually hidden page `h1` reads "Mentor list".
+- Filtering uses the stack buttons, which update `?tag=` so the URL can be shared. There is no search
+  input, no sort control, no price filter and no "featured" section.
 - Each card's "View profile" link points to `/m/<slug>`, which handles booking.
 - Empty: "No mentors have open times right now." With a tag: "No {Tag} mentors have open times right
-  now.", followed by a link to "All stacks".
-- Invalid tag: the A4 message above the tag links, and no cards.
-- Accessibility: the cards are `article` elements in a list. The filter `nav` marks the active tag with
-  `aria-current`. Next-slot times use `<time dateTime>` through `LocalTime`, and the page has no
-  horizontal overflow at 375 px (`expectFitsMobile`).
+  now." "All stacks" stays available in the filter.
+- Invalid tag: a warning empty state, "We do not list that stack. Choose one of the stacks above.", and
+  no cards.
+- Accessibility: each card is an `article` named by the mentor. The filter is a labelled group whose
+  active button has `aria-pressed="true"`. Next-slot times use `<time dateTime>` through `LocalTime`, and
+  the page has no horizontal overflow at 320 px (`expectFitsMobile`).
 - Mockup: [`assets/mentor-list/mockup-01-mentor-list.png`](assets/mentor-list/mockup-01-mentor-list.png)
   (static HTML in the same folder). It is illustrative: the copy and placeholder data are not product
   data.
@@ -238,18 +242,14 @@ no entry point.
    Add the schema file to `coverage.include` in `vitest.config.mts`.
 2. **API route.** Add `packages/app/src/app/api/mentors/route.ts` with `route.test.ts` covering 200 with
    and without a tag, and 422 for `?tag=rust` and `?tag=`. Add the route file to `coverage.include`.
-3. **UI components.** Extract `format-price.ts` and switch `MentorPageView` to it, with behaviour
-   unchanged and its tests green. Add `MentorCard.tsx` and `MentorList.tsx` with tests:
-   - the card renders its fields and the profile link;
-   - the filter marks the active tag;
-   - the empty states, generic and per tag;
-   - the invalid-tag message;
-   - no `searchbox` role and no rating text.
-
-   Add stories for both components and add the files to `coverage.include`.
+3. **UI component.** Export `initials` from `MentorPageView` and add `MentorCard.tsx`, with tests for
+   its fields, its links, and the absence of a `searchbox` role and rating text. Add stories for the card
+   and for the list composed with `MentorDirectory`, and add the file to `coverage.include`.
 4. **Page and landing link.** Add `packages/app/src/app/mentors/page.tsx` with `page.test.tsx`
-   (service mocked; list, filtered, invalid tag, service error). Add the landing page's "Browse mentors"
-   actions and update `page.test.tsx` and the doc comment.
+   (service mocked; list, filtered, invalid tag, service error). Add `MentorListFilter.tsx` with a test
+   for router navigation and `aria-pressed`. Add the landing page's "Browse mentors" actions (hero
+   actions wrap so two fit at 320 px), update `page.test.tsx`, the doc comment and
+   `home.integration.test.ts`, and add the public list to `packages/app/AGENTS.md`'s surfaces table.
 5. **Integration snapshot.** Add `tests/integration/mentor-list.integration.test.ts`. It seeds two
    bookable mentors with different tags and publication order, plus one mentor without prices. It then
    asserts:
