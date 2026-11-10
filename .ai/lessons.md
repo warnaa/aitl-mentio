@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-10 — App-wide response headers (e.g. `X-Frame-Options`, #84) belong in `nextConfig.headers()` via `packages/app/src/lib/security-headers.ts`, not `src/proxy.ts`: the proxy matcher covers only signed-in surfaces, so public and auth pages would be missed. Prove a framing policy with a second loopback origin plus a same-origin control frame, so a blank snapshot cannot pass vacuously.
+
 - 2026-11-09 — `npm audit fix` can fail with ERESOLVE on the Storybook/`vite` peer ranges even when the vulnerable packages are unrelated. Do not use `--force`; run `npm update <package>` for fixes inside the declared range, and re-run `npm audit --omit=dev --audit-level=high`.
 
 - 2026-11-08 — **A decision that freezes other data needs that data's writers on the same lock.** Approving a note froze the written answer, but `postAnswer` was a single conditional update that took no booking lock first, so an approval and a replacement could cross. Writers of frozen data now take the booking lock and re-check inside the transaction. Keep that check out of reads that must survive a notes outage: adding it to the session read took down the whole session screen when the notes table was unavailable (NOTES-008). Also: `db:migration:create` still churns unrelated tables, so keep only the changed table in the snapshot and hand-write the migration, and any new `down` step means `NOTES-007`-style tests must run one `db:migrate:down` per migration.
