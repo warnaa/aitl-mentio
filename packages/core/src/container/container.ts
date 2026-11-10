@@ -28,6 +28,7 @@ import { InvitationService } from '../services/invitations/invitation.service';
 import { MentorProfileService } from '../services/mentors/mentor-profile.service';
 import { SlotService } from '../services/availability/slot.service';
 import { BookingService } from '../services/bookings/booking.service';
+import { BookingCancellationService } from '../services/bookings/booking-cancellation.service';
 import { NotificationService } from '../services/notifications/notification.service';
 import { SessionNoteService } from '../services/notes/session-note.service';
 import { TextSessionService } from '../services/sessions/text-session.service';
@@ -149,6 +150,7 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     mentorProfileService: asClass(MentorProfileService).scoped(),
     slotService: asClass(SlotService).scoped(),
     bookingService: asClass(BookingService).scoped(),
+    bookingCancellationService: asClass(BookingCancellationService).scoped(),
     notificationService: asClass(NotificationService).scoped(),
     textSessionService: asClass(TextSessionService).scoped(),
     sessionNoteService: asClass(SessionNoteService).scoped(),
