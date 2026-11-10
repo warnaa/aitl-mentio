@@ -9,6 +9,7 @@ import type { Clock } from '../../time/clock';
 import type { CheckoutSession, CreateCheckoutSession, PaymentEvent, PaymentGateway } from './payment-gateway.port';
 import { CheckoutNotCreatedError } from './payment-gateway.port';
 import { withBookingLock } from '../bookings/booking-lock';
+import { FREE_CANCELLATION_HOURS } from '../bookings/booking-cancellation.service';
 
 const MINUTE = 60_000;
 const unresolved = ['creating', 'open', 'review'];
@@ -262,7 +263,9 @@ export class PaymentService {
     requireRole(session, role);
     const rows = await this.deps.em.find(Booking, role === 'mentee' ? { mentee: session.userId } : { mentorProfile: { user: session.userId } }, { populate: ['mentee', 'mentorProfile.user'], orderBy: { startsAt: 'desc' }, limit: 50 });
     const attempts = rows.length ? await this.deps.em.find(PaymentAttempt, { booking: { $in: rows.map(row => row.id) } }) : [];
-    return rows.map(row => ({ id: row.id, mentorName: row.mentorProfile.user.displayName, menteeName: row.mentee.displayName, lengthMinutes: row.lengthMinutes, priceCents: row.priceCents, currency: row.currency, status: row.status, startsAt: row.startsAt.toISOString(), expiresAt: row.expiresAt?.toISOString() ?? null, paidAt: row.paidAt?.toISOString() ?? null, paymentStatus: attempts.find(attempt => attempt.booking.id === row.id)?.state ?? 'unpaid' }));
+    return rows.map(row => ({ id: row.id, mentorName: row.mentorProfile.user.displayName, menteeName: row.mentee.displayName, lengthMinutes: row.lengthMinutes, priceCents: row.priceCents, currency: row.currency, status: row.status, startsAt: row.startsAt.toISOString(), expiresAt: row.expiresAt?.toISOString() ?? null, paidAt: row.paidAt?.toISOString() ?? null, paymentStatus: attempts.find(attempt => attempt.booking.id === row.id)?.state ?? 'unpaid',
+      // E03-S05: the dialog phrases the outcome from this line; the server decides again on cancel.
+      cancelledAt: row.cancelledAt?.toISOString() ?? null, refundStatus: row.refundStatus, freeCancellationUntil: new Date(row.startsAt.getTime() - FREE_CANCELLATION_HOURS * 3_600_000).toISOString() }));
   }
 
   async listReview() {

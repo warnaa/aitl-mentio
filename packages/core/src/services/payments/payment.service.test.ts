@@ -108,7 +108,7 @@ beforeEach(() => {
   gateway = new MockPaymentGateway({ clock });
   const profile = { id: 'mentorProfile', slug: 'mentor', user: { id: 'mentor', displayName: 'Mentor' } };
   const slot = { id: 'slot', mentorProfile: profile };
-  booking = { id, mentee: { id: 'mentee', displayName: 'Mentee' }, mentorProfile: profile, slot, status: 'pending', lengthMinutes: 25, priceCents: 8000, currency: 'PLN', startsAt: new Date(now.getTime() + 120 * 60_000), expiresAt: new Date(now.getTime() + 30 * 60_000), paymentPending: false, paidAt: null, bookedAt: null, amountPaidCents: null, stripePaymentIntentId: null, stripeCheckoutSessionId: null };
+  booking = { id, mentee: { id: 'mentee', displayName: 'Mentee' }, mentorProfile: profile, slot, status: 'pending', lengthMinutes: 25, priceCents: 8000, currency: 'PLN', startsAt: new Date(now.getTime() + 120 * 60_000), expiresAt: new Date(now.getTime() + 30 * 60_000), paymentPending: false, paidAt: null, bookedAt: null, amountPaidCents: null, stripePaymentIntentId: null, stripeCheckoutSessionId: null, cancelledAt: null, refundStatus: 'none' };
   tables = { Booking: [booking], Profile: [profile], Slot: [slot], Attempt: [], Event: [], Resolution: [] };
   flush.mockResolvedValue(undefined); emit.mockResolvedValue(undefined);
 });
@@ -264,7 +264,7 @@ it('rejects partial refunds and changed identities; releases only a verified com
 });
 
 it('projects only participant-owned rows and operator-only bounded review cases, never provider secrets or URLs', async () => {
-  expect(await service().listMine()).toEqual([expect.objectContaining({ id, mentorName: 'Mentor', menteeName: 'Mentee', paymentStatus: 'unpaid', paidAt: null })]);
+  expect(await service().listMine()).toEqual([expect.objectContaining({ id, mentorName: 'Mentor', menteeName: 'Mentee', paymentStatus: 'unpaid', paidAt: null, cancelledAt: null, refundStatus: 'none', freeCancellationUntil: new Date(now.getTime() + 120 * 60_000 - 24 * 3_600_000).toISOString() })]);
   await checkout();
   expect(await service().listMine()).toEqual([expect.objectContaining({ paymentStatus: 'open' })]);
   session = { userId: 'foreign', roles: ['mentee'] }; expect(await service().listMine()).toEqual([]);

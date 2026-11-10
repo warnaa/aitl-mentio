@@ -66,7 +66,8 @@ export class MockPaymentGateway implements PaymentGateway {
     return { id: crypto.randomUUID(), type: 'checkout.session.completed', session: paid };
   }
 
-  private readonly refunds = new Map<string, RefundResult & { paymentIntentId: string }>();
+  private readonly refunds = new Map<string, RefundResult>();
+  private readonly refundIntents = new Map<string, string>();
   private readonly refundKeys = new Map<string, string>();
   /** Queued outcomes for the next refund requests; empty means success. */
   readonly refundOutcomes: MockRefundOutcome[] = [];
@@ -81,7 +82,8 @@ export class MockPaymentGateway implements PaymentGateway {
     // Like the provider: an already refunded charge is an error whose outcome must be reconciled.
     if (already > 0) throw new Error('charge_already_refunded');
     const id = `re_mock_${input.bookingId}_${this.refunds.size + 1}`;
-    this.refunds.set(id, { id, status: outcome === 'pending' ? 'pending' : 'succeeded', amountCents: input.amountCents, bookingId: input.bookingId, paymentIntentId: input.paymentIntentId });
+    this.refunds.set(id, { id, status: outcome === 'pending' ? 'pending' : 'succeeded', amountCents: input.amountCents, bookingId: input.bookingId });
+    this.refundIntents.set(id, input.paymentIntentId);
     this.refundKeys.set(input.idempotencyKey, id);
     if (outcome === 'timeout_after_create') throw new Error('Synthetic provider timeout after refund creation');
     return this.retrieveRefund(id);
@@ -90,12 +92,11 @@ export class MockPaymentGateway implements PaymentGateway {
   async retrieveRefund(id: string): Promise<RefundResult> {
     const refund = this.refunds.get(id);
     if (!refund) throw new NotFoundError('Refund not found');
-    const { paymentIntentId: _intent, ...result } = refund;
-    return result;
+    return { ...refund };
   }
 
   async listRefunds(paymentIntentId: string): Promise<RefundResult[]> {
-    return [...this.refunds.values()].filter(refund => refund.paymentIntentId === paymentIntentId).map(({ paymentIntentId: _intent, ...result }) => result);
+    return [...this.refunds.values()].filter(refund => this.refundIntents.get(refund.id) === paymentIntentId).map(refund => ({ ...refund }));
   }
 
   /** Test control: the provider pruned its idempotency keys (Stripe keeps them about 24 hours). */
@@ -104,7 +105,8 @@ export class MockPaymentGateway implements PaymentGateway {
   /** Test control: a refund made by hand in the provider dashboard, without DevMentor metadata. */
   addExternalRefund(paymentIntentId: string, amountCents: number, status: RefundResult['status'] = 'succeeded') {
     const id = `re_mock_external_${this.refunds.size + 1}`;
-    this.refunds.set(id, { id, status, amountCents, bookingId: null, paymentIntentId });
+    this.refunds.set(id, { id, status, amountCents, bookingId: null });
+    this.refundIntents.set(id, paymentIntentId);
     return id;
   }
 
