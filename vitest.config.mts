@@ -97,6 +97,7 @@ export default defineConfig({
         'packages/app/src/app/admin/settings/PlatformSettingsForm.tsx',
         'packages/db/src/env.ts',
         'packages/core/src/money/money.ts',
+        'packages/core/src/money/fee.ts',
         'packages/core/src/domain/vocabularies/session-lengths.ts',
         'packages/app/src/app/\\(mentor\\)/mentor/MentorAvailability.tsx',
         'packages/ui/src/backend/forms/local-datetime.ts',
