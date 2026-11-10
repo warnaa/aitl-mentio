@@ -37,9 +37,9 @@ Mentor-initiated cancellation, rescheduling, partial refunds, disputes, fee/payo
 
 ### Phase 1: Data model, lock helper and payment port
 
-- [ ] 1.1 Migration booking-cancellation, entity fields and checks, booking_cancelled notification kind
-- [ ] 1.2 Extract the mentor-slot-booking lock helper into bookings/booking-lock.ts
-- [ ] 1.3 Refund operations on the PaymentGateway port with mock, unavailable and Stripe adapters
+- [x] 1.1 Migration booking-cancellation, entity fields and checks, booking_cancelled notification kind — 55c773e
+- [x] 1.2 Extract the mentor-slot-booking lock helper into bookings/booking-lock.ts — 8f7b676
+- [x] 1.3 Refund operations on the PaymentGateway port with mock, unavailable and Stripe adapters — eacd730
 
 ### Phase 2: Cancellation service, runner, route and notification
 
