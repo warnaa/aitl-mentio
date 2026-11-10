@@ -43,9 +43,9 @@ Mentor-initiated cancellation, rescheduling, partial refunds, disputes, fee/payo
 
 ### Phase 2: Cancellation service, runner, route and notification
 
-- [ ] 2.1 BookingCancellationService.cancel with evidence-first refund and compare-and-set writes
-- [ ] 2.2 reconcileRefunds and reconcileAll used by the CLI and the operator route
-- [ ] 2.3 Cancel route, bookings.booking.cancelled event and mentor notification
+- [x] 2.1 BookingCancellationService.cancel with evidence-first refund and compare-and-set writes — 18ce564
+- [x] 2.2 reconcileRefunds and reconcileAll used by the CLI and the operator route — 14d4a92
+- [x] 2.3 Cancel route, bookings.booking.cancelled event and mentor notification — ac196c0
 
 ### Phase 3: UI and operator visibility
 
