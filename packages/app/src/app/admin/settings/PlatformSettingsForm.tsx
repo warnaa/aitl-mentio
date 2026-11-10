@@ -43,7 +43,7 @@ export function PlatformSettingsForm({ initial }: { initial: SettingsSnapshot })
   return <>
     <Card className="dm-product-panel">
       <div>
-        <h2>Bounds and fee</h2>
+        <h2 className="dm-product-title">Bounds and fee</h2>
         <p className="dm-product-muted">{`Mentors set prices within these inclusive bounds from their next save. The fee applies to later paid sessions. Currency: ${settings.currency}.`}</p>
       </div>
       <CrudForm schema={schema} endpoint="/api/operator/settings" method="PUT" submitLabel="Save settings" fields={[
@@ -67,7 +67,7 @@ export function PlatformSettingsForm({ initial }: { initial: SettingsSnapshot })
     </Card>
     <Card className="dm-product-panel min-w-0 overflow-x-auto">
       <div>
-        <h2>Prices outside the bounds</h2>
+        <h2 className="dm-product-title">Prices outside the bounds</h2>
         <p className="dm-product-muted">These prices are not changed. These mentors cannot be booked until they set prices within the bounds.</p>
       </div>
       {outOfBounds.total === 0 ? <EmptyState title="Every mentor's prices are within the bounds" description="Mentors appear here when a price falls outside the bounds above." /> : <>
