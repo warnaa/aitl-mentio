@@ -437,6 +437,79 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "cancelled_at": {
+          "name": "cancelled_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "unique": false,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "refund_status": {
+          "name": "refund_status",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "unique": false,
+          "precision": null,
+          "scale": null,
+          "default": "'none'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "none",
+            "pending",
+            "refunded",
+            "failed"
+          ],
+          "nullable": false,
+          "length": null,
+          "mappedType": "enum"
+        },
+        "stripe_refund_id": {
+          "name": "stripe_refund_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "unique": true,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "refund_next_attempt_at": {
+          "name": "refund_next_attempt_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "unique": false,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
         }
       },
       "indexes": [
@@ -491,9 +564,24 @@
           "keyName": "bookings_stripe_payment_intent_id_unique",
           "primary": false,
           "unique": true
+        },
+        {
+          "columnNames": [
+            "stripe_refund_id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "bookings_stripe_refund_id_unique",
+          "primary": false,
+          "unique": true
         }
       ],
       "checks": [
+        {
+          "name": "bookings_cancelled_at_check",
+          "expression": "(status = 'cancelled') = (cancelled_at is not null)",
+          "definition": "check ((status = 'cancelled') = (cancelled_at is not null))"
+        },
         {
           "name": "bookings_currency_check",
           "expression": "\"currency\" in ('PLN')",
@@ -517,6 +605,17 @@
           "expression": "price_cents > 0",
           "definition": "CHECK ((price_cents > 0))",
           "columnName": "price_cents"
+        },
+        {
+          "name": "bookings_refund_state_check",
+          "expression": "refund_status = 'none' or status = 'cancelled'",
+          "definition": "check (refund_status = 'none' or status = 'cancelled')"
+        },
+        {
+          "name": "bookings_refund_status_check",
+          "expression": "\"refund_status\" in ('none', 'pending', 'refunded', 'failed')",
+          "definition": "check (\"refund_status\" in ('none', 'pending', 'refunded', 'failed'))",
+          "columnName": "refund_status"
         },
         {
           "name": "bookings_status_check",
@@ -1377,8 +1476,8 @@
       "checks": [
         {
           "name": "notifications_kind_check",
-          "expression": "kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined')",
-          "definition": "check (kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined'))",
+          "expression": "kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined', 'booking_cancelled')",
+          "definition": "check (kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined', 'booking_cancelled'))",
           "columnName": "kind"
         },
         {

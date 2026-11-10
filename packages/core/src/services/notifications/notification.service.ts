@@ -7,10 +7,11 @@ import type { Logger } from '../../logger';
 import type { Clock } from '../../time/clock';
 import { notificationReadSchema } from '../../validators/notifications/notification-read.schema';
 import { answerPostedMail } from './answer-posted-mail';
+import { bookingCancelledMail } from './booking-cancelled-mail';
 import { bookingConfirmedMail, type Audience } from './booking-confirmed-mail';
 import type { Mailer } from './mailer.port';
 
-export type NotificationKind = 'booking_confirmed' | 'answer_posted' | 'note_awaiting_approval' | 'note_approved' | 'note_declined';
+export type NotificationKind = 'booking_confirmed' | 'answer_posted' | 'note_awaiting_approval' | 'note_approved' | 'note_declined' | 'booking_cancelled';
 const PAGE = 50;
 
 export interface NotificationServiceDeps {
@@ -34,7 +35,8 @@ function toDto(row: INotification, userId: string) {
     lengthMinutes: booking.lengthMinutes,
     readAt: row.readAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
-    sessionPath: `/sessions/${booking.id}`,
+    // A cancelled booking has no session page (it answers 404); the mentor's sessions list shows it.
+    sessionPath: row.kind === 'booking_cancelled' ? '/mentor' : `/sessions/${booking.id}`,
   };
 }
 export type NotificationDto = ReturnType<typeof toDto>;
@@ -112,6 +114,38 @@ export class NotificationService {
       // Neither address nor body is logged; releasing the claim lets a later save retry. A send the
       // provider accepted but reported as failed (a response timeout) can therefore be sent twice.
       // A process that dies between the claim and the send leaves the email unsent: at most once.
+      await this.deps.em.fork().nativeUpdate(Notification, { id: row.id, emailSentAt: claimedAt }, { emailSentAt: null });
+      this.deps.logger.warn({ err: error, notificationId: row.id }, 'notifications.email_failed');
+    }
+  }
+
+  /**
+   * Event consumer for `bookings.booking.cancelled` (E03-S05). Tells the mentor once, in-product
+   * and by email, with the same claim/release pattern as the written answer, and never with
+   * payment identifiers. Nothing is written for a booking that is not cancelled.
+   */
+  async onBookingCancelled(bookingId: string): Promise<void> {
+    const booking = await this.deps.em.fork().findOne(Booking, { id: bookingId }, { populate: ['mentee', 'mentorProfile.user'] });
+    if (!booking || booking.status !== 'cancelled') {
+      this.deps.logger.warn({ bookingId }, 'notifications.booking_not_cancelled');
+      return;
+    }
+    const mentor = booking.mentorProfile.user;
+    const row = await this.record(mentor.id, booking.id, 'booking_cancelled');
+    if (!row || row.emailSentAt) return;
+    const claimedAt = this.deps.clock.now();
+    const claimed = await this.deps.em.fork().nativeUpdate(Notification, { id: row.id, emailSentAt: null }, { emailSentAt: claimedAt });
+    if (claimed !== 1) return;
+    try {
+      await this.deps.mailer.send(bookingCancelledMail({
+        to: mentor.email,
+        menteeName: booking.mentee.displayName,
+        startsAt: booking.startsAt,
+        lengthMinutes: booking.lengthMinutes,
+        refunded: booking.refundStatus !== 'none',
+        sessionsUrl: new URL('/mentor', this.deps.env.APP_URL).toString(),
+      }));
+    } catch (error) {
       await this.deps.em.fork().nativeUpdate(Notification, { id: row.id, emailSentAt: claimedAt }, { emailSentAt: null });
       this.deps.logger.warn({ err: error, notificationId: row.id }, 'notifications.email_failed');
     }

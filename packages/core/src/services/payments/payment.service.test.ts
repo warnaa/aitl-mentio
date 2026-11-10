@@ -108,7 +108,7 @@ beforeEach(() => {
   gateway = new MockPaymentGateway({ clock });
   const profile = { id: 'mentorProfile', slug: 'mentor', user: { id: 'mentor', displayName: 'Mentor' } };
   const slot = { id: 'slot', mentorProfile: profile };
-  booking = { id, mentee: { id: 'mentee', displayName: 'Mentee' }, mentorProfile: profile, slot, status: 'pending', lengthMinutes: 25, priceCents: 8000, currency: 'PLN', startsAt: new Date(now.getTime() + 120 * 60_000), expiresAt: new Date(now.getTime() + 30 * 60_000), paymentPending: false, paidAt: null, bookedAt: null, amountPaidCents: null, stripePaymentIntentId: null, stripeCheckoutSessionId: null };
+  booking = { id, mentee: { id: 'mentee', displayName: 'Mentee' }, mentorProfile: profile, slot, status: 'pending', lengthMinutes: 25, priceCents: 8000, currency: 'PLN', startsAt: new Date(now.getTime() + 120 * 60_000), expiresAt: new Date(now.getTime() + 30 * 60_000), paymentPending: false, paidAt: null, bookedAt: null, amountPaidCents: null, stripePaymentIntentId: null, stripeCheckoutSessionId: null, cancelledAt: null, refundStatus: 'none' };
   tables = { Booking: [booking], Profile: [profile], Slot: [slot], Attempt: [], Event: [], Resolution: [] };
   flush.mockResolvedValue(undefined); emit.mockResolvedValue(undefined);
 });
@@ -264,7 +264,7 @@ it('rejects partial refunds and changed identities; releases only a verified com
 });
 
 it('projects only participant-owned rows and operator-only bounded review cases, never provider secrets or URLs', async () => {
-  expect(await service().listMine()).toEqual([expect.objectContaining({ id, mentorName: 'Mentor', menteeName: 'Mentee', paymentStatus: 'unpaid', paidAt: null })]);
+  expect(await service().listMine()).toEqual([expect.objectContaining({ id, mentorName: 'Mentor', menteeName: 'Mentee', paymentStatus: 'unpaid', paidAt: null, cancelledAt: null, refundStatus: 'none', freeCancellationUntil: new Date(now.getTime() + 120 * 60_000 - 24 * 3_600_000).toISOString() })]);
   await checkout();
   expect(await service().listMine()).toEqual([expect.objectContaining({ paymentStatus: 'open' })]);
   session = { userId: 'foreign', roles: ['mentee'] }; expect(await service().listMine()).toEqual([]);
@@ -341,4 +341,14 @@ it('cannot override an already-used provider payment intent with an operator con
   vi.spyOn(gateway, 'retrieveCheckoutSession').mockResolvedValue(evidence());
   await expect(service().resolveReview(attempt().id, { action: 'confirm', reason: 'checked' })).rejects.toMatchObject({ status: 409 });
   expect(tables.Resolution).toHaveLength(0); expect(emit).not.toHaveBeenCalled();
+});
+
+it('lists failed and overdue cancellation refunds for the operator, but not a refund still settling', async () => {
+  session = { userId: 'operator', roles: ['operator'] };
+  Object.assign(booking, { status: 'cancelled', cancelledAt: new Date(now.getTime() - 30 * 60_000), refundStatus: 'pending', refundNextAttemptAt: now });
+  expect(await service().listReview()).toEqual([]);
+  booking.cancelledAt = new Date(now.getTime() - 61 * 60_000);
+  expect(await service().listReview()).toEqual([expect.objectContaining({ attemptId: null, bookingId: id, sessionId: null, status: 'refund_pending', reason: 'refund_overdue' })]);
+  booking.refundStatus = 'failed';
+  expect(await service().listReview()).toEqual([expect.objectContaining({ bookingId: id, status: 'refund_failed', reason: 'refund_failed', nextReconciliationAt: now.toISOString() })]);
 });
