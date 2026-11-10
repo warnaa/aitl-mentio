@@ -14,7 +14,7 @@
 .dm-landing-hero h1 { max-width:960px; margin:16px auto 24px; font-size:clamp(40px,4.3vw,60px); line-height:1.12; font-weight:700; letter-spacing:-.05em; }
 .dm-landing-hero h1 span { color:var(--dm-action-primary-label); }
 .dm-landing-lead { max-width:65ch; margin-inline:auto!important; font-size:18px; line-height:30px; color:var(--dm-text-sub-600); }
-.dm-home-hero-actions { display:flex; justify-content:center; margin-top:32px; }
+.dm-home-hero-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:16px; margin-top:32px; }
 .dm-landing .dm-home-hero-facts { justify-content:center; margin-top:32px; gap:12px; }
 .dm-landing .dm-home-hero-facts > .dm-badge { height:auto; min-height:48px; max-width:100%; padding:12px 16px; gap:8px; color:var(--dm-action-primary-label); background:var(--card); font-size:14px; line-height:22px; font-weight:600; white-space:normal; }
 .dm-landing .dm-home-hero-facts > .dm-badge > svg { width:18px; height:18px; flex:0 0 18px; }
