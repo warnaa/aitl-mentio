@@ -87,6 +87,10 @@ PR: #88
   - The currency is stated in the intro sentence, because the form has no read-only field type.
   - The caption reads "Using the default values. Nobody has changed them here yet." (Guidelines: full sentences, no semicolons).
   - Layout and intent match the mockup on #86.
+- **CI on the ready PR caught two gaps the configured local gate does not cover.**
+  - 100 % per-file branch coverage (`test:unit:coverage`) required tests for the `?? null` and deleted-editor branches (`4d72bec`).
+  - `NOTES-007` needed one more `db:migrate:down` for the new migration (`e3501d1`).
+  - All 9 checks are green on `e3501d1`.
 - **Process incident.** A `cezar autosave` commit made during a usage-limit pause (ac1c3ed) put the spec file on this branch. It was removed again in 38ad2d7, so the spec still merges only through #86.
 
 ## Follow-ups
