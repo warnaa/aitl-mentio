@@ -17,7 +17,17 @@ Apply labels always through the descriptor guards (`set_pipeline_label` / `apply
 
 ## Summary comment
 
-Every run ends with a single comprehensive summary comment the human reviewer can read top-to-bottom without clicking into the diff. Post it via the tracker operation **comment-pr** with a body file so multi-line formatting is preserved. Cover: base merged in, loop outcome (review verdict, CI status, UI evidence), how each reviewer comment already on the PR was handled (fixed, deferred to a follow-up, or declined with a reason), follow-ups filed, and the merge-readiness verdict with the exact next command (`om-approve-merge-pr {prNumber}` when ready, or the blocker when not). Never post it before the loop finishes, never claim a completion you did not reach, and never paste secrets into it.
+Post one marker-idempotent result comment after the loop settles, preserving
+multi-line formatting. Aim for 40–100 words: concrete fixes, current review/CI/UI
+result, unresolved blocker or next action. Link the authoritative review's
+per-item dispositions (including inherited feedback), QA evidence, and follow-up
+issues. Do not repeat the PR explanation, finding lists, routine base-merge
+metadata, or label inventory. Preserve the existing summary marker and update it
+in place. Never claim completion before reaching it or expose secrets.
+
+When ready, give `om-approve-merge-pr {prNumber}` as the next command and state
+any required QA sign-off still outstanding. When blocked or checks are pending,
+state the actual limit and required action; a local pass does not replace CI.
 
 ## Marker emission
 
@@ -46,6 +56,11 @@ Do **not** use follow-ups to dodge real blockers — a correctness, security, co
 
 Once labels and metadata match the real state, **hand off**: this skill leaves the PR merge-ready and stops. The merge itself belongs to `om-approve-merge-pr` (single PR) or `om-merge-buddy` (sweep), which re-check every gate before squash-merging.
 
+Under `--orchestrated` this step is skipped (`references/orchestrated-mode.md`).
+A replacement PR is reported as `replacement=<n>` to the orchestrator, which
+continues on it without waiting for the original author's recheck. This skill
+still never merges by itself.
+
 ### Fork supersede/credit
 
 When step 4's `om-auto-review-pr` run carried a fork PR forward (it bases a carry branch in the main repo on the fetched PR head — e.g. `carry/pr-{prNumber}-ready` — preserving the original commits and authorship, applies merges/fixes there, opens a replacement PR, and closes the original only after the replacement exists), confirm the replacement PR satisfies the Supersede Credit Rule so changelog tooling credits the original contributor, not the reviewer:
@@ -53,6 +68,10 @@ When step 4's `om-auto-review-pr` run carried a fork PR forward (it bases a carr
 - Its body starts (within the first 20 lines) with `Supersedes #{originalPr}` — changelog tooling matches `^Supersedes\s+#(\d+)\b` (case-insensitive).
 - It carries an explicit credit line — `Credit: original implementation by @{originalAuthor}. …` — matched as `Credit:\s+original\s+implementation\s+by\s+@handle`.
 - It is reassigned to the original author, with a handoff comment inviting them to do the next recheck from the carried-forward branch.
+- When the original had a run folder (`Tracking plan:` line or a committed `HANDOFF.md`), its handoff moved with it: `HANDOFF.md` names the replacement PR and carry branch, `NOTIFY.md` has a `carried forward to #{newPrNumber}` entry, and the replacement body keeps the `Tracking plan:` line, so a continue skill resumes on the replacement.
 - The closed original PR carries a `Closing in favor of #{newPrNumber} ({newPrUrl}).` comment crediting the original author (the fallback detection path for the credit rule).
+- Before the original closes, the replacement copies applicable category, priority, risk, custom labels, QA requirements, and any original `automerge.label` (default `automerge`) through the label guards, verified via **get-pr**. Keep one priority and risk label (preserve or justify raising the originals), preserve human hard blocks, and normalize the pipeline to the verified state; never copy QA approvals (`qa-approved`, `qa-self-verified`) or another run's `in-progress` / `ci-monitoring`. Missing required automerge labeling blocks unattended merging; conflicting QA requirements remain blocked.
+- All subsequent work and emitted PR references use the replacement's number, URL, head/target branch, and fresh claim context. Under `--orchestrated`, hand control back to the orchestrator automatically; reassignment and the author recheck invitation are advisory there.
+- Transfer labels from a fresh **get-pr** reading of the original. If its automerge label was removed, cancel the unattended continuation rather than recreating that authorization from an earlier snapshot.
 
 If any of these are missing, fix them here (edit the replacement PR body, post the comments, reassign) before declaring merge-ready.
