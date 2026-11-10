@@ -38,7 +38,7 @@ it('refuses zero, oversized and malformed amounts and a missing version', () => 
 });
 
 it('validates the client form fields with the same rules, without a version', () => {
-  const { version: _version, ...fields } = valid;
+  const fields = { price25Min: valid.price25Min, price25Max: valid.price25Max, price50Min: valid.price50Min, price50Max: valid.price50Max, feePercent: valid.feePercent };
   expect(platformSettingsFieldsSchema.parse({ ...fields, version: 9 })).toEqual(fields);
   expect(platformSettingsFieldsSchema.safeParse({ ...fields, price50Min: '1300' }).success).toBe(false);
   const missingFee = platformSettingsFieldsSchema.safeParse({ ...fields, feePercent: undefined });
