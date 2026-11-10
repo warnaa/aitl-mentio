@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { loadRepoEnv } from "./src/lib/repo-env";
+import { securityHeaders } from "./src/lib/security-headers";
 
 // Next reads env files only from this package; the documented `.env` is the repo root.
 // Resolved here, not in the helper: Next compiles this config next to itself, so
@@ -19,6 +20,8 @@ const nextConfig: NextConfig = {
     "@mikro-orm/seeder",
     "pino",
   ],
+  // Anti-clickjacking and other response headers, on every route.
+  headers: async () => securityHeaders(),
 };
 
 export default nextConfig;
