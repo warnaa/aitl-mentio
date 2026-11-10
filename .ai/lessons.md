@@ -9,6 +9,12 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-10 — Platform settings (#50) surfaced two gotchas.
+  1. MikroORM's naming strategy turns `price25MinCents` into `price25min_cents`; the digit swallows the underscore. A check constraint written as `price25_min_cents` then fails at migration time, so pin `fieldName(...)` on camelCase properties that contain digits.
+  2. Zod 4 still runs an object's `superRefine`/`transform` after a field failed its own format check. Code there that parses a field (`BigInt('1e3')`) throws instead of reporting a validation error, so re-check field validity before converting.
+
+  Also: a settings read that hits the DB must happen before a service opens its locking transaction, the same pool rule as the 2026-11-08 lesson.
+
 - 2026-11-09 — `npm audit fix` can fail with ERESOLVE on the Storybook/`vite` peer ranges even when the vulnerable packages are unrelated. Do not use `--force`; run `npm update <package>` for fixes inside the declared range, and re-run `npm audit --omit=dev --audit-level=high`.
 
 - 2026-11-08 — **A decision that freezes other data needs that data's writers on the same lock.** Approving a note froze the written answer, but `postAnswer` was a single conditional update that took no booking lock first, so an approval and a replacement could cross. Writers of frozen data now take the booking lock and re-check inside the transaction. Keep that check out of reads that must survive a notes outage: adding it to the session read took down the whole session screen when the notes table was unavailable (NOTES-008). Also: `db:migration:create` still churns unrelated tables, so keep only the changed table in the snapshot and hand-write the migration, and any new `down` step means `NOTES-007`-style tests must run one `db:migrate:down` per migration.

@@ -201,6 +201,8 @@ the change spans several concepts; note it in the PR body.
 
 ### 3. Database schema, migrations, and seed data (`packages/db/`)
 
+Platform settings add `platform_settings` (E05-S02, #50). It holds one row (`id` smallint checked `= 1`), four inclusive integer-cent price bounds (each minimum positive and at most its maximum), `fee_percent` smallint default 20 checked 0–100, `currency` checked `= 'PLN'`, `version` int default 0 and `updated_at`, and has a nullable `updated_by_id` foreign key to `users` with `on delete set null`. Migration `Migration20261109224703_platform_settings` is additive, inserts no row and has a down. No existing row changes. Rollback: run the down migration, which drops the table and the saved bounds and fee; the app returns to `PLATFORM_PRICE_BOUNDS` and 20 %. Copy the saved values into the env first if they should survive.
+
 The text session adds `session_messages` (`booking_id` and `author_id` with restrictive foreign keys to `bookings` and `users`, a `body` text column checked to 1–4,000 characters, an index on `(booking_id, created_at, id)`). Migration `Migration20261107080310_sessions` is additive with a down; no existing row changes. Rollback: drop the table with the migration's down, which **permanently deletes every message exchanged in a session**; export them first if they are needed for a dispute. Session windows are derived from `bookings.starts_at` and `length_minutes`, so no existing column is reinterpreted.
 
 The written answer adds nullable `bookings.written_answer` (text, at most 20,000 characters by check) and `bookings.written_answer_at` (timestamptz), checked to be both null or both set, and widens `notifications_kind_check` to allow `answer_posted`. Migration `Migration20261107113147_written_answer` is additive with a down; no existing row changes. Rollback order: run the down migration **first** (it deletes `answer_posted` notifications so older code never renders them as booking confirmations, then drops the two columns and **permanently deletes every written answer**), then revert the code.
@@ -245,6 +247,8 @@ new column, backfill, switch the code, drop the old column in a later PR); the s
 and the integration test updated together; `risk-high` plus `needs-qa` per `SDLC.md`.
 
 ### 4. Configuration and environment
+
+Operator platform settings (E05-S02, #50) leave `PLATFORM_CURRENCY` and `PLATFORM_PRICE_BOUNDS` unchanged, and they are still honoured while no `platform_settings` row exists. Once an operator saves, the row takes precedence over `PLATFORM_PRICE_BOUNDS`. The variables remain the seed and fallback values; removing them follows the required path below. No fee variable is added: the fee defaults to 20 % in code.
 
 Payment configuration adds `PAYMENT_GATEWAY_ADAPTER` default `stripe`, optional `STRIPE_SECRET_KEY` and optional `STRIPE_WEBHOOK_SECRET`. Payment calls fail closed without required credentials. A mock requires both explicit `PAYMENT_GATEWAY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`, matching the existing harness boundary. These app-only values do not alter db's connection schema; CI and child integration environments pin them to synthetic settings.
 
@@ -382,6 +386,10 @@ Slices 3 and 4 add protected slot collection/removal and mentor-price routes, ex
 Issue #40 adds POST /api/bookings with the existing envelope, live mentee authorization and central CSRF convention. New reservations return 201; matching-owner retries recover the same pending hold with 200 without extending it. Duration and slot are the only accepted client inputs; prices and identities come from stored server state. Existing error codes are reused. Public slot DTOs add viableLengths while retaining existing fields.
 
 The additive bookings migration has up/down. A partial unique slot index reserves only pending/confirmed rows; expired/cancelled rows remain history. Mentor locking prevents overlapping active intervals across different start times. Slot removal now answers 409 while an active booking occupies that exact slot. Rollback requires stopping booking writes and exporting history before dropping the new table; there are no existing-row rewrites. Payment and cancellation APIs remain out of scope.
+
+### Operator platform settings (E05-S02)
+
+Additive operator-only routes: `GET /api/operator/settings` returns `{ settings: { currency, priceBounds, feePercent, version, updatedAt, updatedBy }, outOfBounds: { total, mentors } }`. `PUT` takes `{ price25Min, price25Max, price50Min, price50Max, feePercent, version }`, with amounts as major-unit decimal strings. A refused save is 422 with `fieldErrors` and a stale `version` is 409. `/admin/settings` is a new operator page linked from the operator navigation. Inside `core`, `PlatformSettingsService.get()` and `boundsFor()` are now async and `PlatformSettings` gains `feePercent`. That service is not a public API, and every caller in this repository is updated. Price, readiness and booking behaviour under unchanged bounds is identical.
 
 ### Private session note decisions (E04-S04, slice B)
 
