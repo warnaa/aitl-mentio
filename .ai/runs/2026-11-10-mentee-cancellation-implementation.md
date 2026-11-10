@@ -49,8 +49,8 @@ Mentor-initiated cancellation, rescheduling, partial refunds, disputes, fee/payo
 
 ### Phase 3: UI and operator visibility
 
-- [ ] 3.1 Projection fields and BookingsPanel cancel dialog and cancelled states
-- [ ] 3.2 Operator review list reasons for failed and overdue refunds
+- [x] 3.1 Projection fields and BookingsPanel cancel dialog and cancelled states — ff0e18f
+- [x] 3.2 Operator review list reasons for failed and overdue refunds — c764c4b
 
 ### Phase 4: Verification and docs
 
