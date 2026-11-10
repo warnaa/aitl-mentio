@@ -76,6 +76,7 @@ export { BookingService, type BookingDto } from './services/bookings/booking.ser
 export { NotificationService, type NotificationDto } from './services/notifications/notification.service';
 export { TextSessionService, type SessionWindow, type SessionDto, type SessionMessageDto, type PartyRole, type WrittenAnswerDto } from './services/sessions/text-session.service';
 export * from './services/mentors/mentor-profile.service';
+export * from './validators/mentors/mentor-list-query.schema';
 export * from './domain/vocabulary';
 export * from './domain/vocabularies/stack-tags';
 export * from './domain/slug';
