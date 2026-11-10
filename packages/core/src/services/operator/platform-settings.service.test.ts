@@ -136,6 +136,14 @@ describe('updating', () => {
     expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({ actorId: operator.userId, version: 3, previous: expect.objectContaining({ feePercent: 15, version: 2 }), next: expect.objectContaining({ feePercent: 25 }) }), 'operator.settings.updated');
   });
 
+  it('writes the audit line for a committed save even when the re-read afterwards fails', async () => {
+    const { service, findOne, logger } = harness({ stored: row() });
+    await service.get();
+    findOne.mockRejectedValueOnce(new Error('connection reset'));
+    await expect(service.update(form)).rejects.toThrow('connection reset');
+    expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({ version: 3, next: expect.objectContaining({ feePercent: 25 }) }), 'operator.settings.updated');
+  });
+
   it('creates the row on the first save from the env defaults, with a conflict-proof insert', async () => {
     const { service, execute } = harness();
     const saved = await service.update({ ...form, version: 0 });

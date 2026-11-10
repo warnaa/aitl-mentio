@@ -9,11 +9,7 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
-- 2026-11-10 — Platform settings (#50) surfaced two gotchas.
-  1. MikroORM's naming strategy turns `price25MinCents` into `price25min_cents`; the digit swallows the underscore. A check constraint written as `price25_min_cents` then fails at migration time, so pin `fieldName(...)` on camelCase properties that contain digits.
-  2. Zod 4 still runs an object's `superRefine`/`transform` after a field failed its own format check. Code there that parses a field (`BigInt('1e3')`) throws instead of reporting a validation error, so re-check field validity before converting.
-
-  Also: a settings read that hits the DB must happen before a service opens its locking transaction, the same pool rule as the 2026-11-08 lesson.
+- 2026-11-10 — Pin `fieldName` on camelCase-with-digit properties (`price25MinCents` → `price25min_cents`), and re-check field validity inside a Zod `superRefine`/`transform` before parsing it: Zod still runs them after a field failed. [(details)](lessons/platform-settings-gotchas.md)
 
 - 2026-11-09 — `npm audit fix` can fail with ERESOLVE on the Storybook/`vite` peer ranges even when the vulnerable packages are unrelated. Do not use `--force`; run `npm update <package>` for fixes inside the declared range, and re-run `npm audit --omit=dev --audit-level=high`.
 

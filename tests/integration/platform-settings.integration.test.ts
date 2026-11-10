@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { expect, it } from 'vitest';
-import { Booking, MentorProfile, PlatformSettings } from '@devmentor/db';
+import { Booking, MentorProfile, PlatformSettings, User } from '@devmentor/db';
 import { captureBrowserFailure, closeAgentBrowser, expectFitsMobile, integrationArtifactsDirectory, runAgentBrowser, signInAs } from './agent-browser';
 import { bookingPersona, postBooking, withBookingFixture } from './fixtures/booking';
 
@@ -13,6 +13,11 @@ it('SETTINGS-001 the operator sets bounds and fee; out-of-bounds prices are flag
     const browser = `settings-ui-${process.pid}`;
     // The row is global to the suite's app: start from (and always return to) "never saved".
     await fixture.em.nativeDelete(PlatformSettings, {});
+    // A mentor with no price yet must never be flagged (SQL NULL comparisons), only priced ones.
+    const unpricedEmail = `settings-unpriced-${process.pid}@devmentor.test`;
+    const unpricedUser = fixture.em.create(User, { email: unpricedEmail, displayName: 'Unpriced settings mentor', roles: ['mentor'] });
+    const unpriced = fixture.em.create(MentorProfile, { user: unpricedUser, headline: 'Unpriced', slug: `settings-unpriced-${process.pid}` });
+    await fixture.em.flush();
     try {
       const put = (headers: Record<string, string>, body: unknown) => fetch(endpoint, { method: 'PUT', headers, body: JSON.stringify(body) });
       expect((await fetch(endpoint)).status).toBe(401);
@@ -46,6 +51,8 @@ it('SETTINGS-001 the operator sets bounds and fee; out-of-bounds prices are flag
       const saved = await read();
       expect(saved.settings).toMatchObject({ priceBounds: { p25: { minCents: 10000, maxCents: 60000 } }, feePercent: 15, updatedBy: { displayName: expect.any(String) } });
       // The fixture mentor's 80.00 is now below the minimum: listed, unchanged, not bookable.
+      expect(saved.outOfBounds.mentors.map((mentor: { mentorProfileId: string }) => mentor.mentorProfileId)).not.toContain(unpriced.id);
+      expect(saved.outOfBounds.total).toBe(saved.outOfBounds.mentors.length);
       expect(saved.outOfBounds.mentors).toContainEqual(expect.objectContaining({ mentorProfileId: fixture.profileId, price25Cents: 8000, price50Cents: 16000, breaches: ['price25'] }));
       expect((await fixture.em.findOneOrFail(MentorProfile, { id: fixture.profileId }, { refresh: true })).price25Cents).toBe(8000);
       const page = (await (await fetch(`${fixture.base}/api/mentors/${fixture.slug}`)).json()).data;
@@ -81,6 +88,8 @@ it('SETTINGS-001 the operator sets bounds and fee; out-of-bounds prices are flag
     } finally {
       await closeAgentBrowser(browser);
       await fixture.em.nativeDelete(PlatformSettings, {});
+      await fixture.em.nativeDelete(MentorProfile, { id: unpriced.id });
+      await fixture.em.nativeDelete(User, { email: unpricedEmail });
     }
   });
 });

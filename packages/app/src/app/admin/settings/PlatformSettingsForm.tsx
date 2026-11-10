@@ -56,7 +56,8 @@ export function PlatformSettingsForm({ initial }: { initial: SettingsSnapshot })
         price25Min: amount(p25.minCents), price25Max: amount(p25.maxCents),
         price50Min: amount(p50.minCents), price50Max: amount(p50.maxCents),
         feePercent: settings.feePercent,
-      }} onSuccess={data => { setSnapshot(data as SettingsSnapshot); setSaved(true); }} />
+      }} onSubmittingChange={submitting => { if (submitting) setSaved(false); }}
+      onSuccess={data => { setSnapshot(data as SettingsSnapshot); setSaved(true); }} />
       {saved && <p role="status" className="dm-product-callout">The settings were saved.</p>}
       <p className="dm-product-caption">
         {settings.updatedAt && settings.updatedBy

@@ -99,16 +99,16 @@ export class PlatformSettingsService {
       row.updatedAt = now;
       await em.flush();
     });
-    this.memo = undefined;
-    const next = await this.view();
-    // D19: this line is the audit record of an operator's settings change.
+    // D19: this line is the audit record of an operator's settings change. It is written from
+    // the committed values before anything else can fail, so a committed save is always logged.
     this.deps.logger.info({
       actorId: session.userId,
-      version: next.version,
+      version: data.version + 1,
       previous: previous && { priceBounds: previous.priceBounds, feePercent: previous.feePercent, version: previous.version },
-      next: { priceBounds: next.priceBounds, feePercent: next.feePercent },
+      next: { priceBounds: data.priceBounds, feePercent: data.feePercent },
     }, 'operator.settings.updated');
-    return structuredClone(next);
+    this.memo = undefined;
+    return structuredClone(await this.view());
   }
 
   private async operator(): Promise<Session> {

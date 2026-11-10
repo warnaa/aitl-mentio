@@ -55,6 +55,7 @@ it('sends the loaded version, then shows the saved state and the newly flagged m
   vi.mocked(apiCall).mockResolvedValueOnce({ ok: false, error: { code: 'conflict', message: 'Settings changed since you opened them. Reload to see the current values.' } });
   save();
   await screen.findByText('Settings changed since you opened them. Reload to see the current values.');
+  expect(screen.queryByRole('status')).toBeNull();
   expect(vi.mocked(apiCall).mock.calls[1]![1]).toMatchObject({ body: { version: 5 } });
   expect(field(/Platform fee/).value).toBe('15');
 });
