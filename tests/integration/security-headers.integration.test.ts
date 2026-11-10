@@ -60,7 +60,8 @@ function expectNoncedDocument(result: Awaited<ReturnType<typeof page>>, path: st
   expect(result.policy, path).toContain("object-src 'none'");
   expect(result.policy, path).toContain("base-uri 'self'");
 
-  const scripts = result.html.match(/<script\b[^>]*>/g) ?? [];
+  // Case-insensitive, so an upper-case `<SCRIPT>` cannot slip past the nonce check.
+  const scripts = result.html.match(/<script\b[^>]*>/gi) ?? [];
   expect(scripts.length, `${path} renders framework scripts`).toBeGreaterThan(0);
   for (const script of scripts) {
     expect(script, `${path} script carries the response nonce`).toContain(`nonce="${result.nonce}"`);
