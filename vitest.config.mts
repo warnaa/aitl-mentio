@@ -267,6 +267,10 @@ export default defineConfig({
         'scripts/storybook/index.mjs',
         'scripts/storybook/run.mjs',
         'scripts/invite.ts',
+        // Content-Security-Policy (#83).
+        'packages/app/src/app/layout.tsx',
+        'packages/app/src/lib/content-security-policy.ts',
+        'packages/app/src/proxy.ts',
       ],
       reportsDirectory: 'coverage/unit',
       reporter: ['text', 'json', 'html', 'lcov'],
