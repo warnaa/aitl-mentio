@@ -192,6 +192,17 @@ async function build(): Promise<AwilixContainer<Cradle>> {
     }
   });
 
+  // Tell the mentor about a mentee's cancellation; same system-scope pattern, so a mail
+  // failure never fails the cancellation that emitted the event.
+  container.cradle.eventBus.on('bookings.booking.cancelled', async ({ bookingId }) => {
+    const scope = container.createScope<Cradle>();
+    try {
+      await scope.cradle.notificationService.onBookingCancelled(bookingId);
+    } finally {
+      await scope.dispose();
+    }
+  });
+
   // Tell the mentee that the written answer is there; same system-scope pattern as above, so a
   // mail failure never fails the mentor's save.
   container.cradle.eventBus.on('sessions.answer.posted', async ({ bookingId }) => {

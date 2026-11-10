@@ -8,7 +8,7 @@ import { LocalTime } from '@devmentor/ui/time';
 
 export interface NotificationItem {
   id: string;
-  kind: 'booking_confirmed' | 'answer_posted' | 'note_awaiting_approval' | 'note_approved' | 'note_declined';
+  kind: 'booking_confirmed' | 'answer_posted' | 'note_awaiting_approval' | 'note_approved' | 'note_declined' | 'booking_cancelled';
   audience: 'mentee' | 'mentor';
   counterpartName: string;
   startsAt: string;
@@ -69,6 +69,9 @@ export function NotificationsPanel() {
           </> : item.kind === 'note_awaiting_approval' ? <>
             <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.counterpartName} sent a private session note for your approval.</p>
             <Link href={item.sessionPath}>Read the private session note</Link>
+          </> : item.kind === 'booking_cancelled' ? <>
+            <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.counterpartName} cancelled the session on <LocalTime value={item.startsAt} />. This time is available to book again.</p>
+            <Link href={item.sessionPath}>See your sessions</Link>
           </> : item.kind === 'answer_posted' ? <>
             <p className="dm-product-copy">{item.readAt === null && <strong>New: </strong>}{item.counterpartName} posted the written answer for your session on <LocalTime value={item.startsAt} />.</p>
             <Link href={item.sessionPath}>Read the written answer</Link>
