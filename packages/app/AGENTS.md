@@ -45,7 +45,7 @@ composition root; it may import every workspace package.
 
 | Surface | Routes | Styling |
 | --- | --- | --- |
-| Public | Landing, mentor share links, invitations, `(auth)/*` | `PublicLayout` (`components/public/PublicPage`) or `AuthLayout` with `dm-*` classes from `@devmentor/ui` |
+| Public | Landing, mentor list (`/mentors`), mentor share links, invitations, `(auth)/*` | `PublicLayout` (`components/public/PublicPage`) or `AuthLayout` with `dm-*` classes from `@devmentor/ui` |
 | App | `(mentee)/*`, `(mentor)/*` | shadcn through `@devmentor/ui`, inside `AppShell` |
 | Admin | `/admin/*` | shadcn through `@devmentor/ui`, inside `AppShell` |
 
