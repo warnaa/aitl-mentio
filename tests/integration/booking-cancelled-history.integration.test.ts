@@ -8,7 +8,7 @@ it('BOOKING-015 releases cancelled occupancy while preserving the original booki
     expect(original.status).toBe(201);
     const snapshot = (await original.json()).data;
     // Cancellation is a future story: this fixture supplies its resulting stored state only.
-    await fixture.em.nativeUpdate(Booking, { id: snapshot.id }, { status: 'cancelled' });
+    await fixture.em.nativeUpdate(Booking, { id: snapshot.id }, { status: 'cancelled', cancelledAt: new Date() });
     const replacement = await postBooking(fixture, fixture.slot.id, 50, fixture.second);
     expect(replacement.status).toBe(201);
     const current = (await replacement.json()).data;

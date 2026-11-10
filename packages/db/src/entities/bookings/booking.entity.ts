@@ -17,6 +17,9 @@ export const Booking = defineSingletonEntity('Booking', () =>
       // The written answer (E04-S02) and its latest save time exist together or not at all.
       { name: 'bookings_written_answer_pair_check', expression: '(written_answer is null) = (written_answer_at is null)' },
       { name: 'bookings_written_answer_length_check', expression: 'char_length(written_answer) <= 20000' },
+      // A cancellation (E03-S05) records when it happened; only a cancelled booking carries refund state.
+      { name: 'bookings_cancelled_at_check', expression: "(status = 'cancelled') = (cancelled_at is not null)" },
+      { name: 'bookings_refund_state_check', expression: "refund_status = 'none' or status = 'cancelled'" },
     ],
     indexes: [
       { name: 'bookings_mentor_start_index', properties: ['mentorProfile', 'startsAt'] },
@@ -46,6 +49,12 @@ export const Booking = defineSingletonEntity('Booking', () =>
       // One plain-text answer per session, written by the booking's mentor; replaceable, no history.
       writtenAnswer: p.text().nullable(),
       writtenAnswerAt: p.datetime().nullable(),
+      cancelledAt: p.datetime().nullable(),
+      // none: no refund owed. pending: owed and not yet proven. refunded/failed: provider outcome.
+      refundStatus: p.string().length(16).default('none').check("refund_status in ('none', 'pending', 'refunded', 'failed')"),
+      stripeRefundId: p.string().nullable().unique(),
+      // The refund runner's next due time; null when nothing is owed.
+      refundNextAttemptAt: p.datetime().nullable(),
     },
   }),
 );
