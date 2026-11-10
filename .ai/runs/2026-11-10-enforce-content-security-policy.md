@@ -90,6 +90,18 @@ and leaves framing to #84.
 - `next dev` rewrites the header of `packages/app/AGENTS.md` when it starts. The
   change was reverted and not committed.
 
+- CodeQL `js/bad-tag-filter` in the new integration test: the `<script>` match is
+  now case-insensitive (`1d0d3b5`).
+- A separate review sweep requested changes on `1d0d3b5`. Each item was handled:
+  - B1: `layout.tsx`, `lib/content-security-policy.ts` and `proxy.ts` were missing
+    from `coverage.include`. They are now registered, `layout.test.tsx` was added,
+    and `npm run test:unit:coverage` passes (217 files, 1847 tests, 100% per file).
+  - B2: Lint was red because `main` (#94) added unparseable skill template assets.
+    `eslint.config.mjs` now ignores `{.agents,.claude}/skills/*/references/assets/**`.
+    `main` was merged in, and lint passes with 0 errors.
+  - B3: the `MentorProfileEditor` unit failure was flaky. It passed on the CI re-run
+    and 3 out of 3 times locally.
+
 ## Follow-ups
 
 - #84: add `frame-ancestors` in `buildContentSecurityPolicy`.
