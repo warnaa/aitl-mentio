@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Booking, LockMode, MentorProfile, PaymentAttempt, PaymentResolution, ProcessedWebhookEvent, Slot, User, UniqueConstraintViolationException, type EntityManager, type IBooking, type IPaymentAttempt } from '@devmentor/db';
+import { Booking, MentorProfile, PaymentAttempt, PaymentResolution, ProcessedWebhookEvent, User, UniqueConstraintViolationException, type EntityManager, type IBooking, type IPaymentAttempt } from '@devmentor/db';
 import type { AppEnv } from '../../config/env';
 import type { EventBus } from '../../events/event-bus';
 import { requireRole, type Session } from '../../http/auth';
@@ -8,6 +8,7 @@ import { ConflictError, NotFoundError, UnauthorizedError } from '../../http/erro
 import type { Clock } from '../../time/clock';
 import type { CheckoutSession, CreateCheckoutSession, PaymentEvent, PaymentGateway } from './payment-gateway.port';
 import { CheckoutNotCreatedError } from './payment-gateway.port';
+import { withBookingLock } from '../bookings/booking-lock';
 
 const MINUTE = 60_000;
 const unresolved = ['creating', 'open', 'review'];
@@ -33,14 +34,7 @@ export class PaymentService {
   }
 
   private async locked<T>(bookingId: string, fn: (em: EntityManager, booking: IBooking) => Promise<T>) {
-    const discovered = await this.deps.em.fork().findOne(Booking, { id: bookingId });
-    if (!discovered) throw new NotFoundError('Booking not found');
-    return this.deps.em.fork().transactional(async em => {
-      await em.findOneOrFail(MentorProfile, { id: discovered.mentorProfile.id }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
-      await em.findOneOrFail(Slot, { id: discovered.slot.id }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
-      const booking = await em.findOneOrFail(Booking, { id: bookingId }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
-      return fn(em, booking);
-    });
+    return withBookingLock(this.deps.em, bookingId, fn);
   }
 
   private input(attempt: IPaymentAttempt): CreateCheckoutSession {
