@@ -221,6 +221,11 @@ pool in `finally`, prints the same counts, and logs the operator name.
 
 ## 📝 UI/UX
 
+Illustrative proposals, not accepted designs (synthetic data):
+[mentor payouts](assets/fee-split-and-payouts/mockup-01-mentor-payouts.png) ·
+[mentor payouts at 360 px](assets/fee-split-and-payouts/mockup-03-mentor-payouts-mobile.png) ·
+[operator Payouts panel](assets/fee-split-and-payouts/mockup-02-admin-payouts.png).
+
 - **`/mentor/payouts`** (mentor guard). A table of the mentor's paid sessions, newest first: date, length,
   price, platform fee, **your share**, status chip (`Upcoming`, `Due`, `Paid` with date, `On hold`,
   `Not paid — refunded`, `Sending` for `transferring`, `Payment failed — retrying` for `failed`). An `On hold` chip caused by onboarding links to "Set up payouts"
