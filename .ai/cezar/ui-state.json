@@ -1,0 +1,23 @@
+{
+  "skillUsage": {
+    "om-auto-fix-issue": 11,
+    "om-prepare-issue": 2,
+    "threat-model": 2,
+    "om-review-prs": 2
+  },
+  "lastTask": {
+    "source": "skill",
+    "ref": "om-auto-fix-issue"
+  },
+  "recentSources": [
+    {
+      "source": "skill",
+      "ref": "om-auto-fix-issue"
+    },
+    {
+      "source": "skill",
+      "ref": "om-prepare-issue"
+    }
+  ],
+  "githubView": "issues"
+}

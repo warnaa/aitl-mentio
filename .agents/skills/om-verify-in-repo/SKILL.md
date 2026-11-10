@@ -1,6 +1,6 @@
 ---
 name: om-verify-in-repo
-description: Read-only triage gate for an autofix chain. Decides whether a tracker issue is a real, still-unfixed defect on the current branch. Stops the chain cleanly with NO_ACTION_NEEDED when the issue is already fixed, already in progress by someone else, already covered by an open PR, or not actually a bug.
+description: Use when a tracker issue needs read-only triage before autofixing, e.g. 'check whether issue 123 still needs a fix'. Used by om-auto-fix-issue. Confirm a real, still-unfixed defect on the current branch; stop with NO_ACTION_NEEDED if already fixed, claimed by someone else, covered by an open PR, or not a bug.
 ---
 
 # Verify in Repo
@@ -17,11 +17,15 @@ You are step 1 of an autofix chain (`om-verify-in-repo` → `om-root-cause` → 
 You operate **read-only**:
 
 - File reading and code search only — no file edits, no file writes
-- Shell: read-only git (`git log`, `git diff`, `git show`, `git status`) and READ-ONLY tracker operations only — **get-issue**, **search-prs**, **repo-info**, **current-user**, **get-pr**
+- Shell: read-only git (`git log`, `git diff`, `git show`, `git status`) and READ-ONLY tracker operations only — **get-issue**, **search-prs**, **repo-info**, **get-lock**, **current-user**, **get-pr**
 
 Do not edit files. Do not run mutating tracker operations (no issue edits, comments, claims), `git commit`, or `git push` — claiming and writing happen in later steps.
 
 ## Workflow
+
+**Claims:** `references/claim-pr.md` governs atomic/fallback ownership and release.
+
+**ALWAYS check first:** Apply `.ai/skills/om-verify-in-repo/SKILL.md` when present; safety rules still win.
 
 Run the checks in order. The first one that triggers a stop wins.
 
@@ -31,8 +35,8 @@ Run the checks in order. The first one that triggers a stop wins.
 
 2. **Is it already in progress by someone else?** The issue is **already in progress** when ANY of:
 
-   - It carries the `in-progress` label AND its assignees do not include the current user (resolve via the tracker operation **current-user**)
-   - A `🤖`-prefixed claim comment newer than 30 minutes exists from a different actor
+   - It carries `in-progress` without proof of this run's owned comment id (resolve identity via **current-user**)
+   - A `🤖`-prefixed claim comment newer than 30 minutes exists from a different or unknown run (including the same bot login)
 
    If in-progress by another actor, stop with `NO_ACTION_NEEDED` and name the owner in your reason.
 
@@ -79,7 +83,7 @@ The literal token `NO_ACTION_NEEDED` on its own line triggers the flow runner's 
 <one short paragraph confirming this is a real, still-unfixed defect — with the file/area you expect the root cause to live in>
 ```
 
-Keep it tight (≤200 words). The next agent reads code; do not duplicate that work here.
+Aim for 40–100 words. Lead with the action and cite the decisive evidence. Distinguish observed behavior, code-based inference, and a reproduction not run. Scope “no fix found” to the PR/commit searches and revision inspected; do not turn uncertainty into a claim that the report is false. Preserve the exact `NO_ACTION_NEEDED` stop token.
 
 ## Rules
 
