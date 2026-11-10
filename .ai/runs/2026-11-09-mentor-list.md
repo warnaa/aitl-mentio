@@ -51,16 +51,33 @@ links to the list.
 
 ## Progress
 
+PR: #87
+
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.
 
 ### Phase 1: Mentor list
 
-- [ ] 1.1 Query schema and listPublished service method
-- [ ] 1.2 Public GET /api/mentors route
-- [ ] 1.3 MentorCard, MentorList and shared price formatter
-- [ ] 1.4 /mentors page and landing links
-- [ ] 1.5 Integration test
+- [x] 1.1 Query schema and listPublished service method — c22d901
+- [x] 1.2 Public GET /api/mentors route — 70756df
+- [x] 1.3 MentorCard, MentorList and shared price formatter — 46ab86e
+- [x] 1.4 /mentors page and landing links — 9594136
+- [x] 1.5 Integration test — 50ca5f7
 
 ## Outcome
 
-_(Filled in at completion.)_
+The work is implemented on `feat/mentor-list` (PR #87; spec PR #85).
+
+- **Service:** `MentorProfileService.listPublished(tag?)` uses three bounded queries (candidates, future slots, active occupancy). Eligibility reuses `mentorPagePublishable`, the current price bounds, `MIN_LEAD_MINUTES` and `viableLengths`.
+- **API:** `GET /api/mentors`; an unknown or empty `?tag=` returns 422 `validation_failed`.
+- **Page:** `/mentors` reuses the design system's `MentorDirectory` (built for #39) and adds a new public `MentorCard`. The landing page links to it with "Browse mentors" in the hero and the closing band.
+- **Integration test:** `tests/integration/mentor-list.integration.test.ts` checks the order, the tag filter, the 422 and the page itself (no search box, no rating text, fits a mobile viewport). The home scenario now expects the new links.
+
+Deviations from the spec, all reversible:
+
+- The stack filter is the design system's `MentorDirectory`: buttons with `aria-pressed` that drive `?tag=` through the router, instead of plain links with `aria-current`. This reuses the canonical component built for #39. The URL stays shareable.
+- No separate `MentorList` component. `MentorDirectory` already provides the filter, the result count and the empty slot.
+- The price formatter and `initials` are imported from `MentorPageView` rather than extracted into a new `format-price.ts`.
+
+Validation: `npm run typecheck`, `npm run typecheck:storybook`, `npm run lint` (0 errors; 2 warnings that were already there), `npm run test:unit:coverage` (1849 tests, 100% per file) and `npm run build` all pass. The mentor-list and home integration tests pass.
+
+Follow-ups: Q20 visit recording, which is still open with the founders. The spec moves to `implemented/` after this PR and spec PR #85 merge.
