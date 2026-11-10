@@ -56,8 +56,8 @@ flagged and their prices are not changed.
 
 ### Phase 3: HTTP and UI
 
-- [ ] 3.1 Operator settings route
-- [ ] 3.2 Settings page and nav
+- [x] 3.1 Operator settings route — 242c33d
+- [x] 3.2 Settings page and nav — d9d5f46
 
 ### Phase 4: Integration and docs
 
