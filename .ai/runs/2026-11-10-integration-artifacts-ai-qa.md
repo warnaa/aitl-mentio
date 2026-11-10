@@ -25,8 +25,15 @@ The triage check confirmed the bug was still present on `main` at `4030689`. `in
 ## Not verified
 
 - The forced-failure path was not run. `captureBrowserFailure` builds its paths from the same constant the test checks.
-- The CI upload will be checked on the PR's first Integration tests run.
+- None remaining on CI. On PR #90, Integration tests passed and uploaded `integration-evidence-<run_id>` (about 8.8 MB) from `.ai/qa/integration/`.
+
+## CI
+
+- The first Unit tests attempt failed on `MentorProfileEditor.test.tsx`, a focus assertion in a file this change doesn't touch. It looks flaky: the test passed locally and `main` was green. A single re-run of the failed job passed, and every check is now green.
+- The PR was reviewed and approved. GitHub refuses to let an account approve its own PR, so the review was posted as a comment. The PR's labels are `merge-queue`, `bug`, `skip-qa`, `priority-medium` and `risk-low`. It was not merged.
 
 ## Follow-ups
+
+- `MentorProfileEditor.test.tsx` focus assertion is flaky on CI; worth a tracking issue if it recurs.
 
 - Committed QA reports from before this change link to `test-results/integration/...`. They are historical records and were left as they are.
