@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { BadRequestError, NotFoundError } from '../../../http/errors';
 import type { Clock } from '../../../time/clock';
-import type { CheckoutSession, CreateCheckoutSession, PaymentEvent, PaymentGateway } from '../payment-gateway.port';
+import { RefundDeclinedError, type CheckoutSession, type CreateCheckoutSession, type PaymentEvent, type PaymentGateway, type RefundRequest, type RefundResult } from '../payment-gateway.port';
+
+/** One-shot outcome for the next refund request; tests queue faults explicitly. */
+export type MockRefundOutcome = 'succeed' | 'pending' | 'decline' | 'timeout' | 'timeout_after_create';
 
 const sessionSchema = z.object({
   id: z.string().min(1), url: z.string().nullable(), bookingId: z.string().min(1), attemptId: z.string().min(1),
@@ -61,6 +64,55 @@ export class MockPaymentGateway implements PaymentGateway {
     const paid = { ...session, amountCents: amountCents ?? session.amountCents, status: 'complete' as const, paid: true, paymentIntentId: `pi_mock_${id}` };
     this.sessions.set(id, paid);
     return { id: crypto.randomUUID(), type: 'checkout.session.completed', session: paid };
+  }
+
+  private readonly refunds = new Map<string, RefundResult & { paymentIntentId: string }>();
+  private readonly refundKeys = new Map<string, string>();
+  /** Queued outcomes for the next refund requests; empty means success. */
+  readonly refundOutcomes: MockRefundOutcome[] = [];
+
+  async refund(input: RefundRequest): Promise<RefundResult> {
+    const previous = this.refundKeys.get(input.idempotencyKey);
+    if (previous) return this.retrieveRefund(previous);
+    const outcome = this.refundOutcomes.shift() ?? 'succeed';
+    if (outcome === 'timeout') throw new Error('Synthetic provider timeout before refund creation');
+    if (outcome === 'decline') throw new RefundDeclinedError('charge_disputed');
+    const already = (await this.listRefunds(input.paymentIntentId)).filter(refund => refund.status !== 'failed').reduce((total, refund) => total + refund.amountCents, 0);
+    // Like the provider: an already refunded charge is an error whose outcome must be reconciled.
+    if (already > 0) throw new Error('charge_already_refunded');
+    const id = `re_mock_${input.bookingId}_${this.refunds.size + 1}`;
+    this.refunds.set(id, { id, status: outcome === 'pending' ? 'pending' : 'succeeded', amountCents: input.amountCents, bookingId: input.bookingId, paymentIntentId: input.paymentIntentId });
+    this.refundKeys.set(input.idempotencyKey, id);
+    if (outcome === 'timeout_after_create') throw new Error('Synthetic provider timeout after refund creation');
+    return this.retrieveRefund(id);
+  }
+
+  async retrieveRefund(id: string): Promise<RefundResult> {
+    const refund = this.refunds.get(id);
+    if (!refund) throw new NotFoundError('Refund not found');
+    const { paymentIntentId: _intent, ...result } = refund;
+    return result;
+  }
+
+  async listRefunds(paymentIntentId: string): Promise<RefundResult[]> {
+    return [...this.refunds.values()].filter(refund => refund.paymentIntentId === paymentIntentId).map(({ paymentIntentId: _intent, ...result }) => result);
+  }
+
+  /** Test control: the provider pruned its idempotency keys (Stripe keeps them about 24 hours). */
+  forgetRefundKeys() { this.refundKeys.clear(); }
+
+  /** Test control: a refund made by hand in the provider dashboard, without DevMentor metadata. */
+  addExternalRefund(paymentIntentId: string, amountCents: number, status: RefundResult['status'] = 'succeeded') {
+    const id = `re_mock_external_${this.refunds.size + 1}`;
+    this.refunds.set(id, { id, status, amountCents, bookingId: null, paymentIntentId });
+    return id;
+  }
+
+  /** Test control: the provider settles or fails a pending refund. */
+  settleRefund(id: string, status: 'succeeded' | 'failed') {
+    const refund = this.refunds.get(id);
+    if (!refund) throw new NotFoundError('Refund not found');
+    refund.status = status;
   }
 
   async simulateCheckoutExpired(id: string): Promise<PaymentEvent> {
