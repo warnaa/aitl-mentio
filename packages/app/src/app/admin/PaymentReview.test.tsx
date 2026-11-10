@@ -87,3 +87,11 @@ it('sends an optional provider reference for server-verified recovery of ambiguo
   fireEvent.submit(screen.getByRole('form'));
   await waitFor(() => expect(apiCall).toHaveBeenCalledWith('/api/payments/review/attempt%2Fid', { method: 'POST', body: { action: 'confirm', reason: 'Found in Stripe', sessionId: 'cs_recovered' } }));
 });
+
+it('asks the operator to refund a failed cancellation refund by hand, without a resolution form', () => {
+  resource.data = [{ ...attempt, attemptId: null, status: 'refund_failed', reason: 'refund_failed' }, { ...attempt, attemptId: null, bookingId: 'other', status: 'refund_pending', reason: 'refund_overdue' }];
+  render(<PaymentReview />);
+  expect(screen.getByText(/Stripe refused the automatic refund: refund it by hand in Stripe and log it \(R18\)\./)).toBeTruthy();
+  expect(screen.getByText(/The automatic refund has not settled yet/)).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Verify and record outcome' })).toBeNull();
+});

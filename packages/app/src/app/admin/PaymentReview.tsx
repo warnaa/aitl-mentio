@@ -63,7 +63,10 @@ export function PaymentReview() {
         <p>Payment state: {attempt.status}</p><p>{attempt.reason ?? 'Provider reconciliation is overdue.'}</p>
         {attempt.sessionId && <p className="dm-product-caption">Stripe Checkout reference: <code className="break-all">{attempt.sessionId}</code></p>}
         <p className="dm-product-caption">Created: <LocalTime value={attempt.createdAt} /></p><p className="dm-product-caption">Next check: <LocalTime value={attempt.nextReconciliationAt} /></p>
-        {attempt.attemptId ? <ResolutionForm attempt={attempt} onResolved={() => { setResolved(true); resource.reload(); }} /> : <p>This payment needs manual reconciliation in Stripe. No matching booking can be confirmed or released from this record.</p>}
+        {attempt.attemptId ? <ResolutionForm attempt={attempt} onResolved={() => { setResolved(true); resource.reload(); }} />
+          : attempt.status.startsWith('refund_')
+            ? <p>The mentee cancelled this session in time and is owed a full refund. {attempt.status === 'refund_failed' ? 'Stripe refused the automatic refund: refund it by hand in Stripe and log it (R18).' : 'The automatic refund has not settled yet: check it in Stripe.'} The next check marks the booking refunded once Stripe shows the full refund.</p>
+            : <p>This payment needs manual reconciliation in Stripe. No matching booking can be confirmed or released from this record.</p>}
       </Card>)}</div>}
     </ResourcePanel>
   </section>;

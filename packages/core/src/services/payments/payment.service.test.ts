@@ -342,3 +342,13 @@ it('cannot override an already-used provider payment intent with an operator con
   await expect(service().resolveReview(attempt().id, { action: 'confirm', reason: 'checked' })).rejects.toMatchObject({ status: 409 });
   expect(tables.Resolution).toHaveLength(0); expect(emit).not.toHaveBeenCalled();
 });
+
+it('lists failed and overdue cancellation refunds for the operator, but not a refund still settling', async () => {
+  session = { userId: 'operator', roles: ['operator'] };
+  Object.assign(booking, { status: 'cancelled', cancelledAt: new Date(now.getTime() - 30 * 60_000), refundStatus: 'pending', refundNextAttemptAt: now });
+  expect(await service().listReview()).toEqual([]);
+  booking.cancelledAt = new Date(now.getTime() - 61 * 60_000);
+  expect(await service().listReview()).toEqual([expect.objectContaining({ attemptId: null, bookingId: id, sessionId: null, status: 'refund_pending', reason: 'refund_overdue' })]);
+  booking.refundStatus = 'failed';
+  expect(await service().listReview()).toEqual([expect.objectContaining({ bookingId: id, status: 'refund_failed', reason: 'refund_failed', nextReconciliationAt: now.toISOString() })]);
+});

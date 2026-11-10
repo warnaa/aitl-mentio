@@ -272,9 +272,13 @@ export class PaymentService {
     await this.caller('operator');
     const attempts = await this.deps.em.find(PaymentAttempt, { state: { $in: unresolved } }, { orderBy: { nextReconciliationAt: 'asc' }, limit: 50 });
     const unknown = await this.deps.em.find(ProcessedWebhookEvent, { booking: null, outcome: 'unknown_session' }, { orderBy: { receivedAt: 'desc' }, limit: 25 });
+    // E03-S05: refunds the founders must handle by hand (R18) and refunds the runner has not settled within an hour.
+    const overdue = new Date(this.deps.clock.now().getTime() - 60 * MINUTE);
+    const refunds = await this.deps.em.find(Booking, { status: 'cancelled', $or: [{ refundStatus: 'failed' }, { refundStatus: 'pending', cancelledAt: { $lte: overdue } }] }, { orderBy: { cancelledAt: 'asc' }, limit: 25 });
     return [
       ...attempts.map(row => ({ attemptId: row.id as string | null, bookingId: row.booking.id as string | null, sessionId: row.sessionId, status: row.state, reason: row.diagnosticCode, createdAt: row.createdAt.toISOString(), nextReconciliationAt: row.nextReconciliationAt.toISOString() })),
       ...unknown.map(row => ({ attemptId: null, bookingId: null, sessionId: row.sessionId, status: 'review', reason: 'unknown_provider_session', createdAt: row.receivedAt.toISOString(), nextReconciliationAt: row.receivedAt.toISOString() })),
+      ...refunds.map(row => ({ attemptId: null, bookingId: row.id as string | null, sessionId: null, status: row.refundStatus === 'failed' ? 'refund_failed' : 'refund_pending', reason: row.refundStatus === 'failed' ? 'refund_failed' : 'refund_overdue', createdAt: row.cancelledAt!.toISOString(), nextReconciliationAt: (row.refundNextAttemptAt ?? row.cancelledAt!).toISOString() })),
     ];
   }
 }
