@@ -61,7 +61,7 @@ flagged and their prices are not changed.
 
 ### Phase 4: Integration and docs
 
-- [ ] 4.1 Integration test, coverage and compatibility docs
+- [x] 4.1 Integration test, coverage and compatibility docs — 0ff6033
 
 ## Outcome
 
