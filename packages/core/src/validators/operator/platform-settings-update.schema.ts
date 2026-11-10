@@ -23,6 +23,8 @@ type Amounts = Record<AmountField, string>;
 
 /** Each bound positive and storable; each minimum at most its maximum (the error sits on the maximum). */
 function checkAmounts(input: Amounts, ctx: z.RefinementCtx) {
+  // Zod still runs this refinement when a field already failed its own format check; skip those.
+  if (AMOUNT_FIELDS.some(field => !exactMajorDecimalString.safeParse(input[field]).success)) return;
   const cents = Object.fromEntries(AMOUNT_FIELDS.map(field => [field, toCents(input[field])])) as Record<AmountField, number>;
   for (const field of AMOUNT_FIELDS) {
     if (cents[field] <= 0) ctx.addIssue({ code: 'custom', path: [field], message: 'Enter an amount above zero.' });
