@@ -84,8 +84,8 @@ bump → commit on `release/vX.Y.Z` → annotated tag → one atomic push of bra
 
 ### Phase 1: Spec and release logic
 
-- [ ] 1.1 Write the release workflow spec
-- [ ] 1.2 Add version resolution and changelog extraction with unit tests
+- [x] 1.1 Write the release workflow spec — 057d650
+- [x] 1.2 Add version resolution and changelog extraction with unit tests — 7adb2b2
 
 ### Phase 2: Node effects and entry point
 
