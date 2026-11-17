@@ -1,0 +1,142 @@
+name: Release
+run-name: Release ${{ inputs.bump == 'custom' && inputs.version || inputs.bump }}
+
+# Manually dispatched. Bumps every package.json, tags the release and publishes a
+# GitHub Release whose notes are the matching CHANGELOG.md entry. See SDLC.md
+# ("Releasing") and .ai/specs/2026-11-17-release-workflow.md.
+#
+# The version-bump commit goes on a release/vX.Y.Z branch, never straight to main:
+# the main ruleset requires status checks and has no bypass actors. The tag points at
+# that commit; merge the branch through a PR (with a merge commit, so the tag stays
+# reachable from main) to bring the new versions to main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Part of the version to bump (custom releases the version typed below)
+        type: choice
+        required: true
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+          - custom
+      version:
+        description: Custom version as MAJOR.MINOR.PATCH, used only when bump is custom
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Require the main branch
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$REF" != "refs/heads/main" ]; then
+            echo "::error::Run this workflow from main (selected ref: $REF)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v6
+        with:
+          # Every tag is needed to pick the next version.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # Validates the inputs and the changelog entry before anything is changed.
+      - name: Resolve the version and release notes
+        id: plan
+        env:
+          BUMP: ${{ inputs.bump }}
+          CUSTOM_VERSION: ${{ inputs.version }}
+          RELEASE_NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: node scripts/release/index.mjs
+
+      - name: Refuse a version that is already published
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.plan.outputs.tag }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "::error::GitHub Release $TAG already exists."
+            exit 1
+          fi
+
+      # Skipped when the tag already exists: that is a recovery run (the tag was pushed
+      # but the release was not published), which only needs the release created.
+      - name: Bump versions, commit and tag
+        id: prepare
+        if: steps.plan.outputs.tag_exists != 'true'
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+          TAG: ${{ steps.plan.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Root and workspace package.json files plus package-lock.json.
+          npm version "$VERSION" --ignore-scripts --workspaces --include-workspace-root \
+            --no-git-tag-version --allow-same-version
+
+          refs=("refs/tags/$TAG")
+          branch=""
+          if git diff --quiet; then
+            echo "Every package.json is already at $VERSION; tagging main as it is."
+          else
+            branch="release/$TAG"
+            git switch --create "$branch"
+            git commit --all --message "chore(release): $TAG"
+            refs+=("refs/heads/$branch")
+          fi
+
+          git tag --annotate "$TAG" --message "DevMentor $VERSION"
+          # One atomic push: the tag and its branch both land, or neither does.
+          git push --atomic origin "${refs[@]}"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.plan.outputs.tag }}
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "$NOTES_FILE"
+
+      - name: Summarize
+        env:
+          TAG: ${{ steps.plan.outputs.tag }}
+          TAG_EXISTED: ${{ steps.plan.outputs.tag_exists }}
+          BRANCH: ${{ steps.prepare.outputs.branch }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          {
+            echo "## Released $TAG"
+            echo
+            echo "- Release: $REPO_URL/releases/tag/$TAG"
+            if [ "$TAG_EXISTED" = "true" ]; then
+              echo "- Recovery run: the tag already existed, so only the release was published."
+            elif [ -n "$BRANCH" ]; then
+              echo "- Tag \`$TAG\` points at \`$BRANCH\`, which holds the version bump."
+              echo "- **Next:** open a PR so \`main\` carries the new versions: $REPO_URL/compare/main...$BRANCH?expand=1&title=chore(release)%3A+$TAG"
+              echo "- Merge it with **Create a merge commit** (not squash or rebase) so the tag stays reachable from \`main\`."
+            else
+              echo "- Every package.json already had this version, so \`main\` was tagged as it is. Nothing to merge."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
