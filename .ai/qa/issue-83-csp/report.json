@@ -1,0 +1,32 @@
+{
+  "pr": 93,
+  "verdict": "PASS",
+  "mode": "evidence-only",
+  "date": "2026-11-10",
+  "steps": [
+    {
+      "n": 1,
+      "surface": "/ -> /sign-in",
+      "result": "PASS",
+      "screenshot": "step-01-csp-public.png"
+    },
+    {
+      "n": 2,
+      "surface": "/home (mock-mentee)",
+      "result": "PASS",
+      "screenshot": "step-02-csp-mock-mentee.png"
+    },
+    {
+      "n": 3,
+      "surface": "/mentor (mock-mentor)",
+      "result": "PASS",
+      "screenshot": "step-03-csp-mock-mentor.png"
+    },
+    {
+      "n": 4,
+      "surface": "/admin (mock-operator)",
+      "result": "PASS",
+      "screenshot": "step-04-csp-mock-operator.png"
+    }
+  ]
+}

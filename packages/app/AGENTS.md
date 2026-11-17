@@ -35,9 +35,12 @@ composition root; it may import every workspace package.
 - Signed-in layouts AND every `page.tsx` call `requirePageRole`/
   `requirePageAccount` from `src/lib/session.ts`; layouts do not re-run on client
   navigation. The service checks the session again.
-- `src/proxy.ts` only forwards the path as `x-devmentor-path` so signed-out deep
-  links survive sign-in; it is not an auth boundary. Add each new signed-in
-  surface to its `matcher` or deep links fall back to the section root.
+- `src/proxy.ts` runs on every page (not `api/` or static assets). It sets the
+  per-request nonce Content-Security-Policy (`src/lib/content-security-policy.ts`)
+  and forwards the path as `x-devmentor-path` so signed-out deep links survive
+  sign-in; it is not an auth boundary. The root layout awaits `connection()` so
+  every page renders per request and gets the nonce: never prerender a page, and
+  add any new script/style/image origin to the policy and its tests.
 - For new concepts, copy the existing examples in
   `src/app/api/users/route.ts` and `src/app/admin/users/page.tsx`.
 
