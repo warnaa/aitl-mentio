@@ -63,6 +63,7 @@ export default defineConfig({
         'packages/app/src/components/notifications/*.tsx',
         'packages/app/src/components/sessions/*.ts',
         'packages/app/src/lib/payments/*.ts',
+        'packages/app/src/lib/security-headers.ts',
         'packages/app/src/app/api/payments/**/route.ts',
         'packages/app/src/app/api/bookings/\\[id\\]/checkout/route.ts',
         'packages/app/src/components/sessions/*.tsx',
