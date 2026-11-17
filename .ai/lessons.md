@@ -9,7 +9,7 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
-- 2026-11-17 — **A workflow cannot push a commit to `main`.** The `main protection` ruleset requires six status checks and has no bypass actors, so a bot commit (no check runs yet) is rejected; Actions also cannot open PRs here (`default_workflow_permissions: read`) and a bot PR would not trigger CI. The `Release` workflow therefore commits the version bump on `release/vX.Y.Z`, tags that commit and leaves a compare link for the operator to open the PR. Tags are outside the ruleset. Check `gh api repos/<repo>/rulesets` before designing any workflow that writes to `main`.
+- 2026-11-17 — **A workflow cannot push a commit to `main`.** The `main protection` ruleset requires six status checks and has no bypass actors, so a bot commit (no check runs yet) is rejected; Actions also cannot open PRs here (`default_workflow_permissions: read`) and a bot PR would not trigger CI. The `Release` workflow therefore commits the version bump on `release/vX.Y.Z`, tags that commit and leaves a compare link for the operator to open the PR, to be merged with a **merge commit** (a squash would leave the tag unreachable from `main`, and `om-auto-update-changelog` finds the previous release by tag reachability). Tags are outside the ruleset. Check `gh api repos/<repo>/rulesets` before designing any workflow that writes to `main`.
 
 - 2026-11-09 — `npm audit fix` can fail with ERESOLVE on the Storybook/`vite` peer ranges even when the vulnerable packages are unrelated. Do not use `--force`; run `npm update <package>` for fixes inside the declared range, and re-run `npm audit --omit=dev --audit-level=high`.
 

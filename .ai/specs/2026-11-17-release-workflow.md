@@ -2,8 +2,10 @@
 
 ## Problem / Goal
 
-DevMentor has a `CHANGELOG.md` but no way to cut a release: versions are bumped by
-hand in five `package.json` files, nothing is tagged and no GitHub Release exists.
+DevMentor has no way to cut a release: versions are bumped by hand in five
+`package.json` files, nothing is tagged and no GitHub Release exists. Its first
+`CHANGELOG.md` entry (`0.1.0`) is still in an open PR (#97), so the file is not on
+`main` yet.
 
 Goal: a manually dispatched GitHub Action (`Release`) where the operator selects
 `patch`, `minor`, `major` or `custom` (with a version number). One run bumps every
@@ -40,9 +42,13 @@ time) calls `scripts/release/index.mjs`, then does the git work in shell.
    lockfile). When that changes files, commit them on `release/vX.Y.Z`; otherwise
    (first release of the checked-in version) tag `main` as it is. Create an annotated
    tag `vX.Y.Z` and push branch and tag in one `--atomic` push.
-5. `gh release create vX.Y.Z --verify-tag --notes-file ... --latest`.
+5. `gh release create vX.Y.Z --verify-tag --notes-file ...` (no `--latest`: a recovery
+   run for an older tag must not become the latest release).
 6. The job summary links the release and a prefilled compare URL for the
-   `release/vX.Y.Z` → `main` PR that carries the bump to `main`.
+   `release/vX.Y.Z` → `main` PR that carries the bump to `main`. That PR must be merged
+   with a **merge commit**: the tag sits on the release branch's commit, and
+   `om-auto-update-changelog` finds the previous release by tag reachability from
+   `main`, which a squash or rebase merge would break.
 
 **Recovery.** The tag exists before the release does. If publishing fails, re-run with
 `custom` and the same version: the tag exists and no release does, so only the release

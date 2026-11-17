@@ -69,6 +69,13 @@ describe('resolveRelease', () => {
     expect(() => resolveRelease({ ...base, bump: undefined })).toThrow('Unknown bump "undefined"');
   });
 
+  it('quotes echoed input so a multi-line value cannot forge workflow commands', () => {
+    const forged = '1.0.0\n::set-output name=x::y';
+    expect(() => resolveRelease({ ...base, bump: 'custom', custom: forged }))
+      .toThrow('Custom version "1.0.0\\n::set-output name=x::y" is not');
+    expect(() => resolveRelease({ ...base, bump: 'a\nb' })).toThrow('Unknown bump "a\\nb"');
+  });
+
   it('rejects a package.json version it cannot bump', () => {
     expect(() => resolveRelease({ ...base, bump: 'patch', packageVersion: 'next' })).toThrow('"next" is not MAJOR.MINOR.PATCH');
   });
@@ -171,6 +178,59 @@ describe('extractChangelogEntry', () => {
   it('accepts a BOM, CRLF line endings and a v prefix or a heading without a date', () => {
     const text = '﻿# v1.0.0\r\n\r\nIntro paragraph.\r\n\r\n## Fixes\r\n- fixed\r\n';
     expect(extractChangelogEntry(text, '1.0.0')).toBe('Intro paragraph.\n\n## Fixes\n- fixed\n');
+  });
+
+  it('does not treat lines inside a fenced code block as headings', () => {
+    const text = [
+      '# 1.0.0 (2026-01-01)',
+      '## ✨ Features',
+      '- Install with:',
+      '```bash',
+      '# install',
+      '## not a section',
+      'npm ci',
+      '```',
+      '~~~',
+      '# also not a heading',
+      '~~~',
+      '',
+      '# 0.9.0',
+      '- old',
+    ].join('\n');
+    expect(extractChangelogEntry(text, '1.0.0')).toBe([
+      '## ✨ Features',
+      '- Install with:',
+      '```bash',
+      '# install',
+      '## not a section',
+      'npm ci',
+      '```',
+      '~~~',
+      '# also not a heading',
+      '~~~',
+      '',
+    ].join('\n'));
+  });
+
+  it('does not find an entry heading inside a fenced code block', () => {
+    const text = '# 0.9.0\n```md\n# 1.0.0\n- fake\n```\n';
+    expect(() => extractChangelogEntry(text, '1.0.0')).toThrow('no "# 1.0.0" entry');
+  });
+
+  it('drops the --- rule the changelog skill puts between entries', () => {
+    const text = '# 1.0.0 (2026-01-01)\n\n## Fixes\n- fixed\n\n---\n\n# 0.9.0\n- old\n';
+    expect(extractChangelogEntry(text, '1.0.0')).toBe('## Fixes\n- fixed\n');
+  });
+
+  it('keeps a --- rule that is not at the end of the entry', () => {
+    const text = '# 1.0.0\n\n## Fixes\n- a\n\n---\n\n- b\n';
+    expect(extractChangelogEntry(text, '1.0.0')).toBe('## Fixes\n- a\n\n---\n\n- b\n');
+  });
+
+  it('fails on an entry that is only a heading or only empty sections and a rule', () => {
+    expect(() => extractChangelogEntry('# 1.0.0 (2026-01-01)', '1.0.0')).toThrow('has no content');
+    expect(() => extractChangelogEntry('# 1.0.0\n\n## Highlights\n\n---\n\n# 0.9.0\n', '1.0.0'))
+      .toThrow('has no content');
   });
 
   it('fails when the entry only contains comments and headings', () => {

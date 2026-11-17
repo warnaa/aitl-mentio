@@ -30,7 +30,10 @@ describe('createNodeEffects', () => {
   });
 
   it('runs the real git by default', () => {
-    expect(Array.isArray(createNodeEffects({ env: {} }).listTags())).toBe(true);
+    // Runs in a git checkout (the repository itself): whatever tags exist, only v* ones come back.
+    const tags = createNodeEffects({ env: {} }).listTags();
+    expect(Array.isArray(tags)).toBe(true);
+    expect(tags.every((tag) => tag.startsWith('v'))).toBe(true);
   });
 
   it('appends workflow outputs to the GITHUB_OUTPUT file', () => {

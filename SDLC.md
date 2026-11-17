@@ -38,8 +38,9 @@ After merge, this process stops. Deployment, smoke tests, monitoring, and rollba
 A release is cut by hand from the Actions tab: **Release → Run workflow** on `main`
 (`.github/workflows/release.yml`). Spec: `.ai/specs/2026-11-17-release-workflow.md`.
 
-1. Merge the `CHANGELOG.md` entry for the version first (`om-auto-update-changelog`). The run
-   fails before changing anything when `# <version>` is missing or empty.
+1. Merge the `CHANGELOG.md` entry for the version first (`om-auto-update-changelog`); until the
+   file is on `main` (the `0.1.0` entry is PR #97) every run fails. The run fails before changing
+   anything when `# <version>` is missing or empty.
 2. Choose `patch`, `minor` or `major`, or `custom` and type `MAJOR.MINOR.PATCH` in the version field.
    The base is the higher of the root `package.json` version and the newest `vX.Y.Z` tag. A custom
    version must be above both, except that the version already in `package.json` can be released as
@@ -49,7 +50,10 @@ A release is cut by hand from the Actions tab: **Release → Run workflow** on `
    whose notes are the changelog entry.
 4. **Merge `release/vX.Y.Z` through a PR** (the job summary links it) so `main` carries the new
    versions. A workflow cannot push to `main`: the `main protection` ruleset requires status checks
-   and has no bypass actors.
+   and has no bypass actors. Use **Create a merge commit**, not squash or rebase: the tag sits on the
+   release branch's commit, and only a merge commit keeps it reachable from `main`.
+   `om-auto-update-changelog` finds the previous release by tag reachability, so a squashed bump
+   would make the next changelog window re-list PRs this release already shipped.
 
 Recovery: the tag exists before the release. If publishing fails, run the workflow again with
 `custom` and the same version; it sees the tag, skips the bump and only creates the release. A run

@@ -100,6 +100,23 @@ bump → commit on `release/vX.Y.Z` → annotated tag → one atomic push of bra
 
 - [x] 4.1 Run the full validation gate and dry-run the CLI on the real changelog
 
+## Review pass
+
+An independent read-only review (fresh subagent; GitHub does not let the author approve
+their own PR) found no blockers and these items, all addressed in the follow-up commit:
+
+- major: a squash-merged bump PR leaves the tag unreachable from `main`, which breaks the
+  changelog skill's tag-reachability window. Documented that the PR needs a merge commit
+  (SDLC.md, spec, workflow header and job summary, lesson).
+- minor: headings inside fenced code blocks cut the notes short; a trailing `---` rule was
+  published and hid an empty entry. Both fixed in `extractChangelogEntry` with regression tests.
+- minor: the spec said a changelog exists on `main` and mentioned `--latest`, which the
+  workflow omits on purpose. Spec corrected.
+- nit: echoed input in error annotations is JSON-quoted; the weak `listTags` default test
+  now asserts the `v*` filter.
+- not changed: `npm version` also installs packages (about 25 s); it works and leaves no
+  tracked changes.
+
 ## Outcome
 
 Status: complete (pending the authoritative review pass recorded on the PR).

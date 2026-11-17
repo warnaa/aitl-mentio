@@ -7,7 +7,8 @@ run-name: Release ${{ inputs.bump == 'custom' && inputs.version || inputs.bump }
 #
 # The version-bump commit goes on a release/vX.Y.Z branch, never straight to main:
 # the main ruleset requires status checks and has no bypass actors. The tag points at
-# that commit; merge the branch through a PR to bring the new versions to main.
+# that commit; merge the branch through a PR (with a merge commit, so the tag stays
+# reachable from main) to bring the new versions to main.
 
 on:
   workflow_dispatch:
@@ -134,6 +135,7 @@ jobs:
             elif [ -n "$BRANCH" ]; then
               echo "- Tag \`$TAG\` points at \`$BRANCH\`, which holds the version bump."
               echo "- **Next:** open a PR so \`main\` carries the new versions: $REPO_URL/compare/main...$BRANCH?expand=1&title=chore(release)%3A+$TAG"
+              echo "- Merge it with **Create a merge commit** (not squash or rebase) so the tag stays reachable from \`main\`."
             else
               echo "- Every package.json already had this version, so \`main\` was tagged as it is. Nothing to merge."
             fi

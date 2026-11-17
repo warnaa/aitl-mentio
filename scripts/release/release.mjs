@@ -43,10 +43,10 @@ function newest(versions) {
  */
 export function resolveRelease({ bump, custom, packageVersion, tags }) {
   if (!BUMPS.includes(bump)) {
-    throw new Error(`Unknown bump "${bump}". Choose one of: ${BUMPS.join(', ')}.`);
+    throw new Error(`Unknown bump ${JSON.stringify(String(bump))}. Choose one of: ${BUMPS.join(', ')}.`);
   }
   if (!parseVersion(packageVersion)) {
-    throw new Error(`The root package.json version "${packageVersion}" is not MAJOR.MINOR.PATCH.`);
+    throw new Error(`The root package.json version ${JSON.stringify(packageVersion)} is not MAJOR.MINOR.PATCH.`);
   }
   const tagVersions = tags
     .filter((tag) => tag.startsWith('v'))
@@ -56,14 +56,14 @@ export function resolveRelease({ bump, custom, packageVersion, tags }) {
 
   if (bump !== 'custom') {
     if (requested) {
-      throw new Error(`A custom version was entered but the bump is "${bump}". Choose "custom" to release it.`);
+      throw new Error(`A custom version was entered but the bump is ${JSON.stringify(bump)}. Choose "custom" to release it.`);
     }
     const version = bumpVersion(newest([packageVersion, ...tagVersions]), bump);
     return { version, tag: `v${version}`, tagExists: false };
   }
 
   if (!parseVersion(requested)) {
-    throw new Error(`Custom version "${custom}" is not MAJOR.MINOR.PATCH (for example 1.4.0).`);
+    throw new Error(`Custom version ${JSON.stringify(custom)} is not MAJOR.MINOR.PATCH (for example 1.4.0).`);
   }
   const tagExists = tagVersions.includes(requested);
   if (!tagExists) {
@@ -86,21 +86,36 @@ export function resolveRelease({ bump, custom, packageVersion, tags }) {
  * generator leaves TODO markers) and without `##` sections that have no content.
  */
 export function extractChangelogEntry(markdown, version) {
-  const lines = markdown.replace(/^﻿/, '').split(/\r?\n/);
+  const lines = markdown
+    .replace(/^﻿/, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .split(/\r?\n/);
+  // Headings inside a fenced code block (a shell comment such as `# install`) are not headings.
+  let open = false;
+  const fenced = lines.map((line) => {
+    const isFence = /^\s*(```|~~~)/.test(line);
+    const inside = open || isFence;
+    if (isFence) open = !open;
+    return inside;
+  });
   const heading = new RegExp(`^#\\s+v?${version.replaceAll('.', '\\.')}(?:\\s.*)?$`);
-  const start = lines.findIndex((line) => heading.test(line));
+  const start = lines.findIndex((line, index) => !fenced[index] && heading.test(line));
   if (start === -1) {
     throw new Error(`CHANGELOG.md has no "# ${version}" entry. Add it (om-auto-update-changelog) and merge it first.`);
   }
-  const next = lines.findIndex((line, index) => index > start && /^#\s/.test(line));
-  const body = lines
-    .slice(start + 1, next === -1 ? lines.length : next)
-    .join('\n')
-    .replace(/<!--[\s\S]*?-->/g, '');
-  const notes = body
-    .split(/^(?=##\s)/m)
-    .filter((section) => section.replace(/^##\s.*$/m, '').trim() !== '')
-    .map((section) => section.trim())
+  const next = lines.findIndex((line, index) => index > start && !fenced[index] && /^#\s/.test(line));
+  // Section 0 is the text before the first `##`; every later section starts with its heading.
+  const sections = [[]];
+  for (let index = start + 1; index < (next === -1 ? lines.length : next); index += 1) {
+    if (!fenced[index] && /^##\s/.test(lines[index])) sections.push([]);
+    sections.at(-1).push(lines[index]);
+  }
+  // The changelog skill ends every entry but the oldest with a `---` rule.
+  const last = sections.at(-1);
+  while (last.length > 0 && /^(\s*|-{3,}\s*)$/.test(last.at(-1))) last.pop();
+  const notes = sections
+    .filter((section, index) => section.slice(index === 0 ? 0 : 1).join('\n').trim() !== '')
+    .map((section) => section.join('\n').trim())
     .join('\n\n');
   if (!notes) {
     throw new Error(`The CHANGELOG.md entry for ${version} has no content.`);
