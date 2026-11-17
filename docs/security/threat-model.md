@@ -175,7 +175,7 @@ Scope: the whole application as committed at `f5408a4`, read from code. It adds 
 | T01–T16, T18 | Controls present; covered by `availability`, `prices` and `booking-*` integration suites. |
 | T17 | Open, and wider than the residual note says. No per-account cap on active holds exists in `BookingService.start`: at 20 attempts per 10 minutes and a 30-minute hold, **one** account can hold about 60 slots continuously. Needs a product decision. |
 | T19, T20, T22, T23 | Implemented (`payment.service.ts`, `stripe-payment-gateway.ts`); covered by `payments-signature`, `-lost-response`, `-ambiguous-creation`, `-confirmation`, `-amount`, `-authorization`. |
-| T21, T25 | Implemented, but depend on deployment: nothing in this repository schedules `payments:reconcile` or registers the webhook (`README.md`). Do not take paid traffic until both exist. |
+| T21, T25 | Implemented, but depend on deployment: nothing in this repository schedules `payments:reconcile` or registers the webhook (`docs/development.md`). Do not take paid traffic until both exist. |
 | T24 | Implemented: normalized provider fields, generic webhook status codes, pino redaction. |
 
 ### New threats
