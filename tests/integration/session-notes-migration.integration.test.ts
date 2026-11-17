@@ -37,6 +37,9 @@ it('NOTES-007 migrates session notes up down up with restrictive lifecycle const
     `);
     expect(later.exitCode, later.stderr).toBe(0);
     expect((await psql(`insert into notifications select gen_random_uuid(), created_at, updated_at, user_id, booking_id, kind, read_at, email_sent_at, note_version from notifications where note_version = 2`)).exitCode).not.toBe(0);
+    // One `down` per migration newer than the note migrations: platform settings (#50) is the newest.
+    await runNpm(['run', 'db:migrate:down'], environment);
+    expect(await query(`select to_json(to_regclass('public.platform_settings'))`)).toBeNull();
     await runNpm(['run', 'db:migrate:down'], environment);
     expect(await query(`select count(*) from notifications where kind = 'note_awaiting_approval'`)).toBe(1);
     expect((await psql(`update notifications set kind = 'note_declined' where kind = 'booking_confirmed'`)).exitCode).not.toBe(0);

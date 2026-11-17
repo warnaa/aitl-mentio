@@ -5,7 +5,7 @@ import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from
 import type { Clock } from '../../time/clock';
 import { bookingCreateSchema, type BookingCreate } from '../../validators/bookings/booking-create.schema';
 import { mentorOfferReady } from '../mentors/readiness';
-import type { PlatformSettingsService } from '../operator/platform-settings.service';
+import type { PricePolicy } from '../operator/platform-settings.service';
 import { activeOccupancy, HOLD_MINUTES, MIN_LEAD_MINUTES, MINUTE_MS, overlappingInterval } from './occupancy';
 
 export function toBookingDto(booking: IBooking) {
@@ -21,7 +21,7 @@ export interface BookingServiceDeps {
   em: EntityManager;
   session: Promise<Session | null>;
   clock: Clock;
-  platformSettingsService: Pick<PlatformSettingsService, 'get'>;
+  platformSettingsService: { get(): Promise<PricePolicy> };
 }
 
 export class BookingService {
@@ -35,6 +35,9 @@ export class BookingService {
     // This read only discovers the lock owner; every invariant is rechecked after locking.
     const offered = await this.deps.em.findOne(Slot, { id: data.slotId, removedAt: null });
     if (!offered) throw new NotFoundError('Slot not found');
+    // Read before the transaction, so it never waits for a second pooled connection while this
+    // one holds the mentor and slot locks.
+    const settings = await this.deps.platformSettingsService.get();
     return this.deps.em.fork().transactional(async em => {
       const mentorProfile = await em.findOne(MentorProfile, { id: offered.mentorProfile.id }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
       if (!mentorProfile) throw new NotFoundError('Mentor profile not found');
@@ -52,7 +55,6 @@ export class BookingService {
       if (slot.startsAt.getTime() - now.getTime() < MIN_LEAD_MINUTES * MINUTE_MS) {
         throw new ValidationError('Choose a time at least two hours ahead.', { slotId: ['Sessions need at least two hours of notice.'] });
       }
-      const settings = this.deps.platformSettingsService.get();
       mentorOfferReady.assert({ ...mentorProfile, settings, hasFutureSlots: true }, 'This mentor is not bookable right now.');
       const overlapping = await em.findOne(Booking, { mentorProfile: mentorProfile.id, $and: [activeOccupancy(now), overlappingInterval(slot.startsAt, data.lengthMinutes)] });
       if (overlapping) throw new ConflictError('This duration overlaps another reserved session. Choose another time or duration.');

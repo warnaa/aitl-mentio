@@ -1,6 +1,6 @@
 import { defineReadiness } from '../../domain/readiness';
 import { withinBounds } from '../../money/money';
-import type { PlatformSettings } from '../operator/platform-settings.service';
+import type { PricePolicy } from '../operator/platform-settings.service';
 
 export interface PublishableProfile {
   publicWorkUrl?: string | null;
@@ -18,7 +18,7 @@ export interface MentorOffer extends PublishableProfile {
   price25Cents?: number | null;
   price50Cents?: number | null;
   hasFutureSlots: boolean;
-  settings: PlatformSettings;
+  settings: PricePolicy;
 }
 export const mentorOfferReady = defineReadiness<MentorOffer>([
   { key: 'profile', label: 'Complete your mentor profile.', test: p => mentorPagePublishable.evaluate(p).ready },

@@ -23,6 +23,7 @@ describe('WorkspaceNav', () => {
       ['Operator home', '/admin'],
       ['Users', '/admin/users'],
       ['Note declines', '/admin/sessions'],
+      ['Settings', '/admin/settings'],
       ['Mentor workspace', '/mentor'],
       ['Edit profile', '/mentor/profile'],
     ]);
