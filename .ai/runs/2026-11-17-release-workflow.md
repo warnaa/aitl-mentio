@@ -93,8 +93,8 @@ bump → commit on `release/vX.Y.Z` → annotated tag → one atomic push of bra
 
 ### Phase 3: Workflow and docs
 
-- [ ] 3.1 Add the manually dispatched release workflow
-- [ ] 3.2 Document the release process and record the lesson
+- [x] 3.1 Add the manually dispatched release workflow — c49be48
+- [x] 3.2 Document the release process and record the lesson — a643591
 
 ### Phase 4: Verification
 
