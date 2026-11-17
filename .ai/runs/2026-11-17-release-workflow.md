@@ -80,6 +80,8 @@ bump → commit on `release/vX.Y.Z` → annotated tag → one atomic push of bra
 
 ## Progress
 
+PR: #98
+
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles.
 
 ### Phase 1: Spec and release logic
@@ -119,7 +121,7 @@ their own PR) found no blockers and these items, all addressed in the follow-up 
 
 ## Outcome
 
-Status: complete (pending the authoritative review pass recorded on the PR).
+Status: complete (review pass above; PR #98 marked ready).
 
 Files: `.github/workflows/release.yml`; `scripts/release/{release,effects,index}.mjs` with
 tests; `vitest.config.mts` (coverage include); `SDLC.md` (Releasing); the spec; a lesson.
