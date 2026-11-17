@@ -75,6 +75,8 @@ jobs:
         run: node scripts/check-agent-routes.mjs
       - name: Test CI change classification
         run: node --test scripts/ci/change-scope.test.mjs
+      - name: Test dependency audit gate
+        run: node --test scripts/ci/audit-gate.test.mjs
       - run: npm ci --include=optional
         if: ${{ needs.changes.result != 'success' || needs.changes.outputs.application != 'false' }}
       - run: npm run lint
@@ -190,7 +192,10 @@ jobs:
         with:
           node-version: 24
       # Production dependencies only; the lockfile is enough, nothing is installed.
-      - run: npm audit --omit=dev --audit-level=high
+      # Runs `npm audit --omit=dev` at level high and accepts only the advisories in
+      # scripts/ci/audit-exceptions.json, each bound to a package, its direct dependents
+      # and an expiry date.
+      - run: node scripts/ci/audit-gate.mjs
 
   codeql:
     name: CodeQL

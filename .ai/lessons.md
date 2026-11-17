@@ -9,6 +9,12 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-17 — Stage explicit paths, never `git add -A`, in an autonomous run: a worktree can be modified by other processes, and `git add -A` committed and pushed 9 unrelated skill files (`om-auto-manage-issues`, `skills-lock.json`) to PR #105 before a `git show --stat` caught it. Run `git status --short` and `git diff --cached --stat` before each commit; undo a pushed mistake with a restore commit, not a force-push.
+
+- 2026-11-17 — User correction: `om-auto-fix-issue` must run its whole chain to a finished PR, not end the turn on a sub-skill's output. A "proceed" from `om-verify-in-repo` is a handoff to the next step (worktree, `om-root-cause`, `om-fix`, `om-open-pr`, review), not a result to report.
+
+- 2026-11-17 — A newly published advisory can turn the required **Dependency audit** red on `main` and every PR with no dependency change (GHSA-fc5q-39xc-vjpf, `picomatch`, issue #101). First check `npm view <pkg> version` against the advisory range: when no patched release exists, `overrides` and upgrades cannot help and `npm audit fix --force` only downgrades `awilix` to 6.0.0. Do not lower `--audit-level`. Add a dated entry to `scripts/ci/audit-exceptions.json`, which `scripts/ci/audit-gate.mjs` enforces per advisory, package and direct dependent. The `awilix` exception holds only while nothing calls `loadModules`/`listModules`, which `awilix-glob-loading.test.ts` guards.
+
 - 2026-11-09 — `npm audit fix` can fail with ERESOLVE on the Storybook/`vite` peer ranges even when the vulnerable packages are unrelated. Do not use `--force`; run `npm update <package>` for fixes inside the declared range, and re-run `npm audit --omit=dev --audit-level=high`.
 
 - 2026-11-08 — **A decision that freezes other data needs that data's writers on the same lock.** Approving a note froze the written answer, but `postAnswer` was a single conditional update that took no booking lock first, so an approval and a replacement could cross. Writers of frozen data now take the booking lock and re-check inside the transaction. Keep that check out of reads that must survive a notes outage: adding it to the session read took down the whole session screen when the notes table was unavailable (NOTES-008). Also: `db:migration:create` still churns unrelated tables, so keep only the changed table in the snapshot and hand-write the migration, and any new `down` step means `NOTES-007`-style tests must run one `db:migrate:down` per migration.
