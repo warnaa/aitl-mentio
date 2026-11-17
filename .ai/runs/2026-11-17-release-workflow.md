@@ -98,4 +98,36 @@ bump → commit on `release/vX.Y.Z` → annotated tag → one atomic push of bra
 
 ### Phase 4: Verification
 
-- [ ] 4.1 Run the full validation gate and dry-run the CLI on the real changelog
+- [x] 4.1 Run the full validation gate and dry-run the CLI on the real changelog
+
+## Outcome
+
+Status: complete (pending the authoritative review pass recorded on the PR).
+
+Files: `.github/workflows/release.yml`; `scripts/release/{release,effects,index}.mjs` with
+tests; `vitest.config.mts` (coverage include); `SDLC.md` (Releasing); the spec; a lesson.
+
+Verification (worktree off `origin/main` f52b572):
+
+- `npm run typecheck`, `npm run test` (1881 tests) and the per-file 100% coverage gate
+  (`test:unit:coverage`) pass; `npm run build` passes.
+- `npm run lint` exits 1 because of 2 parse errors in vendored
+  `.agents|.claude/skills/om-ux-design/references/assets/comments.js`, which are on
+  `main` from #94 and not touched here. `scripts/release/` lints clean.
+- CLI run against PR #97's real `CHANGELOG.md`: `custom 0.1.0` writes the notes (no TODO
+  comment, no empty Highlights) and the outputs; `minor` fails on the missing `0.2.0`
+  entry; `patch` with a typed version fails. Exit codes 0 / 1 / 1.
+- The workflow's `prepare` step was extracted from the YAML and run against a local bare
+  remote: a bump creates `release/v0.2.0` with 6 changed files authored by
+  `github-actions[bot]`, an annotated tag on that commit and one atomic push; an
+  unchanged version tags `main` and pushes no branch.
+- Not verified: `gh release view` / `gh release create`, the Actions UI form and
+  `workflow_dispatch` itself. A dispatch workflow runs from the default branch, so the
+  first real run is after merge.
+
+Follow-ups:
+
+- Merge PR #97 (the `0.1.0` changelog); the first release is then `custom` / `0.1.0`.
+- Open the `release/vX.Y.Z` PR after each release (the job summary links it).
+- Fix the vendored `comments.js` lint parse errors (separate change).
+
