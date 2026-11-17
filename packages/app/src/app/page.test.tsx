@@ -49,12 +49,12 @@ it('composes the s17 sections in order inside the landing frame', async () => {
   expect(findByType(tree, Image).props).toMatchObject({ src: '/landing/developer-mentoring.png', alt: '' });
 });
 
-it('leads signed-out visitors to registration and sign-in, never to an unbuilt catalogue', async () => {
+it('leads signed-out visitors to registration and sign-in, and to the public mentor list', async () => {
   const tree = await render();
   const frame = findByType(tree, PublicPage);
   expect(links(frame.props.primary)).toEqual(['Create an account /register']);
   expect(links(frame.props.footer)).toEqual(['Sign in /sign-in']);
-  expect(links(frame.props.children)).toEqual(['Create an account /register', 'Create an account /register', 'Already have an account? Sign in /sign-in']);
+  expect(links(frame.props.children)).toEqual(['Create an account /register', 'Browse mentors /mentors', 'Create an account /register', 'Browse mentors /mentors', 'Already have an account? Sign in /sign-in']);
   expect(textOf(tree)).not.toMatch(/Find your mentor|Meet Alex/);
 });
 
@@ -64,5 +64,5 @@ it('offers a signed-in visitor their workspace and leaves the header to the fram
   const frame = findByType(tree, PublicPage);
   expect(frame.props.primary).toBeUndefined();
   expect(links(frame.props.footer)).toEqual(['My workspace /mentor']);
-  expect(links(frame.props.children)).toEqual(['Open my workspace /mentor', 'Open my workspace /mentor']);
+  expect(links(frame.props.children)).toEqual(['Open my workspace /mentor', 'Browse mentors /mentors', 'Browse mentors /mentors', 'Open my workspace /mentor']);
 });

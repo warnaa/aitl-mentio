@@ -12,16 +12,22 @@ export const dynamic = 'force-dynamic';
 const RESULT_TYPE = 'type Result<T> =\n  | { ok: true; data: T }\n  | { ok: false; error: string };';
 
 /**
- * `/`, the public homepage composed as the prototype's s17 screen. The mentor catalogue
- * (s19) and booking are not built yet, so the prototype's "Find your mentor" actions
- * lead to registration (or the visitor's workspace) and its example-mentor band is left
- * out (spec A12). The conversation and written answer are labelled illustrations.
+ * `/`, the public homepage composed as the prototype's s17 screen. Its "Find your mentor"
+ * actions lead to registration (or the visitor's workspace) and, beside them, to the public
+ * mentor list (`/mentors`, #39). The prototype's example-mentor band stays out (spec A12)
+ * because its mentors and ratings are fictional. The conversation and written answer are
+ * labelled illustrations.
  */
 export default async function Home() {
   const session = await currentSession();
   const account = session
     ? { href: homeFor(session.roles), label: 'My workspace', closing: 'Open my workspace' }
     : { href: '/sign-in', label: 'Sign in', closing: 'Already have an account? Sign in' };
+  const browse = (
+    <Button asChild intent="neutral" appearance="stroke">
+      <Link href="/mentors">Browse mentors</Link>
+    </Button>
+  );
   const primary = session ? (
     <Button asChild>
       <Link href={account.href}>
@@ -81,7 +87,10 @@ export default async function Home() {
               Discuss a problem in your code with another developer.
               <br className="dm-home-wide-break" /> Your mentor writes up the answer so you can use it later.
             </p>
-            <div className="dm-home-hero-actions">{primary}</div>
+            <div className="dm-home-hero-actions">
+              {primary}
+              {browse}
+            </div>
             <div className="dm-fact-chips dm-home-hero-facts" role="group" aria-label="Session format">
               <Badge variant="outline">
                 <MessageSquare aria-hidden="true" />
@@ -281,6 +290,7 @@ export default async function Home() {
             </h2>
             <div>
               {session ? null : primary}
+              {browse}
               <Button asChild intent="neutral" appearance="stroke">
                 <Link href={account.href}>{account.closing}</Link>
               </Button>

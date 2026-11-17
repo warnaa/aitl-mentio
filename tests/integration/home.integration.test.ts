@@ -23,7 +23,8 @@ describe('TC-HOME-001 public home page', () => {
       expect(snapshot).toContain('link "How it works"');
       expect(snapshot).toContain('link "Sign in"');
       expect(snapshot.match(/link "Create an account"/g)?.length).toBeGreaterThanOrEqual(2);
-      // The mentor catalogue is not built yet, so nothing links to it (spec A12).
+      // The public mentor list (#39) is linked; the prototype's fictional mentor band stays out (spec A12).
+      expect(snapshot.match(/link "Browse mentors"/g)?.length).toBeGreaterThanOrEqual(2);
       expect(snapshot).not.toMatch(/Find your mentor|Meet Alex/);
 
       await runAgentBrowser(session, 'screenshot', resolve(integrationArtifactsDirectory, 'home.png'), '--full');

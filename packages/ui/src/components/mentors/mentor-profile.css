@@ -75,3 +75,8 @@
   .dm-mentor-profile-content { gap: 32px; }
 }
 @media (max-width: 560px) { .dm-public-main:has(> .dm-mentor-profile) { padding-top: 32px; } }
+
+/* Public mentor list card (#39): the description is clamped here and read in full on `/m/<slug>`. */
+.dm-mentor-card-intro { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+.dm-mentor-card-work { margin-inline-end: auto; color: var(--dm-primary-base); text-underline-offset: 3px; }
+.dm-mentor-card-work:hover { text-decoration: underline; }
