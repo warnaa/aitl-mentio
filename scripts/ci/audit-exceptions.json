@@ -1,0 +1,12 @@
+{
+  "exceptions": [
+    {
+      "advisory": "ghsa-fc5q-39xc-vjpf",
+      "package": "picomatch",
+      "dependents": ["awilix"],
+      "expires": "2027-02-15",
+      "issue": 101,
+      "reason": "picomatch ReDoS through single-branch repeated extglobs. No patched release exists: the advisory covers every published version (<= 4.0.7, the latest), and the only npm-proposed fix downgrades awilix to 6.0.0. It reaches production only through awilix > fast-glob > micromatch, where awilix globs file names solely inside loadModules() and listModules(). This repo registers every binding explicitly (packages/core/src/container/container.ts) and a unit test forbids those calls, so no attacker-controlled pattern reaches picomatch. Re-check by the expiry date: npm view picomatch version."
+    }
+  ]
+}
