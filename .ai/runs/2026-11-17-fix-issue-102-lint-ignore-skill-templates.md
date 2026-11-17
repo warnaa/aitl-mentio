@@ -14,4 +14,4 @@ Request: `/om-auto-fix-issue 102` — make `npm run lint` ignore the vendored om
 
 ## Follow-ups
 - 10 lint warnings remain in vendored skill scripts and project files; out of scope.
-- `.ai/trackers/github.md` other installed descriptors may also lag the packaged versions.
+- The new `npm audit` failure (picomatch via awilix, 4 high) is unrelated to this change and fails `Dependency audit` on any PR; it needs its own fix.

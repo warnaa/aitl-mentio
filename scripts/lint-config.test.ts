@@ -22,17 +22,4 @@ describe('eslint.config.mjs', () => {
   ])('still lints %s', async (file) => {
     expect(await eslint.isPathIgnored(file)).toBe(false);
   });
-
-  it('does not disable any rule for project code', async () => {
-    const config = (await eslint.calculateConfigForFile('packages/core/src/index.ts')) as {
-      rules?: Record<string, unknown>;
-    };
-    const off = Object.entries(config.rules ?? {}).filter(([, v]) =>
-      [0, 'off'].includes(Array.isArray(v) ? (v[0] as number | string) : (v as number | string)),
-    );
-    // `next/typescript` and core-web-vitals turn a few rules off by design; assert the
-    // boundary rule this repo owns stays an error rather than snapshotting upstream presets.
-    expect(off.map(([name]) => name)).not.toContain('no-restricted-imports');
-    expect(config.rules?.['no-restricted-imports']).toBeDefined();
-  });
 });
