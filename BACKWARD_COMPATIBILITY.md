@@ -11,7 +11,7 @@ packages consume each other as TypeScript source, the integration harness under
 and job names, and the local tooling (`docker-compose.yml`, `openmercato.toml`,
 `scripts/preview.sh`) keys on npm scripts. The packages are private (`0.1.0`,
 unpublished), so there is no external semver to bump. "Breaking" therefore means: a
-consumer listed below stops working, or an operator following `README.md` gets a
+consumer listed below stops working, or an operator following `docs/development.md` gets a
 different result.
 
 ## General rule
@@ -64,7 +64,7 @@ a different GitHub account). An `AppError` may carry optional
 - `GET /api/health`: a plain JSON probe, not enveloped:
   `{ status: "ok", app, environment, database: "up" | "down", databaseError? }`, HTTP
   200 even when the database is down. `tests/integration/global-setup.ts` polls it and
-  waits for `status === "ok"` and `database === "up"`; `README.md` documents it.
+  waits for `status === "ok"` and `database === "up"`; `docs/development.md` documents it.
 - `GET /api/users` returns `UserDto[]`, where
   `UserDto = { id, email, displayName, roles, githubLogin, avatarUrl, createdAt (ISO string), mentorProfile: { id, headline } | null }`
   (`roles` is the stored set in `ROLES` order; `UserDto` never carries `passwordHash`,
@@ -123,7 +123,7 @@ shipping the client side of it; changing `/api/health` to return non-200 on data
 loss (the file itself calls this out as an option; it also breaks the readiness poll).
 
 **Required path:** change both envelope declarations together; update the unit tests
-and the integration scenarios that assert on the route; update `README.md` where the
+and the integration scenarios that assert on the route; update `docs/development.md` where the
 route is documented; list the change under "Breaking changes" in the PR body. A new
 error code is additive as long as existing codes keep their meaning.
 
@@ -261,7 +261,7 @@ schemas describe them, `packages/core/src/config/env.ts` for the app and
 changing a default in a way that changes runtime behavior; dropping the
 `DATABASE_URL` precedence.
 
-**Required path:** both schemas, `.env.example`, `README.md`, the CI workflow, and the
+**Required path:** both schemas, `.env.example`, `docs/development.md`, the CI workflow, and the
 harness environment updated in the same PR; a default wherever one is sensible.
 
 ### 5. npm scripts and CI check names
@@ -269,7 +269,7 @@ harness environment updated in the same PR; a default wherever one is sensible.
 `payments:reconcile` is a new bounded CLI recovery entry point. An external scheduler must invoke it every minute before paid traffic is enabled. Existing command/job names remain unchanged. Unit commands now run the CI classifier's native Node suite explicitly before Vitest; Vitest excludes that native test file from its own incompatible discovery. No test assertion is skipped.
 
 The root `package.json` scripts are this repository's command-line interface. They are
-referenced by `README.md`, `AGENTS.md`, `.github/workflows/ci.yml`,
+referenced by `docs/development.md`, `AGENTS.md`, `.github/workflows/ci.yml`,
 `.ai/agentic.config.json` (`validation.commands`), `SDLC.md`, `openmercato.toml`
 (`scripts/preview.sh` runs `npm run dev`), and `tests/integration/run.sh` and
 `run.ps1`. The CI job names `Build`, `Lint`, `Unit tests`, and `Integration tests` are
@@ -357,7 +357,7 @@ semantics the integration tests assert on (the headings `Operator workspace` and
 `Users`, the links `Users` and `View users`, the text `Connected`, the seeded table
 cells and role lists, and the landing heading `Work through your code with a mentor.`);
 Tailwind class choices and `dm-*` layout classes; and the placeholder
-`User` and `MentorProfile` fields, which `README.md` describes as a demo model. Even
+`User` and `MentorProfile` fields, which `docs/development.md` describes as a demo model. Even
 those change through migrations and tests, only without the breaking-change paperwork.
 
 ## Screen alignment with the prototype (#65)

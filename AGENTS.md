@@ -82,7 +82,7 @@ concrete files; use manifests and CI for the current commands.
 | New feature | `SDLC.md`, `.ai/specs/product-brief.md`, `.ai/specs/2026-09-01-engineering-standards.md`, `tests/AGENTS.md` |
 | Refactor | `BACKWARD_COMPATIBILITY.md`, `.ai/specs/2026-09-01-engineering-standards.md`, `tests/AGENTS.md` |
 | Review | `CODE_REVIEW.md`, `BACKWARD_COMPATIBILITY.md`, `tests/AGENTS.md` |
-| Commands and local environment | `package.json`, `README.md`, `.env.example` |
+| Commands and local environment | `package.json`, `docs/development.md`, `.env.example` |
 | Configuration and env loading | `packages/app/AGENTS.md`, `packages/core/AGENTS.md`, `packages/db/AGENTS.md`, `scripts/setup/AGENTS.md` |
 | Next.js app, routes and authentication | `packages/app/AGENTS.md` |
 | Core services, HTTP helpers, DI and events | `packages/core/AGENTS.md` |
