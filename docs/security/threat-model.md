@@ -175,7 +175,7 @@ Scope: the whole application as committed at `f5408a4`, read from code. It adds 
 | T01–T16, T18 | Controls present; covered by `availability`, `prices` and `booking-*` integration suites. |
 | T17 | Open, and wider than the residual note says. No per-account cap on active holds exists in `BookingService.start`: at 20 attempts per 10 minutes and a 30-minute hold, **one** account can hold about 60 slots continuously. Needs a product decision. |
 | T19, T20, T22, T23 | Implemented (`payment.service.ts`, `stripe-payment-gateway.ts`); covered by `payments-signature`, `-lost-response`, `-ambiguous-creation`, `-confirmation`, `-amount`, `-authorization`. |
-| T21, T25 | Implemented, but depend on deployment: nothing in this repository schedules `payments:reconcile` or registers the webhook (`README.md`). Do not take paid traffic until both exist. |
+| T21, T25 | Implemented, but depend on deployment: nothing in this repository schedules `payments:reconcile` or registers the webhook (`docs/development.md`). Do not take paid traffic until both exist. |
 | T24 | Implemented: normalized provider fields, generic webhook status codes, pino redaction. |
 
 ### New threats
@@ -203,6 +203,7 @@ STRIDE across the new flows: **S** T26, T27, T29, T37, signed state and purpose-
 
 - [ ] Production hosting, TLS termination and the real `TRUSTED_PROXY_HOPS` are undefined here.
 - [x] Dependency vulnerabilities: the first CI audit (2026-11-09) found 1 critical and 3 high in `next`, `sharp`, `source-map-js` and `zod`; all fixed by #82.
+- [ ] Accepted risk (T39, issue #101), review by 2027-02-15: GHSA-fc5q-39xc-vjpf, a `picomatch` ReDoS with no patched release. It reaches production only through `awilix` → `fast-glob` → `micromatch`, which `awilix` uses solely in `loadModules()`/`listModules()`. The container registers every binding explicitly, so no attacker-controlled glob reaches it, and `awilix-glob-loading.test.ts` fails if that changes. The CI audit stays at level `high`: `scripts/ci/audit-gate.mjs` accepts only the advisories in `scripts/ci/audit-exceptions.json`, and fails when one expires, gains another direct dependent or gets a non-breaking fix.
 - [ ] No code path creates, resends or revokes invitations; `InvitationService` exposes them but nothing calls them. How operators invite mentors is unverified.
 - [ ] Session messages and accounts have no retention or deletion path. This needs a privacy decision.
 - [ ] A mentor holding the mentee role is not prevented from booking their own slot, which would inflate paid-session counts. Product decision.
@@ -252,3 +253,5 @@ Each row of the table above was re-checked against code at `f5408a4`. Damian app
 Changelog: 2026-11-09 recorded owner decisions and work order; T39 scanning added to CI.
 
 Changelog: 2026-11-09 T39: the first audit run found 1 critical and 3 high production dependency findings, cleared by #82 (`next` 16.4.5, `sharp` 0.35.5, `source-map-js` 1.2.2, `zod` 4.6.7). The new jobs do not block merges until they are added to the branch ruleset.
+
+Changelog: 2026-11-17 T39: GHSA-fc5q-39xc-vjpf (`picomatch`, no patched release) failed the required audit through `awilix`. It is accepted narrowly and time-boxed in `scripts/ci/audit-exceptions.json` instead of lowering the audit level (issue #101).

@@ -18,6 +18,7 @@ export default defineConfig({
     exclude: [
       // Native node:test suite is run explicitly by the npm unit commands.
       'scripts/ci/change-scope.test.mjs',
+      'scripts/ci/audit-gate.test.mjs',
       'tests/integration/**',
       '**/.next/**',
       '**/node_modules/**',

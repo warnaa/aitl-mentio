@@ -1,332 +1,151 @@
-# DevMentor
+<h1 align="center">🧑‍💻 DevMentor</h1>
 
-## Paying for reserved sessions
+<p align="center">
+  <strong>Specific technical help from a named developer mentor — in a short, private text session.</strong>
+</p>
 
-Checkout uses Stripe with `PAYMENT_GATEWAY_ADAPTER=stripe` (the default), `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. Missing credentials disable payment operations without selecting a fake provider. Explicit synthetic tests require both `PAYMENT_GATEWAY_ADAPTER=mock` and `INTEGRATION_TEST_RUN=1`; never enable the test harness for paid production traffic. Stripe SDK code lives in the app composition layer behind core's payment port.
+<p align="center">
+  <a href="#-getting-started">🚀 Getting started</a> ·
+  <a href="#-features">✨ Features</a> ·
+  <a href="#-how-it-works">🔄 How it works</a> ·
+  <a href="docs/development.md">📚 Development guide</a> ·
+  <a href="CHANGELOG.md">📝 Changelog</a>
+</p>
 
-Register the payment webhook for Checkout completion/expiry in deployment configuration and run `npm run payments:reconcile` every minute through an external scheduler before enabling paid traffic. This repository change provisions neither a public webhook nor a scheduler. See [payment recovery and rollback operations](docs/payments-operations.md) for provider outages, stuck attempts, operator exceptions and rollback prerequisites. Both participants see booking status in their existing workspaces. The operator sees both booking-week and session-start-week counts plus the booking-to-start median; neither view selects D16's official weekly definition.
+<p align="center">
+  <img src=".ai/qa/artifacts_pr75/step-04-mentor-sees-message-desktop.png" alt="A mentor reading a mentee's question in a DevMentor text session" width="820">
+</p>
 
-A platform connecting developers with experienced mentors. Built as an
-npm-workspaces monorepo on Next.js 16 + React 19 + TypeScript, with PostgreSQL via
-MikroORM v7, awilix for dependency injection, Tailwind CSS for public pages, and
-shadcn-ui for the admin surface.
+---
 
-> Working in this repo as a human or an AI agent? Read **[AGENTS.md](./AGENTS.md)**
-> first — it documents the stack, conventions, and gotchas in depth.
+## 💡 What is DevMentor?
 
-## Getting started
+You are stuck on a TypeScript release blocker, a production incident or a React estimate.
+Searching has not helped, and a community thread has contradictory answers. DevMentor lets
+you book **25 or 50 minutes with an experienced mentor**, ask in text, and keep a
+**written answer** and a **private session note** afterwards.
 
-Requires **Node ≥ 24**. Docker is optional — see
-[Bring your own PostgreSQL](#bring-your-own-postgresql).
+For mentors it is bounded, paid help on their own terms, instead of the same unpaid
+questions over and over.
+
+> 🚧 **Status: 0.1.0, pre-launch.** The core marketplace flow works end to end, but
+> mentor discovery and Stripe Connect payouts are not built yet. See
+> [what is not here yet](#-what-is-not-here-yet).
+
+## 🔄 How it works
+
+1. 🔑 **Sign in** with GitHub or email. Mentors join by invitation.
+2. 🔎 **Open a mentor's page** and see their stack, public work, session prices and
+   availability.
+3. 📅 **Pick a time** and duration. The slot is held while you pay through Stripe Checkout.
+4. 💬 **Ask in text** when the session starts. Only the mentee and mentor can read it.
+5. 📄 **Keep the result:** the mentor's written answer and, if you approve it, a private
+   session note.
+
+## ✨ Features
+
+### 👩‍🏫 Mentors you can check before you book
+
+Mentors are invited by the operators and get a **public page with a stable share link**:
+stack tags, a link to their public work, a short bio, **fixed PLN prices** for 25- and
+50-minute sessions and their **published availability**. Times are shown in your own
+timezone, and a start must be at least two hours ahead.
+
+<p align="center">
+  <img src=".ai/qa/BOOKING/booking-pending-desktop.png" alt="A public mentor page with prices, availability and a pending reservation" width="760">
+</p>
+
+### 💳 Booking and payment
+
+Reserve a slot at **server-side prices** that clients cannot override. **Stripe Checkout**
+takes the payment, a reconciliation command recovers delayed or lost provider events, and both
+sides get a **confirmation** once the payment is verified.
+
+### 💬 Text sessions
+
+A confirmed booking opens a **private text conversation** with a clear status
+(not started, in progress, ended). Paste code, ask follow-ups and read the thread again
+after the session ends. Sessions are text only, and DevMentor makes no promise about how
+fast an answer arrives.
+
+<p align="center">
+  <img src=".ai/qa/artifacts_pr75/step-07-open-mobile-320.png" alt="A text session on a 320 pixel wide phone screen" width="240">
+</p>
+
+### 📝 A written answer to keep
+
+The mentor posts a **written answer** that appears on the mentee's session screen and can
+be edited by the mentor afterwards. It stays readable long after the conversation is
+over.
+
+<p align="center">
+  <img src=".ai/qa/artifacts_pr77/step-03-mentee-sees-answer-desktop.png" alt="A mentee viewing the mentor's posted written answer" width="760">
+</p>
+
+### 🔒 Private session notes, approved by the mentee
+
+The mentor drafts a **private note** and sends it for approval. The mentee **approves it
+or declines with a comment**, and the mentor can redraft. Approval never publishes
+anything: the note stays between the two of them.
+
+<p align="center">
+  <img src=".ai/qa/NOTES/mentee-awaiting-desktop.png" alt="A mentee reviewing a private session note that awaits approval" width="760">
+</p>
+
+### 🛡️ An operator workspace
+
+Operators manage **users and roles**, see **paid sessions by booking week and by
+session-start week** with the booking-to-start median, and work through **payments that
+need review** against the provider's evidence.
+
+<p align="center">
+  <img src=".ai/qa/PAYMENTS/PAYMENTS-operator-populated-review-desktop.png" alt="The operator workspace with paid-session report and payment review" width="640">
+</p>
+
+> 📸 Screenshots come from the project's QA runs and integration tests, with synthetic
+> data. They are kept under [`.ai/qa/`](.ai/qa).
+
+### 🧭 Deliberately not included
+
+- 🚫 **No video or voice calls.** Sessions are text by design.
+- 🚫 **No ratings or reviews.**
+- 🚫 **No ownership checks of pasted code.** Participants share only what they may share.
+
+## 🚧 What is not here yet
+
+- **Finding a mentor** by list or filter. Today you reach a mentor through their share link.
+- **Stripe Connect onboarding and mentor payouts.**
+- **Later:** vault publication, subscriptions, MCP and team plans.
+
+The reasoning and scope decisions live in the [product brief](.ai/specs/product-brief.md).
+
+## 🚀 Getting started
+
+You need **Node ≥ 24**. Docker is optional and only used if no PostgreSQL is reachable.
 
 ```bash
 npm install
-npm run setup
+npm run setup   # creates .env, starts PostgreSQL, migrates, seeds sample data
 npm run dev
 ```
 
-`npm run setup` does everything the manual steps below do: installs workspace
-dependencies, creates `.env` from `.env.example`, makes sure a PostgreSQL is running,
-applies migrations, and seeds a sample mentor.
+Open <http://localhost:3000>. `npm run setup` is idempotent, so run it again whenever you
+like. To sign in locally, use the seeded mentee `mock-mentee@devmentor.test` with the
+password `devmentor-demo-password`. For GitHub sign-in, your own PostgreSQL, Stripe and
+every other setting, see the **[development guide](docs/development.md)**.
 
-It is **idempotent** — run it as often as you like. Every step checks whether it is
-already done and reports itself as `ran` or `skipped`, so a second run only does the
-work that is actually outstanding:
+## 📚 Documentation
 
-```text
-✔ Preflight (ran) — Node v24.10.0
-↷ Install dependencies (skipped) — node_modules is up to date with package-lock.json
-↷ Configure .env (skipped) — .env already exists and sets every documented variable
-✔ Start PostgreSQL (ran) — docker compose up -d postgres
-✔ Wait for PostgreSQL (ran) — container reports healthy
-✔ Apply migrations (ran) — npm run db:migrate
-✔ Seed sample data (ran) — npm run db:seed
-```
-
-Your existing `.env` is never overwritten. If it is missing a variable that
-`.env.example` documents, setup leaves the file alone and warns you which key to add.
-Setting `DATABASE_URL` counts as setting the discrete `DB_HOST`, `DB_PORT`, `DB_NAME`,
-`DB_USER`, and `DB_PASSWORD` variables it replaces, so the URL style is never reported
-as incomplete.
-Setup deliberately stops short of starting the app — `npm run dev` never exits — and
-prints it as the next command instead.
-
-### Bring your own PostgreSQL
-
-**Docker is only a fallback.** Setup first checks whether anything is already
-listening at the address the app is configured to use, and reuses it if so — a
-container you started yourself, a native PostgreSQL install, or a managed remote
-database. Docker Compose is consulted only when nothing answers, and only then does
-its absence become an error.
-
-To point setup at an existing database, set `DATABASE_URL` (or the discrete `DB_*`
-variables) in your environment or in `.env`:
-
-```bash
-DATABASE_URL=postgres://user:password@db.example.com:5432/devmentor npm run setup
-```
-
-```text
-↷ Provision PostgreSQL (skipped) — something is accepting connections on
-  db.example.com:5432 (per DATABASE_URL from the environment) — reusing it as the
-  DevMentor database; Docker not needed
-```
-
-The check is a TCP probe, so it can tell that *something* is listening but not that it
-speaks PostgreSQL. If the listener turns out not to be your DevMentor database, the
-`Apply migrations` step below it reports the real connection error.
-
-Resolution order matches the Zod config modules: `DATABASE_URL` wins over
-`DB_HOST`/`DB_PORT`, and the real environment wins over `.env`. With no database
-reachable *and* no Docker, setup stops and names both remedies rather than failing
-with a stack trace.
-
-### Manual setup (alternative)
-
-The individual steps, if you would rather run them yourself or need to deviate:
-
-```bash
-# 1. Install (links all workspaces)
-npm install
-
-# 2. Configure — copy the example and adjust if needed
-cp .env.example .env
-
-# 3. Start Postgres (defaults match .env)
-npm run db:up
-
-# 4. Create the schema and seed a sample mentor
-npm run db:migrate
-npm run db:seed
-
-# 5. Run the app
-npm run dev
-```
-
-Note that step 4 races the container's startup on a cold `db:up`; wait for
-`docker compose ps` to report `healthy` before migrating. `npm run setup` handles that
-wait for you.
-
-Then open:
-
-- <http://localhost:3000> — public landing page (Tailwind).
-- <http://localhost:3000/admin> — admin dashboard (shadcn-ui).
-- <http://localhost:3000/admin/users> — users list, read through the DI container.
-- <http://localhost:3000/api/health> — app + database health JSON.
-
-The app **builds and boots even with no database running**; DB-backed pages degrade
-to a visible "unavailable" state instead of crashing.
-
-### Configuration
-
-All configuration is read from the environment (or `.env`) and validated once by the
-zod schema in `packages/core/src/config/env.ts`. `.env.example` documents every
-variable; the database and logging ones are listed there as live defaults, the
-account, sign-in and mail ones as commented-out lines you uncomment when needed.
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `APP_URL` | `http://localhost:3000` | Public origin, for OAuth callback and email links |
-| `SESSION_SECRET` | unset | HS256 key for session cookies and signed links, at least 32 characters (`openssl rand -base64 32`). **Required when `NODE_ENV=production`** |
-| `SESSION_SECRET_PREVIOUS` | unset | The previous key during a rotation; verified, never used to sign |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | unset | GitHub OAuth app credentials |
-| `OPERATOR_EMAILS` | empty | Comma-separated operator allowlist, matched case-insensitively |
-| `TRUSTED_PROXY_HOPS` | `0` | Trusted reverse proxies when deriving the client IP from `X-Forwarded-For` |
-| `PASSWORD_HASH_CONCURRENCY` | `2` | Password hashes run at once; each scrypt hash holds about 128 MiB |
-| `PASSWORD_HASH_WAIT_MS` | `5000` | How long a sign-in or registration waits for a hashing slot before a retryable 503 |
-| `MAIL_API_KEY` / `MAIL_FROM` | unset | Resend API key and sender address for transactional mail |
-| `AUTH_IDENTITY_ADAPTER` | `github` | `mock` is for the integration harness only |
-| `MAILER_ADAPTER` | unset | `resend` or `log`. Unset means `log` in development and `resend` elsewhere; an explicit `log` is for the integration harness only |
-| `INTEGRATION_TEST_RUN` | `0` | Set to `1` by the integration harness; required alongside a `mock` or `log` adapter |
-
-Production requires `SESSION_SECRET`, `MAIL_API_KEY` and `MAIL_FROM` at boot, and checks
-them when the app handles its first request, not during `npm run build`, so a build needs
-no secrets. In `npm run dev` with no `MAILER_ADAPTER`, mail is not sent: each message is
-written to the server log as a `mail.sent` line (with the verification link), and a
-warning at startup says so. A missing
-`GITHUB_*` or `MAIL_*` value never stops the app from starting: only the feature that
-needs it reports itself unavailable. Selecting a fake adapter (`mock`, `log`) without
-`INTEGRATION_TEST_RUN=1` is refused at startup, so a misconfigured deployment can
-never quietly accept "sign in as anyone".
-
-#### Creating a GitHub OAuth app
-
-1. On GitHub open **Settings → Developer settings → OAuth Apps → New OAuth App**
-   (or the same page under an organisation's settings).
-2. Set **Homepage URL** to your `APP_URL` and **Authorization callback URL** to
-   `<APP_URL>/api/auth/github/callback`, e.g.
-   `http://localhost:3000/api/auth/github/callback` locally. GitHub allows one
-   callback URL per app, so use a separate app for each environment.
-3. Register it, then **Generate a new client secret**. Put the Client ID in
-   `GITHUB_CLIENT_ID` and the secret in `GITHUB_CLIENT_SECRET`, and set
-   `SESSION_SECRET` if you have not already.
-4. Restart the app. DevMentor requests the `read:user user:email` scopes and signs in
-   only accounts whose primary GitHub email is verified. Add your email to
-   `OPERATOR_EMAILS` to open `/admin`.
-
-Without these values the "Sign in with GitHub" link sends you back to `/sign-in` with
-a "not available" message; nothing else stops working.
-
-#### Signing in locally
-
-Two ways to sign in, GitHub first (`/sign-in`) and email registration (`/register`):
-
-- **Email and password.** Register at `/register`. In `npm run dev` with no
-  `MAILER_ADAPTER`, the verification link is not mailed but written to the server log
-  as a `mail.sent` line; open it to confirm the address and land on the mentee home.
-  `npm run db:seed` gives the seeded mentee (`mock-mentee@devmentor.test`) and the
-  mentor/operator (`mock-operator@devmentor.test`) the demo password
-  `devmentor-demo-password`; Ada Lovelace (`mock-mentor@devmentor.test`) is GitHub-only.
-  Sign-in attempts are limited per address (5 per 15 minutes) and, behind a trusted proxy
-  (`TRUSTED_PROXY_HOPS`), per IP; over the limit the form says to wait.
-- **GitHub without an OAuth app.** With `AUTH_IDENTITY_ADAPTER=mock` and
-  `INTEGRATION_TEST_RUN=1`, open `/api/auth/github?login=mock-operator` (or
-  `mock-mentee`, `mock-mentor`, any other login for a new mentee). Never set these in a
-  deployed environment.
-
-## Scripts
-
-| Command | Description |
+| 📖 Document | What is in it |
 | --- | --- |
-| `npm run setup` | One-command install, configure, database up, migrate, and seed (idempotent; reuses an existing PostgreSQL, Docker only as fallback) |
-| `npm run dev` | Start the Next.js dev server |
-| `npm run build` / `npm run start` | Production build / serve |
-| `npm run typecheck` | `tsc --noEmit` across all packages |
-| `npm run lint` | ESLint, including dependency-direction rules |
-| `npm run test:unit` | Run TypeScript unit tests with Vitest |
-| `npm run test:unit:coverage` | Run unit tests with per-file 100% coverage gates |
-| `npm run test:browser:install` | Install agent-browser's Chrome runtime locally |
-| `npm run test:integration` | Test an ephemeral PostgreSQL + production app with agent-browser |
-| `npm run db:up` / `npm run db:down` | Start / stop local Postgres (Docker) |
-| `npm run db:migration:create -- --name <x>` | Generate a migration from entity diff |
-| `npm run db:migrate` / `npm run db:migrate:down` | Apply / revert migrations |
-| `npm run db:seed` | Run the default seeder |
+| [Development guide](docs/development.md) | Setup in depth, configuration, scripts, testing, architecture, operator tasks |
+| [Payment operations](docs/payments-operations.md) | Provider outages, stuck payments, rollback |
+| [Threat model](docs/security/threat-model.md) | Security analysis of the whole system |
+| [Changelog](CHANGELOG.md) | What shipped in each release |
+| [Product brief](.ai/specs/product-brief.md) | Problem, evidence, scope and decisions |
+| [AGENTS.md](AGENTS.md) | Conventions for contributors and AI agents |
 
-## Testing and pull-request checks
+## 🧱 Built with
 
-Every pull request runs four independent GitHub checks: **Build**, **Lint**, **Unit
-tests**, and **Integration tests**. Configure those exact names as required checks in
-the GitHub branch ruleset if merges must be blocked until they pass.
-
-**Lint** first runs `node scripts/check-agent-routes.mjs` to validate agent
-instruction routes and line budgets (root ≤ 150 lines, units ≤ 120), then installs
-dependencies and runs ESLint. The agent check also runs locally without installing
-dependencies.
-
-The unit suite uses Vitest and V8 coverage:
-
-```bash
-npm run test:unit
-npm run test:unit:coverage
-```
-
-Coverage is enforced at 100% for statements, branches, functions, and lines on every
-file listed in `vitest.config.mts`. New features must add their production files to
-that explicit list and add adjacent unit tests in the same change.
-
-The integration suite requires Docker and agent-browser's Chrome runtime. Install the
-browser once, then run the suite:
-
-```bash
-npm run test:browser:install
-npm run test:integration
-```
-
-The suite creates a fresh PostgreSQL 17 Testcontainer on a random port, applies
-migrations, seeds prerequisites, builds and starts Next.js on another random port,
-waits for database readiness, then tests the home page and admin panel through the
-pinned `agent-browser` CLI. Screenshots and app logs go to `test-results/integration/`;
-the browser, app process, and container are stopped in teardown. POSIX and native
-PowerShell launchers are also available at `tests/integration/run.sh` and
-`tests/integration/run.ps1`.
-
-## Architecture
-
-### Monorepo packages
-
-The repo is an npm-workspaces monorepo under `packages/*` with a strictly one-way
-dependency graph (enforced by ESLint — a cycle fails `npm run lint`):
-
-```
-app ──> core ──> db
- └────> ui
-```
-
-| Package | Name | Responsibility |
-| --- | --- | --- |
-| `packages/app` | `@devmentor/app` | Next.js host and **composition root** — the only package allowed to import all others. Contains routes, layouts, and API handlers. |
-| `packages/core` | `@devmentor/core` | Config (zod), logging (pino), the **awilix DI container**, and domain services. Depends on `db`; never touches React/Next/UI. |
-| `packages/db` | `@devmentor/db` | MikroORM configuration, entities, migrations, seeders. The **leaf** — the only package that imports `@mikro-orm/*`. |
-| `packages/ui` | `@devmentor/ui` | shadcn-ui components and Tailwind design tokens. Presentational only. |
-
-Packages are consumed as **TypeScript source** (no per-package build) and transpiled
-by Next.js via `transpilePackages`.
-
-### Dependency injection
-
-`@devmentor/core` builds a single awilix container (`PROXY` injection mode, a typed
-`Cradle` interface). Lifetimes:
-
-- **Singleton** — `env`, `logger`, `orm` (cached on `globalThis` to survive HMR).
-- **Scoped** — a forked `EntityManager` and the domain services that use it.
-
-Request handlers call `withScope(fn)`, which opens a scope with its own forked
-`EntityManager`, runs the callback, and disposes the scope. Work done for a request
-uses `withRequestScope(req, fn)`, which also registers the caller's lazily-resolved
-`session`. `GET /api/users` is a worked example: `withRequestScope(req, (c) =>
-c.userService.list())` → operator check → forked EM → repository → entity with a
-populated 1:1 relation.
-
-### Database
-
-- MikroORM v7 with the PostgreSQL driver, explicit connection pooling, and migrations
-  under `packages/db/migrations`.
-- Entities are defined with `defineEntity` (MikroORM v7 dropped decorators) and
-  registered as `globalThis` singletons so the same schema object is shared across
-  Next's RSC/SSR/route module graphs.
-- The domain model ships a placeholder `User` 1:1 `MentorProfile` to exercise
-  relations, repositories, and migrations end to end.
-
-### Frontend / backend split
-
-- **Public / marketing pages** (`/`) use plain Tailwind CSS v4 utilities.
-- **Admin pages** (`/admin/*`) use shadcn-ui components from `@devmentor/ui`. The
-  design tokens live in `packages/ui/src/tokens.css`; add components with
-  `npx shadcn@latest add <component>` run inside `packages/ui`.
-
-### Spec-driven development
-
-Nontrivial work is specified before it's built. Specs, autonomous-run logs, and
-lessons live under `.ai/` — see [AGENTS.md](./AGENTS.md) for the full workflow.
-
-### Invite a mentor locally
-
-An operator with repository/database access runs the invitation command by hand (R18).
-It never sends mail: deliver the returned link to the invited address through the
-agreed channel. Keep the bearer link private; copy only the separate token-free
-JSON audit line into the shared operator note. `--operator` identifies the human
-performing the action; it does not grant an application role.
-
-```powershell
-npm run invite -- create --operator "Founder A" --email engineer@example.com --tags typescript,react --batch first-20
-npm run invite -- resend --operator "Founder A" --id <invitation-uuid>
-npm run invite -- revoke --operator "Founder A" --id <invitation-uuid>
-```
-
-Allowed tag keys: `typescript`, `react`, `python`, `ai-agents`. Resend rotates the
-secret and expiry; the previous link stops working. Revoke/resend only apply to
-pending invitations. An expired unresolved invitation must be resent or revoked
-before creating another for that address. Accepted invitations never remove roles.
-
-`INVITATION_TTL_DAYS` and `MENTOR_PUBLISH_WINDOW_DAYS` default to 14 whole days
-(valid range 1–365). Expiry is stored when created or
-resent; the publication deadline is stored at acceptance and the first deadline
-is retained on the mentor profile. Later configuration changes never move them.
-The root `.env` is loaded without overriding real environment values.
-
-### Mentor prices
-
-Founder/operator approval on 2026-11-05 sets PLN with two decimal minor units. `PLATFORM_CURRENCY=PLN`; `PLATFORM_PRICE_BOUNDS={"p25":{"minCents":8000,"maxCents":60000},"p50":{"minCents":16000,"maxCents":120000}}`. These approved defaults mean 25 min PLN 80–600 and 50 min PLN 160–1,200. Bounds are inclusive positive integer minor units; malformed/missing injected policy fails closed in the settings service. Changing currency after stored prices requires a migration; zero/three-decimal or other currencies are unsupported. Both prices save atomically. Booking, fees and payouts are separate capabilities.
-
-
-The owner availability collection supports `GET /api/availability/slots?past=false&page=1`: 25 server-filtered rows plus `page`/`pageCount`; `past=true` switches to past times. The public mentor page shows the next 50 active future times. Soft removal preserves slot history and permits republishing the same instant with a new slot ID.
+Next.js 16 · React 19 · TypeScript · PostgreSQL with MikroORM · Tailwind CSS ·
+shadcn-ui · Stripe — in an npm-workspaces monorepo (`app → core → db`, `app → ui`).
