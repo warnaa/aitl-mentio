@@ -38,9 +38,8 @@ After merge, this process stops. Deployment, smoke tests, monitoring, and rollba
 A release is cut by hand from the Actions tab: **Release → Run workflow** on `main`
 (`.github/workflows/release.yml`). Spec: `.ai/specs/2026-11-17-release-workflow.md`.
 
-1. Merge the `CHANGELOG.md` entry for the version first (`om-auto-update-changelog`); until the
-   file is on `main` (the `0.1.0` entry is PR #97) every run fails. The run fails before changing
-   anything when `# <version>` is missing or empty.
+1. Merge the `CHANGELOG.md` entry for the version first (`om-auto-update-changelog`). The run
+   fails before changing anything when `# <version>` is missing or empty.
 2. Choose `patch`, `minor` or `major`, or `custom` and type `MAJOR.MINOR.PATCH` in the version field.
    The base is the higher of the root `package.json` version and the newest `vX.Y.Z` tag. A custom
    version must be above both, except that the version already in `package.json` can be released as
