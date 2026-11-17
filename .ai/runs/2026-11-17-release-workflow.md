@@ -89,7 +89,7 @@ bump → commit on `release/vX.Y.Z` → annotated tag → one atomic push of bra
 
 ### Phase 2: Node effects and entry point
 
-- [ ] 2.1 Add injectable effects and the CLI entry point with tests
+- [x] 2.1 Add injectable effects and the CLI entry point with tests — 0aa2799
 
 ### Phase 3: Workflow and docs
 
