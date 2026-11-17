@@ -259,6 +259,7 @@ export default defineConfig({
         'packages/ui/src/components/ui/tooltip.tsx',
         'packages/ui/src/time/LocalTime.tsx',
         'packages/ui/src/time/formatInstant.ts',
+        'scripts/release/release.mjs',
         'scripts/setup/effects.mjs',
         'scripts/setup/index.mjs',
         'scripts/setup/run.mjs',
