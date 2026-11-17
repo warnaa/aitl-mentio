@@ -83,6 +83,10 @@ const eslintConfig = defineConfig([
     "test-results/**",
     "**/next-env.d.ts",
     "packages/db/migrations/**",
+    // Installed agent-skill assets are templates with `{{placeholders}}` (for example
+    // `comments.js`), not project source, and they do not parse as JavaScript.
+    ".agents/skills/*/references/assets/**",
+    ".claude/skills/*/references/assets/**",
   ]),
 ]);
 

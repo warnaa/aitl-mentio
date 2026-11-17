@@ -266,7 +266,7 @@ harness environment updated in the same PR; a default wherever one is sensible.
 
 ### 5. npm scripts and CI check names
 
-`payments:reconcile` is a new bounded CLI recovery entry point. An external scheduler must invoke it every minute before paid traffic is enabled. Existing command/job names remain unchanged. Unit commands now run the CI classifier's native Node suite explicitly before Vitest; Vitest excludes that native test file from its own incompatible discovery. No test assertion is skipped.
+`payments:reconcile` is a new bounded CLI recovery entry point. An external scheduler must invoke it every minute before paid traffic is enabled. Existing command/job names remain unchanged. Unit commands now run the CI classifier's native Node suite explicitly before Vitest; Vitest excludes that native test file from its own incompatible discovery. No test assertion is skipped. The same commands also run the native suite for the dependency audit gate (`scripts/ci/audit-gate.test.mjs`), and the `Dependency audit` job now runs `node scripts/ci/audit-gate.mjs`: `npm audit --omit=dev` at level `high`, accepting only the dated advisories in `scripts/ci/audit-exceptions.json`. The job name is unchanged.
 
 The root `package.json` scripts are this repository's command-line interface. They are
 referenced by `docs/development.md`, `AGENTS.md`, `.github/workflows/ci.yml`,

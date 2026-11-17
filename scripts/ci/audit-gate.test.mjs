@@ -173,6 +173,8 @@ test('exceptions are validated strictly', () => {
   assert.throws(() => parseExceptions({ exceptions: [exception({ dependents: [''] })] }), /"dependents"/);
   assert.throws(() => parseExceptions({ exceptions: [exception({ expires: '2027-2-15' })] }), /"expires"/);
   assert.throws(() => parseExceptions({ exceptions: [exception({ expires: '2027-13-45' })] }), /"expires"/);
+  assert.throws(() => parseExceptions({ exceptions: [exception({ expires: '2027-02-30' })] }), /"expires"/);
+  assert.throws(() => parseExceptions({ exceptions: [exception({ expires: '2027-04-31' })] }), /"expires"/);
   assert.throws(() => parseExceptions({ exceptions: [exception({ expires: undefined })] }), /"expires"/);
   assert.throws(() => parseExceptions({ exceptions: [exception(), exception()] }), /duplicate exception/);
   assert.deepEqual(parseExceptions({ exceptions: [] }), []);

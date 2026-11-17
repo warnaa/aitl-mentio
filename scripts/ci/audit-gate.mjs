@@ -82,7 +82,9 @@ export function parseExceptions(data) {
         entry.dependents.some((name) => typeof name !== 'string' || name === '')) {
       throw new Error(`${where}: "dependents" must list the direct dependencies allowed to reach it`);
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.expires ?? '') || Number.isNaN(expiryEnd(entry.expires))) {
+    // The round trip rejects dates V8 would roll over, such as 2027-02-30.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.expires ?? '') || Number.isNaN(expiryEnd(entry.expires)) ||
+        !new Date(expiryEnd(entry.expires)).toISOString().startsWith(entry.expires)) {
       throw new Error(`${where}: "expires" must be a YYYY-MM-DD date`);
     }
     const key = `${entry.advisory}|${entry.package}`;
