@@ -10,6 +10,9 @@ Package roles and framework details live in the unit instructions below.
 - Work locally. Obtain explicit approval before any remote write: pushes, PRs,
   issues, publishing/deployment, Figma or another external service. Read-only
   research is allowed; a request to build locally is not approval to publish.
+  Invoking an autonomous `om-auto-*` skill, or explicitly asking for a push, is
+  approval for the remote writes that task needs (branch push, PR, labels,
+  comments) and nothing beyond it. In every other case ask separately.
 - Commit `.ai/` artifacts as project records alongside the work that produced them:
   `.ai/runs/` logs, `.ai/qa/` reports and evidence, generated test-environment
   helpers, PR drafts, working references and generated previews. Review and sanitize
