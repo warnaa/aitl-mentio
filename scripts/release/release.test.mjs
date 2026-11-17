@@ -238,6 +238,16 @@ describe('extractChangelogEntry', () => {
     expect(() => extractChangelogEntry(text, '1.0.0')).toThrow('entry for 1.0.0 has no content');
   });
 
+  it('leaves no comment behind when removing one joins the fragments around it', () => {
+    const text = '# 1.0.0\n\n- keep <!<!-- a -->-- hidden --> me\n';
+    expect(extractChangelogEntry(text, '1.0.0')).toBe('- keep  me\n');
+  });
+
+  it('fails on an unclosed comment instead of publishing notes it would hide', () => {
+    expect(() => extractChangelogEntry('# 1.0.0\n\n- shown\n<!-- TODO\n- hidden\n', '1.0.0'))
+      .toThrow('"<!--" comment that is never closed');
+  });
+
   it('fails when the version is missing, telling the operator what to do', () => {
     expect(() => extractChangelogEntry(CHANGELOG, '9.9.9')).toThrow('Add it (om-auto-update-changelog) and merge it first.');
   });

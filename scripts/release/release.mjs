@@ -81,15 +81,29 @@ export function resolveRelease({ bump, custom, packageVersion, tags }) {
 }
 
 /**
+ * Removes every `<!-- ... -->` comment, rescanning from the start after each cut so a
+ * removal cannot join two fragments into a new `<!--`. An unclosed `<!--` would hide
+ * the rest of the published notes, so it fails instead of being guessed at.
+ */
+function stripHtmlComments(markdown) {
+  let text = markdown;
+  for (let open = text.indexOf('<!--'); open !== -1; open = text.indexOf('<!--')) {
+    const close = text.indexOf('-->', open + 4);
+    if (close === -1) {
+      throw new Error('CHANGELOG.md has a "<!--" comment that is never closed with "-->". Close or remove it.');
+    }
+    text = text.slice(0, open) + text.slice(close + 3);
+  }
+  return text;
+}
+
+/**
  * Returns the release notes for `version`: the `# <version> (date)` section of the
  * changelog up to the next level-1 heading, without HTML comments (the changelog
  * generator leaves TODO markers) and without `##` sections that have no content.
  */
 export function extractChangelogEntry(markdown, version) {
-  const lines = markdown
-    .replace(/^﻿/, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .split(/\r?\n/);
+  const lines = stripHtmlComments(markdown.replace(/^﻿/, '')).split(/\r?\n/);
   // Headings inside a fenced code block (a shell comment such as `# install`) are not headings.
   let open = false;
   const fenced = lines.map((line) => {
