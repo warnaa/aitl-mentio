@@ -33,6 +33,29 @@ Before intake, the work is shaped: `om-brainstorm` turns an idea or a question i
 
 After merge, this process stops. Deployment, smoke tests, monitoring, and rollback belong to the repository's release process, not to this document: the Release Manager role drafts the changelog with `om-auto-update-changelog` and reconciles the tracker with `om-close-fixed-issues`, and `om-pipeline-retro` reads finished runs to rank what second passes cost. Merge is where this document ends; delivering the change to users is a separate process the team owns.
 
+## Releasing
+
+A release is cut by hand from the Actions tab: **Release → Run workflow** on `main`
+(`.github/workflows/release.yml`). Spec: `.ai/specs/2026-11-17-release-workflow.md`.
+
+1. Merge the `CHANGELOG.md` entry for the version first (`om-auto-update-changelog`). The run
+   fails before changing anything when `# <version>` is missing or empty.
+2. Choose `patch`, `minor` or `major`, or `custom` and type `MAJOR.MINOR.PATCH` in the version field.
+   The base is the higher of the root `package.json` version and the newest `vX.Y.Z` tag. A custom
+   version must be above both, except that the version already in `package.json` can be released as
+   is (the first release).
+3. The run bumps the root and workspace `package.json` files and `package-lock.json`, commits them on
+   `release/vX.Y.Z`, pushes that branch with an annotated tag `vX.Y.Z`, and publishes a GitHub Release
+   whose notes are the changelog entry.
+4. **Merge `release/vX.Y.Z` through a PR** (the job summary links it) so `main` carries the new
+   versions. A workflow cannot push to `main`: the `main protection` ruleset requires status checks
+   and has no bypass actors.
+
+Recovery: the tag exists before the release. If publishing fails, run the workflow again with
+`custom` and the same version; it sees the tag, skips the bump and only creates the release. A run
+that fails earlier changed nothing, so retry with any input. To undo a release, delete the GitHub
+Release, then the tag and the release branch.
+
 ## Definition of Ready
 
 A ticket is ready for implementation when the answers below are on the ticket or in a spec it links. They come in two tiers, because a spec can supply the second but never the first.
