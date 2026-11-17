@@ -83,6 +83,11 @@ const eslintConfig = defineConfig([
     "test-results/**",
     "**/next-env.d.ts",
     "packages/db/migrations/**",
+    // Vendored skill templates (`{{SLUG_JSON}}` placeholders), not runnable project code:
+    // they do not parse until a skill fills them in. Narrow to `references/assets` so the
+    // skills' own scripts stay linted.
+    ".claude/skills/**/references/assets/**",
+    ".agents/skills/**/references/assets/**",
   ]),
 ]);
 
