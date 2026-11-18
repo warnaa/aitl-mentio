@@ -9,6 +9,8 @@ Omit the link for lessons short enough to state inline.
 
 <!-- Add new entries below this line, most recent first. -->
 
+- 2026-11-18 — **Railway stops reading `railway.json` / `railway.toml` on 2026-12-01** (the CLI warns on `railway service link`); its IaC replacement (`.railway/railway.ts`) is beta and applied per environment, so it cannot give PR environments their own pre-deploy. Keep the `web` service settings in Railway, and make preview differ from production through a variable on the PR base environment (`SEED_DEMO_DATA` on `preview`). Also: `railway environment edit --service-config` answered "No changes to apply" without applying anything; `railway api` `serviceInstanceUpdate` works, and its `Builder` enum has no `DOCKERFILE` (set `dockerfilePath`; a root `Dockerfile` is picked up automatically).
+
 - 2026-11-17 — Stage explicit paths, never `git add -A`, in an autonomous run: a worktree can be modified by other processes, and `git add -A` committed and pushed 9 unrelated skill files (`om-auto-manage-issues`, `skills-lock.json`) to PR #105 before a `git show --stat` caught it. Run `git status --short` and `git diff --cached --stat` before each commit; undo a pushed mistake with a restore commit, not a force-push.
 
 - 2026-11-17 — User correction: `om-auto-fix-issue` must run its whole chain to a finished PR, not end the turn on a sub-skill's output. A "proceed" from `om-verify-in-repo` is a handoff to the next step (worktree, `om-root-cause`, `om-fix`, `om-open-pr`, review), not a result to report.

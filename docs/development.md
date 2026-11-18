@@ -1,7 +1,8 @@
 # DevMentor — development guide
 
 Technical documentation for running, configuring, testing and extending DevMentor.
-For the product overview, see the [README](../README.md).
+For the product overview, see the [README](../README.md); for the hosted
+environments and per-PR previews, see [Deployment](deployment.md).
 
 **Contents:** [Getting started](#getting-started) · [Configuration](#configuration) ·
 [Paying for reserved sessions](#paying-for-reserved-sessions) · [Scripts](#scripts) ·
