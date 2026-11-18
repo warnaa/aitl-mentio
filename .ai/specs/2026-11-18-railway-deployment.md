@@ -37,7 +37,7 @@ failure keeps the previous deployment.
 | --- | --- | --- | --- | --- |
 | `production` | `main` | own Postgres | unset | live app |
 | `preview` | `main` | own Postgres | `true` | base environment for PR environments |
-| `pr-*` | the PR branch | own Postgres, forked from `preview` | `true` | one per open PR, deleted on close |
+| `aitl-mentio-pr-<n>` | the PR branch | own Postgres, forked from `preview` | `true` | one per open PR, deleted on close |
 
 Service `web` variables: `DATABASE_URL=${{Postgres.DATABASE_URL}}` (private network),
 `APP_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}` (resolves per environment, so each PR

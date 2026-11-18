@@ -38,11 +38,11 @@
 - `railway up` to `preview` succeeded (deployment `f95227e2`): migrations ran, then
   `Seeder DatabaseSeeder successfully executed`, and the health check reported the
   database up.
-- The PR environment for this branch's PR: see Outcome.
+- PR #106 created environment `aitl-mentio-pr-106`, which deployed from branch `feat/railway-deploy` (deployment `e6ca2223`, SUCCESS). Its pre-deploy migrated and seeded, and <https://web-aitl-mentio-pr-106.up.railway.app/api/health> reported the database up.
 
 ## Outcome
 
-See the PR. `main` keeps deploying the placeholder Dockerfile, which fails, until this PR
+PR: #106. `main` keeps deploying the placeholder Dockerfile, which fails, until this PR
 merges. Railway leaves the last good deployment (the `railway up` above) serving.
 
 ## Follow-ups

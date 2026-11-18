@@ -8,7 +8,7 @@ design and its reasons are in
 | --- | --- | --- | --- |
 | `production` | every push to `main` | <https://web-production-eb0354f1.up.railway.app> | real; never seeded |
 | `preview` | every push to `main` | <https://web-preview-72083626.up.railway.app> | demo accounts |
-| `devmentor-pr-<n>` | every push to an open PR | linked from the PR by the Railway bot | demo accounts, own database, deleted when the PR closes |
+| `aitl-mentio-pr-<n>` | every push to an open PR | `https://web-aitl-mentio-pr-<n>.up.railway.app` | demo accounts, own database, deleted when the PR closes |
 
 Each environment has two services: **web** (this repository, built from the root
 `Dockerfile`) and **Postgres**.
