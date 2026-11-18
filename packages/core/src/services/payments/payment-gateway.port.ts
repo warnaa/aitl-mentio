@@ -9,6 +9,35 @@ export class CheckoutNotCreatedError extends ServiceUnavailableError {
   }
 }
 
+const REFUND_DECLINED = Symbol.for('devmentor.refund-declined');
+/**
+ * A definitive provider refusal to refund (an allowlisted decline). Every other refund
+ * error means the outcome is unknown and must be reconciled from provider evidence.
+ */
+export class RefundDeclinedError extends Error {
+  readonly [REFUND_DECLINED] = true;
+  constructor(readonly code: string) { super(`Refund declined: ${code}`); }
+  static override [Symbol.hasInstance](value: unknown): boolean {
+    return typeof value === 'object' && value !== null && REFUND_DECLINED in value;
+  }
+}
+
+export interface RefundRequest {
+  /** Stable per booking (`refund-<bookingId>`); providers prune keys, so it is not the only guard. */
+  idempotencyKey: string;
+  paymentIntentId: string;
+  amountCents: number;
+  bookingId: string;
+}
+
+/** Normalized refund evidence. `bookingId` is null for a refund made outside DevMentor. */
+export interface RefundResult {
+  id: string;
+  status: 'succeeded' | 'pending' | 'failed';
+  amountCents: number;
+  bookingId: string | null;
+}
+
 /** Vendor-neutral, deliberately minimal evidence accepted by the payment lifecycle. */
 export interface CheckoutSession {
   id: string;
@@ -49,4 +78,8 @@ export interface PaymentGateway {
   retrieveCheckoutSession(id: string): Promise<CheckoutSession>;
   expireCheckoutSession(id: string): Promise<CheckoutSession>;
   verifyWebhook(rawBody: string, signature: string): PaymentEvent;
+  refund(input: RefundRequest): Promise<RefundResult>;
+  retrieveRefund(id: string): Promise<RefundResult>;
+  /** Every refund recorded against the payment, including ones made by hand in the provider dashboard. */
+  listRefunds(paymentIntentId: string): Promise<RefundResult[]>;
 }

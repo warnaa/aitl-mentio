@@ -6,8 +6,9 @@ import { BookingsPanel, type ParticipantBooking } from './BookingsPanel';
 
 const resource = vi.hoisted(() => ({ data: null as unknown, loading: false, error: null as string | null, reload: vi.fn() }));
 vi.mock('@devmentor/ui/backend', async original => ({ ...await original<typeof import('@devmentor/ui/backend')>(), useApiResource: vi.fn(() => resource) }));
+vi.mock('./CancelAction', () => ({ CancelAction: ({ booking }: { booking: { id: string } }) => <button>Cancel {booking.id}</button> }));
 vi.mock('./CheckoutAction', () => ({ CheckoutAction: ({ bookingId }: { bookingId: string }) => <button>Checkout {bookingId}</button> }));
-const booking: ParticipantBooking = { id: 'booking', mentorName: 'Ada', menteeName: 'Grace', lengthMinutes: 25, priceCents: 9000, currency: 'PLN', startsAt: '2099-01-01T12:00:00Z', status: 'pending', expiresAt: '2099-01-01T11:00:00Z', paidAt: null, paymentStatus: 'open' };
+const booking: ParticipantBooking = { id: 'booking', mentorName: 'Ada', menteeName: 'Grace', lengthMinutes: 25, priceCents: 9000, currency: 'PLN', startsAt: '2099-01-01T12:00:00Z', status: 'pending', expiresAt: '2099-01-01T11:00:00Z', paidAt: null, paymentStatus: 'open', cancelledAt: null, refundStatus: 'none', freeCancellationUntil: '2098-12-31T12:00:00Z' };
 beforeEach(() => { vi.clearAllMocks(); resource.data = []; resource.loading = false; resource.error = null; });
 afterEach(cleanup);
 
@@ -72,7 +73,7 @@ it.each(['mentee', 'mentor'] as const)('links a confirmed booking to its text se
   expect(links.map(link => link.getAttribute('href'))).toEqual(['/sessions/confirmed']);
 });
 
-it.each(['expired', 'cancelled'])('renders historical %s reservations without payment actions', status => {
+it.each(['expired'])('renders historical %s reservations without payment actions', status => {
   resource.data = [{ ...booking, status, paymentStatus: 'expired' }];
   render(<BookingsPanel persona="mentee" />);
   expect(screen.getByText(status === 'expired' ? 'Expired' : 'Cancelled')).toBeTruthy();
@@ -110,4 +111,34 @@ it('marks only the booking a Checkout return named, without claiming confirmatio
   expect(screen.getByRole('heading', { name: 'Session with Ada' }).closest('[aria-current="true"]')).toBeTruthy();
   expect(screen.getByRole('heading', { name: 'Session with Other' }).closest('[aria-current]')).toBeNull();
   expect(screen.queryByText('Payment verified. Your session is confirmed.')).toBeNull();
+});
+
+it('offers the mentee a cancel action only on an upcoming confirmed session, never to the mentor', () => {
+  resource.data = [{ ...booking, status: 'confirmed', paymentStatus: 'confirmed', paidAt: '2098-12-01T12:00:00Z' }, { ...booking, id: 'past', status: 'confirmed', paymentStatus: 'confirmed', startsAt: '2000-01-01T12:00:00Z' }];
+  const { rerender } = render(<BookingsPanel persona="mentee" />);
+  expect(screen.getByRole('button', { name: 'Cancel booking' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Cancel past' })).toBeNull();
+  rerender(<BookingsPanel persona="mentor" />);
+  expect(screen.queryByRole('button', { name: /^Cancel / })).toBeNull();
+});
+
+it('shows each refund state of a cancelled session to the mentee, without a session link or checkout', () => {
+  const cancelled = (id: string, refundStatus: ParticipantBooking['refundStatus']): ParticipantBooking => ({ ...booking, id, status: 'cancelled', paymentStatus: 'confirmed', cancelledAt: '2098-12-01T12:00:00Z', refundStatus });
+  resource.data = [cancelled('a', 'refunded'), cancelled('b', 'pending'), cancelled('c', 'failed'), cancelled('d', 'none')];
+  render(<BookingsPanel persona="mentee" />);
+  expect(screen.getAllByText('Cancelled')).toHaveLength(4);
+  expect(screen.getByText('Refunded in full.')).toBeTruthy();
+  expect(screen.getByText('Refund in progress.')).toBeTruthy();
+  expect(screen.getByText(/We could not refund automatically\. DevMentor will refund you by hand/)).toBeTruthy();
+  expect(screen.getByText('Cancelled less than 24 hours before the start; no refund.')).toBeTruthy();
+  expect(screen.queryByText('Open text session')).toBeNull();
+  expect(screen.queryByRole('button', { name: /Checkout/ })).toBeNull();
+});
+
+it('tells the mentor the time is free again, with the refund state and no booking reference', () => {
+  resource.data = [{ ...booking, status: 'cancelled', paymentStatus: 'confirmed', cancelledAt: '2098-12-01T12:00:00Z', refundStatus: 'failed' }];
+  render(<BookingsPanel persona="mentor" />);
+  expect(screen.getByText('The mentee cancelled. This time is available to book again.')).toBeTruthy();
+  expect(screen.getByText('Refund being handled by DevMentor.')).toBeTruthy();
+  expect(screen.queryByText(/booking reference/)).toBeNull();
 });

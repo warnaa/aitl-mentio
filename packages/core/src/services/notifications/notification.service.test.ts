@@ -273,3 +273,53 @@ it('records no decision notification for a mismatched note or an unconfirmed boo
   await service().onNoteDecided('approved', { bookingId, noteId: 'note', version: 1 });
   expect(notifications).toHaveLength(0);
 });
+
+describe('onBookingCancelled', () => {
+  const cancelled = (refundStatus = 'refunded'): Row => ({ ...confirmed(), status: 'cancelled', refundStatus });
+
+  it('tells only the mentor, once, with the refund outcome and no payment identifiers', async () => {
+    booking = cancelled();
+    await service().onBookingCancelled(bookingId);
+    await service().onBookingCancelled(bookingId);
+    expect(notifications.map(row => [row.user, row.kind, row.booking])).toEqual([['mentor', 'booking_cancelled', bookingId]]);
+    expect(send).toHaveBeenCalledOnce();
+    const [mail] = send.mock.calls[0]!;
+    expect(mail).toMatchObject({ to: 'mentor@example.com', subject: 'A DevMentor session was cancelled' });
+    expect(mail.text).toContain('Sam Mentee cancelled your 25-minute text session.');
+    expect(mail.text).toContain('they get a full refund');
+    expect(mail.text).toContain('This time is available to book again.');
+    expect(mail.text).toContain('https://devmentor.example/mentor');
+    expect(mail.text).not.toMatch(/pi_|re_|cs_/);
+  });
+
+  it('says no refund for a late cancellation and writes nothing for a booking that is not cancelled', async () => {
+    booking = cancelled('none');
+    await service().onBookingCancelled(bookingId);
+    expect(send.mock.calls[0]![0].text).toContain('so no refund is made');
+    notifications = []; send.mockClear();
+    booking = confirmed();
+    await service().onBookingCancelled(bookingId);
+    expect(notifications).toEqual([]);
+    expect(send).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith({ bookingId }, 'notifications.booking_not_cancelled');
+  });
+
+  it('links the mentor to their sessions list, because a cancelled booking has no session page', async () => {
+    booking = cancelled();
+    session = { userId: 'mentor', roles: ['mentor'] };
+    await service().onBookingCancelled(bookingId);
+    notifications[0]!.createdAt = now;
+    notifications[0]!.booking = booking;
+    expect((await service().listMine()).items[0]).toMatchObject({ kind: 'booking_cancelled', audience: 'mentor', counterpartName: 'Sam Mentee', sessionPath: '/mentor' });
+  });
+
+  it('releases the email claim on failure so a replay retries it', async () => {
+    booking = cancelled();
+    send.mockRejectedValueOnce(new Error('provider down'));
+    await service().onBookingCancelled(bookingId);
+    expect(notifications[0]!.emailSentAt).toBeNull();
+    await service().onBookingCancelled(bookingId);
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(notifications[0]!.emailSentAt).toEqual(now);
+  });
+});

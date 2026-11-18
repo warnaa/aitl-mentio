@@ -92,3 +92,40 @@ it('requires bounded succeeded-refund evidence and fails closed on pending, fail
   state.list.mockRejectedValueOnce(new Error('refund API unavailable'));
   await expect(gateway.retrieveCheckoutSession('cs')).rejects.toMatchObject({ status: 503 });
 });
+
+const refundInput = { idempotencyKey: 'refund-booking', paymentIntentId: 'pi_synthetic', amountCents: 8000, bookingId: 'booking' };
+const stripeRefund = (overrides = {}) => ({ id: 're_synthetic', status: 'succeeded', amount: 8000, metadata: { bookingId: 'booking' }, ...overrides });
+
+it('refunds the full amount with the booking idempotency key and maps every provider refund status', async () => {
+  const gateway = new StripePaymentGateway(env);
+  state.create.mockResolvedValueOnce(stripeRefund());
+  expect(await gateway.refund(refundInput)).toEqual({ id: 're_synthetic', status: 'succeeded', amountCents: 8000, bookingId: 'booking' });
+  expect(state.create).toHaveBeenCalledWith(
+    { payment_intent: 'pi_synthetic', amount: 8000, reason: 'requested_by_customer', metadata: { bookingId: 'booking' } },
+    { idempotencyKey: 'refund-booking' },
+  );
+  for (const [status, expected] of [['pending', 'pending'], ['requires_action', 'pending'], ['failed', 'failed'], ['canceled', 'failed']] as const) {
+    state.retrieve.mockResolvedValueOnce(stripeRefund({ status }));
+    expect((await gateway.retrieveRefund('re_synthetic')).status).toBe(expected);
+  }
+  state.list.mockResolvedValueOnce({ data: [stripeRefund({ metadata: {} })], has_more: false });
+  expect(await gateway.listRefunds('pi_synthetic')).toEqual([{ id: 're_synthetic', status: 'succeeded', amountCents: 8000, bookingId: null }]);
+  expect(state.list).toHaveBeenLastCalledWith({ payment_intent: 'pi_synthetic', limit: 100 });
+});
+
+it('declines only on allowlisted provider codes and treats everything else as an unknown outcome', async () => {
+  const gateway = new StripePaymentGateway(env);
+  state.create.mockRejectedValueOnce(Object.assign(new Error('disputed'), { code: 'charge_disputed' }));
+  await expect(gateway.refund(refundInput)).rejects.toMatchObject({ code: 'charge_disputed' });
+  for (const code of ['charge_already_refunded', 'idempotency_error', undefined]) {
+    state.create.mockRejectedValueOnce(Object.assign(new Error('unknown'), { code }));
+    await expect(gateway.refund(refundInput)).rejects.toMatchObject({ status: 503 });
+  }
+  state.list.mockResolvedValueOnce({ data: [], has_more: true });
+  await expect(gateway.listRefunds('pi_synthetic')).rejects.toMatchObject({ status: 503 });
+  state.list.mockRejectedValueOnce(new Error('down'));
+  await expect(gateway.listRefunds('pi_synthetic')).rejects.toMatchObject({ status: 503 });
+  state.retrieve.mockRejectedValueOnce(new Error('down'));
+  await expect(gateway.retrieveRefund('re_synthetic')).rejects.toMatchObject({ status: 503 });
+  await expect(new StripePaymentGateway({ STRIPE_SECRET_KEY: undefined, STRIPE_WEBHOOK_SECRET: undefined }).refund(refundInput)).rejects.toMatchObject({ status: 503 });
+});

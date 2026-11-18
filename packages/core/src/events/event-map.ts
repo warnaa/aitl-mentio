@@ -14,6 +14,8 @@ export interface EventMap {
   'notes.note.approved': { bookingId: string; noteId: string; version: number };
   'notes.note.declined': { bookingId: string; noteId: string; version: number };
   'bookings.booking.confirmed': { bookingId: string };
+  /** A mentee cancelled a confirmed booking (E03-S05). IDs only; the refund state is read from the booking. */
+  'bookings.booking.cancelled': { bookingId: string };
   'availability.slot.published': { mentorProfileId: string; slotId: string; startsAt: string };
   'auth.user.created': { userId: string; email: string };
   /**

@@ -10,4 +10,7 @@ export class UnavailablePaymentGateway implements PaymentGateway {
   retrieveCheckoutSession(): never { return this.unavailable(); }
   expireCheckoutSession(): never { return this.unavailable(); }
   verifyWebhook(): never { return this.unavailable(); }
+  refund(): never { return this.unavailable(); }
+  retrieveRefund(): never { return this.unavailable(); }
+  listRefunds(): never { return this.unavailable(); }
 }

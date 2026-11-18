@@ -14,6 +14,7 @@ import type { InvitationService } from '../services/invitations/invitation.servi
 import type { MentorProfileService } from '../services/mentors/mentor-profile.service';
 import type { SlotService } from '../services/availability/slot.service';
 import type { BookingService } from '../services/bookings/booking.service';
+import type { BookingCancellationService } from '../services/bookings/booking-cancellation.service';
 import type { PaymentService } from '../services/payments/payment.service';
 import type { PaymentReportService } from '../services/payments/payment-report.service';
 import type { PaymentGateway } from '../services/payments/payment-gateway.port';
@@ -64,6 +65,7 @@ export interface Cradle {
   mentorProfileService: MentorProfileService;
   slotService: SlotService;
   bookingService: BookingService;
+  bookingCancellationService: BookingCancellationService;
   notificationService: NotificationService;
   textSessionService: TextSessionService;
   sessionNoteService: SessionNoteService;

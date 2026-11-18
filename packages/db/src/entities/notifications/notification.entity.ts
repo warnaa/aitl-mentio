@@ -24,7 +24,7 @@ export const Notification = defineSingletonEntity('Notification', () =>
       ...baseProperties,
       user: () => p.manyToOne(User).deleteRule('no action'),
       booking: () => p.manyToOne(Booking).deleteRule('no action'),
-      kind: p.string().length(32).check("kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined')"),
+      kind: p.string().length(32).check("kind in ('booking_confirmed', 'answer_posted', 'note_awaiting_approval', 'note_approved', 'note_declined', 'booking_cancelled')"),
       /** 0 for non-note kinds; the note version otherwise, so each version gets its own message. */
       noteVersion: p.integer().default(0),
       readAt: p.datetime().nullable(),

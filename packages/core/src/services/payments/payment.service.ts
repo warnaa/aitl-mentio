@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Booking, LockMode, MentorProfile, PaymentAttempt, PaymentResolution, ProcessedWebhookEvent, Slot, User, UniqueConstraintViolationException, type EntityManager, type IBooking, type IPaymentAttempt } from '@devmentor/db';
+import { Booking, MentorProfile, PaymentAttempt, PaymentResolution, ProcessedWebhookEvent, User, UniqueConstraintViolationException, type EntityManager, type IBooking, type IPaymentAttempt } from '@devmentor/db';
 import type { AppEnv } from '../../config/env';
 import type { EventBus } from '../../events/event-bus';
 import { requireRole, type Session } from '../../http/auth';
@@ -8,6 +8,8 @@ import { ConflictError, NotFoundError, UnauthorizedError } from '../../http/erro
 import type { Clock } from '../../time/clock';
 import type { CheckoutSession, CreateCheckoutSession, PaymentEvent, PaymentGateway } from './payment-gateway.port';
 import { CheckoutNotCreatedError } from './payment-gateway.port';
+import { withBookingLock } from '../bookings/booking-lock';
+import { FREE_CANCELLATION_HOURS } from '../bookings/booking-cancellation.service';
 
 const MINUTE = 60_000;
 const unresolved = ['creating', 'open', 'review'];
@@ -33,14 +35,7 @@ export class PaymentService {
   }
 
   private async locked<T>(bookingId: string, fn: (em: EntityManager, booking: IBooking) => Promise<T>) {
-    const discovered = await this.deps.em.fork().findOne(Booking, { id: bookingId });
-    if (!discovered) throw new NotFoundError('Booking not found');
-    return this.deps.em.fork().transactional(async em => {
-      await em.findOneOrFail(MentorProfile, { id: discovered.mentorProfile.id }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
-      await em.findOneOrFail(Slot, { id: discovered.slot.id }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
-      const booking = await em.findOneOrFail(Booking, { id: bookingId }, { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true });
-      return fn(em, booking);
-    });
+    return withBookingLock(this.deps.em, bookingId, fn);
   }
 
   private input(attempt: IPaymentAttempt): CreateCheckoutSession {
@@ -268,16 +263,22 @@ export class PaymentService {
     requireRole(session, role);
     const rows = await this.deps.em.find(Booking, role === 'mentee' ? { mentee: session.userId } : { mentorProfile: { user: session.userId } }, { populate: ['mentee', 'mentorProfile.user'], orderBy: { startsAt: 'desc' }, limit: 50 });
     const attempts = rows.length ? await this.deps.em.find(PaymentAttempt, { booking: { $in: rows.map(row => row.id) } }) : [];
-    return rows.map(row => ({ id: row.id, mentorName: row.mentorProfile.user.displayName, menteeName: row.mentee.displayName, lengthMinutes: row.lengthMinutes, priceCents: row.priceCents, currency: row.currency, status: row.status, startsAt: row.startsAt.toISOString(), expiresAt: row.expiresAt?.toISOString() ?? null, paidAt: row.paidAt?.toISOString() ?? null, paymentStatus: attempts.find(attempt => attempt.booking.id === row.id)?.state ?? 'unpaid' }));
+    return rows.map(row => ({ id: row.id, mentorName: row.mentorProfile.user.displayName, menteeName: row.mentee.displayName, lengthMinutes: row.lengthMinutes, priceCents: row.priceCents, currency: row.currency, status: row.status, startsAt: row.startsAt.toISOString(), expiresAt: row.expiresAt?.toISOString() ?? null, paidAt: row.paidAt?.toISOString() ?? null, paymentStatus: attempts.find(attempt => attempt.booking.id === row.id)?.state ?? 'unpaid',
+      // E03-S05: the dialog phrases the outcome from this line; the server decides again on cancel.
+      cancelledAt: row.cancelledAt?.toISOString() ?? null, refundStatus: row.refundStatus, freeCancellationUntil: new Date(row.startsAt.getTime() - FREE_CANCELLATION_HOURS * 3_600_000).toISOString() }));
   }
 
   async listReview() {
     await this.caller('operator');
     const attempts = await this.deps.em.find(PaymentAttempt, { state: { $in: unresolved } }, { orderBy: { nextReconciliationAt: 'asc' }, limit: 50 });
     const unknown = await this.deps.em.find(ProcessedWebhookEvent, { booking: null, outcome: 'unknown_session' }, { orderBy: { receivedAt: 'desc' }, limit: 25 });
+    // E03-S05: refunds the founders must handle by hand (R18) and refunds the runner has not settled within an hour.
+    const overdue = new Date(this.deps.clock.now().getTime() - 60 * MINUTE);
+    const refunds = await this.deps.em.find(Booking, { status: 'cancelled', $or: [{ refundStatus: 'failed' }, { refundStatus: 'pending', cancelledAt: { $lte: overdue } }] }, { orderBy: { cancelledAt: 'asc' }, limit: 25 });
     return [
       ...attempts.map(row => ({ attemptId: row.id as string | null, bookingId: row.booking.id as string | null, sessionId: row.sessionId, status: row.state, reason: row.diagnosticCode, createdAt: row.createdAt.toISOString(), nextReconciliationAt: row.nextReconciliationAt.toISOString() })),
       ...unknown.map(row => ({ attemptId: null, bookingId: null, sessionId: row.sessionId, status: 'review', reason: 'unknown_provider_session', createdAt: row.receivedAt.toISOString(), nextReconciliationAt: row.receivedAt.toISOString() })),
+      ...refunds.map(row => ({ attemptId: null, bookingId: row.id as string | null, sessionId: null, status: row.refundStatus === 'failed' ? 'refund_failed' : 'refund_pending', reason: row.refundStatus === 'failed' ? 'refund_failed' : 'refund_overdue', createdAt: row.cancelledAt!.toISOString(), nextReconciliationAt: (row.refundNextAttemptAt ?? row.cancelledAt!).toISOString() })),
     ];
   }
 }

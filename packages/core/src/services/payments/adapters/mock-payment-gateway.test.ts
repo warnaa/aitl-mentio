@@ -49,3 +49,34 @@ it('lets a signed synthetic event advance open provider truth without regressing
   gateway.verifyWebhook(JSON.stringify({ ...event, session: { ...event.session, id: 'unknown' } }), 'devmentor-mock-payment');
   await expect(gateway.retrieveCheckoutSession('unknown')).rejects.toMatchObject({ status: 404 });
 });
+
+const refund = { idempotencyKey: 'refund-booking', paymentIntentId: 'pi_mock', amountCents: 8000, bookingId: 'booking' };
+
+it('refunds once per idempotency key and lists refunds by payment, including external ones', async () => {
+  const first = await gateway.refund(refund);
+  expect(first).toMatchObject({ status: 'succeeded', amountCents: 8000, bookingId: 'booking' });
+  expect(await gateway.refund(refund)).toEqual(first);
+  expect(await gateway.retrieveRefund(first.id)).toEqual(first);
+  const external = gateway.addExternalRefund('pi_other', 4000);
+  expect(await gateway.listRefunds('pi_other')).toEqual([{ id: external, status: 'succeeded', amountCents: 4000, bookingId: null }]);
+  expect(await gateway.listRefunds('pi_mock')).toEqual([first]);
+  await expect(gateway.retrieveRefund('missing')).rejects.toMatchObject({ status: 404 });
+});
+
+it('models declines, timeouts, pending settlement, pruned keys and already-refunded charges', async () => {
+  gateway.refundOutcomes.push('decline', 'timeout');
+  await expect(gateway.refund(refund)).rejects.toMatchObject({ code: 'charge_disputed' });
+  await expect(gateway.refund(refund)).rejects.toThrow('timeout before refund creation');
+  expect(await gateway.listRefunds('pi_mock')).toEqual([]);
+  gateway.refundOutcomes.push('timeout_after_create');
+  await expect(gateway.refund(refund)).rejects.toThrow('after refund creation');
+  const [created] = await gateway.listRefunds('pi_mock');
+  expect(created).toMatchObject({ status: 'succeeded' });
+  gateway.forgetRefundKeys();
+  await expect(gateway.refund(refund)).rejects.toThrow('charge_already_refunded');
+  gateway.refundOutcomes.push('pending');
+  const pending = await gateway.refund({ ...refund, idempotencyKey: 'other', paymentIntentId: 'pi_pending' });
+  expect(pending.status).toBe('pending');
+  gateway.settleRefund(pending.id, 'failed');
+  expect(await gateway.retrieveRefund(pending.id)).toMatchObject({ status: 'failed' });
+});

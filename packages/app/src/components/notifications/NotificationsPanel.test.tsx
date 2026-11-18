@@ -99,3 +99,12 @@ it('does not repeat the unread prefix on a read decision notification', () => {
   render(<NotificationsPanel />);
   expect(screen.queryByText('New:')).toBeNull();
 });
+
+it('tells the mentor a mentee cancelled and links to their sessions list', () => {
+  resource.data = { unreadCount: 1, items: [item({ kind: 'booking_cancelled', audience: 'mentor', counterpartName: 'Sam Mentee', sessionPath: '/mentor' })] };
+  render(<NotificationsPanel />);
+  expect(screen.getByText(/Sam Mentee cancelled the session on/)).toBeTruthy();
+  expect(screen.getByText(/This time is available to book again\./)).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'See your sessions' }).getAttribute('href')).toBe('/mentor');
+  expect(screen.queryByText(/booked a session with you/)).toBeNull();
+});

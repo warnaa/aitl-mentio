@@ -16,7 +16,7 @@ export function plainName(name: string): string {
   return name.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim();
 }
 
-const START_FORMAT = new Intl.DateTimeFormat('en-GB', {
+export const START_FORMAT = new Intl.DateTimeFormat('en-GB', {
   weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   hour: '2-digit', minute: '2-digit', timeZone: 'UTC', timeZoneName: 'short',
 });

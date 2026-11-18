@@ -23,6 +23,15 @@ it('preserves booking history while constraining active occupancy, money and dur
     expect(sql).toContain('"written_answer_at" timestamptz null');
     expect(sql).toContain('(written_answer is null) = (written_answer_at is null)');
     expect(sql).toContain('char_length(written_answer) <= 20000');
+    // E03-S05 cancellation and refund state.
+    expect(sql).toContain('"cancelled_at" timestamptz null');
+    expect(sql).toContain("\"refund_status\" varchar(16) not null default 'none'");
+    expect(sql).toContain('"stripe_refund_id" varchar(255) null');
+    expect(sql).toContain('bookings_stripe_refund_id_unique');
+    expect(sql).toContain('"refund_next_attempt_at" timestamptz null');
+    expect(sql).toContain("(status = 'cancelled') = (cancelled_at is not null)");
+    expect(sql).toContain("refund_status = 'none' or status = 'cancelled'");
+    expect(sql).toContain("refund_status in ('none', 'pending', 'refunded', 'failed')");
     expect(metadata.properties.slot.kind).toBe('m:1');
     expect(metadata.properties.slot.deleteRule).toBe('no action');
     expect(metadata.properties.mentee.deleteRule).toBe('no action');

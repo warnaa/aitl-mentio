@@ -187,6 +187,16 @@ describe('getContainer', () => {
     expect(onBookingConfirmed).toHaveBeenCalledExactlyOnceWith('b1');
   });
 
+  it('hands a cancelled booking to the notification consumer in its own disposed scope', async () => {
+    const container = await getContainer();
+    const onBookingCancelled = vi.fn().mockResolvedValue(undefined);
+    container.register({ notificationService: asValue({ onBookingCancelled }) });
+
+    await container.cradle.eventBus.emit('bookings.booking.cancelled', { bookingId: 'b1' });
+
+    expect(onBookingCancelled).toHaveBeenCalledExactlyOnceWith('b1');
+  });
+
   it('hands a saved written answer to the notification consumer in its own disposed scope', async () => {
     const container = await getContainer();
     const onAnswerPosted = vi.fn().mockResolvedValue(undefined);
