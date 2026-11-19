@@ -36,9 +36,16 @@ cancel-in-progress concurrency and four separately visible jobs:
    the Testcontainers-backed harness, and uploads screenshots/log artifacts even when
    the scenario fails.
 
-Each job uses `npm ci` and an npm cache. Jobs are intentionally independent so a
-failure reports the responsible gate directly and integration tests never depend on
-state leaked from another job.
+The later [documentation CI split](implemented/2026-11-06-documentation-ci-split.md)
+amends this original four-job design: Change scope classifies the complete PR diff;
+Build, Unit tests and Integration tests run only for application changes. Lint
+always runs dependency-free route, classifier and audit-gate checks, installing
+packages and running ESLint only for application changes, without an npm cache.
+Application Build, Unit tests and Integration tests retain their npm install/cache
+steps and isolated environments. Later security jobs add Secret scan on every ready
+PR and Dependency audit and CodeQL for application changes. Failed classification
+selects application checks; drafts skip all jobs. Current required checks are
+recorded separately in `docs/development.md`, from the branch ruleset.
 
 ### Unit test framework
 

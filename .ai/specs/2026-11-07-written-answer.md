@@ -89,13 +89,20 @@ Additive: two columns, a widened check, one route, one event, additive DTO field
 - **R03** sessions are text (notices unchanged). **R19** the screen keeps the share rule; the answer may quote shared code and is treated as private.
 - **D13** first-iteration story. No active decision is superseded; Q1 records the ticket owner's open question (founder A) as answered by default and overridable.
 
+## Amendment after session notes shipped
+
+The [session-notes spec](2026-11-07-session-notes.md) now supplies the approval
+freeze anticipated in Q1. Answer saves, including replacement, are allowed only
+until the mentee approves a note; after approval the service returns 409 and keeps
+the answer unchanged. This qualifies Q1, the second-save flow and AC6 below.
+
 ## Acceptance criteria
 1. Given a held session (window `open` or `ended`), when its mentor posts the written answer, then the mentee sees it on `/sessions/[bookingId]` and receives one `answer_posted` notification and one email (however many times the answer is saved) linking to the session, neither containing the answer text. (D05)
 2. Given a session with no written answer after its end, when the mentee opens it, then the screen says "The written answer is still owed." and the read returns `answerOwed: true`. (negative; D03)
 3. Given a posted answer, when the mentee opens the session weeks later (clock advanced), then the same answer is shown and returned by the read. (D05)
 4. Given the mentor of a different session, when they `PUT` an answer to this one, then they get 404 and nothing is stored; the booking's mentee gets 403; a signed-out caller gets 401; a missing CSRF header is rejected. (data scoping; negative)
 5. Given a save before `startsAt`, then 409; invalid bodies get 422; the 31st save in a minute gets 429.
-6. Given a second save, then the body is replaced and no second notification or email is sent.
+6. Given a second save before note approval, then the body is replaced and no second notification or email is sent. After note approval, a save returns 409 and the answer remains unchanged (session-notes amendment).
 7. Typecheck, lint, unit tests with per-file 100% coverage for new and changed files, build and the new integration scenario pass, reported truthfully; desktop and 320px screenshots of the mentor editor, the mentee posted card and the owed card.
 
 ## 📋 Phasing

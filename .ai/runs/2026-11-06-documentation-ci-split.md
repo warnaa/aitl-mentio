@@ -3,7 +3,7 @@
 Request: keep lightweight instruction validation while avoiding costly application
 checks, especially integrations, for documentation-only PRs.
 
-Plan/spec: `.ai/specs/2026-11-06-documentation-ci-split.md`. Reviewed independently
+Plan/spec: `.ai/specs/implemented/2026-11-06-documentation-ci-split.md`. Reviewed independently
 before implementation and again against the resulting diff; no blocking findings.
 
 Work: removed workflow trigger path exclusions; added a dependency-free Git

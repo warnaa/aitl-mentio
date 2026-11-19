@@ -29,7 +29,7 @@ database and is safe to re-run at any time.
 - Starting the dev server. `npm run dev` never exits, so running it from setup would
   hang the installer; setup prints it as the next command instead.
 - Replacing any existing script. `db:up`, `db:migrate`, and `db:seed` keep working
-  standalone, and the manual sequence stays documented in `README.md` as the
+  standalone, and the manual sequence stays documented in `docs/development.md` as the
   alternative.
 - Installing system-level prerequisites (Node, Docker, PostgreSQL). Setup detects and
   reports them; it never installs them.
@@ -122,5 +122,7 @@ sets `seeder.glob: '!(*.d|*.test).{js,ts}'`.
 9. Integration coverage seeds twice against the ephemeral database and asserts a
    single sample mentor survives, through both the API and the admin page.
 10. `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build` pass.
-11. `README.md` and `AGENTS.md` document the quick path, the bring-your-own-PostgreSQL
-    behavior, and the idempotency guarantee.
+11. `README.md` documents the quick path and links to `docs/development.md`, which
+    documents bring-your-own-PostgreSQL behavior and the idempotency guarantee.
+    `AGENTS.md` routes commands and local-environment work to that guide. This
+    placement follows the documentation relocation in PR #100.
