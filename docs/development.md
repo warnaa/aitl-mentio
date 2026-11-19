@@ -212,14 +212,30 @@ Register the payment webhook for Checkout completion/expiry in deployment config
 
 ## Testing and pull-request checks
 
-Every pull request runs four independent GitHub checks: **Build**, **Lint**, **Unit
-tests**, and **Integration tests**. Configure those exact names as required checks in
-the GitHub branch ruleset if merges must be blocked until they pass.
+The pull-request workflow starts with **Change scope**, which classifies the entire
+merge-base diff. For ready PRs, **Lint** always validates instruction routes and
+line budgets (`node scripts/check-agent-routes.mjs`) and runs the dependency-free
+change-classifier and audit-gate regressions. It installs dependencies and runs
+ESLint only for application changes, without an npm cache.
 
-**Lint** first runs `node scripts/check-agent-routes.mjs` to validate agent
-instruction routes and line budgets (root ≤ 150 lines, units ≤ 120), then installs
-dependencies and runs ESLint. The agent check also runs locally without installing
-dependencies.
+**Build**, **Unit tests**, and **Integration tests** run for application changes and
+skip for documentation-only diffs. Unknown paths, failed classification or missing
+output select application checks. Jobs are skipped individually; the workflow is
+not excluded by path filters. Draft PRs skip all jobs.
+
+Security jobs are separate: **Secret scan** runs Gitleaks on every ready PR;
+**Dependency audit** runs the production-dependency audit through the dated,
+exception-aware `scripts/ci/audit-gate.mjs`; **CodeQL** analyzes JavaScript/TypeScript.
+The latter two run for application changes. CodeQL alone grants its job
+`security-events: write`; the workflow defaults to `contents: read`.
+
+Workflow job names and required merge checks are distinct. A read-only query of the
+`main` rules on 2026-11-19 returned five required checks: **Build**, **Unit tests**,
+**Secret scan**, **Dependency audit**, and **CodeQL**. **Lint** and **Integration
+tests** exist but are not required by that ruleset. Recheck with
+`gh api repos/warnaa/aitl-mentio/rules/branches/main` before relying on this snapshot;
+changing required checks is a maintainer decision. The release spec's six-check
+premise is historical, not the current check list.
 
 The unit suite uses Vitest and V8 coverage:
 

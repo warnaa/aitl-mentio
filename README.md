@@ -75,8 +75,8 @@ fast an answer arrives.
 ### 📝 A written answer to keep
 
 The mentor posts a **written answer** that appears on the mentee's session screen and can
-be edited by the mentor afterwards. It stays readable long after the conversation is
-over.
+be edited by the mentor until the mentee approves a session note. That approval
+freezes the answer. It stays readable long after the conversation is over.
 
 <p align="center">
   <img src=".ai/qa/artifacts_pr77/step-03-mentee-sees-answer-desktop.png" alt="A mentee viewing the mentor's posted written answer" width="760">

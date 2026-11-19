@@ -3,7 +3,7 @@ run-name: Release ${{ inputs.bump == 'custom' && inputs.version || inputs.bump }
 
 # Manually dispatched. Bumps every package.json, tags the release and publishes a
 # GitHub Release whose notes are the matching CHANGELOG.md entry. See SDLC.md
-# ("Releasing") and .ai/specs/2026-11-17-release-workflow.md.
+# ("Releasing") and .ai/specs/implemented/2026-11-17-release-workflow.md.
 #
 # The version-bump commit goes on a release/vX.Y.Z branch, never straight to main:
 # the main ruleset requires status checks and has no bypass actors. The tag points at

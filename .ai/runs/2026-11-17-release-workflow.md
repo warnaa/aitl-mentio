@@ -5,7 +5,7 @@ operator picks the new version (bump patch, minor or major, or a custom number).
 action publishes a GitHub Release for it, leaves a git tag for easy recovery, uses the
 matching `CHANGELOG.md` entry as the release notes and bumps every `package.json`.
 
-Branch: `feat/release-workflow`. Source doc: `.ai/specs/2026-11-17-release-workflow.md`
+Branch: `feat/release-workflow`. Source doc: `.ai/specs/implemented/2026-11-17-release-workflow.md`
 (written in Phase 1).
 
 ## Goal

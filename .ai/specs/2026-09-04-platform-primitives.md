@@ -1021,7 +1021,7 @@ Three documentation steps do belong here and are owed by whichever PR first ship
    `CrudForm`.
 2. **`BACKWARD_COMPATIBILITY.md` §1** — the 503 `service_unavailable` and 429 `rate_limited`
    codes (B6); **§7** — the CSRF header is now enforced by `apiHandler` on every mutating route.
-3. **`README.md`** — the env additions: `SESSION_SECRET(+_PREVIOUS)`, `GITHUB_CLIENT_*`,
+3. **`docs/development.md`** (linked from `README.md`, following PR #100) — the env additions: `SESSION_SECRET(+_PREVIOUS)`, `GITHUB_CLIENT_*`,
    `TRUSTED_PROXY_HOPS`, `MAIL_API_KEY`, `MAIL_FROM`, `MAILER_ADAPTER`, `AUTH_IDENTITY_ADAPTER`,
    `INTEGRATION_TEST_RUN`, and which of them production requires at boot.
 
